@@ -26,10 +26,10 @@
 #'   \item{\code{umcg}}{UMCG code, like \code{AMCL}}
 #'   \item{\code{official}}{Official name by the WHO, like \code{"amoxicillin and enzyme inhibitor"}}
 #'   \item{\code{official_nl}}{Official name in the Netherlands, like \code{"Amoxicilline met enzymremmer"}}
-#'   \item{\code{trivial}}{Trivial name in Dutch, like \code{"Amoxicilline/clavulaanzuur"}}
-#'   \item{\code{oral_ddd}}{Daily Defined Dose (DDD) according to the WHO, oral treatment}
+#'   \item{\code{trivial_nl}}{Trivial name in Dutch, like \code{"Amoxicilline/clavulaanzuur"}}
+#'   \item{\code{oral_ddd}}{Defined Daily Dose (DDD) according to the WHO, oral treatment}
 #'   \item{\code{oral_units}}{Units of \code{ddd_units}}
-#'   \item{\code{iv_ddd}}{Daily Defined Dose (DDD) according to the WHO, bij parenteral treatment}
+#'   \item{\code{iv_ddd}}{Defined Daily Dose (DDD) according to the WHO, parenteral treatment}
 #'   \item{\code{iv_units}}{Units of \code{iv_ddd}}
 #'   \item{\code{atc_group1}}{ATC group in Dutch, like \code{"Macroliden, lincosamiden en streptograminen"}}
 #'   \item{\code{atc_group2}}{Subgroup of \code{atc_group1} in Dutch, like \code{"Macroliden"}}
@@ -56,7 +56,7 @@
 #'   \item{\code{species}}{Species name of microorganism, like \code{"coli"}}
 #'   \item{\code{subspecies}}{Subspecies name of bio-/serovar of microorganism, like \code{"EHEC"}}
 #'   \item{\code{fullname}}{Full name, like \code{"Echerichia coli (EHEC)"}}
-#'   \item{\code{type}}{Type of microorganism, like \code{"Bacterie"} en \code{"Schimmel/gist"} (these are Dutch)}
+#'   \item{\code{type}}{Type of microorganism in Dutch, like \code{"Bacterie"} and \code{"Schimmel/gist"}}
 #'   \item{\code{gramstain}}{Gram of microorganism in Dutch, like \code{"Negatieve staven"}}
 #'   \item{\code{aerobic}}{Type aerobe/anaerobe of bacteria}
 #' }
@@ -75,3 +75,22 @@
 #' @source MOLIS (LIS of Certe) - \url{https://www.certe.nl} \cr \cr GLIMS (LIS of UMCG) - \url{https://www.umcg.nl}
 #' @seealso \code{\link{bactlist}}
 "bactlist.umcg"
+
+#' Dataset with 2000 blood culture isolates of septic patients
+#'
+#' An anonymised dataset containing 2000 microbial blood culture isolates with their antibiogram of septic patients found in 5 different hospitals in the Netherlands, between 2001 and 2017. This data.frame can be used to practice AMR analysis e.g. with \code{\link{rsi}} or \code{\link{rsi_predict}}, or it can be used to practice other statistics.
+#' @format A data.frame with 2000 observations and 47 variables:
+#' \describe{
+#'   \item{\code{date}}{date of receipt at the laboratory}
+#'   \item{\code{hospital_id}}{ID of the hospital}
+#'   \item{\code{ward_icu}}{logical to determine if ward is an intensive care unit}
+#'   \item{\code{ward_clinical}}{logical to determine if ward is a regular clinical ward}
+#'   \item{\code{ward_outpatient}}{logical to determine if ward is an outpatient clinic}
+#'   \item{\code{age}}{age of the patient}
+#'   \item{\code{sex}}{sex of the patient}
+#'   \item{\code{patient_id}}{ID of the patient, first 10 characters of an SHA hash containing irretrievable information}
+#'   \item{\code{bactid}}{ID of microorganism, see \code{\link{bactlist}}}
+#'   \item{\code{peni:mupi}}{38 different antibiotics with class \code{rsi} (see \code{\link{as.rsi}}), these column names occur in \code{\link{ablist}} and can be translated with \code{\link{abname}}}
+#' }
+#' @source MOLIS (LIS of Certe) - \url{https://www.certe.nl}
+"septic_patients"

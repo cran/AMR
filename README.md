@@ -12,6 +12,30 @@ AMR can also be predicted for the forthcoming years with the `rsi_predict` funct
 
 It also contains functions to translate antibiotic codes from the lab (like `"AMOX"`) or the [WHO](https://www.whocc.no/atc_ddd_index/?code=J01CA04&showdescription=no) (like `"J01CA04"`) to trivial names (like `"amoxicillin"`) and vice versa.
 
+## How to get it?
+This package is available on CRAN and also here on GitHub.
+
+### From CRAN (recommended, latest stable version)
+[![CRAN_Badge](https://img.shields.io/cran/v/AMR.svg?label=CRAN&colorB=3679BC)](http://cran.r-project.org/package=AMR)
+[![CRAN_Downloads](https://cranlogs.r-pkg.org/badges/grand-total/AMR)](http://cran.r-project.org/package=AMR)
+
+- RStudio:
+  - Click on `Tools` and then `Install Packages...`
+  -  Type in `AMR` and press <kbd>Install</kbd>
+
+- R console:
+  - `install.packages("AMR")`
+
+### From GitHub (latest development version)
+[![Travis_Build](https://travis-ci.org/msberends/AMR.svg?branch=master)](https://travis-ci.org/msberends/AMR)
+[![Since_Release](https://img.shields.io/github/commits-since/msberends/AMR/latest.svg?colorB=3679BC)](https://github.com/msberends/AMR/releases)
+[![Last_Commit](https://img.shields.io/github/last-commit/msberends/AMR.svg?colorB=3679BC)](https://github.com/msberends/AMR/commits/master)
+
+```r
+install.packages("devtools")
+devtools::install_github("msberends/AMR")
+```
+
 ## How to use it?
 ```r
 # Call it with:
@@ -20,14 +44,37 @@ library(AMR)
 # For a list of functions:
 help(package = "AMR")
 ```
-
-### Databases included in package
+### Overwrite/force resistance based on EUCAST rules
+This is also called *interpretive reading*.
 ```r
-# Dataset with ATC antibiotics codes, official names and DDD's (oral and parenteral)
-ablist        # A tibble: 420 x 12
+before <- data.frame(bactid = c("STAAUR",  # Staphylococcus aureus
+                                "ENCFAE",  # Enterococcus faecalis
+                                "ESCCOL",  # Escherichia coli
+                                "KLEPNE",  # Klebsiella pneumoniae
+                                "PSEAER"), # Pseudomonas aeruginosa
+                     vanc = "-",           # Vancomycin
+                     amox = "-",           # Amoxicillin
+                     coli = "-",           # Colistin
+                     cfta = "-",           # Ceftazidime
+                     cfur = "-",           # Cefuroxime
+                     stringsAsFactors = FALSE)
+before
+#   bactid vanc amox coli cfta cfur
+# 1 STAAUR    -    -    -    -    -
+# 2 ENCFAE    -    -    -    -    -
+# 3 ESCCOL    -    -    -    -    -
+# 4 KLEPNE    -    -    -    -    -
+# 5 PSEAER    -    -    -    -    -
 
-# Dataset with bacteria codes and properties like gram stain and aerobic/anaerobic
-bactlist      # A tibble: 2,507 x 10
+# Now apply those rules; just need a column with bacteria ID's and antibiotic results:
+after <- EUCAST_rules(before)
+after
+#   bactid vanc amox coli cfta cfur
+# 1 STAAUR    -    -    R    R    -
+# 2 ENCFAE    -    -    R    R    R
+# 3 ESCCOL    R    -    -    -    -
+# 4 KLEPNE    R    R    -    -    -
+# 5 PSEAER    R    R    -    -    R
 ```
 
 ### New classes
@@ -74,18 +121,13 @@ plot(rsi_data)
 Other epidemiological functions:
 
 ```r
-# Apply EUCAST Expert Rules v3.1 (latest) to antibiotic columns
-EUCAST_rules(...)
-
 # Determine key antibiotic based on bacteria ID
 key_antibiotics(...)
-# Check if key antibiotics are equal
-key_antibiotics_equal(...)
 
 # Selection of first isolates of any patient
 first_isolate(...)
 
-# Calculate resistance levels of antibiotics
+# Calculate resistance levels of antibiotics, can be used with `summarise` (dplyr)
 rsi(...)
 # Predict resistance levels of antibiotics
 rsi_predict(...)
@@ -95,27 +137,16 @@ abname(...)
 abname("J01CR02", from = "atc", to = "umcg") # "AMCL"
 ```
 
-## How to get it?
-This package is only available here on GitHub, but respects the [CRAN Repository Policy](https://cran.r-project.org/web/packages/policies.html).
-
-*Installation commands:*
+### Databases included in package
+Datasets to work with antibiotics and bacteria properties.
 ```r
-library(devtools)
-install_github("msberends/AMR")
+# Dataset with ATC antibiotics codes, official names and DDD's (oral and parenteral)
+ablist        # A tibble: 420 x 12
+
+# Dataset with bacteria codes and properties like gram stain and aerobic/anaerobic
+bactlist      # A tibble: 2,507 x 10
 ```
 
-*Working behind a proxy? Then use:*
-```r
-library(httr)
-library(devtools)
-set_config(use_proxy("yourproxydomain.com",
-                     8080,
-                     "username",
-                     "password",
-                     "any")) # change "any" to "basic" or "digest" if needed
-install_github("msberends/AMR")
-reset_config()
-```
 
 ## Authors
 
@@ -128,6 +159,8 @@ reset_config()
 <sup>2</sup> Department of Medical, Market and Innovation (MMI), Certe Medische diagnostiek & advies, Groningen, the Netherlands
 
 ## Copyright
+[![License](https://img.shields.io/github/license/msberends/AMR.svg?colorB=3679BC)](https://github.com/msberends/AMR/blob/master/LICENSE)
+
 This R package is licensed under the [GNU General Public License (GPL) v2.0](https://github.com/msberends/AMR/blob/master/LICENSE). In a nutshell, this means that this package:
 
 - May be used for commercial purposes

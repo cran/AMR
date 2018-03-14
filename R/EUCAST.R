@@ -20,11 +20,10 @@
 #'
 #' Apply expert rules (like intrinsic resistance), as defined by the European Committee on Antimicrobial Susceptibility Testing (EUCAST, \url{http://eucast.org}), see \emph{Source}.
 #' @param tbl table with antibiotic columns, like e.g. \code{amox} and \code{amcl}
-#' @param col_bactcode column name of the bacteria ID in \code{tbl} - should also be present in \code{bactlist$bactid}, see \code{\link{bactlist}}.
+#' @param col_bactcode column name of the bacteria ID in \code{tbl} - values of this column should be present in \code{bactlist$bactid}, see \code{\link{bactlist}}
 #' @param info print progress
 #' @param amcl,amik,amox,ampi,azit,aztr,cefa,cfra,cfep,cfot,cfox,cfta,cftr,cfur,chlo,cipr,clar,clin,clox,coli,czol,dapt,doxy,erta,eryt,fosf,fusi,gent,imip,kana,levo,linc,line,mero,mino,moxi,nali,neom,neti,nitr,novo,norf,oflo,peni,pita,poly,qida,rifa,roxi,siso,teic,tetr,tica,tige,tobr,trim,trsu,vanc column names of antibiotics. Use \code{NA} to skip a column, like \code{tica = NA}. Non-existing column will be skipped.
 #' @param ... parameters that are passed on to \code{EUCAST_rules}
-#' @name EUCAST
 #' @rdname EUCAST
 #' @export
 #' @importFrom dplyr %>% left_join select
@@ -37,11 +36,23 @@
 #'   EUCAST Expert Rules Version 3.1: \cr
 #'   \url{http://www.eucast.org/expert_rules_and_intrinsic_resistance}
 #' @examples
-#' \dontrun{
-#' tbl <- EUCAST_rules(tbl)
-#' }
+#' a <- data.frame(bactid = c("STAAUR",  # Staphylococcus aureus
+#'                            "ENCFAE",  # Enterococcus faecalis
+#'                            "ESCCOL",  # Escherichia coli
+#'                            "KLEPNE",  # Klebsiella pneumoniae
+#'                            "PSEAER"), # Pseudomonas aeruginosa
+#'                 vanc = "-",           # Vancomycin
+#'                 amox = "-",           # Amoxicillin
+#'                 coli = "-",           # Colistin
+#'                 cfta = "-",           # Ceftazidime
+#'                 cfur = "-",           # Cefuroxime
+#'                 stringsAsFactors = FALSE)
+#' a
+#' 
+#' b <- EUCAST_rules(a)
+#' b
 EUCAST_rules <- function(tbl,
-                         col_bactcode = 'bacteriecode',
+                         col_bactcode = 'bactid',
                          info = TRUE,
                          amcl = 'amcl',
                          amik = 'amik',
@@ -185,6 +196,7 @@ EUCAST_rules <- function(tbl,
   }
   
   total <- 0
+  total_rows <- integer(0)
   
   # functie voor uitvoeren
   edit_rsi <- function(to, rows, cols) {
@@ -193,6 +205,7 @@ EUCAST_rules <- function(tbl,
     if (length(rows) > 0 & length(cols) > 0) {
       tbl[rows, cols] <<- to
       total <<- total + (length(rows) * length(cols))
+      total_rows <<- c(total_rows, rows)
     }
   }
   
@@ -215,9 +228,9 @@ EUCAST_rules <- function(tbl,
   fluorochinolonen <- c(oflo, cipr, norf, levo, moxi)
   
   if (info == TRUE) {
-    cat('\nApplying EUCAST expert rules on',
-        tbl[!is.na(tbl$genus),] %>% nrow(),
-        'isolates according to "EUCAST Expert Rules Version 3.1"\n\n')
+    cat('\nApplying rules to',
+        tbl[!is.na(tbl$genus),] %>% nrow() %>% format(big.mark = ","),
+        'rows according to "EUCAST Expert Rules Version 3.1"\n\n')
   }
   
   # Table 1: Intrinsic resistance in Enterobacteriaceae ----
@@ -232,61 +245,61 @@ EUCAST_rules <- function(tbl,
   # Citrobacter
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Citrobacter (koseri|amalonaticus|sedlakii|farmeri|rodentium)'),
-           cols = c(ampi, tica))
+           cols = c(aminopenicillines, tica))
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Citrobacter (freundii|braakii|murliniae|werkmanii|youngae)'),
-           cols = c(ampi, amcl, czol, cfox))
+           cols = c(aminopenicillines, amcl, czol, cfox))
   # Enterobacter
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Enterobacter cloacae'),
-           cols = c(ampi, amcl, czol, cfox))
+           cols = c(aminopenicillines, amcl, czol, cfox))
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Enterobacter aerogenes'),
-           cols = c(ampi, amcl, czol, cfox))
+           cols = c(aminopenicillines, amcl, czol, cfox))
   # Escherichia
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Escherichia hermanni'),
-           cols = c(ampi, tica))
+           cols = c(aminopenicillines, tica))
   # Hafnia
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Hafnia alvei'),
-           cols = c(ampi, amcl, czol, cfox))
+           cols = c(aminopenicillines, amcl, czol, cfox))
   # Klebsiella
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Klebsiella'),
-           cols = c(ampi, tica))
+           cols = c(aminopenicillines, tica))
   # Morganella / Proteus
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Morganella morganii'),
-           cols = c(ampi, amcl, czol, tetracyclines, polymyxines, nitr))
+           cols = c(aminopenicillines, amcl, czol, tetracyclines, polymyxines, nitr))
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Proteus mirabilis'),
            cols = c(tetracyclines, tige, polymyxines, nitr))
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Proteus penneri'),
-           cols = c(ampi, czol, cfur, tetracyclines, tige, polymyxines, nitr))
+           cols = c(aminopenicillines, czol, cfur, tetracyclines, tige, polymyxines, nitr))
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Proteus vulgaris'),
-           cols = c(ampi, czol, cfur, tetracyclines, tige, polymyxines, nitr))
+           cols = c(aminopenicillines, czol, cfur, tetracyclines, tige, polymyxines, nitr))
   # Providencia
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Providencia rettgeri'),
-           cols = c(ampi, amcl, czol, cfur, tetracyclines, tige, polymyxines, nitr))
+           cols = c(aminopenicillines, amcl, czol, cfur, tetracyclines, tige, polymyxines, nitr))
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Providencia stuartii'),
-           cols = c(ampi, amcl, czol, cfur, tetracyclines, tige, polymyxines, nitr))
+           cols = c(aminopenicillines, amcl, czol, cfur, tetracyclines, tige, polymyxines, nitr))
   # Raoultella
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Raoultella'),
-           cols = c(ampi, tica))
+           cols = c(aminopenicillines, tica))
   # Serratia
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Serratia marcescens'),
-           cols = c(ampi, amcl, czol, cfox, cfur, tetracyclines[tetracyclines != 'mino'], polymyxines, nitr))
+           cols = c(aminopenicillines, amcl, czol, cfox, cfur, tetracyclines[tetracyclines != 'mino'], polymyxines, nitr))
   # Yersinia
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Yersinia enterocolitica'),
-           cols = c(ampi, amcl, tica, czol, cfox))
+           cols = c(aminopenicillines, amcl, tica, czol, cfox))
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Yersinia pseudotuberculosis'),
            cols = c(poly, coli))
@@ -313,32 +326,32 @@ EUCAST_rules <- function(tbl,
   # Acinetobacter
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Acinetobacter (baumannii|pittii|nosocomialis|calcoaceticus)'),
-           cols = c(ampi, amcl, czol, cfot, cftr, aztr, erta, trim, fosf, tetracyclines[tetracyclines != 'mino']))
+           cols = c(aminopenicillines, amcl, czol, cfot, cftr, aztr, erta, trim, fosf, tetracyclines[tetracyclines != 'mino']))
   # Achromobacter
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Achromobacter (xylosoxydans|xylosoxidans)'),
-           cols = c(ampi, czol, cfot, cftr, erta))
+           cols = c(aminopenicillines, czol, cfot, cftr, erta))
   # Burkholderia
   edit_rsi(to = 'R',
            # onder 'Burkholderia cepacia complex' vallen deze species allemaal: PMID 16217180.
            rows = which(tbl$fullname %like% '^Burkholderia (cepacia|multivorans|cenocepacia|stabilis|vietnamiensis|dolosa|ambifaria|anthina|pyrrocinia|ubonensis)'),
-           cols = c(ampi, amcl, tica, pita, czol, cfot, cftr, aztr, erta, cipr, chlo, aminoglycosiden, trim, fosf, polymyxines))
+           cols = c(aminopenicillines, amcl, tica, pita, czol, cfot, cftr, aztr, erta, cipr, chlo, aminoglycosiden, trim, fosf, polymyxines))
   # Elizabethkingia
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Elizabethkingia meningoseptic(a|um)'),
-           cols = c(ampi, amcl, tica, czol, cfot, cftr, cfta, cfep, aztr, erta, imip, mero, polymyxines))
+           cols = c(aminopenicillines, amcl, tica, czol, cfot, cftr, cfta, cfep, aztr, erta, imip, mero, polymyxines))
   # Ochrobactrum
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Ochrobactrum anthropi'),
-           cols = c(ampi, amcl, tica, pita, czol, cfot, cftr, cfta, cfep, aztr, erta))
+           cols = c(aminopenicillines, amcl, tica, pita, czol, cfot, cftr, cfta, cfep, aztr, erta))
   # Pseudomonas
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Pseudomonas aeruginosa'),
-           cols = c(ampi, amcl, czol, cfot, cftr, erta, chlo, kana, neom, trim, trsu, tetracyclines, tige))
+           cols = c(aminopenicillines, amcl, czol, cfot, cftr, erta, chlo, kana, neom, trim, trsu, tetracyclines, tige))
   # Stenotrophomonas
   edit_rsi(to = 'R',
            rows = which(tbl$fullname %like% '^Stenotrophomonas maltophilia'),
-           cols = c(ampi, amcl, tica, pita, czol, cfot, cftr, cfta, aztr, erta, imip, mero, aminoglycosiden, trim, fosf, tetr))
+           cols = c(aminopenicillines, amcl, tica, pita, czol, cfot, cftr, cfta, aztr, erta, imip, mero, aminoglycosiden, trim, fosf, tetr))
   
   
   # Table 3: Intrinsic resistance in other Gram-negative bacteria ----
@@ -446,6 +459,12 @@ EUCAST_rules <- function(tbl,
     edit_rsi(to = 'R',
              rows = which(tbl$genus == 'Enterococcus'
                           & tbl[, ampi] == 'R'),
+             cols = c(ureidopenicillines, carbapenems))
+  }
+  if (!is.na(amox)) {
+    edit_rsi(to = 'R',
+             rows = which(tbl$genus == 'Enterococcus'
+                          & tbl[, amox] == 'R'),
              cols = c(ureidopenicillines, carbapenems))
   }
   
@@ -579,7 +598,7 @@ EUCAST_rules <- function(tbl,
              cols = trim)
   }
   if (!is.na(ampi) & !is.na(amox)) {
-    tbl[, amox] <- tbl[, ampi]
+    tbl[, amox] <- tbl %>% pull(ampi)
   }
   
   # Toegevoegde kolommen weer verwijderen
@@ -590,7 +609,10 @@ EUCAST_rules <- function(tbl,
   colnames(tbl) <- gsub("_tempbactlist", "", colnames(tbl))
   
   if (info == TRUE) {
-    cat('\nDone.\nExpert rules applied to', total, 'test results.\n')
+    cat('\nDone.\nEUCAST Expert rules applied to',
+        total_rows %>% unique() %>% length() %>% format(big.mark = ","),
+        'different rows, to a total of',
+        total %>% format(big.mark = ","), 'test results.\n\n')
   }
   
   tbl

@@ -18,7 +18,7 @@
 
 #' Properties of an ATC code
 #'
-#' Gets data from the WHO to determine properties of an ATC of e.g. an antibiotic. \strong{This function requires an internet connection.}
+#' Gets data from the WHO to determine properties of an ATC (e.g. an antibiotic) like name, defined daily dose (DDD) or standard unit. \strong{This function requires an internet connection.}
 #' @param atc_code a character or character vector with ATC code(s) of antibiotic(s)
 #' @param property property of an ATC code. Valid values are \code{"ATC code"}, \code{"Name"}, \code{"DDD"}, \code{"U"} (\code{"unit"}), \code{"Adm.R"} en \code{"Note"}.
 #' @param administration type of administration, see \emph{Details}
@@ -56,8 +56,8 @@
 #' @source \url{https://www.whocc.no/atc_ddd_alterations__cumulative/ddd_alterations/abbrevations/}
 #' @examples 
 #' \donttest{
-#' atc_property("J01CA04", "DDD", "O") # oral DDD of amoxicillin
-#' atc_property("J01CA04", "DDD", "P") # parenteral DDD of amoxicillin
+#' atc_property("J01CA04", "DDD", "O") # oral DDD (Defined Daily Dose) of amoxicillin
+#' atc_property("J01CA04", "DDD", "P") # parenteral DDD (Defined Daily Dose) of amoxicillin
 #' }
 atc_property <- function(atc_code,
                          property,
@@ -128,7 +128,7 @@ atc_property <- function(atc_code,
 #' Name of an antibiotic
 #'
 #' Convert antibiotic codes (from a laboratory information system like MOLIS or GLIMS) to a (trivial) antibiotic name or ATC code, or vice versa. This uses the data from \code{\link{ablist}}.
-#' @param abcode a code or name, like \code{"amox"}, \code{"cftr"} or \code{"J01CA04"}
+#' @param abcode a code or name, like \code{"AMOX"}, \code{"AMCL"} or \code{"J01CA04"}
 #' @param from,to type to transform from and to. See \code{\link{ablist}} for its column names.
 #' @param textbetween text to put between multiple returned texts
 #' @param tolower return output as lower case with function \code{\link{tolower}}.
@@ -146,7 +146,7 @@ atc_property <- function(atc_code,
 #' abname(c("AMCL", "GENT"))
 #' # "amoxicillin and enzyme inhibitor" "gentamicin" 
 #'
-#' abname("AMCL", to = "trivial")
+#' abname("AMCL", to = "trivial_nl")
 #' # "Amoxicilline/clavulaanzuur"
 #'
 #' abname("AMCL", to = "atc")
@@ -210,7 +210,7 @@ abname <- function(abcode, from = 'umcg', to = 'official', textbetween = ' + ', 
           select(to) %>%
           slice(1) %>%
           as.character()
-        if (j > 1 & to %in% c('official', 'trivial')) {
+        if (j > 1 & to %in% c('official', 'trivial_nl')) {
           drug.group[j] <- drug.group[j] %>% tolower()
         }
       }

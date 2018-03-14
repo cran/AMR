@@ -28,14 +28,9 @@
 #' rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370)))
 #' rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370), "A", "B", "C"))
 #' is.rsi(rsi_data)
-#' plot(rsi_data)
 #' 
-#' \donttest{
-#' library(dplyr)
-#' tbl %>%
-#'   mutate_at(vars(ends_with("_rsi")), as.rsi)
-#' sapply(mic_data, is.rsi)
-#' }
+#' plot(rsi_data)    # for percentages
+#' barplot(rsi_data) # for frequencies
 as.rsi <- function(x) {
   if (is.rsi(x)) {
     x
@@ -125,7 +120,7 @@ summary.rsi <- function(object, ...) {
 
 #' @exportMethod plot.rsi
 #' @export
-#' @importFrom dplyr %>% group_by summarise filter mutate if_else
+#' @importFrom dplyr %>% group_by summarise filter mutate if_else n_distinct
 #' @importFrom graphics plot text
 #' @noRd
 plot.rsi <- function(x, ...) {
@@ -150,15 +145,47 @@ plot.rsi <- function(x, ...) {
        ylab = 'Percentage',
        xlab = 'Antimicrobial Interpretation',
        main = paste('Susceptibilty Analysis of', x_name),
+       axes = FALSE,
        ...)
+  # x axis
+  axis(side = 1, at = 1:n_distinct(data$x), labels = levels(data$x), lwd = 0)
+  # y axis, 0-100%
+  axis(side = 2, at = seq(0, 100, 5))
+  
   text(x = data$x,
-       y = data$s + 5,
+       y = data$s + 4,
        labels = paste0(data$s, '% (n = ', data$n, ')'))
+}
+
+
+#' @exportMethod barplot.rsi
+#' @export
+#' @importFrom dplyr %>% group_by summarise filter mutate if_else n_distinct
+#' @importFrom graphics barplot axis
+#' @noRd
+barplot.rsi <- function(height, ...) {
+  x <- height
+  x_name <- deparse(substitute(height))
+  
+  data <- data.frame(rsi = x, cnt = 1) %>%
+    group_by(rsi) %>%
+    summarise(cnt = sum(cnt)) %>%
+    droplevels()
+
+  barplot(table(x),
+          col = c('green3', 'orange2', 'red3'),
+          xlab = 'Antimicrobial Interpretation',
+          main = paste('Susceptibilty Analysis of', x_name),
+          ylab = 'Frequency',
+          axes = FALSE,
+          ...)
+  # y axis, 0-100%
+  axis(side = 2, at = seq(0, max(data$cnt) + max(data$cnt) * 1.1, by = 25))
 }
 
 #' Class 'mic'
 #'
-#' This transforms a vector to a new class\code{mic}, which is an ordered factor valid MIC values as levels. Invalid MIC values will be translated as \code{NA} with a warning.
+#' This transforms a vector to a new class\code{mic}, which is an ordered factor with valid MIC values as levels. Invalid MIC values will be translated as \code{NA} with a warning.
 #' @rdname as.mic
 #' @param x vector
 #' @param na.rm a logical indicating whether missing values should be removed
@@ -168,14 +195,9 @@ plot.rsi <- function(x, ...) {
 #' @examples
 #' mic_data <- as.mic(c(">=32", "1.0", "1", "1.00", 8, "<=0.128", "8", "16", "16"))
 #' is.mic(mic_data)
-#' plot(mic_data)
 #' 
-#' \donttest{
-#' library(dplyr)
-#' tbl %>%
-#'   mutate_at(vars(ends_with("_mic")), as.mic)
-#' sapply(mic_data, is.mic)
-#' }
+#' plot(mic_data)
+#' barplot(mic_data)
 as.mic <- function(x, na.rm = FALSE) {
   if (is.mic(x)) {
     x
@@ -207,24 +229,29 @@ as.mic <- function(x, na.rm = FALSE) {
               "<0.012", "<=0.012", "0.012", ">=0.012", ">0.012",
               "<0.016", "<=0.016", "0.016", ">=0.016", ">0.016",
               "<0.023", "<=0.023", "0.023", ">=0.023", ">0.023",
+              "<0.025", "<=0.025", "0.025", ">=0.025", ">0.025",
               "<0.03", "<=0.03", "0.03", ">=0.03", ">0.03",
               "<0.032", "<=0.032", "0.032", ">=0.032", ">0.032",
               "<0.047", "<=0.047", "0.047", ">=0.047", ">0.047",
               "<0.05", "<=0.05", "0.05", ">=0.05", ">0.05",
               "<0.06", "<=0.06", "0.06", ">=0.06", ">0.06",
               "<0.0625", "<=0.0625", "0.0625", ">=0.0625", ">0.0625",
+              "<0.063", "<=0.063", "0.063", ">=0.063", ">0.063",
               "<0.064", "<=0.064", "0.064", ">=0.064", ">0.064",
               "<0.09", "<=0.09", "0.09", ">=0.09", ">0.09",
               "<0.094", "<=0.094", "0.094", ">=0.094", ">0.094",
               "<0.12", "<=0.12", "0.12", ">=0.12", ">0.12",
               "<0.125", "<=0.125", "0.125", ">=0.125", ">0.125",
               "<0.128", "<=0.128", "0.128", ">=0.128", ">0.128",
+              "<0.16", "<=0.16", "0.16", ">=0.16", ">0.16",
               "<0.19", "<=0.19", "0.19", ">=0.19", ">0.19",
               "<0.25", "<=0.25", "0.25", ">=0.25", ">0.25",
               "<0.256", "<=0.256", "0.256", ">=0.256", ">0.256",
+              "<0.32", "<=0.32", "0.32", ">=0.32", ">0.32",
               "<0.38", "<=0.38", "0.38", ">=0.38", ">0.38",
               "<0.5", "<=0.5", "0.5", ">=0.5", ">0.5",
               "<0.512", "<=0.512", "0.512", ">=0.512", ">0.512",
+              "<0.64", "<=0.64", "0.64", ">=0.64", ">0.64",
               "<0.75", "<=0.75", "0.75", ">=0.75", ">0.75",
               "<1", "<=1", "1", ">=1", ">1",
               "<1.5", "<=1.5", "1.5", ">=1.5", ">1.5",
@@ -284,26 +311,23 @@ is.mic <- function(x) {
 
 #' @exportMethod as.double.mic
 #' @export
-#' @importFrom dplyr %>%
 #' @noRd
 as.double.mic <- function(x, ...) {
-  as.double(gsub('(<=)|(>=)', '', as.character(x)))
+  as.double(gsub('(<|=|>)+', '', as.character(x)))
 }
 
 #' @exportMethod as.integer.mic
 #' @export
-#' @importFrom dplyr %>%
 #' @noRd
 as.integer.mic <- function(x, ...) {
-  as.integer(gsub('(<=)|(>=)', '', as.character(x)))
+  as.integer(gsub('(<|=|>)+', '', as.character(x)))
 }
 
 #' @exportMethod as.numeric.mic
 #' @export
-#' @importFrom dplyr %>%
 #' @noRd
 as.numeric.mic <- function(x, ...) {
-  as.numeric(gsub('(<=)|(>=)', '', as.character(x)))
+  as.numeric(gsub('(<|=|>)+', '', as.character(x)))
 }
 
 #' @exportMethod print.mic
@@ -355,21 +379,30 @@ summary.mic <- function(object, ...) {
 #' @noRd
 plot.mic <- function(x, ...) {
   x_name <- deparse(substitute(x))
-  
+  create_barplot_mic(x, x_name, ...)
+}
+
+#' @exportMethod barplot.mic
+#' @export
+#' @importFrom dplyr %>% group_by summarise
+#' @importFrom graphics barplot axis
+#' @noRd
+barplot.mic <- function(height, ...) {
+  x_name <- deparse(substitute(height))
+  create_barplot_mic(height, x_name, ...)
+}
+
+#' @importFrom graphics barplot axis
+create_barplot_mic <- function(x, x_name, ...) {
   data <- data.frame(mic = x, cnt = 1) %>%
     group_by(mic) %>%
     summarise(cnt = sum(cnt)) %>%
     droplevels()
-
-  plot(x = data$mic,
-       y = data$cnt,
-       lwd = 2,
-       ylim = c(-0.5, max(5, max(data$cnt))),
-       ylab = 'Frequency',
-       xlab = 'MIC value',
-       main = paste('MIC values of', x_name),
-       ...)
-  text(x = data$mic,
-       y = -0.5,
-       labels = paste('n =', data$cnt))
+  barplot(table(droplevels(x)),
+          ylab = 'Frequency',
+          xlab = 'MIC value',
+          main = paste('MIC values of', x_name), 
+          axes = FALSE,
+          ...)
+  axis(2, seq(0, max(data$cnt)))
 }
