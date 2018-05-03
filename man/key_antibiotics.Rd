@@ -4,7 +4,7 @@
 \alias{key_antibiotics}
 \title{Key antibiotics based on bacteria ID}
 \usage{
-key_antibiotics(tbl, col_bactcode = "bactid", info = TRUE, amcl = "amcl",
+key_antibiotics(tbl, col_bactid = "bactid", info = TRUE, amcl = "amcl",
   amox = "amox", cfot = "cfot", cfta = "cfta", cftr = "cftr",
   cfur = "cfur", cipr = "cipr", clar = "clar", clin = "clin",
   clox = "clox", doxy = "doxy", gent = "gent", line = "line",
@@ -14,11 +14,11 @@ key_antibiotics(tbl, col_bactcode = "bactid", info = TRUE, amcl = "amcl",
 \arguments{
 \item{tbl}{table with antibiotics coloms, like \code{amox} and \code{amcl}.}
 
-\item{col_bactcode}{column of bacteria IDs in \code{tbl}; these should occur in \code{bactlist$bactid}, see \code{\link{bactlist}}}
+\item{col_bactid}{column of bacteria IDs in \code{tbl}; these should occur in \code{microorganisms$bactid}, see \code{\link{microorganisms}}}
 
 \item{info}{print warnings}
 
-\item{amcl, amox, cfot, cfta, cftr, cfur, cipr, clar, clin, clox, doxy, gent, line, mero, peni, pita, rifa, teic, trsu, vanc}{column names of antibiotics.}
+\item{amcl, amox, cfot, cfta, cftr, cfur, cipr, clar, clin, clox, doxy, gent, line, mero, peni, pita, rifa, teic, trsu, vanc}{column names of antibiotics, case-insensitive}
 }
 \value{
 Character of length 1.
@@ -33,5 +33,5 @@ tbl$keyab <- key_antibiotics(tbl)
 }
 }
 \seealso{
-\code{\link{mo_property}} \code{\link{ablist}}
+\code{\link{mo_property}} \code{\link{antibiotics}}
 }

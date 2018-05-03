@@ -21,25 +21,31 @@
 #' This transforms a vector to a new class \code{rsi}, which is an ordered factor with levels \code{S < I < R}. Invalid antimicrobial interpretations will be translated as \code{NA} with a warning.
 #' @rdname as.rsi
 #' @param x vector
-#' @return New class \code{rsi}
+#' @return Ordered factor with new class \code{rsi} and new attributes \code{package} and \code{package.version}
 #' @export
 #' @importFrom dplyr %>%
+#' @importFrom utils packageDescription
 #' @examples
 #' rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370)))
 #' rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370), "A", "B", "C"))
 #' is.rsi(rsi_data)
-#' 
+#'
 #' plot(rsi_data)    # for percentages
 #' barplot(rsi_data) # for frequencies
 as.rsi <- function(x) {
   if (is.rsi(x)) {
     x
   } else {
-    
+
     x <- x %>% unlist()
     x.bak <- x
-    
+
     na_before <- x[is.na(x) | x == ''] %>% length()
+    # remove all spaces
+    x <- gsub(' {2,55}', '', x)
+    # disallow more than 3 characters
+    x[nchar(x) > 3] <- NA
+    # remove all invalid characters
     x <- gsub('[^RSI]+', '', x %>% toupper())
     # needed for UMCG in cases of "S;S" but also "S;I"; the latter will be NA:
     x <- gsub('^S+$', 'S', x)
@@ -47,20 +53,22 @@ as.rsi <- function(x) {
     x <- gsub('^R+$', 'R', x)
     x[!x %in% c('S', 'I', 'R')] <- NA
     na_after <- x[is.na(x) | x == ''] %>% length()
-    
+
     if (na_before != na_after) {
       list_missing <- x.bak[is.na(x) & !is.na(x.bak) & x.bak != ''] %>%
         unique() %>%
         sort()
       list_missing <- paste0('"', list_missing , '"', collapse = ", ")
       warning(na_after - na_before, ' results truncated (',
-              round(((na_after - na_before) / length(x)) / 100),
+              round(((na_after - na_before) / length(x)) * 100),
               '%) that were invalid antimicrobial interpretations: ',
               list_missing, call. = FALSE)
     }
-    
+
     x <- x %>% toupper() %>% factor(levels = c("S", "I", "R"), ordered = TRUE)
     class(x) <- c('rsi', 'ordered', 'factor')
+    attr(x, 'package') <- 'AMR'
+    attr(x, 'package.version') <- packageDescription('AMR')$Version
     x
   }
 }
@@ -84,20 +92,15 @@ print.rsi <- function(x, ...) {
   I <- x[x == 'I'] %>% length()
   R <- x[x == 'R'] %>% length()
   IR <- x[x %in% c('I', 'R')] %>% length()
-  cat("Class 'rsi': ", n, " isolates\n", sep = '')
-  cat('\n')
-  cat('<NA>:      ', n_total - n, '\n')
-  cat('Sum of S:  ', S, '\n')
-  cat('Sum of IR: ', IR, '\n')
-  cat('- Sum of R:', R, '\n')
-  cat('- Sum of I:', I, '\n')
-  cat('\n')
-  print(c(
-    `%S` = round((S / n) * 100, 1),
-    `%IR` = round((IR / n) * 100, 1),
-    `%I` = round((I / n) * 100, 1),
-    `%R` = round((R / n) * 100, 1)
-  ))
+  cat("Class 'rsi'\n")
+  cat(n, " results (missing: ", n_total - n, ' = ', percent((n_total - n) / n_total, force_zero = TRUE), ')\n', sep = "")
+  if (n > 0) {
+    cat('\n')
+    cat('Sum of S:   ', S, ' (', percent(S / n, force_zero = TRUE), ')\n', sep = "")
+    cat('Sum of IR:  ', IR, ' (', percent(IR / n, force_zero = TRUE), ')\n', sep = "")
+    cat('- Sum of R: ', R, ' (', percent(R / n, force_zero = TRUE), ')\n', sep = "")
+    cat('- Sum of I: ', I, ' (', percent(I / n, force_zero = TRUE), ')\n', sep = "")
+  }
 }
 
 #' @exportMethod summary.rsi
@@ -125,7 +128,7 @@ summary.rsi <- function(object, ...) {
 #' @noRd
 plot.rsi <- function(x, ...) {
   x_name <- deparse(substitute(x))
-  
+
   data <- data.frame(x = x,
                      y = 1,
                      stringsAsFactors = TRUE) %>%
@@ -134,7 +137,7 @@ plot.rsi <- function(x, ...) {
     filter(!is.na(x)) %>%
     mutate(s = round((n / sum(n)) * 100, 1))
   data$x <- factor(data$x, levels = c('S', 'I', 'R'), ordered = TRUE)
-  
+
   ymax <- if_else(max(data$s) > 95, 105, 100)
 
   plot(x = data$x,
@@ -151,7 +154,7 @@ plot.rsi <- function(x, ...) {
   axis(side = 1, at = 1:n_distinct(data$x), labels = levels(data$x), lwd = 0)
   # y axis, 0-100%
   axis(side = 2, at = seq(0, 100, 5))
-  
+
   text(x = data$x,
        y = data$s + 4,
        labels = paste0(data$s, '% (n = ', data$n, ')'))
@@ -166,7 +169,7 @@ plot.rsi <- function(x, ...) {
 barplot.rsi <- function(height, ...) {
   x <- height
   x_name <- deparse(substitute(height))
-  
+
   data <- data.frame(rsi = x, cnt = 1) %>%
     group_by(rsi) %>%
     summarise(cnt = sum(cnt)) %>%
@@ -189,13 +192,14 @@ barplot.rsi <- function(height, ...) {
 #' @rdname as.mic
 #' @param x vector
 #' @param na.rm a logical indicating whether missing values should be removed
-#' @return New class \code{mic}
+#' @return Ordered factor with new class \code{mic} and new attributes \code{package} and \code{package.version}
 #' @export
 #' @importFrom dplyr %>%
+#' @importFrom utils packageDescription
 #' @examples
 #' mic_data <- as.mic(c(">=32", "1.0", "1", "1.00", 8, "<=0.128", "8", "16", "16"))
 #' is.mic(mic_data)
-#' 
+#'
 #' plot(mic_data)
 #' barplot(mic_data)
 as.mic <- function(x, na.rm = FALSE) {
@@ -207,7 +211,7 @@ as.mic <- function(x, na.rm = FALSE) {
       x <- x[!is.na(x)]
     }
     x.bak <- x
-    
+
     # comma to dot
     x <- gsub(',', '.', x, fixed = TRUE)
     # starting dots must start with 0
@@ -220,7 +224,7 @@ as.mic <- function(x, na.rm = FALSE) {
     x <- gsub('[^0-9]$', '', x)
     # remove last zeroes
     x <- gsub('[.]?0+$', '', x)
-    
+
     lvls <- c("<0.002", "<=0.002", "0.002", ">=0.002", ">0.002",
               "<0.003", "<=0.003", "0.003", ">=0.003", ">0.003",
               "<0.004", "<=0.004", "0.004", ">=0.004", ">0.004",
@@ -278,26 +282,28 @@ as.mic <- function(x, na.rm = FALSE) {
               "<512", "<=512", "512", ">=512", ">512",
               "<1024", "<=1024", "1024", ">=1024", ">1024")
     x <- x %>% as.character()
-    
+
     na_before <- x[is.na(x) | x == ''] %>% length()
     x[!x %in% lvls] <- NA
     na_after <- x[is.na(x) | x == ''] %>% length()
-    
+
     if (na_before != na_after) {
       list_missing <- x.bak[is.na(x) & !is.na(x.bak) & x.bak != ''] %>%
         unique() %>%
         sort()
       list_missing <- paste0('"', list_missing , '"', collapse = ", ")
       warning(na_after - na_before, ' results truncated (',
-              round(((na_after - na_before) / length(x)) / 100),
+              round(((na_after - na_before) / length(x)) * 100),
               '%) that were invalid MICs: ',
               list_missing, call. = FALSE)
     }
-    
+
     x <- factor(x = x,
                 levels = lvls,
                 ordered = TRUE)
     class(x) <- c('mic', 'ordered', 'factor')
+    attr(x, 'package') <- 'AMR'
+    attr(x, 'package.version') <- packageDescription('AMR')$Version
     x
   }
 }
@@ -350,26 +356,19 @@ print.mic <- function(x, ...) {
 
 #' @exportMethod summary.mic
 #' @export
-#' @importFrom dplyr %>% tibble group_by summarise pull
+#' @importFrom dplyr %>%
 #' @noRd
 summary.mic <- function(object, ...) {
   x <- object
   n_total <- x %>% length()
   x <- x[!is.na(x)]
   n <- x %>% length()
-  return(c("Mode" = 'mic',
-           "NA" = n_total - n,
-           "Min." = sort(x)[1] %>% as.character(),
-           "Max." = sort(x)[n] %>% as.character()
-  ))
-  cat("Class 'mic': ", n, " isolates\n", sep = '')
-  cat('\n')
-  cat('<NA> ', n_total - n, '\n')
-  cat('\n')
-  tbl <- tibble(x = x, y = 1) %>% group_by(x) %>% summarise(y = sum(y))
-  cnt <- tbl %>% pull(y)
-  names(cnt) <- tbl %>% pull(x)
-  print(cnt)
+  lst <- c('mic',
+           n_total - n,
+           sort(x)[1] %>% as.character(),
+           sort(x)[n] %>% as.character())
+  names(lst) <- c("Mode", "<NA>", "Min.", "Max.")
+  lst
 }
 
 #' @exportMethod plot.mic
@@ -401,7 +400,7 @@ create_barplot_mic <- function(x, x_name, ...) {
   barplot(table(droplevels(x)),
           ylab = 'Frequency',
           xlab = 'MIC value',
-          main = paste('MIC values of', x_name), 
+          main = paste('MIC values of', x_name),
           axes = FALSE,
           ...)
   axis(2, seq(0, max(data$cnt)))

@@ -4,23 +4,23 @@
 \alias{abname}
 \title{Name of an antibiotic}
 \source{
-\code{\link{ablist}}
+\code{\link{antibiotics}}
 }
 \usage{
-abname(abcode, from = "umcg", to = "official", textbetween = " + ",
-  tolower = FALSE)
+abname(abcode, from = c("guess", "atc", "molis", "umcg"), to = "official",
+  textbetween = " + ", tolower = FALSE)
 }
 \arguments{
 \item{abcode}{a code or name, like \code{"AMOX"}, \code{"AMCL"} or \code{"J01CA04"}}
 
-\item{from, to}{type to transform from and to. See \code{\link{ablist}} for its column names.}
+\item{from, to}{type to transform from and to. See \code{\link{antibiotics}} for its column names. WIth \code{from = "guess"} the from will be guessed from \code{"atc"}, \code{"molis"} and \code{"umcg"}.}
 
 \item{textbetween}{text to put between multiple returned texts}
 
 \item{tolower}{return output as lower case with function \code{\link{tolower}}.}
 }
 \description{
-Convert antibiotic codes (from a laboratory information system like MOLIS or GLIMS) to a (trivial) antibiotic name or ATC code, or vice versa. This uses the data from \code{\link{ablist}}.
+Convert antibiotic codes (from a laboratory information system like MOLIS or GLIMS) to a (trivial) antibiotic name or ATC code, or vice versa. This uses the data from \code{\link{antibiotics}}.
 }
 \examples{
 abname("AMCL")
@@ -30,7 +30,7 @@ abname("AMCL+GENT")
 # "amoxicillin and enzyme inhibitor + gentamicin"
 
 abname(c("AMCL", "GENT"))
-# "amoxicillin and enzyme inhibitor" "gentamicin" 
+# "amoxicillin and enzyme inhibitor" "gentamicin"
 
 abname("AMCL", to = "trivial_nl")
 # "Amoxicilline/clavulaanzuur"
