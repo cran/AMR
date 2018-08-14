@@ -1,6 +1,6 @@
 Package: AMR
-Version: 0.2.0
-Date: 2018-05-02
+Version: 0.3.0
+Date: 2018-08-14
 Title: Antimicrobial Resistance Analysis
 Authors@R: c(
     person(
@@ -13,34 +13,56 @@ Authors@R: c(
         given = c("Christian", "F."),
         family = "Luz",
         email = "c.f.luz@umcg.nl",
-        role = c("aut", "ctb"),
+        role = c("aut", "rev"),
         comment = c(ORCID = "0000-0001-5809-5995")),
     person(
         given = c("Erwin", "E.A."),
         family = "Hassing",
         email = "e.hassing@certe.nl",
-        role = "ctb"))
+        role = "ctb"),
+    person(
+        given = "Corinna",
+        family = "Glasner",
+        email = "c.glasner@umcg.nl",
+        role = "ths",
+        comment = c(ORCID = "0000-0003-1241-1328")),
+    person(
+        given = c("Alex", "W."),
+        family = "Friedrich",
+        email = "alex.friedrich@umcg.nl",
+        role = "ths",
+        comment = c(ORCID = "0000-0003-4881-038X")),
+    person(
+        given = "Bhanu",
+        family = "Sinha",
+        email = "b.sinha@umcg.nl",
+        role = "ths",
+        comment = c(ORCID = "0000-0003-1634-0010")))
 Description: Functions to simplify the analysis of Antimicrobial Resistance (AMR)
     of microbial isolates, by using new S3 classes and applying EUCAST expert rules
     on antibiograms according to Leclercq (2013)
     <doi:10.1111/j.1469-0691.2011.03703.x>.
-Depends: R (>= 3.0.0)
-Imports: backports, dplyr (>= 0.7.0), data.table (>= 1.10.0), reshape2
-        (>= 1.4.0), xml2 (>= 1.0.0), knitr (>= 1.0.0), rvest (>=
-        0.3.2), tibble
-Suggests: testthat (>= 1.0.2), covr (>= 3.0.1)
+Depends: R (>= 3.1.0)
+Imports: backports, clipr, curl, dplyr (>= 0.7.0), xml2 (>= 1.0.0),
+        knitr (>= 1.0.0), readr, rvest (>= 0.3.2), tibble
+Suggests: testthat (>= 1.0.2), covr (>= 3.0.1), rmarkdown, rstudioapi,
+        tidyr, ggplot2
+VignetteBuilder: knitr
 URL: https://github.com/msberends/AMR
 BugReports: https://github.com/msberends/AMR/issues
 License: GPL-2 | file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.0.1.9000
+RoxygenNote: 6.1.0
 NeedsCompilation: no
-Packaged: 2018-05-03 08:19:53 UTC; uscloud
+Packaged: 2018-08-14 10:56:46 UTC; uscloud
 Author: Matthijs S. Berends [aut, cre]
     (<https://orcid.org/0000-0001-7620-1800>),
-  Christian F. Luz [aut, ctb] (<https://orcid.org/0000-0001-5809-5995>),
-  Erwin E.A. Hassing [ctb]
+  Christian F. Luz [aut, rev] (<https://orcid.org/0000-0001-5809-5995>),
+  Erwin E.A. Hassing [ctb],
+  Corinna Glasner [ths] (<https://orcid.org/0000-0003-1241-1328>),
+  Alex W. Friedrich [ths] (<https://orcid.org/0000-0003-4881-038X>),
+  Bhanu Sinha [ths] (<https://orcid.org/0000-0003-1634-0010>)
 Maintainer: Matthijs S. Berends <m.s.berends@umcg.nl>
 Repository: CRAN
-Date/Publication: 2018-05-03 11:06:32 UTC
+Date/Publication: 2018-08-14 11:10:02 UTC

@@ -22,7 +22,7 @@
 #' @param tbl a \code{data.frame} containing isolates.
 #' @param col_date column name of the result date (or date that is was received on the lab)
 #' @param col_patient_id column name of the unique IDs of the patients
-#' @param col_bactid column name of the unique IDs of the microorganisms (should occur in the \code{\link{microorganisms}} dataset)
+#' @param col_bactid column name of the unique IDs of the microorganisms: \code{bactid}'s. If this column has another class than \code{"bactid"}, values will be coerced using \code{\link{as.bactid}}.
 #' @param col_testcode column name of the test codes. Use \code{col_testcode = NA} to \strong{not} exclude certain test codes (like test codes for screening). In that case \code{testcodes_exclude} will be ignored. Supports tidyverse-like quotation.
 #' @param col_specimen column name of the specimen type or group
 #' @param col_icu column name of the logicals (\code{TRUE}/\code{FALSE}) whether a ward or department is an Intensive Care Unit (ICU)
@@ -40,27 +40,49 @@
 #' @param col_species (deprecated, use \code{col_bactid} instead) column name of the species of the microorganisms
 #' @details \strong{WHY THIS IS SO IMPORTANT} \cr
 #'     To conduct an analysis of antimicrobial resistance, you should only include the first isolate of every patient per episode \href{https://www.ncbi.nlm.nih.gov/pubmed/17304462}{[1]}. If you would not do this, you could easily get an overestimate or underestimate of the resistance of an antibiotic. Imagine that a patient was admitted with an MRSA and that it was found in 5 different blood cultures the following week. The resistance percentage of oxacillin of all \emph{S. aureus} isolates would be overestimated, because you included this MRSA more than once. It would be \href{https://en.wikipedia.org/wiki/Selection_bias}{selection bias}.
+#' @section Key antibiotics:
+#'     There are two ways to determine whether isolates can be included as first \emph{weighted} isolates which will give generally the same results: \cr
 #'
-#'     \strong{DETERMINING WEIGHTED ISOLATES} \cr
 #'     \strong{1. Using} \code{type = "keyantibiotics"} \strong{and parameter} \code{ignore_I} \cr
-#'     To determine weighted isolates, the difference between key antibiotics will be checked. Any difference from S to R (or vice versa) will (re)select an isolate as a first weighted isolate. With \code{ignore_I = FALSE}, also differences from I to S|R (or vice versa) will lead to this. This is a reliable method and 30-35 times faster than method 2. \cr
+#'     Any difference from S to R (or vice versa) will (re)select an isolate as a first weighted isolate. With \code{ignore_I = FALSE}, also differences from I to S|R (or vice versa) will lead to this. This is a reliable method and 30-35 times faster than method 2. \cr
+#'
 #'     \strong{2. Using} \code{type = "points"} \strong{and parameter} \code{points_threshold} \cr
-#'     To determine weighted isolates, difference between antimicrobial interpretations will be measured with points. A difference from I to S|R (or vice versa) means 0.5 points, a difference from S to R (or vice versa) means 1 point. When the sum of points exceeds \code{points_threshold}, an isolate will be (re)selected as a first weighted isolate. This method is being used by the Infection Prevention department (Dr M. Lokate) of the University Medical Center Groningen (UMCG).
+#'     A difference from I to S|R (or vice versa) means 0.5 points, a difference from S to R (or vice versa) means 1 point. When the sum of points exceeds \code{points_threshold}, an isolate will be (re)selected as a first weighted isolate.
 #' @keywords isolate isolates first
+#' @seealso \code{\link{key_antibiotics}}
 #' @export
 #' @importFrom dplyr arrange_at lag between row_number filter mutate arrange
 #' @return A vector to add to table, see Examples.
-#' @source Methodology of this function is based on: "M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 4th Edition", 2014, Clinical and Laboratory Standards Institute. \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
+#' @source Methodology of this function is based on: \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 4th Edition}, 2014, \emph{Clinical and Laboratory Standards Institute (CLSI)}. \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
 #' @examples
-#' # septic_patients is a dataset available in the AMR package
+#' # septic_patients is a dataset available in the AMR package. It is true, genuine data.
 #' ?septic_patients
-#' my_patients <- septic_patients
 #'
 #' library(dplyr)
-#' my_patients$first_isolate <- my_patients %>%
-#'   first_isolate(col_date = "date",
-#'                 col_patient_id = "patient_id",
-#'                 col_bactid = "bactid")
+#' my_patients <- septic_patients %>%
+#'   mutate(first_isolate = first_isolate(.,
+#'                                        col_date = "date",
+#'                                        col_patient_id = "patient_id",
+#'                                        col_bactid = "bactid"))
+#'
+#' # Now let's see if first isolates matter:
+#' A <- my_patients %>%
+#'   group_by(hospital_id) %>%
+#'   summarise(count = n_rsi(gent),            # gentamicin availability
+#'             resistance = portion_IR(gent))  # gentamicin resistance
+#'
+#' B <- my_patients %>%
+#'   filter(first_isolate == TRUE) %>%         # the 1st isolate filter
+#'   group_by(hospital_id) %>%
+#'   summarise(count = n_rsi(gent),            # gentamicin availability
+#'             resistance = portion_IR(gent))  # gentamicin resistance
+#'
+#' # Have a look at A and B.
+#' # B is more reliable because every isolate is only counted once.
+#' # Gentamicin resitance in hospital D appears to be 5.4% higher than
+#' # when you (erroneously) would have used all isolates!
+#'
+#' ## OTHER EXAMPLES:
 #'
 #' \dontrun{
 #'
@@ -123,7 +145,7 @@ first_isolate <- function(tbl,
 
   # bactid OR genus+species must be available
   if (is.na(col_bactid) & (is.na(col_genus) | is.na(col_species))) {
-    stop('`col_bactid or both `col_genus` and `col_species` must be available.')
+    stop('`col_bactid` or both `col_genus` and `col_species` must be available.')
   }
 
   # check if columns exist
@@ -149,6 +171,10 @@ first_isolate <- function(tbl,
   check_columns_existance(col_keyantibiotics)
 
   if (!is.na(col_bactid)) {
+    if (!tbl %>% pull(col_bactid) %>% is.bactid()) {
+      warning("Improve integrity of the `", col_bactid, "` column by transforming it with 'as.bactid'.")
+    }
+    # join to microorganisms data set
     tbl <- tbl %>% left_join_microorganisms(by = col_bactid)
     col_genus <- "genus"
     col_species <- "species"
@@ -159,7 +185,7 @@ first_isolate <- function(tbl,
   }
   # remove testcodes
   if (!is.na(testcodes_exclude[1]) & testcodes_exclude[1] != '' & info == TRUE) {
-    cat('Isolates from these test codes will be ignored:\n', toString(testcodes_exclude), '\n')
+    cat('[Criteria] Excluded test codes:\n', toString(testcodes_exclude), '\n')
   }
 
   if (is.na(col_icu)) {
@@ -173,13 +199,11 @@ first_isolate <- function(tbl,
     filter_specimen <- ''
   }
 
-  specgroup.notice <- ''
-  weighted.notice <- ''
   # filter on specimen group and keyantibiotics when they are filled in
   if (!is.na(filter_specimen) & filter_specimen != '') {
     check_columns_existance(col_specimen, tbl)
     if (info == TRUE) {
-      cat('Isolates other than of specimen group \'', filter_specimen, '\' will be ignored. ', sep = '')
+      cat('[Criteria] Excluded other than specimen group \'', filter_specimen, '\'\n', sep = '')
     }
   } else {
     filter_specimen <- ''
@@ -197,19 +221,18 @@ first_isolate <- function(tbl,
   # create new dataframe with original row index and right sorting
   tbl <- tbl %>%
     mutate(first_isolate_row_index = 1:nrow(tbl),
-           eersteisolaatbepaling = 0,
            date_lab = tbl %>% pull(col_date),
            patient_id = tbl %>% pull(col_patient_id),
            species = tbl %>% pull(col_species),
            genus = tbl %>% pull(col_genus)) %>%
-    mutate(species = if_else(is.na(species), '', species),
-           genus = if_else(is.na(genus), '', genus))
+    mutate(species = if_else(is.na(species) | species == "(no MO)", "", species),
+           genus = if_else(is.na(genus) | genus == "(no MO)", "", genus))
 
   if (filter_specimen == '') {
 
     if (icu_exclude == FALSE) {
-      if (info == TRUE) {
-        cat('Isolates from ICU will *NOT* be ignored.\n')
+      if (info == TRUE & !is.na(col_icu)) {
+        cat('[Criteria] Included isolates from ICU.\n')
       }
       tbl <- tbl %>%
         arrange_at(c(col_patient_id,
@@ -220,7 +243,7 @@ first_isolate <- function(tbl,
       row.end <- nrow(tbl)
     } else {
       if (info == TRUE) {
-        cat('Isolates from ICU will be ignored.\n')
+        cat('[Criteria] Excluded isolates from ICU.\n')
       }
       tbl <- tbl %>%
         arrange_at(c(col_icu,
@@ -240,8 +263,8 @@ first_isolate <- function(tbl,
   } else {
     # sort on specimen and only analyse these row to save time
     if (icu_exclude == FALSE) {
-      if (info == TRUE) {
-        cat('Isolates from ICU will *NOT* be ignored.\n')
+      if (info == TRUE & !is.na(col_icu)) {
+        cat('[Criteria] Included isolates from ICU.\n')
       }
       tbl <- tbl %>%
         arrange_at(c(col_specimen,
@@ -257,7 +280,7 @@ first_isolate <- function(tbl,
       )
     } else {
       if (info == TRUE) {
-        cat('Isolates from ICU will be ignored.\n')
+        cat('[Criteria] Excluded isolates from ICU.\n')
       }
       tbl <- tbl %>%
         arrange_at(c(col_icu,
@@ -280,7 +303,7 @@ first_isolate <- function(tbl,
 
   if (abs(row.start) == Inf | abs(row.end) == Inf) {
     if (info == TRUE) {
-      cat('No isolates found.\n')
+      message('No isolates found.')
     }
     # NA's where genus is unavailable
     tbl <- tbl %>%
@@ -291,12 +314,15 @@ first_isolate <- function(tbl,
     return(tbl %>% pull(real_first_isolate))
   }
 
-  scope.size <- tbl %>%
-    filter(row_number() %>%
-             between(row.start,
-                     row.end),
-           genus != '') %>%
-    nrow()
+  # suppress warnings because dplyr want us to use library(dplyr) when using filter(row_number())
+  suppressWarnings(
+    scope.size <- tbl %>%
+      filter(
+        row_number() %>% between(row.start,
+                                 row.end),
+        genus != '') %>%
+      nrow()
+  )
 
   # Analysis of first isolate ----
   all_first <- tbl %>%
@@ -310,53 +336,58 @@ first_isolate <- function(tbl,
                                (date_lab - lag(date_lab)) + lag(days_diff),
                                0))
 
+  weighted.notice <- ''
   if (col_keyantibiotics != '') {
+    weighted.notice <- 'weighted '
     if (info == TRUE) {
       if (type == 'keyantibiotics') {
-        cat('Comparing key antibiotics for first weighted isolates (')
+        cat('[Criteria] Inclusion based on key antibiotics, ')
         if (ignore_I == FALSE) {
-          cat('NOT ')
+          cat('not ')
         }
-        cat('ignoring I)...\n')
+        cat('ignoring I.\n')
       }
       if (type == 'points') {
-        cat(paste0('Comparing antibiotics for first weighted isolates (using points threshold of '
-                   , points_threshold, ')...\n'))
+        cat(paste0('[Criteria] Inclusion based on key antibiotics, using points threshold of '
+                   , points_threshold, '.\n'))
       }
     }
     type_param <- type
-    all_first <- all_first %>%
-      mutate(key_ab_lag = lag(key_ab)) %>%
-      mutate(key_ab_other = !key_antibiotics_equal(x = key_ab,
-                                                   y = key_ab_lag,
-                                                   type = type_param,
-                                                   ignore_I = ignore_I,
-                                                   points_threshold = points_threshold,
-                                                   info = info)) %>%
-      mutate(
-        real_first_isolate =
-          if_else(
-            between(row_number(), row.start, row.end)
-            & genus != ''
-            & (other_pat_or_mo
-               | days_diff >= episode_days
-               | key_ab_other),
-            TRUE,
-            FALSE))
-    if (info == TRUE) {
-      cat('\n')
-    }
+    # suppress warnings because dplyr want us to use library(dplyr) when using filter(row_number())
+    suppressWarnings(
+      all_first <- all_first %>%
+        mutate(key_ab_lag = lag(key_ab)) %>%
+        mutate(key_ab_other = !key_antibiotics_equal(x = key_ab,
+                                                     y = key_ab_lag,
+                                                     type = type_param,
+                                                     ignore_I = ignore_I,
+                                                     points_threshold = points_threshold,
+                                                     info = info)) %>%
+        mutate(
+          real_first_isolate =
+            if_else(
+              between(row_number(), row.start, row.end)
+              & genus != ''
+              & (other_pat_or_mo
+                 | days_diff >= episode_days
+                 | key_ab_other),
+              TRUE,
+              FALSE))
+    )
   } else {
-    all_first <- all_first %>%
-      mutate(
-        real_first_isolate =
-          if_else(
-            between(row_number(), row.start, row.end)
-            & genus != ''
-            & (other_pat_or_mo
-               | days_diff >= episode_days),
-            TRUE,
-            FALSE))
+    # suppress warnings because dplyr want us to use library(dplyr) when using filter(row_number())
+    suppressWarnings(
+      all_first <- all_first %>%
+        mutate(
+          real_first_isolate =
+            if_else(
+              between(row_number(), row.start, row.end)
+              & genus != ''
+              & (other_pat_or_mo
+                 | days_diff >= episode_days),
+              TRUE,
+              FALSE))
+    )
   }
 
   # first one as TRUE
@@ -371,20 +402,20 @@ first_isolate <- function(tbl,
 
   # NA's where genus is unavailable
   all_first <- all_first %>%
-    mutate(real_first_isolate = if_else(genus == '', NA, real_first_isolate))
+    mutate(real_first_isolate = if_else(genus %in% c('', '(no MO)', NA), NA, real_first_isolate))
 
   all_first <- all_first %>%
     arrange(first_isolate_row_index) %>%
     pull(real_first_isolate)
 
   if (info == TRUE) {
-    cat(paste0('\nFound ',
+    message(paste0('Found ',
                all_first %>% sum(na.rm = TRUE),
                ' first ', weighted.notice, 'isolates (',
                (all_first %>% sum(na.rm = TRUE) / scope.size) %>% percent(),
                ' of isolates in scope [where genus was not empty] and ',
                (all_first %>% sum(na.rm = TRUE) / tbl %>% nrow()) %>% percent(),
-               ' of total)\n'))
+               ' of total)'))
   }
 
   if (output_logical == FALSE) {
@@ -393,206 +424,4 @@ first_isolate <- function(tbl,
 
   all_first
 
-}
-
-#' Key antibiotics based on bacteria ID
-#'
-#' @param tbl table with antibiotics coloms, like \code{amox} and \code{amcl}.
-#' @param col_bactid column of bacteria IDs in \code{tbl}; these should occur in \code{microorganisms$bactid}, see \code{\link{microorganisms}}
-#' @param info print warnings
-#' @param amcl,amox,cfot,cfta,cftr,cfur,cipr,clar,clin,clox,doxy,gent,line,mero,peni,pita,rifa,teic,trsu,vanc column names of antibiotics, case-insensitive
-#' @export
-#' @importFrom dplyr %>% mutate if_else
-#' @return Character of length 1.
-#' @seealso \code{\link{mo_property}} \code{\link{antibiotics}}
-#' @examples
-#' \donttest{
-#' #' # set key antibiotics to a new variable
-#' tbl$keyab <- key_antibiotics(tbl)
-#' }
-key_antibiotics <- function(tbl,
-                            col_bactid = 'bactid',
-                            info = TRUE,
-                            amcl = 'amcl',
-                            amox = 'amox',
-                            cfot = 'cfot',
-                            cfta = 'cfta',
-                            cftr = 'cftr',
-                            cfur = 'cfur',
-                            cipr = 'cipr',
-                            clar = 'clar',
-                            clin = 'clin',
-                            clox = 'clox',
-                            doxy = 'doxy',
-                            gent = 'gent',
-                            line = 'line',
-                            mero = 'mero',
-                            peni = 'peni',
-                            pita = 'pita',
-                            rifa = 'rifa',
-                            teic = 'teic',
-                            trsu = 'trsu',
-                            vanc = 'vanc') {
-
-  keylist <- character(length = nrow(tbl))
-
-  if (!col_bactid %in% colnames(tbl)) {
-    stop('Column ', col_bactid, ' not found.', call. = FALSE)
-  }
-
-  # check columns
-  col.list <- c(amox, cfot, cfta, cftr, cfur, cipr, clar,
-                clin, clox, doxy, gent, line, mero, peni,
-                pita, rifa, teic, trsu, vanc)
-  col.list <- check_available_columns(tbl = tbl, col.list = col.list, info = info)
-  amox <- col.list[amox]
-  cfot <- col.list[cfot]
-  cfta <- col.list[cfta]
-  cftr <- col.list[cftr]
-  cfur <- col.list[cfur]
-  cipr <- col.list[cipr]
-  clar <- col.list[clar]
-  clin <- col.list[clin]
-  clox <- col.list[clox]
-  doxy <- col.list[doxy]
-  gent <- col.list[gent]
-  line <- col.list[line]
-  mero <- col.list[mero]
-  peni <- col.list[peni]
-  pita <- col.list[pita]
-  rifa <- col.list[rifa]
-  teic <- col.list[teic]
-  trsu <- col.list[trsu]
-  vanc <- col.list[vanc]
-
-  # join microorganisms
-  tbl <- tbl %>% left_join_microorganisms(col_bactid)
-
-  tbl$key_ab <- NA_character_
-
-  # Staphylococcus
-  list_ab <- c(clox, trsu, teic, vanc, doxy, line, clar, rifa)
-  list_ab <- list_ab[list_ab %in% colnames(tbl)]
-  tbl <- tbl %>% mutate(key_ab =
-                          if_else(genus == 'Staphylococcus',
-                                  apply(X = tbl[, list_ab],
-                                        MARGIN = 1,
-                                        FUN = function(x) paste(x, collapse = "")),
-                                  key_ab))
-
-  # Rest of Gram +
-  list_ab <- c(peni, amox, teic, vanc, clin, line, clar, trsu)
-  list_ab <- list_ab[list_ab %in% colnames(tbl)]
-  tbl <- tbl %>% mutate(key_ab =
-                          if_else(gramstain %like% '^Positive ',
-                                  apply(X = tbl[, list_ab],
-                                        MARGIN = 1,
-                                        FUN = function(x) paste(x, collapse = "")),
-                                  key_ab))
-
-  # Gram -
-  list_ab <- c(amox, amcl, pita, cfur, cfot, cfta, cftr, mero, cipr, trsu, gent)
-  list_ab <- list_ab[list_ab %in% colnames(tbl)]
-  tbl <- tbl %>% mutate(key_ab =
-                          if_else(gramstain %like% '^Negative ',
-                                  apply(X = tbl[, list_ab],
-                                        MARGIN = 1,
-                                        FUN = function(x) paste(x, collapse = "")),
-                                  key_ab))
-
-  # format
-  tbl <- tbl %>%
-    mutate(key_ab = gsub('(NA|NULL)', '-', key_ab) %>% toupper())
-
-  tbl$key_ab
-
-}
-
-#' @importFrom dplyr progress_estimated %>%
-#' @noRd
-key_antibiotics_equal <- function(x,
-                                  y,
-                                  type = c("keyantibiotics", "points"),
-                                  ignore_I = TRUE,
-                                  points_threshold = 2,
-                                  info = FALSE) {
-  # x is active row, y is lag
-
-  type <- type[1]
-
-  if (length(x) != length(y)) {
-    stop('Length of `x` and `y` must be equal.')
-  }
-
-  result <- logical(length(x))
-
-  if (info == TRUE) {
-    p <- dplyr::progress_estimated(length(x))
-  }
-
-  for (i in 1:length(x)) {
-
-    if (info == TRUE) {
-      p$tick()$print()
-    }
-
-    if (is.na(x[i])) {
-      x[i] <- ''
-    }
-    if (is.na(y[i])) {
-      y[i] <- ''
-    }
-
-    if (nchar(x[i]) != nchar(y[i])) {
-
-      result[i] <- FALSE
-
-    } else if (x[i] == '' & y[i] == '') {
-
-      result[i] <- TRUE
-
-    } else {
-
-      x2 <- strsplit(x[i], "")[[1]]
-      y2 <- strsplit(y[i], "")[[1]]
-
-      if (type == 'points') {
-        # count points for every single character:
-        # - no change is 0 points
-        # - I <-> S|R is 0.5 point
-        # - S|R <-> R|S is 1 point
-        # use the levels of as.rsi (S = 1, I = 2, R = 3)
-
-        suppressWarnings(x2 <- x2 %>% as.rsi() %>% as.double())
-        suppressWarnings(y2 <- y2 %>% as.rsi() %>% as.double())
-
-        points <- (x2 - y2) %>% abs() %>% sum(na.rm = TRUE)
-        result[i] <- ((points / 2) >= points_threshold)
-
-      } else if (type == 'keyantibiotics') {
-        # check if key antibiotics are exactly the same
-        # also possible to ignore I, so only S <-> R and S <-> R are counted
-        if (ignore_I == TRUE) {
-          valid_chars <- c('S', 's', 'R', 'r')
-        } else {
-          valid_chars <- c('S', 's', 'I', 'i', 'R', 'r')
-        }
-
-        # remove invalid values (like "-", NA) on both locations
-        x2[which(!x2 %in% valid_chars)] <- '?'
-        x2[which(!y2 %in% valid_chars)] <- '?'
-        y2[which(!x2 %in% valid_chars)] <- '?'
-        y2[which(!y2 %in% valid_chars)] <- '?'
-
-        result[i] <- all(x2 == y2)
-
-      } else {
-        stop('`', type, '` is not a valid value for type, must be "points" or "keyantibiotics". See ?first_isolate.')
-      }
-    }
-  }
-  if (info == TRUE) {
-    cat('\n')
-  }
-  result
 }

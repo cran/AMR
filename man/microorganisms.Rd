@@ -4,7 +4,7 @@
 \name{microorganisms}
 \alias{microorganisms}
 \title{Dataset with ~2500 microorganisms}
-\format{A data.frame with 2453 observations and 12 variables:
+\format{A data.frame with 2464 observations and 12 variables:
 \describe{
   \item{\code{bactid}}{ID of microorganism}
   \item{\code{bactsys}}{Bactsyscode of microorganism}
@@ -19,14 +19,11 @@
   \item{\code{type_nl}}{Type of microorganism in Dutch, like \code{"Bacterie"} and \code{"Schimmel/gist"}}
   \item{\code{gramstain_nl}}{Gram of microorganism in Dutch, like \code{"Negatieve staven"}}
 }}
-\source{
-MOLIS (LIS of Certe) - \url{https://www.certe.nl}
-}
 \usage{
 microorganisms
 }
 \description{
-A dataset containing 2453 microorganisms. MO codes of the UMCG can be looked up using \code{\link{microorganisms.umcg}}.
+A dataset containing 2464 microorganisms. MO codes of the UMCG can be looked up using \code{\link{microorganisms.umcg}}.
 }
 \seealso{
 \code{\link{guess_bactid}} \code{\link{antibiotics}} \code{\link{microorganisms.umcg}}

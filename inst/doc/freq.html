@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Matthijs S. Berends" />
+
+
+<title>Creating Frequency Tables</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; position: absolute; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; }
+pre.numberSource a.sourceLine:empty
+  { position: absolute; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: absolute; left: -5em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#header {
+text-align: center;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Creating Frequency Tables</h1>
+<h4 class="author"><em>Matthijs S. Berends</em></h4>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#frequencies-of-one-variable">Frequencies of one variable</a></li>
+<li><a href="#frequencies-of-more-than-one-variable">Frequencies of more than one variable</a></li>
+<li><a href="#frequencies-of-numeric-values">Frequencies of numeric values</a></li>
+<li><a href="#frequencies-of-factors">Frequencies of factors</a></li>
+<li><a href="#frequencies-of-dates">Frequencies of dates</a></li>
+<li><a href="#assigning-a-frequency-table-to-an-object">Assigning a frequency table to an object</a></li>
+<li><a href="#additional-parameters">Additional parameters</a><ul>
+<li><a href="#parameter-na.rm">Parameter <code>na.rm</code></a></li>
+<li><a href="#parameter-row.names">Parameter <code>row.names</code></a></li>
+<li><a href="#parameter-markdown">Parameter <code>markdown</code></a></li>
+</ul></li>
+</ul>
+</div>
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Frequency tables (or frequency distributions) are summaries of the distribution of values in a sample. With the <code>freq</code> function, you can create univariate frequency tables. Multiple variables will be pasted into one variable, so it forces a univariate distribution. We take the <code>septic_patients</code> dataset (included in this AMR package) as example.</p>
+</div>
+<div id="frequencies-of-one-variable" class="section level2">
+<h2>Frequencies of one variable</h2>
+<p>To only show and quickly review the content of one variable, you can just select this variable in various ways. Let’s say we want to get the frequencies of the <code>sex</code> variable of the <code>septic_patients</code> dataset:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co"># just using base R</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">freq</span>(septic_patients<span class="op">$</span>sex)</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="co"># using base R to select the variable and pass it on with a pipe from the dplyr package</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">septic_patients<span class="op">$</span>sex <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">freq</span>()</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="co"># do it all with pipes, using the `select` function from the dplyr package</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">septic_patients <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="st">  </span><span class="kw">select</span>(sex) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="st">  </span><span class="kw">freq</span>()</a>
+<a class="sourceLine" id="cb1-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="co"># or the preferred way: using a pipe to pass the variable on to the freq function</span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13">septic_patients <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">freq</span>(sex) <span class="co"># this also shows 'age' in the title</span></a></code></pre></div>
+<p>This will all lead to the following table:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">freq</span>(septic_patients<span class="op">$</span>sex)</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="co"># Frequency table  </span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="co"># Class:     character</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="co"># Length:    2000 (of which NA: 0 = 0.00%)</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="co"># Unique:    2</span></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6"><span class="co"># </span></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7"><span class="co">#      Item    Count   Percent   Cum. Count   Cum. Percent</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8"><span class="co"># ---  -----  ------  --------  -----------  -------------</span></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9"><span class="co"># 1    M        1032     51.6%         1032          51.6%</span></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="co"># 2    V         968     48.4%         2000         100.0%</span></a></code></pre></div>
+<p>This immediately shows the class of the variable, its length and availability (i.e. the amount of <code>NA</code>), the amount of unique values and (most importantly) that among septic patients men are more prevalent than women.</p>
+</div>
+<div id="frequencies-of-more-than-one-variable" class="section level2">
+<h2>Frequencies of more than one variable</h2>
+<p>Multiple variables will be pasted into one variable to review individual cases, keeping a univariate frequency table.</p>
+<p>For illustration, we could add some more variables to the <code>septic_patients</code> dataset to learn about bacterial properties:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">my_patients &lt;-<span class="st"> </span>septic_patients <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">left_join_microorganisms</span>()</a></code></pre></div>
+<p>Now all variables of the <code>microorganisms</code> dataset have been joined to the <code>septic_patients</code> dataset. The <code>microorganisms</code> dataset consists of the following variables:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">colnames</span>(microorganisms)</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="co">#  [1] &quot;bactid&quot;       &quot;bactsys&quot;      &quot;family&quot;       &quot;genus&quot;       </span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="co">#  [5] &quot;species&quot;      &quot;subspecies&quot;   &quot;fullname&quot;     &quot;type&quot;        </span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="co">#  [9] &quot;gramstain&quot;    &quot;aerobic&quot;      &quot;type_nl&quot;      &quot;gramstain_nl&quot;</span></a></code></pre></div>
+<p>If we compare the dimensions between the old and new dataset, we can see that these 11 variables were added:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">dim</span>(septic_patients)</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="co"># [1] 2000   49</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="kw">dim</span>(my_patients)</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="co"># [1] 2000   60</span></a></code></pre></div>
+<p>So now the <code>genus</code> and <code>species</code> variables are available. A frequency table of these combined variables can be created like this:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1">my_patients <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">freq</span>(genus, species)</a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="co"># Frequency table of `genus` and `species` </span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3"><span class="co"># Columns:   2</span></a>
+<a class="sourceLine" id="cb6-4" data-line-number="4"><span class="co"># Length:    2000 (of which NA: 0 = 0.00%)</span></a>
+<a class="sourceLine" id="cb6-5" data-line-number="5"><span class="co"># Unique:    110</span></a>
+<a class="sourceLine" id="cb6-6" data-line-number="6"><span class="co"># </span></a>
+<a class="sourceLine" id="cb6-7" data-line-number="7"><span class="co">#      Item                                 Count   Percent   Cum. Count   Cum. Percent</span></a>
+<a class="sourceLine" id="cb6-8" data-line-number="8"><span class="co"># ---  ----------------------------------  ------  --------  -----------  -------------</span></a>
+<a class="sourceLine" id="cb6-9" data-line-number="9"><span class="co"># 1    Escherichia coli                       460     23.0%          460          23.0%</span></a>
+<a class="sourceLine" id="cb6-10" data-line-number="10"><span class="co"># 2    Staphylococcus coagulase negative      309     15.4%          769          38.5%</span></a>
+<a class="sourceLine" id="cb6-11" data-line-number="11"><span class="co"># 3    Staphylococcus aureus                  233     11.7%         1002          50.1%</span></a>
+<a class="sourceLine" id="cb6-12" data-line-number="12"><span class="co"># 4    Staphylococcus epidermidis             174      8.7%         1176          58.8%</span></a>
+<a class="sourceLine" id="cb6-13" data-line-number="13"><span class="co"># 5    Streptococcus pneumoniae               102      5.1%         1278          63.9%</span></a>
+<a class="sourceLine" id="cb6-14" data-line-number="14"><span class="co"># 6    Staphylococcus hominis                  80      4.0%         1358          67.9%</span></a>
+<a class="sourceLine" id="cb6-15" data-line-number="15"><span class="co"># 7    Klebsiella pneumoniae                   57      2.8%         1415          70.8%</span></a>
+<a class="sourceLine" id="cb6-16" data-line-number="16"><span class="co"># 8    Enterococcus faecalis                   39      2.0%         1454          72.7%</span></a>
+<a class="sourceLine" id="cb6-17" data-line-number="17"><span class="co"># 9    Proteus mirabilis                       35      1.8%         1489          74.5%</span></a>
+<a class="sourceLine" id="cb6-18" data-line-number="18"><span class="co"># 10   Pseudomonas aeruginosa                  30      1.5%         1519          75.9%</span></a>
+<a class="sourceLine" id="cb6-19" data-line-number="19"><span class="co"># 11   Serratia marcescens                     23      1.1%         1542          77.1%</span></a>
+<a class="sourceLine" id="cb6-20" data-line-number="20"><span class="co"># 12   Enterobacter cloacae                    22      1.1%         1564          78.2%</span></a>
+<a class="sourceLine" id="cb6-21" data-line-number="21"><span class="co"># 13   Enterococcus faecium                    21      1.1%         1585          79.2%</span></a>
+<a class="sourceLine" id="cb6-22" data-line-number="22"><span class="co"># 14   Staphylococcus capitis                  21      1.1%         1606          80.3%</span></a>
+<a class="sourceLine" id="cb6-23" data-line-number="23"><span class="co"># 15   Bacteroides fragilis                    20      1.0%         1626          81.3%</span></a>
+<a class="sourceLine" id="cb6-24" data-line-number="24"><span class="co"># [ reached getOption(&quot;max.print.freq&quot;) -- omitted 95 entries, n = 374 (18.7%) ]</span></a></code></pre></div>
+</div>
+<div id="frequencies-of-numeric-values" class="section level2">
+<h2>Frequencies of numeric values</h2>
+<p>Frequency tables can be created of any input.</p>
+<p>In case of numeric values (like integers, doubles, etc.) additional descriptive statistics will be calculated and shown into the header:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="co"># # get age distribution of unique patients</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">septic_patients <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="st">  </span><span class="kw">distinct</span>(patient_id, <span class="dt">.keep_all =</span> <span class="ot">TRUE</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="st">  </span><span class="kw">freq</span>(age, <span class="dt">nmax =</span> <span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb7-5" data-line-number="5"><span class="co"># Frequency table of `age` </span></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6"><span class="co"># Class:     numeric</span></a>
+<a class="sourceLine" id="cb7-7" data-line-number="7"><span class="co"># Length:    989 (of which NA: 0 = 0.00%)</span></a>
+<a class="sourceLine" id="cb7-8" data-line-number="8"><span class="co"># Unique:    73</span></a>
+<a class="sourceLine" id="cb7-9" data-line-number="9"><span class="co">#   </span></a>
+<a class="sourceLine" id="cb7-10" data-line-number="10"><span class="co"># Mean:      71</span></a>
+<a class="sourceLine" id="cb7-11" data-line-number="11"><span class="co"># Std. dev.: 14 (CV: 0.2, MAD: 13)</span></a>
+<a class="sourceLine" id="cb7-12" data-line-number="12"><span class="co"># Five-Num:  14 | 63 | 74 | 82 | 97 (IQR: 19, CQV: 0.13)</span></a>
+<a class="sourceLine" id="cb7-13" data-line-number="13"><span class="co"># Outliers:  15 (unique: 12)</span></a>
+<a class="sourceLine" id="cb7-14" data-line-number="14"><span class="co"># </span></a>
+<a class="sourceLine" id="cb7-15" data-line-number="15"><span class="co">#       Item   Count   Percent   Cum. Count   Cum. Percent</span></a>
+<a class="sourceLine" id="cb7-16" data-line-number="16"><span class="co"># ---  -----  ------  --------  -----------  -------------</span></a>
+<a class="sourceLine" id="cb7-17" data-line-number="17"><span class="co"># 1       83      44      4.4%           44           4.4%</span></a>
+<a class="sourceLine" id="cb7-18" data-line-number="18"><span class="co"># 2       76      43      4.3%           87           8.8%</span></a>
+<a class="sourceLine" id="cb7-19" data-line-number="19"><span class="co"># 3       75      38      3.8%          125          12.6%</span></a>
+<a class="sourceLine" id="cb7-20" data-line-number="20"><span class="co"># 4       78      33      3.3%          158          16.0%</span></a>
+<a class="sourceLine" id="cb7-21" data-line-number="21"><span class="co"># 5       82      33      3.3%          191          19.3%</span></a>
+<a class="sourceLine" id="cb7-22" data-line-number="22"><span class="co"># [ reached `nmax = 5` -- omitted 68 entries, n = 798 (80.7%) ]</span></a></code></pre></div>
+<p>So the following properties are determined, where <code>NA</code> values are always ignored:</p>
+<ul>
+<li><p><strong>Mean</strong></p></li>
+<li><p><strong>Standard deviation</strong></p></li>
+<li><p><strong>Coefficient of variation</strong> (CV), the standard deviation divided by the mean</p></li>
+<li><p><strong>Five numbers of Tukey</strong> (min, Q1, median, Q3, max)</p></li>
+<li><p><strong>Coefficient of quartile variation</strong> (CQV, sometimes called coefficient of dispersion), calculated as (Q3 - Q1) / (Q3 + Q1) using quantile with <code>type = 6</code> as quantile algorithm to comply with SPSS standards</p></li>
+<li><p><strong>Outliers</strong> (total count and unique count)</p></li>
+</ul>
+<p>So for example, the above frequency table quickly shows the median age of patients being 74.</p>
+</div>
+<div id="frequencies-of-factors" class="section level2">
+<h2>Frequencies of factors</h2>
+<p>Frequencies of factors will be sorted on factor level instead of item count by default. This can be changed with the <code>sort.count</code> parameter. Frequency tables of factors always show the factor level as an additional last column.</p>
+<p><code>sort.count</code> is <code>TRUE</code> by default, except for factors. Compare this default behaviour…</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1">septic_patients <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="st">  </span><span class="kw">freq</span>(hospital_id)</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3"><span class="co"># Frequency table of `hospital_id` </span></a>
+<a class="sourceLine" id="cb8-4" data-line-number="4"><span class="co"># Class:     factor</span></a>
+<a class="sourceLine" id="cb8-5" data-line-number="5"><span class="co"># Length:    2000 (of which NA: 0 = 0.00%)</span></a>
+<a class="sourceLine" id="cb8-6" data-line-number="6"><span class="co"># Unique:    4</span></a>
+<a class="sourceLine" id="cb8-7" data-line-number="7"><span class="co"># </span></a>
+<a class="sourceLine" id="cb8-8" data-line-number="8"><span class="co">#      Item    Count   Percent   Cum. Count   Cum. Percent   (Factor Level)</span></a>
+<a class="sourceLine" id="cb8-9" data-line-number="9"><span class="co"># ---  -----  ------  --------  -----------  -------------  ---------------</span></a>
+<a class="sourceLine" id="cb8-10" data-line-number="10"><span class="co"># 1    A         319     16.0%          319          16.0%                1</span></a>
+<a class="sourceLine" id="cb8-11" data-line-number="11"><span class="co"># 2    B         661     33.1%          980          49.0%                2</span></a>
+<a class="sourceLine" id="cb8-12" data-line-number="12"><span class="co"># 3    C         256     12.8%         1236          61.8%                3</span></a>
+<a class="sourceLine" id="cb8-13" data-line-number="13"><span class="co"># 4    D         764     38.2%         2000         100.0%                4</span></a></code></pre></div>
+<p>… with this, where items are now sorted on count:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1">septic_patients <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="st">  </span><span class="kw">freq</span>(hospital_id, <span class="dt">sort.count =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb9-3" data-line-number="3"><span class="co"># Frequency table of `hospital_id` </span></a>
+<a class="sourceLine" id="cb9-4" data-line-number="4"><span class="co"># Class:     factor</span></a>
+<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="co"># Length:    2000 (of which NA: 0 = 0.00%)</span></a>
+<a class="sourceLine" id="cb9-6" data-line-number="6"><span class="co"># Unique:    4</span></a>
+<a class="sourceLine" id="cb9-7" data-line-number="7"><span class="co"># </span></a>
+<a class="sourceLine" id="cb9-8" data-line-number="8"><span class="co">#      Item    Count   Percent   Cum. Count   Cum. Percent   (Factor Level)</span></a>
+<a class="sourceLine" id="cb9-9" data-line-number="9"><span class="co"># ---  -----  ------  --------  -----------  -------------  ---------------</span></a>
+<a class="sourceLine" id="cb9-10" data-line-number="10"><span class="co"># 1    D         764     38.2%          764          38.2%                4</span></a>
+<a class="sourceLine" id="cb9-11" data-line-number="11"><span class="co"># 2    B         661     33.1%         1425          71.2%                2</span></a>
+<a class="sourceLine" id="cb9-12" data-line-number="12"><span class="co"># 3    A         319     16.0%         1744          87.2%                1</span></a>
+<a class="sourceLine" id="cb9-13" data-line-number="13"><span class="co"># 4    C         256     12.8%         2000         100.0%                3</span></a></code></pre></div>
+<p>All classes will be printed into the header. Variables with the new <code>rsi</code> class of this AMR package are actually ordered factors and have three classes (look at <code>Class</code> in the header):</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">septic_patients <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb10-2" data-line-number="2"><span class="st">  </span><span class="kw">select</span>(amox) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb10-3" data-line-number="3"><span class="st">  </span><span class="kw">freq</span>()</a>
+<a class="sourceLine" id="cb10-4" data-line-number="4"><span class="co"># Frequency table  </span></a>
+<a class="sourceLine" id="cb10-5" data-line-number="5"><span class="co"># Class:     factor &gt; ordered &gt; rsi</span></a>
+<a class="sourceLine" id="cb10-6" data-line-number="6"><span class="co"># Length:    2000 (of which NA: 1002 = 50.1%)</span></a>
+<a class="sourceLine" id="cb10-7" data-line-number="7"><span class="co"># Unique:    3</span></a>
+<a class="sourceLine" id="cb10-8" data-line-number="8"><span class="co">#   </span></a>
+<a class="sourceLine" id="cb10-9" data-line-number="9"><span class="co"># %IR:       66.33%</span></a>
+<a class="sourceLine" id="cb10-10" data-line-number="10"><span class="co"># Ratio SIR: 1.0 : 0.009 : 2.0</span></a>
+<a class="sourceLine" id="cb10-11" data-line-number="11"><span class="co"># </span></a>
+<a class="sourceLine" id="cb10-12" data-line-number="12"><span class="co">#      Item    Count   Percent   Cum. Count   Cum. Percent   (Factor Level)</span></a>
+<a class="sourceLine" id="cb10-13" data-line-number="13"><span class="co"># ---  -----  ------  --------  -----------  -------------  ---------------</span></a>
+<a class="sourceLine" id="cb10-14" data-line-number="14"><span class="co"># 1    S         336     33.7%          336          33.7%                1</span></a>
+<a class="sourceLine" id="cb10-15" data-line-number="15"><span class="co"># 2    I           3      0.3%          339          34.0%                2</span></a>
+<a class="sourceLine" id="cb10-16" data-line-number="16"><span class="co"># 3    R         659     66.0%          998         100.0%                3</span></a></code></pre></div>
+</div>
+<div id="frequencies-of-dates" class="section level2">
+<h2>Frequencies of dates</h2>
+<p>Frequencies of dates will show the oldest and newest date in the data, and the amount of days between them:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1">septic_patients <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb11-2" data-line-number="2"><span class="st">  </span><span class="kw">select</span>(date) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb11-3" data-line-number="3"><span class="st">  </span><span class="kw">freq</span>(<span class="dt">nmax =</span> <span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb11-4" data-line-number="4"><span class="co"># Frequency table  </span></a>
+<a class="sourceLine" id="cb11-5" data-line-number="5"><span class="co"># Class:     Date</span></a>
+<a class="sourceLine" id="cb11-6" data-line-number="6"><span class="co"># Length:    2000 (of which NA: 0 = 0.00%)</span></a>
+<a class="sourceLine" id="cb11-7" data-line-number="7"><span class="co"># Unique:    1151</span></a>
+<a class="sourceLine" id="cb11-8" data-line-number="8"><span class="co"># </span></a>
+<a class="sourceLine" id="cb11-9" data-line-number="9"><span class="co"># Oldest:    2 januari 2002</span></a>
+<a class="sourceLine" id="cb11-10" data-line-number="10"><span class="co"># Newest:    28 december 2017 (+5839)</span></a>
+<a class="sourceLine" id="cb11-11" data-line-number="11"><span class="co"># Median:    7 augustus 2009 (~48%)</span></a>
+<a class="sourceLine" id="cb11-12" data-line-number="12"><span class="co"># </span></a>
+<a class="sourceLine" id="cb11-13" data-line-number="13"><span class="co">#      Item          Count   Percent   Cum. Count   Cum. Percent</span></a>
+<a class="sourceLine" id="cb11-14" data-line-number="14"><span class="co"># ---  -----------  ------  --------  -----------  -------------</span></a>
+<a class="sourceLine" id="cb11-15" data-line-number="15"><span class="co"># 1    2016-05-21       10      0.5%           10           0.5%</span></a>
+<a class="sourceLine" id="cb11-16" data-line-number="16"><span class="co"># 2    2004-11-15        8      0.4%           18           0.9%</span></a>
+<a class="sourceLine" id="cb11-17" data-line-number="17"><span class="co"># 3    2013-07-29        8      0.4%           26           1.3%</span></a>
+<a class="sourceLine" id="cb11-18" data-line-number="18"><span class="co"># 4    2017-06-12        8      0.4%           34           1.7%</span></a>
+<a class="sourceLine" id="cb11-19" data-line-number="19"><span class="co"># 5    2015-11-19        7      0.4%           41           2.1%</span></a>
+<a class="sourceLine" id="cb11-20" data-line-number="20"><span class="co"># [ reached `nmax = 5` -- omitted 1146 entries, n = 1959 (98.0%) ]</span></a></code></pre></div>
+</div>
+<div id="assigning-a-frequency-table-to-an-object" class="section level2">
+<h2>Assigning a frequency table to an object</h2>
+<p>A frequency table is actaually a regular <code>data.frame</code>, with the exception that it contains an additional class.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1">my_df &lt;-<span class="st"> </span>septic_patients <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">freq</span>(age)</a>
+<a class="sourceLine" id="cb12-2" data-line-number="2"><span class="kw">class</span>(my_df)</a>
+<a class="sourceLine" id="cb12-3" data-line-number="3"><span class="co"># [1] &quot;frequency_tbl&quot; &quot;data.frame&quot;</span></a></code></pre></div>
+<p>Because of this additional class, a frequency table prints like the examples above. But the object itself contains the complete table without a row limitation:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="kw">dim</span>(my_df)</a>
+<a class="sourceLine" id="cb13-2" data-line-number="2"><span class="co"># [1] 74  5</span></a></code></pre></div>
+</div>
+<div id="additional-parameters" class="section level2">
+<h2>Additional parameters</h2>
+<div id="parameter-na.rm" class="section level3">
+<h3>Parameter <code>na.rm</code></h3>
+<p>With the <code>na.rm</code> parameter (defaults to <code>TRUE</code>, but they will always be shown into the header), you can include <code>NA</code> values in the frequency table:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1">septic_patients <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb14-2" data-line-number="2"><span class="st">  </span><span class="kw">freq</span>(amox, <span class="dt">na.rm =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb14-3" data-line-number="3"><span class="co"># Frequency table of `amox` </span></a>
+<a class="sourceLine" id="cb14-4" data-line-number="4"><span class="co"># Class:     factor &gt; ordered &gt; rsi</span></a>
+<a class="sourceLine" id="cb14-5" data-line-number="5"><span class="co"># Length:    3002 (of which NA: 1002 = 33.38%)</span></a>
+<a class="sourceLine" id="cb14-6" data-line-number="6"><span class="co"># Unique:    4</span></a>
+<a class="sourceLine" id="cb14-7" data-line-number="7"><span class="co">#   </span></a>
+<a class="sourceLine" id="cb14-8" data-line-number="8"><span class="co"># %IR:       NA</span></a>
+<a class="sourceLine" id="cb14-9" data-line-number="9"><span class="co"># Ratio SIR: 1.0 : NA : NA</span></a>
+<a class="sourceLine" id="cb14-10" data-line-number="10"><span class="co"># </span></a>
+<a class="sourceLine" id="cb14-11" data-line-number="11"><span class="co">#      Item    Count   Percent   Cum. Count   Cum. Percent   (Factor Level)</span></a>
+<a class="sourceLine" id="cb14-12" data-line-number="12"><span class="co"># ---  -----  ------  --------  -----------  -------------  ---------------</span></a>
+<a class="sourceLine" id="cb14-13" data-line-number="13"><span class="co"># 1    S         336     16.8%          336          16.8%                1</span></a>
+<a class="sourceLine" id="cb14-14" data-line-number="14"><span class="co"># 2    I           3      0.2%          339          17.0%                2</span></a>
+<a class="sourceLine" id="cb14-15" data-line-number="15"><span class="co"># 3    R         659     33.0%          998          49.9%                3</span></a>
+<a class="sourceLine" id="cb14-16" data-line-number="16"><span class="co"># 4    &lt;NA&gt;     1002     50.1%         2000         100.0%             &lt;NA&gt;</span></a></code></pre></div>
+</div>
+<div id="parameter-row.names" class="section level3">
+<h3>Parameter <code>row.names</code></h3>
+<p>The default frequency tables shows row indices. To remove them, use <code>row.names = FALSE</code>:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1">septic_patients <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb15-2" data-line-number="2"><span class="st">  </span><span class="kw">freq</span>(hospital_id, <span class="dt">row.names =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb15-3" data-line-number="3"><span class="co"># Frequency table of `hospital_id` </span></a>
+<a class="sourceLine" id="cb15-4" data-line-number="4"><span class="co"># Class:     factor</span></a>
+<a class="sourceLine" id="cb15-5" data-line-number="5"><span class="co"># Length:    2000 (of which NA: 0 = 0.00%)</span></a>
+<a class="sourceLine" id="cb15-6" data-line-number="6"><span class="co"># Unique:    4</span></a>
+<a class="sourceLine" id="cb15-7" data-line-number="7"><span class="co"># </span></a>
+<a class="sourceLine" id="cb15-8" data-line-number="8"><span class="co"># Item    Count   Percent   Cum. Count   Cum. Percent   (Factor Level)</span></a>
+<a class="sourceLine" id="cb15-9" data-line-number="9"><span class="co"># -----  ------  --------  -----------  -------------  ---------------</span></a>
+<a class="sourceLine" id="cb15-10" data-line-number="10"><span class="co"># A         319     16.0%          319          16.0%                1</span></a>
+<a class="sourceLine" id="cb15-11" data-line-number="11"><span class="co"># B         661     33.1%          980          49.0%                2</span></a>
+<a class="sourceLine" id="cb15-12" data-line-number="12"><span class="co"># C         256     12.8%         1236          61.8%                3</span></a>
+<a class="sourceLine" id="cb15-13" data-line-number="13"><span class="co"># D         764     38.2%         2000         100.0%                4</span></a></code></pre></div>
+</div>
+<div id="parameter-markdown" class="section level3">
+<h3>Parameter <code>markdown</code></h3>
+<p>The <code>markdown</code> parameter can be used in reports created with R Markdown. This will always print all rows:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1">septic_patients <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb16-2" data-line-number="2"><span class="st">  </span><span class="kw">freq</span>(hospital_id, <span class="dt">markdown =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb16-3" data-line-number="3"><span class="co"># Frequency table of `hospital_id` </span></a>
+<a class="sourceLine" id="cb16-4" data-line-number="4"><span class="co"># </span></a>
+<a class="sourceLine" id="cb16-5" data-line-number="5"><span class="co"># Class:     factor</span></a>
+<a class="sourceLine" id="cb16-6" data-line-number="6"><span class="co"># </span></a>
+<a class="sourceLine" id="cb16-7" data-line-number="7"><span class="co"># Length:    2000 (of which NA: 0 = 0.00%)</span></a>
+<a class="sourceLine" id="cb16-8" data-line-number="8"><span class="co"># </span></a>
+<a class="sourceLine" id="cb16-9" data-line-number="9"><span class="co"># Unique:    4</span></a>
+<a class="sourceLine" id="cb16-10" data-line-number="10"><span class="co"># </span></a>
+<a class="sourceLine" id="cb16-11" data-line-number="11"><span class="co"># |   |Item | Count| Percent| Cum. Count| Cum. Percent| (Factor Level)|</span></a>
+<a class="sourceLine" id="cb16-12" data-line-number="12"><span class="co"># |:--|:----|-----:|-------:|----------:|------------:|--------------:|</span></a>
+<a class="sourceLine" id="cb16-13" data-line-number="13"><span class="co"># |1  |A    |   319|   16.0%|        319|        16.0%|              1|</span></a>
+<a class="sourceLine" id="cb16-14" data-line-number="14"><span class="co"># |2  |B    |   661|   33.1%|        980|        49.0%|              2|</span></a>
+<a class="sourceLine" id="cb16-15" data-line-number="15"><span class="co"># |3  |C    |   256|   12.8%|       1236|        61.8%|              3|</span></a>
+<a class="sourceLine" id="cb16-16" data-line-number="16"><span class="co"># |4  |D    |   764|   38.2%|       2000|       100.0%|              4|</span></a></code></pre></div>
+<hr />
+<p>AMR, (c) 2018, <a href="https://github.com/msberends/AMR" class="uri">https://github.com/msberends/AMR</a></p>
+<p>Licensed under the <a href="https://github.com/msberends/AMR/blob/master/LICENSE">GNU General Public License v2.0</a>.</p>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

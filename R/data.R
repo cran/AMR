@@ -236,8 +236,8 @@
 
 #' Dataset with ~2500 microorganisms
 #'
-#' A dataset containing 2453 microorganisms. MO codes of the UMCG can be looked up using \code{\link{microorganisms.umcg}}.
-#' @format A data.frame with 2453 observations and 12 variables:
+#' A dataset containing 2464 microorganisms. MO codes of the UMCG can be looked up using \code{\link{microorganisms.umcg}}.
+#' @format A data.frame with 2464 observations and 12 variables:
 #' \describe{
 #'   \item{\code{bactid}}{ID of microorganism}
 #'   \item{\code{bactsys}}{Bactsyscode of microorganism}
@@ -252,7 +252,16 @@
 #'   \item{\code{type_nl}}{Type of microorganism in Dutch, like \code{"Bacterie"} and \code{"Schimmel/gist"}}
 #'   \item{\code{gramstain_nl}}{Gram of microorganism in Dutch, like \code{"Negatieve staven"}}
 #' }
-#' @source MOLIS (LIS of Certe) - \url{https://www.certe.nl}
+#  source MOLIS (LIS of Certe) - \url{https://www.certe.nl}
+# new <- microorganisms %>% filter(genus == "Bacteroides") %>% .[1,]
+# new[1, 'bactid'] <- "DIAPNU"
+# new[1, 'bactsys'] <- "DIAPNU"
+# new[1, 'family'] <- "Veillonellaceae"
+# new[1, 'genus'] <- "Dialister"
+# new[1, 'species'] <- "pneumosintes"
+# new[1, 'subspecies'] <- NA
+# new[1, 'fullname'] <- paste(new[1, 'genus'], new[1, 'species'])
+# microorganisms <- microorganisms %>% bind_rows(new) %>% arrange(bactid)
 #' @seealso \code{\link{guess_bactid}} \code{\link{antibiotics}} \code{\link{microorganisms.umcg}}
 "microorganisms"
 
@@ -264,17 +273,17 @@
 #'   \item{\code{mocode}}{Code of microorganism according to UMCG MMB}
 #'   \item{\code{bactid}}{Code of microorganism in \code{\link{microorganisms}}}
 #' }
-#' @source MOLIS (LIS of Certe) - \url{https://www.certe.nl} \cr \cr GLIMS (LIS of UMCG) - \url{https://www.umcg.nl}
+# source MOLIS (LIS of Certe) - \url{https://www.certe.nl} \cr \cr GLIMS (LIS of UMCG) - \url{https://www.umcg.nl}
 #' @seealso \code{\link{guess_bactid}} \code{\link{microorganisms}}
 "microorganisms.umcg"
 
 #' Dataset with 2000 blood culture isolates of septic patients
 #'
-#' An anonymised dataset containing 2000 microbial blood culture isolates with their antibiogram of septic patients found in 5 different hospitals in the Netherlands, between 2001 and 2017. This data.frame can be used to practice AMR analysis. For examples, press F1.
-#' @format A data.frame with 2000 observations and 47 variables:
+#' An anonymised dataset containing 2000 microbial blood culture isolates with their full antibiograms found in septic patients in 4 different hospitals in the Netherlands, between 2001 and 2017. It is true, genuine data. This \code{data.frame} can be used to practice AMR analysis. For examples, press F1.
+#' @format A data.frame with 2000 observations and 49 variables:
 #' \describe{
 #'   \item{\code{date}}{date of receipt at the laboratory}
-#'   \item{\code{hospital_id}}{ID of the hospital}
+#'   \item{\code{hospital_id}}{ID of the hospital, from A to D}
 #'   \item{\code{ward_icu}}{logical to determine if ward is an intensive care unit}
 #'   \item{\code{ward_clinical}}{logical to determine if ward is a regular clinical ward}
 #'   \item{\code{ward_outpatient}}{logical to determine if ward is an outpatient clinic}
@@ -282,9 +291,9 @@
 #'   \item{\code{sex}}{sex of the patient}
 #'   \item{\code{patient_id}}{ID of the patient, first 10 characters of an SHA hash containing irretrievable information}
 #'   \item{\code{bactid}}{ID of microorganism, see \code{\link{microorganisms}}}
-#'   \item{\code{peni:mupi}}{38 different antibiotics with class \code{rsi} (see \code{\link{as.rsi}}); these column names occur in \code{\link{antibiotics}} and can be translated with \code{\link{abname}}}
+#'   \item{\code{peni:rifa}}{40 different antibiotics with class \code{rsi} (see \code{\link{as.rsi}}); these column names occur in \code{\link{antibiotics}} data set and can be translated with \code{\link{abname}}}
 #' }
-#' @source MOLIS (LIS of Certe) - \url{https://www.certe.nl}
+# source MOLIS (LIS of Certe) - \url{https://www.certe.nl}
 #' @examples
 #' # ----------- #
 #' # PREPARATION #
@@ -304,15 +313,15 @@
 #' # ANALYSIS #
 #' # -------- #
 #'
-#' # 1. Get the amoxicillin resistance percentages
-#' #    of E. coli, divided by hospital:
+#' # 1. Get the amoxicillin resistance percentages (p)
+#' #     and numbers (n) of E. coli, divided by hospital:
 #'
 #' my_data %>%
-#'   filter(bactid == "ESCCOL",
+#'   filter(bactid == guess_bactid("E. coli"),
 #'          first_isolates == TRUE) %>%
 #'   group_by(hospital_id) %>%
-#'   summarise(n = n(),
-#'             amoxicillin_resistance = rsi(amox))
+#'   summarise(n = n_rsi(amox),
+#'             p = portion_IR(amox))
 #'
 #'
 #' # 2. Get the amoxicillin/clavulanic acid resistance
@@ -322,6 +331,6 @@
 #'   filter(bactid == guess_bactid("E. coli"),
 #'          first_isolates == TRUE) %>%
 #'   group_by(year = format(date, "%Y")) %>%
-#'   summarise(n = n(),
-#'             amoxclav_resistance = rsi(amcl, minimum = 20))
+#'   summarise(n = n_rsi(amcl),
+#'             p = portion_IR(amcl, minimum = 20))
 "septic_patients"

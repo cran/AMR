@@ -16,33 +16,32 @@
 # GNU General Public License for more details.                         #
 # ==================================================================== #
 
-#' Pattern Matching
-#'
-#' Convenience function to compare a vector with a pattern, like \code{\link[base]{grep}}. It always returns a \code{logical} vector and is always case-insensitive.
-#' @inheritParams base::grep
-#' @return A \code{logical} vector
-#' @name like
-#' @rdname like
-#' @export
-#' @source Inherited from the \href{https://github.com/Rdatatable/data.table/blob/master/R/like.R}{\code{like} function from the \code{data.table} package}, but made it case insensitive at default.
-#' @examples
-#' library(dplyr)
-#' # get unique occurences of bacteria whose name start with 'Ent'
-#' septic_patients %>%
-#'   left_join_microorganisms() %>%
-#'   filter(fullname %like% '^Ent') %>%
-#'   pull(fullname) %>%
-#'   unique()
-"%like%" <- function(x, pattern) {
-  if (length(pattern) > 1) {
-    pattern <- pattern[1]
-    warning('only the first element of argument `pattern` used for `%like%`', call. = FALSE)
-  }
-  if (is.factor(x)) {
-    as.integer(x) %in% base::grep(pattern, levels(x), ignore.case = TRUE)
-  } else {
-    base::grepl(pattern, x, ignore.case = TRUE)
-  }
+# No export, no Rd
+addin_insert_in <- function() {
+  rstudioapi::insertText(" %in% ")
+}
+
+# No export, no Rd
+addin_insert_like <- function() {
+  rstudioapi::insertText(" %like% ")
+}
+
+#  No export, no Rd
+#' @importFrom utils View
+addin_open_antibiotics <- function() {
+  View(antibiotics)
+}
+
+#  No export, no Rd
+#' @importFrom utils View
+addin_open_microorganisms <- function() {
+  View(microorganisms)
+}
+
+#  No export, no Rd
+#' @importFrom utils View
+addin_open_septic_patients <- function() {
+  View(septic_patients)
 }
 
 # No export, no Rd
@@ -85,17 +84,14 @@ check_available_columns <- function(tbl, col.list, info = TRUE) {
 
 # Coefficient of variation (CV)
 cv <- function(x, na.rm = TRUE) {
-  cv.x <- sd(x, na.rm = na.rm) / abs(mean(x, na.rm = na.rm))
-  cv.x
+  stats::sd(x, na.rm = na.rm) / base::abs(base::mean(x, na.rm = na.rm))
 }
 
 # Coefficient of dispersion, or coefficient of quartile variation (CQV).
 # (Bonett et al., 2006: Confidence interval for a coefficient of quartile variation).
 cqv <- function(x, na.rm = TRUE) {
-  cqv.x <-
-    (quantile(x, 0.75, na.rm = na.rm, type = 6) - quantile(x, 0.25, na.rm = na.rm, type = 6)) /
-    (quantile(x, 0.75, na.rm = na.rm, type = 6) + quantile(x, 0.25, na.rm = na.rm, type = 6))
-  unname(cqv.x)
+  fives <- stats::fivenum(x, na.rm = na.rm)
+  (fives[4] - fives[2]) / (fives[4] + fives[2])
 }
 
 # show bytes as kB/MB/GB
@@ -113,4 +109,103 @@ size_humanreadable <- function(bytes, decimals = 1) {
 
   out <- paste(sprintf(paste0("%.", decimals, "f"), bytes / (1024 ^ factor)), size[factor + 1])
   out
+}
+
+# based on readr::parse_guess
+tbl_parse_guess <- function(tbl,
+                            date_names = 'en',
+                            date_format = '%Y-%m-%d',
+                            time_format = '%H:%M',
+                            decimal_mark = '.',
+                            tz = "UTC",
+                            encoding = "UTF-8",
+                            remove_ASCII_escape_char = FALSE,
+                            na = c("", "NA", "NULL")) {
+
+  date_format <- date_generic(date_format)
+  time_format <- date_generic(time_format)
+  # set col types with readr
+  for (i in 1:ncol(tbl)) {
+    if (!all(tbl %>% pull(i) %>% class() %in% c('list', 'matrix'))) {
+      tbl[, i] <- readr::parse_guess(x = tbl %>% pull(i) %>% as.character(),
+                                     na = na,
+                                     locale = readr::locale(date_names = date_names,
+                                                            date_format = date_format,
+                                                            time_format = time_format,
+                                                            decimal_mark = decimal_mark,
+                                                            encoding = encoding,
+                                                            tz = tz,
+                                                            asciify = FALSE))
+    }
+    if (any(tbl %>% pull(i) %>% class() %in% c('factor', 'character'))) {
+      # get values
+      distinct_val <- tbl %>% pull(i) %>% unique() %>% sort()
+      if (remove_ASCII_escape_char == TRUE) {
+        # remove ASCII escape character: https://en.wikipedia.org/wiki/Escape_character#ASCII_escape_character
+        tbl[, i] <- tbl %>% pull(i) %>% gsub('\033', ' ', ., fixed = TRUE)
+      }
+      # look for RSI, shouldn't all be "" and must be valid antibiotic interpretations
+      if (!all(distinct_val[!is.na(distinct_val)] == '')
+          & all(distinct_val[!is.na(distinct_val)] %in% c('', 'I', 'I;I', 'R', 'R;R', 'S', 'S;S'))) {
+        tbl[, i] <- tbl %>% pull(i) %>% as.rsi()
+      }
+    }
+    # convert to MIC class
+    if (colnames(tbl)[i] %like% '_mic$') {
+      tbl[, i] <- tbl %>% pull(i) %>% as.mic()
+    }
+  }
+  tbl
+}
+
+# transforms date format like "dddd d mmmm yyyy" to "%A %e %B %Y"
+date_generic <- function(format) {
+  if (!grepl('%', format, fixed = TRUE)) {
+
+    # first months and minutes, after that everything is case INsensitive
+    format <- gsub('mmmm', '%B1', format, fixed = TRUE)
+    format <- gsub('mmm', '%b', format, fixed = TRUE)
+    format <- gsub('mm', '%m', format, fixed = TRUE)
+    format <- gsub('MM', '%M1', format, fixed = TRUE)
+    format <- format %>%
+      tolower() %>%
+      gsub('%b1', '%B', ., fixed = TRUE) %>%
+      gsub('%m1', '%M', ., fixed = TRUE)
+
+    # dates
+    format <- gsub('dddd', '%A', format, fixed = TRUE)
+    format <- gsub('ddd', '%a', format, fixed = TRUE)
+    format <- gsub('dd', '%!', format, fixed = TRUE)
+    format <- gsub('d', '%e', format, fixed = TRUE)
+    format <- gsub('%!', '%d', format, fixed = TRUE)
+
+    format <- gsub('ww', '%V', format, fixed = TRUE)
+    format <- gsub('w', '%V', format, fixed = TRUE)
+
+    format <- gsub('qq', 'Qq', format, fixed = TRUE) # so will be 'Q%%q' after this
+    format <- gsub('kk', 'Kq', format, fixed = TRUE)
+    format <- gsub('k', 'q', format, fixed = TRUE)
+    format <- gsub('q', '%%q', format, fixed = TRUE)
+
+    format <- gsub('yyyy_iso', '%G', format, fixed = TRUE)
+    format <- gsub('jjjj_iso', '%G', format, fixed = TRUE)
+    format <- gsub('yyyy', '%Y', format, fixed = TRUE)
+    format <- gsub('jjjj', '%Y', format, fixed = TRUE)
+    format <- gsub('yy_iso', '%g', format, fixed = TRUE)
+    format <- gsub('jj_iso', '%g', format, fixed = TRUE)
+    format <- gsub('yy', '%y', format, fixed = TRUE)
+    format <- gsub('jj', '%y', format, fixed = TRUE)
+
+    # time
+    format <- gsub('hh', '%H', format, fixed = TRUE)
+    format <- gsub('h', '%k', format, fixed = TRUE)
+    format <- gsub('ss', '%S', format, fixed = TRUE)
+
+    # seconds since the Epoch, 1970-01-01 00:00:00
+    format <- gsub('unix', '%s', format, fixed = TRUE)
+    # Equivalent to %Y-%m-%d (the ISO 8601 date format)
+    format <- gsub('iso', '%F', format, fixed = TRUE)
+
+  }
+  format
 }

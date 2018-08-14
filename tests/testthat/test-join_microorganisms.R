@@ -1,4 +1,4 @@
-context("joins.R")
+context("join_microorganisms.R")
 
 test_that("joins work", {
   unjoined <- septic_patients
@@ -23,5 +23,9 @@ test_that("joins work", {
   expect_true(nrow(unjoined) < nrow(right))
   expect_true(nrow(unjoined) < nrow(full))
 
+  expect_equal(nrow(inner_join_microorganisms("ESCCOL")), 1)
   expect_equal(nrow(left_join_microorganisms("ESCCOL")), 1)
+  expect_equal(nrow(semi_join_microorganisms("ESCCOL")), 1)
+  expect_equal(nrow(anti_join_microorganisms("ESCCOL")), 0)
+
 })

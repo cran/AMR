@@ -21,17 +21,22 @@
 #' This transforms a vector to a new class \code{rsi}, which is an ordered factor with levels \code{S < I < R}. Invalid antimicrobial interpretations will be translated as \code{NA} with a warning.
 #' @rdname as.rsi
 #' @param x vector
-#' @return Ordered factor with new class \code{rsi} and new attributes \code{package} and \code{package.version}
+#' @return Ordered factor with new class \code{rsi} and new attribute \code{package}
+#' @keywords rsi
 #' @export
 #' @importFrom dplyr %>%
-#' @importFrom utils packageDescription
+#' @seealso \code{\link{as.mic}}
 #' @examples
 #' rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370)))
 #' rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370), "A", "B", "C"))
 #' is.rsi(rsi_data)
 #'
+#' # this can also coerce combined MIC/RSI values:
+#' as.rsi("<= 0.002; S") # will return S
+#'
 #' plot(rsi_data)    # for percentages
 #' barplot(rsi_data) # for frequencies
+#' freq(rsi_data)    # frequency table with informative header
 as.rsi <- function(x) {
   if (is.rsi(x)) {
     x
@@ -42,12 +47,16 @@ as.rsi <- function(x) {
 
     na_before <- x[is.na(x) | x == ''] %>% length()
     # remove all spaces
-    x <- gsub(' {2,55}', '', x)
+    x <- gsub(' +', '', x)
+    # remove all MIC-like values: numbers, operators and periods
+    x <- gsub('[0-9.,;:<=>]+', '', x)
     # disallow more than 3 characters
     x[nchar(x) > 3] <- NA
+    # set to capitals
+    x <- toupper(x)
     # remove all invalid characters
-    x <- gsub('[^RSI]+', '', x %>% toupper())
-    # needed for UMCG in cases of "S;S" but also "S;I"; the latter will be NA:
+    x <- gsub('[^RSI]+', '', x)
+    # in cases of "S;S" keep S, but in case of "S;I" make it NA
     x <- gsub('^S+$', 'S', x)
     x <- gsub('^I+$', 'I', x)
     x <- gsub('^R+$', 'R', x)
@@ -65,10 +74,9 @@ as.rsi <- function(x) {
               list_missing, call. = FALSE)
     }
 
-    x <- x %>% toupper() %>% factor(levels = c("S", "I", "R"), ordered = TRUE)
+    x <- x %>% factor(levels = c("S", "I", "R"), ordered = TRUE)
     class(x) <- c('rsi', 'ordered', 'factor')
     attr(x, 'package') <- 'AMR'
-    attr(x, 'package.version') <- packageDescription('AMR')$Version
     x
   }
 }
@@ -85,40 +93,23 @@ is.rsi <- function(x) {
 #' @importFrom dplyr %>%
 #' @noRd
 print.rsi <- function(x, ...) {
-  n_total <- x %>% length()
-  x <- x[!is.na(x)]
-  n <- x %>% length()
-  S <- x[x == 'S'] %>% length()
-  I <- x[x == 'I'] %>% length()
-  R <- x[x == 'R'] %>% length()
-  IR <- x[x %in% c('I', 'R')] %>% length()
   cat("Class 'rsi'\n")
-  cat(n, " results (missing: ", n_total - n, ' = ', percent((n_total - n) / n_total, force_zero = TRUE), ')\n', sep = "")
-  if (n > 0) {
-    cat('\n')
-    cat('Sum of S:   ', S, ' (', percent(S / n, force_zero = TRUE), ')\n', sep = "")
-    cat('Sum of IR:  ', IR, ' (', percent(IR / n, force_zero = TRUE), ')\n', sep = "")
-    cat('- Sum of R: ', R, ' (', percent(R / n, force_zero = TRUE), ')\n', sep = "")
-    cat('- Sum of I: ', I, ' (', percent(I / n, force_zero = TRUE), ')\n', sep = "")
-  }
+  print(as.character(x), quote = FALSE)
 }
 
 #' @exportMethod summary.rsi
 #' @export
-#' @importFrom dplyr %>%
 #' @noRd
 summary.rsi <- function(object, ...) {
   x <- object
-  n_total <- x %>% length()
-  x <- x[!is.na(x)]
-  n <- x %>% length()
-  S <- x[x == 'S'] %>% length()
-  I <- x[x == 'I'] %>% length()
-  R <- x[x == 'R'] %>% length()
-  IR <- x[x %in% c('I', 'R')] %>% length()
-  lst <- c('rsi', n_total - n, S, IR, R, I)
-  names(lst) <- c("Mode", "<NA>", "Sum S", "Sum IR", "Sum R", "Sum I")
-  lst
+  c(
+    "Mode" = 'rsi',
+    "<NA>" = sum(is.na(x)),
+    "Sum S" = sum(x == "S", na.rm = TRUE),
+    "Sum IR" = sum(x %in% c("I", "R"), na.rm = TRUE),
+    "-Sum R" = sum(x == "R", na.rm = TRUE),
+    "-Sum I" = sum(x == "I", na.rm = TRUE)
+  )
 }
 
 #' @exportMethod plot.rsi
@@ -147,7 +138,7 @@ plot.rsi <- function(x, ...) {
        ylim = c(0, ymax),
        ylab = 'Percentage',
        xlab = 'Antimicrobial Interpretation',
-       main = paste('Susceptibilty Analysis of', x_name),
+       main = paste('Susceptibility Analysis of', x_name),
        axes = FALSE,
        ...)
   # x axis
@@ -178,7 +169,7 @@ barplot.rsi <- function(height, ...) {
   barplot(table(x),
           col = c('green3', 'orange2', 'red3'),
           xlab = 'Antimicrobial Interpretation',
-          main = paste('Susceptibilty Analysis of', x_name),
+          main = paste('Susceptibility Analysis of', x_name),
           ylab = 'Frequency',
           axes = FALSE,
           ...)
@@ -188,20 +179,25 @@ barplot.rsi <- function(height, ...) {
 
 #' Class 'mic'
 #'
-#' This transforms a vector to a new class\code{mic}, which is an ordered factor with valid MIC values as levels. Invalid MIC values will be translated as \code{NA} with a warning.
+#' This transforms a vector to a new class \code{mic}, which is an ordered factor with valid MIC values as levels. Invalid MIC values will be translated as \code{NA} with a warning.
 #' @rdname as.mic
 #' @param x vector
 #' @param na.rm a logical indicating whether missing values should be removed
-#' @return Ordered factor with new class \code{mic} and new attributes \code{package} and \code{package.version}
+#' @return Ordered factor with new class \code{mic} and new attribute \code{package}
+#' @keywords mic
 #' @export
 #' @importFrom dplyr %>%
-#' @importFrom utils packageDescription
+#' @seealso \code{\link{as.rsi}}
 #' @examples
 #' mic_data <- as.mic(c(">=32", "1.0", "1", "1.00", 8, "<=0.128", "8", "16", "16"))
 #' is.mic(mic_data)
 #'
+#' # this can also coerce combined MIC/RSI values:
+#' as.mic("<=0.002; S") # will return <=0.002
+#'
 #' plot(mic_data)
 #' barplot(mic_data)
+#' freq(mic_data)
 as.mic <- function(x, na.rm = FALSE) {
   if (is.mic(x)) {
     x
@@ -212,25 +208,31 @@ as.mic <- function(x, na.rm = FALSE) {
     }
     x.bak <- x
 
-    # comma to dot
+    # comma to period
     x <- gsub(',', '.', x, fixed = TRUE)
+    # remove space between operator and number ("<= 0.002" -> "<=0.002")
+    x <- gsub('(<|=|>) +', '\\1', x)
     # starting dots must start with 0
-    x <- gsub('^[.]', '0.', x)
+    x <- gsub('^[.]+', '0.', x)
     # <=0.2560.512 should be 0.512
     x <- gsub('.*[.].*[.]', '0.', x)
     # remove ending .0
-    x <- gsub('[.]0$', '', x)
+    x <- gsub('[.]+0$', '', x)
     # remove all after last digit
-    x <- gsub('[^0-9]$', '', x)
+    x <- gsub('[^0-9]+$', '', x)
     # remove last zeroes
     x <- gsub('[.]?0+$', '', x)
+    # force to be character
+    x <- as.character(x)
 
+    # these are alllowed MIC values and will become factor levels
     lvls <- c("<0.002", "<=0.002", "0.002", ">=0.002", ">0.002",
               "<0.003", "<=0.003", "0.003", ">=0.003", ">0.003",
               "<0.004", "<=0.004", "0.004", ">=0.004", ">0.004",
               "<0.006", "<=0.006", "0.006", ">=0.006", ">0.006",
               "<0.008", "<=0.008", "0.008", ">=0.008", ">0.008",
               "<0.012", "<=0.012", "0.012", ">=0.012", ">0.012",
+              "<0.0125", "<=0.0125", "0.0125", ">=0.0125", ">0.0125",
               "<0.016", "<=0.016", "0.016", ">=0.016", ">0.016",
               "<0.023", "<=0.023", "0.023", ">=0.023", ">0.023",
               "<0.025", "<=0.025", "0.025", ">=0.025", ">0.025",
@@ -238,6 +240,7 @@ as.mic <- function(x, na.rm = FALSE) {
               "<0.032", "<=0.032", "0.032", ">=0.032", ">0.032",
               "<0.047", "<=0.047", "0.047", ">=0.047", ">0.047",
               "<0.05", "<=0.05", "0.05", ">=0.05", ">0.05",
+              "<0.054", "<=0.054", "0.054", ">=0.054", ">0.054",
               "<0.06", "<=0.06", "0.06", ">=0.06", ">0.06",
               "<0.0625", "<=0.0625", "0.0625", ">=0.0625", ">0.0625",
               "<0.063", "<=0.063", "0.063", ">=0.063", ">0.063",
@@ -249,9 +252,13 @@ as.mic <- function(x, na.rm = FALSE) {
               "<0.128", "<=0.128", "0.128", ">=0.128", ">0.128",
               "<0.16", "<=0.16", "0.16", ">=0.16", ">0.16",
               "<0.19", "<=0.19", "0.19", ">=0.19", ">0.19",
+              "<0.23", "<=0.23", "0.23", ">=0.23", ">0.23",
               "<0.25", "<=0.25", "0.25", ">=0.25", ">0.25",
               "<0.256", "<=0.256", "0.256", ">=0.256", ">0.256",
+              "<0.28", "<=0.28", "0.28", ">=0.28", ">0.28",
+              "<0.30", "<=0.30", "0.30", ">=0.30", ">0.30",
               "<0.32", "<=0.32", "0.32", ">=0.32", ">0.32",
+              "<0.36", "<=0.36", "0.36", ">=0.36", ">0.36",
               "<0.38", "<=0.38", "0.38", ">=0.38", ">0.38",
               "<0.5", "<=0.5", "0.5", ">=0.5", ">0.5",
               "<0.512", "<=0.512", "0.512", ">=0.512", ">0.512",
@@ -262,7 +269,9 @@ as.mic <- function(x, na.rm = FALSE) {
               "<2", "<=2", "2", ">=2", ">2",
               "<3", "<=3", "3", ">=3", ">3",
               "<4", "<=4", "4", ">=4", ">4",
+              "<5", "<=5", "5", ">=5", ">5",
               "<6", "<=6", "6", ">=6", ">6",
+              "<7", "<=7", "7", ">=7", ">7",
               "<8", "<=8", "8", ">=8", ">8",
               "<10", "<=10", "10", ">=10", ">10",
               "<12", "<=12", "12", ">=12", ">12",
@@ -281,7 +290,6 @@ as.mic <- function(x, na.rm = FALSE) {
               "<320", "<=320", "320", ">=320", ">320",
               "<512", "<=512", "512", ">=512", ">512",
               "<1024", "<=1024", "1024", ">=1024", ">1024")
-    x <- x %>% as.character()
 
     na_before <- x[is.na(x) | x == ''] %>% length()
     x[!x %in% lvls] <- NA
@@ -303,7 +311,6 @@ as.mic <- function(x, na.rm = FALSE) {
                 ordered = TRUE)
     class(x) <- c('mic', 'ordered', 'factor')
     attr(x, 'package') <- 'AMR'
-    attr(x, 'package.version') <- packageDescription('AMR')$Version
     x
   }
 }
@@ -341,17 +348,8 @@ as.numeric.mic <- function(x, ...) {
 #' @importFrom dplyr %>% tibble group_by summarise pull
 #' @noRd
 print.mic <- function(x, ...) {
-  n_total <- x %>% length()
-  x <- x[!is.na(x)]
-  n <- x %>% length()
-  cat("Class 'mic': ", n, " isolates\n", sep = '')
-  cat('\n')
-  cat('<NA> ', n_total - n, '\n')
-  cat('\n')
-  tbl <- tibble(x = x, y = 1) %>% group_by(x) %>% summarise(y = sum(y))
-  cnt <- tbl %>% pull(y)
-  names(cnt) <- tbl %>% pull(x)
-  print(cnt)
+  cat("Class 'mic'\n")
+  print(as.character(x), quote = FALSE)
 }
 
 #' @exportMethod summary.mic
@@ -383,7 +381,6 @@ plot.mic <- function(x, ...) {
 
 #' @exportMethod barplot.mic
 #' @export
-#' @importFrom dplyr %>% group_by summarise
 #' @importFrom graphics barplot axis
 #' @noRd
 barplot.mic <- function(height, ...) {
@@ -392,6 +389,7 @@ barplot.mic <- function(height, ...) {
 }
 
 #' @importFrom graphics barplot axis
+#' @importFrom dplyr %>% group_by summarise
 create_barplot_mic <- function(x, x_name, ...) {
   data <- data.frame(mic = x, cnt = 1) %>%
     group_by(mic) %>%

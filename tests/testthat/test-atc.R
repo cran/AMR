@@ -1,33 +1,25 @@
 context("atc.R")
 
-
 test_that("atc_property works", {
-  expect_equal(tolower(atc_property("J01CA04", property = "Name")), "amoxicillin")
-  expect_equivalent(atc_property("J01CA04", "DDD"), 1)
-})
+  skip_on_travis() # relies on internet connection of server, don't test
 
-test_that("abname works", {
-  expect_equal(abname("AMOX"), "Amoxicillin")
-  expect_equal(abname(c("AMOX", "GENT")), c("Amoxicillin", "Gentamicin"))
-  expect_equal(abname(c("AMOX+GENT")), "Amoxicillin + gentamicin")
-  expect_equal(abname("AMOX", from = 'umcg'), "Amoxicillin")
-  expect_equal(abname("amox", from = 'molis'), "Amoxicillin")
-  expect_equal(abname("J01CA04", from = 'atc'), "Amoxicillin")
-})
+  skip_on_appveyor() # security error on AppVeyor
 
-test_that("guess_bactid works", {
-  expect_identical(guess_bactid(c("E. coli", "H. influenzae")), c("ESCCOL", "HAEINF"))
-  expect_equal(guess_bactid("Escherichia coli"), "ESCCOL")
-  expect_equal(guess_bactid("Negative rods"), "GNR")
-  expect_equal(guess_bactid(c("stau",
-                              "STAU",
-                              "staaur",
-                              "S. aureus",
-                              "S aureus",
-                              "Staphylococcus aureus",
-                              "MRSA",
-                              "VISA")),
-               rep("STAAUR", 8))
+  if (!is.null(curl::nslookup("www.whocc.no", error = FALSE))) {
+    expect_equal(tolower(atc_property("J01CA04", property = "Name")), "amoxicillin")
+    expect_equal(atc_property("J01CA04", property = "unit"), "g")
+    expect_equal(atc_property("J01CA04", property = "DDD"),
+                 atc_ddd("J01CA04"))
+
+    expect_identical(atc_property("J01CA04", property = "Groups"),
+                     atc_groups("J01CA04"))
+
+    expect_warning(atc_property("ABCDEFG", property = "DDD"))
+
+    expect_error(atc_property("J01CA04", property = c(1:5)))
+    expect_error(atc_property("J01CA04", property = "test"))
+    expect_error(atc_property("J01CA04", property = "test", administration = c(1:5)))
+  }
 })
 
 test_that("guess_atc works", {

@@ -1,12 +1,5 @@
 context("misc.R")
 
-test_that("`like` works", {
-  expect_true(suppressWarnings("test" %like% c("^t", "^s")))
-  expect_true("test" %like% "test")
-  expect_true("test" %like% "TEST")
-  expect_true(as.factor("test") %like% "TEST")
-})
-
 test_that("percentages works", {
   expect_equal(percent(0.25), "25%")
   expect_equal(percent(0.5), "50%")
@@ -24,4 +17,9 @@ test_that("functions missing in older R versions work", {
   expect_equal(trimws(" test "), "test")
   expect_equal(trimws(" test ", "l"), "test ")
   expect_equal(trimws(" test ", "r"), " test")
+})
+
+test_that("generic dates work", {
+  expect_equal(date_generic("yyyy-mm-dd"), "%Y-%m-%d")
+  expect_equal(date_generic("dddd d mmmm yyyy"), "%A %e %B %Y")
 })
