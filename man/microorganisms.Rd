@@ -3,29 +3,45 @@
 \docType{data}
 \name{microorganisms}
 \alias{microorganisms}
-\title{Dataset with ~2500 microorganisms}
-\format{A data.frame with 2464 observations and 12 variables:
+\title{Data set with taxonomic data from ITIS}
+\format{A \code{\link{data.frame}} with 18,833 observations and 15 variables:
 \describe{
-  \item{\code{bactid}}{ID of microorganism}
-  \item{\code{bactsys}}{Bactsyscode of microorganism}
-  \item{\code{family}}{Family name of microorganism}
-  \item{\code{genus}}{Genus name of microorganism, like \code{"Echerichia"}}
-  \item{\code{species}}{Species name of microorganism, like \code{"coli"}}
-  \item{\code{subspecies}}{Subspecies name of bio-/serovar of microorganism, like \code{"EHEC"}}
-  \item{\code{fullname}}{Full name, like \code{"Echerichia coli (EHEC)"}}
-  \item{\code{type}}{Type of microorganism, like \code{"Bacteria"} and \code{"Fungus/yeast"}}
-  \item{\code{gramstain}}{Gram of microorganism, like \code{"Negative rods"}}
-  \item{\code{aerobic}}{Logical whether bacteria is aerobic}
-  \item{\code{type_nl}}{Type of microorganism in Dutch, like \code{"Bacterie"} and \code{"Schimmel/gist"}}
-  \item{\code{gramstain_nl}}{Gram of microorganism in Dutch, like \code{"Negatieve staven"}}
+  \item{\code{mo}}{ID of microorganism}
+  \item{\code{tsn}}{Taxonomic Serial Number (TSN), as defined by ITIS}
+  \item{\code{genus}}{Taxonomic genus of the microorganism as found in ITIS, see Source}
+  \item{\code{species}}{Taxonomic species of the microorganism as found in ITIS, see Source}
+  \item{\code{subspecies}}{Taxonomic subspecies of the microorganism as found in ITIS, see Source}
+  \item{\code{fullname}}{Full name, like \code{"Echerichia coli"}}
+  \item{\code{family}}{Taxonomic family of the microorganism as found in ITIS, see Source}
+  \item{\code{order}}{Taxonomic order of the microorganism as found in ITIS, see Source}
+  \item{\code{class}}{Taxonomic class of the microorganism as found in ITIS, see Source}
+  \item{\code{phylum}}{Taxonomic phylum of the microorganism as found in ITIS, see Source}
+  \item{\code{subkingdom}}{Taxonomic subkingdom of the microorganism as found in ITIS, see Source}
+  \item{\code{gramstain}}{Gram of microorganism, like \code{"Gram negative"}}
+  \item{\code{type}}{Type of microorganism, like \code{"Bacteria"} and \code{"Fungi"}}
+  \item{\code{prevalence}}{A rounded integer based on prevalence of the microorganism. Used internally by \code{\link{as.mo}}, otherwise quite meaningless.}
+  \item{\code{ref}}{Author(s) and year of concerning publication as found in ITIS, see Source}
 }}
+\source{
+[3] Integrated Taxonomic Information System (ITIS) on-line database, \url{https://www.itis.gov}.
+}
 \usage{
 microorganisms
 }
 \description{
-A dataset containing 2464 microorganisms. MO codes of the UMCG can be looked up using \code{\link{microorganisms.umcg}}.
+A data set containing the complete microbial taxonomy of the kingdoms Bacteria, Fungi and Protozoa. MO codes can be looked up using \code{\link{as.mo}}.
 }
+\section{ITIS}{
+
+\if{html}{\figure{itis_logo.jpg}{options: height=60px style=margin-bottom:5px} \cr}
+This package contains the \strong{complete microbial taxonomic data} (with all  seven taxonomic ranks - from subkingdom to subspecies) from the publicly available Integrated Taxonomic Information System (ITIS, \url{https://www.itis.gov}).
+
+The complete taxonomic kingdoms Bacteria, Fungi and Protozoa are included in this package, as well as all previously accepted names known to ITIS. Furthermore, the responsible authors and year of publication are available too. This allows users to use authoritative taxonomic information for their data analyses on any microorganisms, not only human pathogens.
+
+ITIS is a partnership of U.S., Canadian, and Mexican agencies and taxonomic specialists [3].
+}
+
 \seealso{
-\code{\link{guess_bactid}} \code{\link{antibiotics}} \code{\link{microorganisms.umcg}}
+\code{\link{as.mo}} \code{\link{mo_property}} \code{\link{microorganisms.umcg}}
 }
 \keyword{datasets}

@@ -9,11 +9,11 @@
 \usage{
 frequency_tbl(x, ..., sort.count = TRUE,
   nmax = getOption("max.print.freq"), na.rm = TRUE, row.names = TRUE,
-  markdown = FALSE, digits = 2, sep = " ")
+  markdown = FALSE, digits = 2, quote = FALSE, sep = " ")
 
 freq(x, ..., sort.count = TRUE, nmax = getOption("max.print.freq"),
   na.rm = TRUE, row.names = TRUE, markdown = FALSE, digits = 2,
-  sep = " ")
+  quote = FALSE, sep = " ")
 
 top_freq(f, n)
 
@@ -36,6 +36,8 @@ top_freq(f, n)
 \item{markdown}{print table in markdown format (this forces \code{nmax = NA})}
 
 \item{digits}{how many significant digits are to be used for numeric values in the header (not for the items themselves, that depends on \code{\link{getOption}("digits")})}
+
+\item{quote}{a logical value indicating whether or not strings should be printed with surrounding quotes}
 
 \item{sep}{a character string to separate the terms when selecting multiple columns}
 
@@ -88,7 +90,7 @@ septic_patients \%>\% freq(hospital_id)  #<- easiest to remember when you're use
 # you could also use `select` or `pull` to get your variables
 septic_patients \%>\%
   filter(hospital_id == "A") \%>\%
-  select(bactid) \%>\%
+  select(mo) \%>\%
   freq()
 
 # multiple selected variables will be pasted together
@@ -100,7 +102,7 @@ septic_patients \%>\%
 # get top 10 bugs of hospital A as a vector
 septic_patients \%>\%
   filter(hospital_id == "A") \%>\%
-  freq(bactid) \%>\%
+  freq(mo) \%>\%
   top_freq(10)
 
 # save frequency table to an object
@@ -117,7 +119,7 @@ years <- format(years)
 # print a histogram of numeric values
 septic_patients \%>\%
   freq(age) \%>\%
-  hist()  # prettier: ggplot(septic_patients, aes(age)) + geom_histogram()
+  hist()
 
 # or print all points to a regular plot
 septic_patients \%>\%
@@ -141,9 +143,13 @@ identical(septic_patients \%>\%
           sort(septic_patients$age)) # TRUE
 
 # it also supports `table` objects:
-table(septic_patients$sex,
+table(septic_patients$gender,
       septic_patients$age) \%>\%
   freq(sep = " **sep** ")
+
+# check differences between frequency tables
+diff(freq(septic_patients$trim),
+     freq(septic_patients$trsu))
 
 \dontrun{
 # send frequency table to clipboard (e.g. for pasting in Excel)

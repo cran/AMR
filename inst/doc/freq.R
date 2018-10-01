@@ -6,24 +6,8 @@ knitr::opts_chunk$set(
 library(dplyr)
 library(AMR)
 
-## ---- echo = TRUE, results = 'hide'--------------------------------------
-# just using base R
-freq(septic_patients$sex)
-
-# using base R to select the variable and pass it on with a pipe from the dplyr package
-septic_patients$sex %>% freq()
-
-# do it all with pipes, using the `select` function from the dplyr package
-septic_patients %>%
-  select(sex) %>%
-  freq()
-
-# or the preferred way: using a pipe to pass the variable on to the freq function
-septic_patients %>% freq(sex) # this also shows 'age' in the title
-
-
 ## ---- echo = TRUE--------------------------------------------------------
-freq(septic_patients$sex)
+septic_patients %>% freq(gender)
 
 ## ---- echo = TRUE, results = 'hide'--------------------------------------
 my_patients <- septic_patients %>% left_join_microorganisms()
@@ -83,7 +67,5 @@ septic_patients %>%
 
 ## ---- echo = FALSE-------------------------------------------------------
 # this will print "2018" in 2018, and "2018-yyyy" after 2018.
-yrs <- c(2018:format(Sys.Date(), "%Y"))
-yrs <- c(min(yrs), max(yrs))
-yrs <- paste(unique(yrs), collapse = "-")
+yrs <- paste(unique(c(2018, format(Sys.Date(), "%Y"))), collapse = "-")
 

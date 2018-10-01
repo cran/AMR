@@ -1,4 +1,116 @@
-# 0.2.0.90xx (development version)
+# 0.4.0
+
+#### New
+* The data set `microorganisms` now contains **all microbial taxonomic data from ITIS** (kingdoms Bacteria, Fungi and Protozoa), the Integrated Taxonomy Information System, available via https://itis.gov. The data set now contains more than 18,000 microorganisms with all known bacteria, fungi and protozoa according ITIS with genus, species, subspecies, family, order, class, phylum and subkingdom. The new data set `microorganisms.old` contains all previously known taxonomic names from those kingdoms.
+* New functions based on the existing function `mo_property`:
+  * Taxonomic names: `mo_phylum`, `mo_class`, `mo_order`, `mo_family`, `mo_genus`, `mo_species`, `mo_subspecies`
+  * Semantic names: `mo_fullname`, `mo_shortname`
+  * Microbial properties: `mo_type`, `mo_gramstain`
+  * Author and year: `mo_ref`
+  
+  They also come with support for German, Dutch, French, Italian, Spanish and Portuguese:
+  ```r
+  mo_gramstain("E. coli")
+  # [1] "Gram negative"
+  mo_gramstain("E. coli", language = "de") # German
+  # [1] "Gramnegativ"
+  mo_gramstain("E. coli", language = "es") # Spanish
+  # [1] "Gram negativo"
+  mo_fullname("S. group A", language = "pt") # Portuguese
+  # [1] "Streptococcus grupo A"
+  ```
+  
+  Furthermore, former taxonomic names will give a note about the current taxonomic name:
+  ```r
+  mo_gramstain("Esc blattae")
+  # Note: 'Escherichia blattae' (Burgess et al., 1973) was renamed 'Shimwellia blattae' (Priest and Barker, 2010)
+  # [1] "Gram negative"
+  ```
+* Functions `count_R`, `count_IR`, `count_I`, `count_SI` and `count_S` to selectively count resistant or susceptible isolates
+  * Extra function `count_df` (which works like `portion_df`) to get all counts of S, I and R of a data set with antibiotic columns, with support for grouped variables
+* Function `is.rsi.eligible` to check for columns that have valid antimicrobial results, but do not have the `rsi` class yet. Transform the columns of your raw data with: `data %>% mutate_if(is.rsi.eligible, as.rsi)`
+* Functions `as.mo` and `is.mo` as replacements for `as.bactid` and `is.bactid` (since the `microoganisms` data set not only contains bacteria). These last two functions are deprecated and will be removed in a future release. The `as.mo` function determines microbial IDs using Artificial Intelligence (AI):
+  ```r
+  as.mo("E. coli")
+  # [1] B_ESCHR_COL
+  as.mo("MRSA")
+  # [1] B_STPHY_AUR
+  as.mo("S group A")
+  # [1] B_STRPTC_GRA
+  ```
+  And with great speed too - on a quite regular Linux server from 2007 it takes us less than 0.02 seconds to transform 25,000 items:
+  ```r
+  thousands_of_E_colis <- rep("E. coli", 25000)
+  microbenchmark::microbenchmark(as.mo(thousands_of_E_colis), unit = "s")
+  # Unit: seconds
+  #         min       median         max  neval
+  #  0.01817717  0.01843957  0.03878077    100
+  ```
+* Added parameter `reference_df` for `as.mo`, so users can supply their own microbial IDs, name or codes as a reference table
+* Renamed all previous references to `bactid` to `mo`, like:
+  * Column names inputs of `EUCAST_rules`, `first_isolate` and `key_antibiotics`
+  * Column names of datasets `microorganisms` and `septic_patients`
+  * All old syntaxes will still work with this version, but will throw warnings
+* Function `labels_rsi_count` to print datalabels on a RSI `ggplot2` model
+* Functions `as.atc` and `is.atc` to transform/look up antibiotic ATC codes as defined by the WHO. The existing function `guess_atc` is now an alias of `as.atc`.
+
+* Function `ab_property` and its aliases: `ab_name`, `ab_tradenames`, `ab_certe`, `ab_umcg` and `ab_trivial_nl`
+* Introduction to AMR as a vignette
+* Removed clipboard functions as it violated the CRAN policy
+* Renamed `septic_patients$sex` to `septic_patients$gender`
+
+#### Changed
+* Added three antimicrobial agents to the `antibiotics` data set: Terbinafine (D01BA02), Rifaximin (A07AA11) and Isoconazole (D01AC05)
+* Added 163 trade names to the `antibiotics` data set, it now contains 298 different trade names in total, e.g.:
+  ```r
+  ab_official("Bactroban")
+  # [1] "Mupirocin"
+  ab_name(c("Bactroban", "Amoxil", "Zithromax", "Floxapen"))
+  # [1] "Mupirocin" "Amoxicillin" "Azithromycin" "Flucloxacillin"
+  ab_atc(c("Bactroban", "Amoxil", "Zithromax", "Floxapen"))
+  # [1] "R01AX06" "J01CA04" "J01FA10" "J01CF05"
+  ```
+* For `first_isolate`, rows will be ignored when there's no species available
+* Function `ratio` is now deprecated and will be removed in a future release, as it is not really the scope of this package
+* Fix for `as.mic` for values ending in zeroes after a real number
+* Small fix where *B. fragilis* would not be found in the `microorganisms.umcg` data set
+* Added `prevalence` column to the `microorganisms` data set
+* Added parameters `minimum` and `as_percent` to `portion_df`
+* Support for quasiquotation in the functions series `count_*` and `portions_*`, and `n_rsi`. This allows to check for more than 2 vectors or columns.
+  ```r
+  septic_patients %>% select(amox, cipr) %>% count_IR()
+  # which is the same as:
+  septic_patients %>% count_IR(amox, cipr)
+  
+  septic_patients %>% portion_S(amcl)
+  septic_patients %>% portion_S(amcl, gent)
+  septic_patients %>% portion_S(amcl, gent, pita)
+  ```
+* Edited `ggplot_rsi` and `geom_rsi` so they can cope with `count_df`. The new `fun` parameter has value `portion_df` at default, but can be set to `count_df`.
+* Fix for `ggplot_rsi` when the `ggplot2` package was not loaded
+* Added datalabels function `labels_rsi_count` to `ggplot_rsi`
+* Added possibility to set any parameter to `geom_rsi` (and `ggplot_rsi`) so you can set your own preferences
+* Fix for joins, where predefined suffices would not be honoured
+* Added parameter `quote` to the `freq` function
+* Added generic function `diff` for frequency tables
+* Added longest en shortest character length in the frequency table (`freq`) header of class `character`
+* Support for types (classes) list and matrix for `freq`
+  ```r
+  my_matrix = with(septic_patients, matrix(c(age, gender), ncol = 2))
+  freq(my_matrix)
+  ```
+  For lists, subsetting is possible:
+  ```r
+  my_list = list(age = septic_patients$age, gender = septic_patients$gender)
+  my_list %>% freq(age)
+  my_list %>% freq(gender)
+  ```
+
+#### Other
+* More unit tests to ensure better integrity of functions
+
+# 0.3.0
+**Published on CRAN: 2018-08-14**
 
 #### New
 * **BREAKING**: `rsi_df` was removed in favour of new functions `portion_R`, `portion_IR`, `portion_I`, `portion_SI` and `portion_S` to selectively calculate resistance or susceptibility. These functions are 20 to 30 times faster than the old `rsi` function. The old function still works, but is deprecated.
@@ -19,8 +131,8 @@
   * New Lancefield classification for *Streptococcus* to categorise them into Lancefield groups
 * For convience, new descriptive statistical functions `kurtosis` and `skewness` that are lacking in base R - they are generic functions and have support for vectors, data.frames and matrices
 * Function `g.test` to perform the Χ<sup>2</sup> distributed [*G*-test](https://en.wikipedia.org/wiki/G-test), which use is the same as `chisq.test`
-* Function `ratio` to transform a vector of values to a preset ratio
-  * For example: `ratio(c(10, 500, 10), ratio = "1:2:1")` would return `130, 260, 130`
+* ~~Function `ratio` to transform a vector of values to a preset ratio~~
+  * ~~For example: `ratio(c(10, 500, 10), ratio = "1:2:1")` would return `130, 260, 130`~~
 * Support for Addins menu in RStudio to quickly insert `%in%` or `%like%` (and give them keyboard shortcuts), or to view the datasets that come with this package
 * Function `p.symbol` to transform p values to their related symbols: `0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1`
 * Functions `clipboard_import` and `clipboard_export` as helper functions to quickly copy and paste from/to software like Excel and SPSS. These functions use the `clipr` package, but are a little altered to also support headless Linux servers (so you can use it in RStudio Server)
@@ -68,7 +180,7 @@
   * Windows: https://ci.appveyor.com/project/msberends/amr
 * Added thesis advisors to DESCRIPTION file
 
-# 0.2.0 (latest stable version)
+# 0.2.0
 **Published on CRAN: 2018-05-03**
 
 #### New

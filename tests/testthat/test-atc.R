@@ -1,8 +1,7 @@
 context("atc.R")
 
 test_that("atc_property works", {
-  skip_on_travis() # relies on internet connection of server, don't test
-
+  skip_on_cran() # relies on internet connection of server, don't test
   skip_on_appveyor() # security error on AppVeyor
 
   if (!is.null(curl::nslookup("www.whocc.no", error = FALSE))) {
@@ -23,14 +22,27 @@ test_that("atc_property works", {
 })
 
 test_that("guess_atc works", {
-  expect_equal(guess_atc(c("J01FA01",
+  expect_equal(as.character(guess_atc(c("J01FA01",
                            "Erythromycin",
                            "eryt",
                            "ERYT",
                            "ERY",
                            "Erythrocin",
                            "Eryzole",
-                           "Pediamycin")),
+                           "Pediamycin"))),
                rep("J01FA01", 8))
+
+  expect_identical(class(as.atc("amox")), "atc")
+  expect_identical(class(pull(antibiotics, atc)), "atc")
+  expect_identical(ab_trivial_nl("Cefmenoxim"), "Cefmenoxim")
+
+  expect_warning(as.atc("Z00ZZ00")) # not yet available in data set
+  expect_warning(as.atc("UNKNOWN"))
+
+  expect_output(print(as.atc("amox")))
+
+  # first 5 chars of official name
+  expect_equal(as.character(as.atc(c("nitro", "cipro"))),
+               c("J01XE01", "J01MA02"))
 
 })

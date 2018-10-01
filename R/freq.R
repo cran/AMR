@@ -27,6 +27,7 @@
 #' @param row.names a logical value indicating whether row indices should be printed as \code{1:nrow(x)}
 #' @param markdown print table in markdown format (this forces \code{nmax = NA})
 #' @param digits how many significant digits are to be used for numeric values in the header (not for the items themselves, that depends on \code{\link{getOption}("digits")})
+#' @param quote a logical value indicating whether or not strings should be printed with surrounding quotes
 #' @param sep a character string to separate the terms when selecting multiple columns
 #' @param f a frequency table
 #' @param n number of top \emph{n} items to return, use -n for the bottom \emph{n} items. It will include more than \code{n} rows if there are ties.
@@ -55,9 +56,8 @@
 #' The function \code{top_freq} uses \code{\link[dplyr]{top_n}} internally and will include more than \code{n} rows if there are ties.
 #' @importFrom stats fivenum sd mad
 #' @importFrom grDevices boxplot.stats
-#' @importFrom dplyr %>% select pull n_distinct group_by arrange desc mutate summarise n_distinct
+#' @importFrom dplyr %>% select pull n_distinct group_by arrange desc mutate summarise n_distinct tibble
 #' @importFrom utils browseVignettes installed.packages
-#' @importFrom tibble tibble
 #' @keywords summary summarise frequency freq
 #' @rdname freq
 #' @name freq
@@ -77,7 +77,7 @@
 #' # you could also use `select` or `pull` to get your variables
 #' septic_patients %>%
 #'   filter(hospital_id == "A") %>%
-#'   select(bactid) %>%
+#'   select(mo) %>%
 #'   freq()
 #'
 #' # multiple selected variables will be pasted together
@@ -89,7 +89,7 @@
 #' # get top 10 bugs of hospital A as a vector
 #' septic_patients %>%
 #'   filter(hospital_id == "A") %>%
-#'   freq(bactid) %>%
+#'   freq(mo) %>%
 #'   top_freq(10)
 #'
 #' # save frequency table to an object
@@ -106,7 +106,7 @@
 #' # print a histogram of numeric values
 #' septic_patients %>%
 #'   freq(age) %>%
-#'   hist()  # prettier: ggplot(septic_patients, aes(age)) + geom_histogram()
+#'   hist()
 #'
 #' # or print all points to a regular plot
 #' septic_patients %>%
@@ -130,9 +130,13 @@
 #'           sort(septic_patients$age)) # TRUE
 #'
 #' # it also supports `table` objects:
-#' table(septic_patients$sex,
+#' table(septic_patients$gender,
 #'       septic_patients$age) %>%
 #'   freq(sep = " **sep** ")
+#'
+#' # check differences between frequency tables
+#' diff(freq(septic_patients$trim),
+#'      freq(septic_patients$trsu))
 #'
 #' \dontrun{
 #' # send frequency table to clipboard (e.g. for pasting in Excel)
@@ -149,26 +153,44 @@ frequency_tbl <- function(x,
                           row.names = TRUE,
                           markdown = FALSE,
                           digits = 2,
+                          quote = FALSE,
                           sep = " ") {
 
   mult.columns <- 0
 
+  x.name <- NULL
+  cols <- NULL
+  if (any(class(x) == 'list')) {
+    cols <- names(x)
+    x <- as.data.frame(x, stringsAsFactors = FALSE)
+    x.name <- "a list"
+  } else if (any(class(x) == 'matrix')) {
+    x <- as.data.frame(x, stringsAsFactors = FALSE)
+    x.name <- "a matrix"
+    cols <- colnames(x)
+    if (all(cols %like% 'V[0-9]')) {
+      cols <- NULL
+    }
+  }
+
   if (any(class(x) == 'data.frame')) {
-    x.name <- deparse(substitute(x))
+    if (is.null(x.name)) {
+      x.name <- deparse(substitute(x))
+    }
     if (x.name == ".") {
       x.name <- NULL
     }
     dots <- base::eval(base::substitute(base::alist(...)))
     ndots <- length(dots)
 
-    if (NROW(x) == 0) {
-      x <- NA
-    } else if (ndots > 0 & ndots < 10) {
+    if (ndots < 10) {
       cols <- as.character(dots)
       if (!all(cols %in% colnames(x))) {
         stop("one or more columns not found: `", paste(cols, collapse = "`, `"), '`', call. = FALSE)
       }
-      x <- x[, cols]
+      if (length(cols) > 0) {
+        x <- x[, cols]
+      }
     } else if (ndots >= 10) {
       stop('A maximum of 9 columns can be analysed at the same time.', call. = FALSE)
     } else {
@@ -297,16 +319,21 @@ frequency_tbl <- function(x,
     header <- header %>% paste0(markdown_line, 'Columns:   ', mult.columns)
   } else {
     header <- header %>% paste0(markdown_line, 'Class:     ', class(x) %>% rev() %>% paste(collapse = " > "))
-  }
-
-  if (is.list(x) | is.matrix(x) | is.environment(x) | is.function(x)) {
-    stop('frequency tables do not support lists, matrices, environments and functions.', call. = FALSE)
+    if (!mode(x) %in% class(x)) {
+      header <- header %>% paste0(" (", mode(x), ")")
+    }
   }
 
   header <- header %>% paste0(markdown_line, '\nLength:    ', (NAs %>% length() + x %>% length()) %>% format(),
                               ' (of which NA: ', NAs %>% length() %>% format(),
                               ' = ', (NAs %>% length() / (NAs %>% length() + x %>% length())) %>% percent(force_zero = TRUE, round = digits) %>% sub('NaN', '0', ., fixed = TRUE), ')')
   header <- header %>% paste0(markdown_line, '\nUnique:    ', x %>% n_distinct() %>% format())
+
+  if (NROW(x) > 0 & any(class(x) == "character")) {
+    header <- header %>% paste0('\n')
+    header <- header %>% paste0(markdown_line, '\nShortest:  ', x %>% base::nchar() %>% base::min(na.rm = TRUE))
+    header <- header %>% paste0(markdown_line, '\nLongest:   ', x %>% base::nchar() %>% base::max(na.rm = TRUE))
+  }
 
   if (NROW(x) > 0 & any(class(x) %in% c('double', 'integer', 'numeric', 'raw', 'single'))) {
     # right align number
@@ -351,9 +378,17 @@ frequency_tbl <- function(x,
     mediandate <- x %>% median(na.rm = TRUE)
     median_days <- difftime(mediandate, mindate, units = 'auto') %>% as.double()
 
-    header <- header %>% paste0(markdown_line, '\nOldest:    ', mindate %>% format(formatdates) %>% trimws())
-    header <- header %>% paste0(markdown_line, '\nNewest:    ', maxdate %>% format(formatdates) %>% trimws(),
-                                ' (+', difftime(maxdate, mindate, units = 'auto') %>% as.double() %>% format(), ')')
+    if (formatdates == "%H:%M:%S") {
+      # hms
+      header <- header %>% paste0(markdown_line, '\nEarliest:  ', mindate %>% format(formatdates) %>% trimws())
+      header <- header %>% paste0(markdown_line, '\nLatest:    ', maxdate %>% format(formatdates) %>% trimws(),
+                                  ' (+', difftime(maxdate, mindate, units = 'mins') %>% as.double() %>% format(digits = digits), ' min.)')
+    } else {
+      # other date formats
+      header <- header %>% paste0(markdown_line, '\nOldest:    ', mindate %>% format(formatdates) %>% trimws())
+      header <- header %>% paste0(markdown_line, '\nNewest:    ', maxdate %>% format(formatdates) %>% trimws(),
+                                  ' (+', difftime(maxdate, mindate, units = 'auto') %>% as.double() %>% format(digits = digits), ')')
+    }
     header <- header %>% paste0(markdown_line, '\nMedian:    ', mediandate %>% format(formatdates) %>% trimws(),
                                 ' (~', percent(median_days / maxdate_days, round = 0), ')')
   }
@@ -378,12 +413,12 @@ frequency_tbl <- function(x,
   column_names_df <- c('item', 'count', 'percent', 'cum_count', 'cum_percent', 'factor_level')
 
   if (any(class(x) == 'factor')) {
-    df <- tibble::tibble(item = x,
+    df <- tibble(item = x,
                          fctlvl = x %>% as.integer()) %>%
       group_by(item, fctlvl)
     column_align <- c('l', 'r', 'r', 'r', 'r', 'r')
   } else {
-    df <- tibble::tibble(item = x) %>%
+    df <- tibble(item = x) %>%
       group_by(item)
     # strip factor lvl from col names
     column_names <- column_names[1:length(column_names) - 1]
@@ -393,11 +428,9 @@ frequency_tbl <- function(x,
   df <- df %>% summarise(count = n())
 
   if (df$item %>% paste(collapse = ',') %like% '\033') {
-    df <- df %>%
-      mutate(item = item %>%
-               # remove escape char
-               # see https://en.wikipedia.org/wiki/Escape_character#ASCII_escape_character
-               gsub('\033', ' ', ., fixed = TRUE))
+    # remove escape char
+    # see https://en.wikipedia.org/wiki/Escape_character#ASCII_escape_character
+    df <- df %>% mutate(item = item %>% gsub('\033', ' ', ., fixed = TRUE))
   }
 
   # sort according to setting
@@ -409,6 +442,10 @@ frequency_tbl <- function(x,
     } else {
       df <- df %>% arrange(item)
     }
+  }
+
+  if (quote == TRUE) {
+    df$item <- paste0('"', df$item, '"')
   }
 
   df <- as.data.frame(df, stringsAsFactors = FALSE)
@@ -469,6 +506,58 @@ top_freq <- function(f, n) {
   vect
 }
 
+#' @noRd
+#' @exportMethod diff.frequency_tbl
+#' @importFrom dplyr %>% full_join mutate
+#' @export
+diff.frequency_tbl <- function(x, y, ...) {
+  # check classes
+  if (!"frequency_tbl" %in% class(x)
+      | !"frequency_tbl" %in% class(y)) {
+    stop("Both x and y must be a frequency table.")
+  }
+
+  cat("Differences between frequency tables")
+  if (identical(x, y)) {
+    cat("\n\nNo differences found.\n")
+    return(invisible())
+  }
+
+  x.attr <- attributes(x)$opt
+
+  # only keep item and count
+  x <- x[, 1:2]
+  y <- y[, 1:2]
+
+  x <- x %>%
+    full_join(y,
+              by = colnames(x)[1],
+              suffix = c(".x", ".y")) %>%
+    mutate(
+      diff = case_when(
+        is.na(count.y) ~ -count.x,
+        is.na(count.x) ~ count.y,
+        TRUE ~ count.y - count.x)) %>%
+    mutate(
+      diff.percent = percent(
+        diff / count.x,
+        force_zero = TRUE)) %>%
+    mutate(diff = ifelse(diff %like% '^-',
+                         diff,
+                         paste0("+", diff)),
+           diff.percent = ifelse(diff.percent %like% '^-',
+                                 diff.percent,
+                                 paste0("+", diff.percent)))
+
+  print(
+    knitr::kable(x,
+                 format = x.attr$tbl_format,
+                 col.names = c("Item", "Count #1", "Count #2", "Difference", "Diff. percent"),
+                 align = paste0(x.attr$column_align[1], "rrrr"),
+                 padding = 1)
+  )
+}
+
 #' @rdname freq
 #' @exportMethod print.frequency_tbl
 #' @importFrom knitr kable
@@ -477,6 +566,10 @@ top_freq <- function(f, n) {
 print.frequency_tbl <- function(x, nmax = getOption("max.print.freq", default = 15), ...) {
 
   opt <- attr(x, 'opt')
+
+  if (length(opt$vars) == 0) {
+    opt$vars <- NULL
+  }
 
   if (!is.null(opt$data) & !is.null(opt$vars)) {
     title <- paste0("of `", paste0(opt$vars, collapse = "` and `"), "` from ", opt$data)
@@ -491,6 +584,14 @@ print.frequency_tbl <- function(x, nmax = getOption("max.print.freq", default = 
   if (!missing(nmax)) {
     opt$nmax <- nmax
     opt$nmax.set <- TRUE
+  }
+  dots <- list(...)
+  if ("markdown" %in% names(dots)) {
+    if (dots$markdown == TRUE) {
+      opt$tbl_format <- "markdown"
+    } else {
+      opt$tbl_format <- "pandoc"
+    }
   }
 
   cat("Frequency table", title, "\n")

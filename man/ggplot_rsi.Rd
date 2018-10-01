@@ -7,27 +7,33 @@
 \alias{scale_y_percent}
 \alias{scale_rsi_colours}
 \alias{theme_rsi}
+\alias{labels_rsi_count}
 \title{AMR bar plots with \code{ggplot}}
 \usage{
-ggplot_rsi(data, position = "stack", x = "Antibiotic",
+ggplot_rsi(data, position = NULL, x = "Antibiotic",
   fill = "Interpretation", facet = NULL, translate_ab = "official",
+  fun = count_df, nrow = NULL, datalabels = TRUE,
+  datalabels.size = 3, datalabels.colour = "grey15", ...)
+
+geom_rsi(position = NULL, x = c("Antibiotic", "Interpretation"),
+  fill = "Interpretation", translate_ab = "official", fun = count_df,
   ...)
 
-geom_rsi(position = "stack", x = c("Antibiotic", "Interpretation"),
-  fill = "Interpretation", translate_ab = "official")
-
-facet_rsi(facet = c("Interpretation", "Antibiotic"), ...)
+facet_rsi(facet = c("Interpretation", "Antibiotic"), nrow = NULL)
 
 scale_y_percent()
 
 scale_rsi_colours()
 
 theme_rsi()
+
+labels_rsi_count(position = NULL, x = "Antibiotic",
+  datalabels.size = 3, datalabels.colour = "grey15")
 }
 \arguments{
 \item{data}{a \code{data.frame} with column(s) of class \code{"rsi"} (see \code{\link{as.rsi}})}
 
-\item{position}{position adjustment of bars, either \code{"stack"} (default) or \code{"dodge"}}
+\item{position}{position adjustment of bars, either \code{"fill"} (default when \code{fun} is \code{\link{count_df}}), \code{"stack"} (default when \code{fun} is \code{\link{portion_df}}) or \code{"dodge"}}
 
 \item{x}{variable to show on x axis, either \code{"Antibiotic"} (default) or \code{"Interpretation"} or a grouping variable}
 
@@ -37,7 +43,17 @@ theme_rsi()
 
 \item{translate_ab}{a column name of the \code{\link{antibiotics}} data set to translate the antibiotic abbreviations into, using \code{\link{abname}}. Default behaviour is to translate to official names according to the WHO. Use \code{translate_ab = FALSE} to disable translation.}
 
-\item{...}{other parameters passed on to \code{\link[ggplot2]{facet_wrap}}}
+\item{fun}{function to transform \code{data}, either \code{\link{count_df}} (default) or \code{\link{portion_df}}}
+
+\item{nrow}{(when using \code{facet}) number of rows}
+
+\item{datalabels}{show datalabels using \code{labels_rsi_count}, will at default only be shown when \code{fun = count_df}}
+
+\item{datalabels.size}{size of the datalabels}
+
+\item{datalabels.colour}{colour of the datalabels}
+
+\item{...}{other parameters passed on to \code{geom_rsi}}
 }
 \description{
 Use these functions to create bar plots for antimicrobial resistance analysis. All functions rely on internal \code{\link[ggplot2]{ggplot}} functions.
@@ -46,15 +62,17 @@ Use these functions to create bar plots for antimicrobial resistance analysis. A
 At default, the names of antibiotics will be shown on the plots using \code{\link{abname}}. This can be set with the option \code{get_antibiotic_names} (a logical value), so change it e.g. to \code{FALSE} with \code{options(get_antibiotic_names = FALSE)}.
 
 \strong{The functions}\cr
-\code{geom_rsi} will take any variable from the data that has an \code{rsi} class (created with \code{\link{as.rsi}}) using \code{\link{portion_df}} and will plot bars with the percentage R, I and S. The default behaviour is to have the bars stacked and to have the different antibiotics on the x axis.
+\code{geom_rsi} will take any variable from the data that has an \code{rsi} class (created with \code{\link{as.rsi}}) using \code{fun} (\code{\link{count_df}} at default, can also be \code{\link{portion_df}}) and will plot bars with the percentage R, I and S. The default behaviour is to have the bars stacked and to have the different antibiotics on the x axis.
 
 \code{facet_rsi} creates 2d plots (at default based on S/I/R) using \code{\link[ggplot2]{facet_wrap}}.
 
-\code{scale_y_percent} transforms the y axis to a 0 to 100\% range.
+\code{scale_y_percent} transforms the y axis to a 0 to 100\% range using \code{\link[ggplot2]{scale_continuous}}.
 
-\code{scale_rsi_colours} sets colours to the bars: green for S, yellow for I and red for R.
+\code{scale_rsi_colours} sets colours to the bars: green for S, yellow for I and red for R, using \code{\link[ggplot2]{scale_colour_brewer}}.
 
-\code{theme_rsi} is a \code{\link[ggplot2]{theme}} with minimal distraction.
+\code{theme_rsi} is a \code{ggplot \link[ggplot2]{theme}} with minimal distraction.
+
+\code{labels_rsi_count} print datalabels on the bars with percentage and amount of isolates using \code{\link[ggplot2]{geom_text}}
 
 \code{ggplot_rsi} is a wrapper around all above functions that uses data as first input. This makes it possible to use this function after a pipe (\code{\%>\%}). See Examples.
 }
@@ -70,22 +88,43 @@ ggplot(septic_patients \%>\% select(amox, nitr, fosf, trim, cipr)) +
 df <- septic_patients[, c("amox", "nitr", "fosf", "trim", "cipr")]
 ggplot(df) +
   geom_rsi() +
-  facet_rsi() +
   scale_y_percent() +
   scale_rsi_colours() +
+  labels_rsi_count() +
   theme_rsi()
 
 # or better yet, simplify this using the wrapper function - a single command:
 septic_patients \%>\%
   select(amox, nitr, fosf, trim, cipr) \%>\%
   ggplot_rsi()
+
+# get only portions and no counts:
+septic_patients \%>\%
+  select(amox, nitr, fosf, trim, cipr) \%>\%
+  ggplot_rsi(fun = portion_df)
+
+# add other ggplot2 parameters as you like:
+septic_patients \%>\%
+  select(amox, nitr, fosf, trim, cipr) \%>\%
+  ggplot_rsi(width = 0.5,
+             colour = "black",
+             size = 1,
+             linetype = 2,
+             alpha = 0.25)
 \donttest{
-# it also supports groups (don't forget to use the group on `x` or `facet`):
+
+# for colourblind mode, use divergent colours from the viridis package:
+septic_patients \%>\%
+  select(amox, nitr, fosf, trim, cipr) \%>\%
+  ggplot_rsi() + scale_fill_viridis_d()
+
+
+# it also supports groups (don't forget to use the group var on `x` or `facet`):
 septic_patients \%>\%
   select(hospital_id, amox, nitr, fosf, trim, cipr) \%>\%
   group_by(hospital_id) \%>\%
-  ggplot_rsi(x = "hospital_id",
-             facet = "Antibiotic",
+  ggplot_rsi(x = hospital_id,
+             facet = Antibiotic,
              nrow = 1) +
   labs(title = "AMR of Anti-UTI Drugs Per Hospital",
        x = "Hospital")
@@ -93,28 +132,29 @@ septic_patients \%>\%
 # genuine analysis: check 2 most prevalent microorganisms
 septic_patients \%>\%
   # create new bacterial ID's, with all CoNS under the same group (Becker et al.)
-  mutate(bactid = as.bactid(bactid, Becker = TRUE)) \%>\%
-  # filter on top 2 bacterial ID's
-  filter(bactid \%in\% top_freq(freq(.$bactid), 2)) \%>\%
+  mutate(mo = as.mo(mo, Becker = TRUE)) \%>\%
+  # filter on top three bacterial ID's
+  filter(mo \%in\% top_freq(freq(.$mo), 3)) \%>\%
   # determine first isolates
   mutate(first_isolate = first_isolate(.,
                                        col_date = "date",
                                        col_patient_id = "patient_id",
-                                       col_bactid = "bactid")) \%>\%
+                                       col_mo = "mo")) \%>\%
   # filter on first isolates
   filter(first_isolate == TRUE) \%>\%
-  # join the `microorganisms` data set
-  left_join_microorganisms() \%>\%
-  # select full name and some antiseptic drugs
-  select(mo = fullname,
-            cfur, gent, cipr) \%>\%
+  # get short MO names (like "E. coli")
+  mutate(mo = mo_shortname(mo, Becker = TRUE)) \%>\%
+  # select this short name and some antiseptic drugs
+  select(mo, cfur, gent, cipr) \%>\%
   # group by MO
   group_by(mo) \%>\%
   # plot the thing, putting MOs on the facet
-  ggplot_rsi(x = "Antibiotic",
-             facet = "mo") +
-  labs(title = "AMR of Top Two Microorganisms In Blood Culture Isolates",
-       subtitle = "Only First Isolates, CoNS grouped according to Becker et al.",
+  ggplot_rsi(x = Antibiotic,
+             facet = mo,
+             translate_ab = FALSE,
+             nrow = 1) +
+  labs(title = "AMR of Top Three Microorganisms In Blood Culture Isolates",
+       subtitle = "Only First Isolates, CoNS grouped according to Becker et al. (2014)",
        x = "Microorganisms")
 }
 }

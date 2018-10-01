@@ -16,19 +16,19 @@
 # GNU General Public License for more details.                         #
 # ==================================================================== #
 
-#' Dataset with 420 antibiotics
+#' Data set with 423 antibiotics
 #'
-#' A dataset containing all antibiotics with a J0 code, with their DDD's. Properties were downloaded from the WHO, see Source.
-#' @format A data.frame with 420 observations and 18 variables:
+#' A data set containing all antibiotics with a J0 code and some other antimicrobial agents, with their DDDs. Except for trade names and abbreviations, all properties were downloaded from the WHO, see Source.
+#' @format A \code{\link{tibble}} with 423 observations and 18 variables:
 #' \describe{
 #'   \item{\code{atc}}{ATC code, like \code{J01CR02}}
-#'   \item{\code{molis}}{MOLIS code, like \code{amcl}}
+#'   \item{\code{certe}}{Certe code, like \code{amcl}}
 #'   \item{\code{umcg}}{UMCG code, like \code{AMCL}}
-#'   \item{\code{abbr}}{Abbreviation as used by many countries, to be used for \code{\link{guess_atc}}}
-#'   \item{\code{official}}{Official name by the WHO, like \code{"Amoxicillin and enzyme inhibitor"}}
+#'   \item{\code{abbr}}{Abbreviation as used by many countries, used internally by \code{\link{as.atc}}}
+#'   \item{\code{official}}{Official name by the WHO, like \code{"Amoxicillin and beta-lactamase inhibitor"}}
 #'   \item{\code{official_nl}}{Official name in the Netherlands, like \code{"Amoxicilline met enzymremmer"}}
 #'   \item{\code{trivial_nl}}{Trivial name in Dutch, like \code{"Amoxicilline/clavulaanzuur"}}
-#'   \item{\code{trade_name}}{Trade name as used by many countries, to be used for \code{\link{guess_atc}}}
+#'   \item{\code{trade_name}}{Trade name as used by many countries (a total of 294), used internally by \code{\link{as.atc}}}
 #'   \item{\code{oral_ddd}}{Defined Daily Dose (DDD), oral treatment}
 #'   \item{\code{oral_units}}{Units of \code{ddd_units}}
 #'   \item{\code{iv_ddd}}{Defined Daily Dose (DDD), parenteral treatment}
@@ -42,177 +42,26 @@
 #' }
 #' @source - World Health Organization: \url{https://www.whocc.no/atc_ddd_index/} \cr - EUCAST - Expert rules intrinsic exceptional V3.1 \cr - MOLIS (LIS of Certe): \url{https://www.certe.nl} \cr - GLIMS (LIS of UMCG): \url{https://www.umcg.nl}
 #' @seealso \code{\link{microorganisms}}
-# abbr and trade_name created with:
-# https://hs.unr.edu/Documents/dhs/chs/NVPHTC/antibiotic_refeference_guide.pdf
-# antibiotics %>%
-#   mutate(abbr =
-#            case_when(
-#              official == 'Amikacin' ~ 'Ak|AN|AMI|AMK',
-#              official == 'Amoxicillin' ~ 'AMX|AMOX|AC',
-#              official == 'Amoxicillin and beta-lactamase inhibitor' ~ 'AUG|A/C|XL|AML',
-#              official == 'Ampicillin' ~ 'AM|AMP',
-#              official == 'Ampicillin and beta-lactamase inhibitor' ~ 'A/S|SAM|AMS|AB',
-#              official == 'Azithromycin' ~ 'Azi|AZM|AZ',
-#              official == 'Azlocillin' ~ 'AZ|AZL',
-#              official == 'Aztreonam' ~ 'Azt|ATM|AT|AZM',
-#              official == 'Carbenicillin' ~ 'Cb|BAR',
-#              official == 'Cefaclor' ~ 'Ccl|CEC|Cfr|FAC|CF',
-#              official == 'Cefadroxil' ~ 'CFR|FAD',
-#              official == 'Cefazolin' ~ 'Cfz|CZ|FAZ|KZ',
-#              official == 'Cefdinir' ~ 'Cdn|CDR|DIN|CD|CFD',
-#              official == 'Cefditoren' ~ 'CDN',
-#              official == 'Cefepime' ~ 'Cpe|FEP|PM|CPM',
-#              official == 'Cefixime' ~ 'Cfe|DCFM|FIX|IX',
-#              official == 'Cefoperazone' ~ 'Cfp|CPZ|PER|FOP|CP',
-#              official == 'Cefotaxime' ~ 'Cft|CTX|TAX|FOT|CT',
-#              official == 'Cefotetan' ~ 'Ctn|CTT|CTE|TANS|CN',
-#              official == 'Cefoxitin' ~ 'Cfx|FOX|CX|FX',
-#              official == 'Cefpodoxime' ~ 'Cpd|POD|PX',
-#              official == 'Cefprozil' ~ 'Cpz|CPR|FP',
-#              official == 'Ceftaroline' ~ 'CPT',
-#              official == 'Ceftazidime' ~ 'Caz|TAZ|TZ',
-#              official == 'Ceftibuten' ~ 'CTB|TIB|CB',
-#              official == 'Ceftizoxime' ~ 'Cz|ZOX|CZX|CZ|CTZ|TIZ',
-#              official == 'Ceftriaxone' ~ 'Cax|CRO|CTR|FRX|AXO|TX',
-#              official == 'Cefuroxime' ~ 'Crm|CXM|CFX|ROX|FUR|XM',
-#              official == 'Cephalexin' ~ 'CN|LX|CFL',
-#              official == 'Cephalothin' ~ 'Cf',
-#              official == 'Chloramphenicol' ~ 'C|CHL|CL',
-#              official == 'Ciprofloxacin' ~ 'Cp|CIP|CI',
-#              official == 'Clarithromycin' ~ 'Cla|CLR|CLM|CH',
-#              official == 'Clindamycin' ~ 'Cd|CC|CM|CLI|DA',
-#              official == 'Colistin' ~ 'CL|CS|CT',
-#              official == 'Daptomycin' ~ 'Dap',
-#              official == 'Doxycycline' ~ 'Dox',
-#              official == 'Doripenem' ~ 'DOR|Dor',
-#              official == 'Ertapenem' ~ 'Etp',
-#              official == 'Erythromycin' ~ 'E|ERY|EM',
-#              official == 'Fosfomycin' ~ 'FOS|FF|FO|FM',
-#              official == 'Flucloxacillin' ~ 'CLOX',
-#              official == 'Gentamicin' ~ 'Gm|CN|GEN',
-#              official == 'Imipenem' ~ 'Imp|IPM|IMI|IP',
-#              official == 'Kanamycin' ~ 'K|KAN|HLK|KM',
-#              official == 'Levofloxacin' ~ 'Lvx|LEV|LEVO|LE',
-#              official == 'Linezolid' ~ 'Lzd|LNZ|LZ',
-#              official == 'Lomefloxacin' ~ 'Lmf|LOM',
-#              official == 'Meropenem' ~ 'Mer|MEM|MERO|MRP|MP',
-#              official == 'Metronidazole' ~ 'MNZ',
-#              official == 'Mezlocillin' ~ 'Mz|MEZ',
-#              official == 'Minocycline' ~ 'Min|MI|MN|MNO|MC|MH',
-#              official == 'Moxifloxacin' ~ 'Mox|MXF',
-#              official == 'Mupirocin' ~ 'MUP',
-#              official == 'Nafcillin' ~ 'Naf|NF',
-#              official == 'Nalidixic acid' ~ 'NA|NAL',
-#              official == 'Nitrofurantoin' ~ 'Fd|F/M|FT|NIT|NI|F',
-#              official == 'Norfloxacin' ~ 'Nxn|NOR|NX',
-#              official == 'Ofloxacin' ~ 'Ofl|OFX|OF',
-#              official == 'Oxacillin' ~ 'Ox|OXS|OXA',
-#              official == 'Benzylpenicillin' ~ 'P|PEN|PV',
-#              official == 'Penicillins, combinations with other antibacterials' ~ 'P|PEN|PV',
-#              official == 'Piperacillin' ~ 'Pi|PIP|PP',
-#              official == 'Piperacillin and beta-lactamase inhibitor' ~ 'PT|TZP|PTZ|P/T|PTc',
-#              official == 'Polymyxin B' ~ 'PB',
-#              official == 'Quinupristin/dalfopristin' ~ 'Syn|Q/D|QDA|RP',
-#              official == 'Rifampin' ~ 'Rif|RA|RI|RD',
-#              official == 'Spectinomycin' ~ 'SPT|SPE|SC',
-#              official == 'Streptomycin' ~ 'S|STR',
-#              official == 'Teicoplanin' ~ 'Tei|TEC|TPN|TP|TPL',
-#              official == 'Telavancin' ~ 'TLV',
-#              official == 'Telithromcyin' ~ 'Tel',
-#              official == 'Tetracycline' ~ 'Te|TET|TC',
-#              official == 'Ticarcillin' ~ 'Ti|TIC|TC',
-#              official == 'Ticarcillin and beta-lactamase inhibitor' ~ 'Tim|T/C|TCC|TLc',
-#              official == 'Tigecycline' ~ 'TGC',
-#              official == 'Tobramycin' ~ 'To|NN|TM|TOB',
-#              official == 'Trimethoprim' ~ 'T|TMP|TR|W',
-#              official == 'Sulfamethoxazole and trimethoprim' ~ 'T/S|SXT|SxT|TS|COT',
-#              official == 'Vancomycin' ~ 'Va|VAN',
-#              TRUE ~ NA_character_),
-#
-#          trade_name =
-#            case_when(
-#              official == 'Amikacin' ~ 'Amikin',
-#              official == 'Amoxicillin' ~ 'Amoxil|Dispermox|Larotid|Trimox',
-#              official == 'Amoxicillin and beta-lactamase inhibitor' ~ 'Augmentin',
-#              official == 'Ampicillin' ~ 'Pfizerpen-A|Principen',
-#              official == 'Ampicillin and beta-lactamase inhibitor' ~ 'Unasyn',
-#              official == 'Azithromycin' ~ 'Zithromax',
-#              official == 'Azlocillin' ~ 'Azlin',
-#              official == 'Aztreonam' ~ 'Azactam',
-#              official == 'Carbenicillin' ~ 'Geocillin',
-#              official == 'Cefaclor' ~ 'Ceclor',
-#              official == 'Cefadroxil' ~ 'Duricef',
-#              official == 'Cefazolin' ~ 'Ancef',
-#              official == 'Cefdinir' ~ 'Omnicef',
-#              official == 'Cefditoren' ~ 'Spectracef',
-#              official == 'Cefepime' ~ 'Maxipime',
-#              official == 'Cefixime' ~ 'Suprax',
-#              official == 'Cefoperazone' ~ 'Cefobid',
-#              official == 'Cefotaxime' ~ 'Claforan',
-#              official == 'Cefotetan' ~ 'Cefotan',
-#              official == 'Cefoxitin' ~ 'Mefoxin',
-#              official == 'Cefpodoxime' ~ 'Vantin',
-#              official == 'Cefprozil' ~ 'Cefzil',
-#              official == 'Ceftaroline' ~ 'Teflaro',
-#              official == 'Ceftazidime' ~ 'Fortaz|Tazicef|Tazidime',
-#              official == 'Ceftibuten' ~ 'Cedax',
-#              official == 'Ceftizoxime' ~ 'Cefizox',
-#              official == 'Ceftriaxone' ~ 'Rocephin',
-#              official == 'Cefuroxime' ~ 'Ceftin|Zinacef',
-#              official == 'Cephalexin' ~ 'Keflex|Panixine',
-#              official == 'Cephalothin' ~ 'Keflin',
-#              official == 'Chloramphenicol' ~ 'Chloromycetin',
-#              official == 'Ciprofloxacin' ~ 'Cipro|Ciloxan|Ciproxin',
-#              official == 'Clarithromycin' ~ 'Biaxin',
-#              official == 'Clindamycin' ~ 'Cleocin|Clinda-Derm|Clindagel|Clindesse|Clindets|Evoclin',
-#              official == 'Colistin' ~ 'Coly-Mycin',
-#              official == 'Daptomycin' ~ 'Cubicin',
-#              official == 'Doxycycline' ~ 'Doryx|Monodox|Vibramycin|Atridox|Oracea|Periostat|Vibra-Tabs',
-#              official == 'Doripenem' ~ 'Doribax',
-#              official == 'Ertapenem' ~ 'Invanz',
-#              official == 'Erythromycin' ~ 'Eryc|EryPed|Erythrocin|E-Base|E-Glades|E-Mycin|E.E.S.|Ery-Tab|Eryderm|Erygel|Erythra-derm|Eryzole|Pediamycin',
-#              official == 'Fosfomycin' ~ 'Monurol',
-#              official == 'Flucloxacillin' ~ 'Flopen|Floxapen|Fluclox|Sesamol|Softapen|Staphylex',
-#              official == 'Gentamicin' ~ 'Garamycin|Genoptic',
-#              official == 'Imipenem' ~ 'Primaxin',
-#              official == 'Kanamycin' ~ 'Kantrex',
-#              official == 'Levofloxacin' ~ 'Levaquin|Quixin',
-#              official == 'Linezolid' ~ 'Zyvox',
-#              official == 'Lomefloxacin' ~ 'Maxaquin',
-#              official == 'Meropenem' ~ 'Merrem',
-#              official == 'Metronidazole' ~ 'Flagyl|MetroGel|MetroCream|MetroLotion',
-#              official == 'Mezlocillin' ~ 'Mezlin',
-#              official == 'Minocycline' ~ 'Arestin|Solodyn',
-#              official == 'Moxifloxacin' ~ 'Avelox|Vigamox',
-#              official == 'Mupirocin' ~ 'Bactroban|Centany',
-#              official == 'Nafcillin' ~ 'Unipen',
-#              official == 'Nalidixic acid' ~ 'NegGram',
-#              official == 'Nitrofurantoin' ~ 'Furadantin|Macrobid|Macrodantin',
-#              official == 'Norfloxacin' ~ 'Noroxin',
-#              official == 'Ofloxacin' ~ 'Floxin|Ocuflox|Ophthalmic',
-#              official == 'Oxacillin' ~ 'Bactocill',
-#              official == 'Benzylpenicillin' ~ 'Permapen|Pfizerpen|Veetids',
-#              official == 'Penicillins, combinations with other antibacterials' ~ 'Permapen|Pfizerpen|Veetids',
-#              official == 'Piperacillin' ~ 'Pipracil',
-#              official == 'Piperacillin and beta-lactamase inhibitor' ~ 'Zosyn',
-#              official == 'Polymyxin B' ~ 'Poly-RX',
-#              official == 'Quinupristin/dalfopristin' ~ 'Synercid',
-#              official == 'Rifampin' ~ 'Rifadin|Rifamate|Rimactane',
-#              official == 'Spectinomycin' ~ 'Trobicin',
-#              official == 'Streptomycin' ~ 'Streptomycin Sulfate',
-#              official == 'Teicoplanin' ~ 'Targocid',
-#              official == 'Telavancin' ~ 'Vibativ',
-#              official == 'Telithromcyin' ~ 'Ketek',
-#              official == 'Tetracycline' ~ 'Sumycin|Bristacycline|Tetrex',
-#              official == 'Ticarcillin' ~ 'Ticar',
-#              official == 'Ticarcillin and beta-lactamase inhibitor' ~ 'Timentin',
-#              official == 'Tigecycline' ~ 'Tygacil',
-#              official == 'Tobramycin' ~ 'Tobi|Aktob|Tobre',
-#              official == 'Trimethoprim' ~ 'Primsol|Proloprim',
-#              official == 'Sulfamethoxazole and trimethoprim' ~ 'Bactrim|Septra|Sulfatrim',
-#              official == 'Vancomycin' ~ 'Vancocin|Vancomycin Hydrochloride',
-#              TRUE ~ NA_character_)
-#   )
+# use this later to further fill AMR::antibiotics
+# drug <- "Ciprofloxacin"
+# url <- xml2::read_html(paste0("https://www.ncbi.nlm.nih.gov/pccompound?term=", drug)) %>%
+#   html_nodes(".rslt") %>%
+#   .[[1]] %>%
+#   html_nodes(".title a") %>%
+#   html_attr("href") %>%
+#   gsub("/compound/", "/rest/pug_view/data/compound/", ., fixed = TRUE) %>%
+#   paste0("/XML/?response_type=display")
+# synonyms <- url %>%
+#   read_xml() %>%
+#   xml_contents() %>% .[[6]] %>%
+#   xml_contents() %>% .[[8]] %>%
+#   xml_contents() %>% .[[3]] %>%
+#   xml_contents() %>% .[[3]] %>%
+#   xml_contents() %>%
+#   paste() %>%
+#   .[. %like% "StringValueList"] %>%
+#   gsub("[</]+StringValueList[>]", "", .)
+
 # last two columns created with:
 # antibiotics %>%
 #   mutate(useful_gramnegative =
@@ -232,55 +81,112 @@
 #              NA
 #            )
 #   )
+#
+# ADD NEW TRADE NAMES FROM OTHER DATAFRAME
+# antibiotics_add_to_property <- function(ab_df, atc, property, value) {
+#   if (length(atc) > 1L) {
+#     stop("only one atc at a time")
+#   }
+#   if (!property %in% c("abbr", "trade_name")) {
+#     stop("only possible for abbr and trade_name")
+#   }
+#
+#   value <- gsub(ab_df[which(ab_df$atc == atc),] %>% pull("official"), "", value, fixed = TRUE)
+#   value <- gsub("||", "|", value, fixed = TRUE)
+#   value <- gsub("[äáàâ]", "a", value)
+#   value <- gsub("[ëéèê]", "e", value)
+#   value <- gsub("[ïíìî]", "i", value)
+#   value <- gsub("[öóòô]", "o", value)
+#   value <- gsub("[üúùû]", "u", value)
+#   if (!atc %in% ab_df$atc) {
+#     message("SKIPPING - UNKNOWN ATC: ", atc)
+#   }
+#   if (is.na(value)) {
+#     message("SKIPPING - VALUE MISSES: ", atc)
+#   }
+#   if (atc %in% ab_df$atc & !is.na(value)) {
+#     current <- ab_df[which(ab_df$atc == atc),] %>% pull(property)
+#     if (!is.na(current)) {
+#       value <- paste(current, value, sep = "|")
+#     }
+#     value <- strsplit(value, "|", fixed = TRUE) %>% unlist() %>% unique() %>% paste(collapse = "|")
+#     value <- gsub("||", "|", value, fixed = TRUE)
+#     # print(value)
+#     ab_df[which(ab_df$atc == atc), property] <- value
+#     message("Added ", value, " to ", ab_official(atc), " (", atc, ", ", ab_certe(atc), ")")
+#   }
+#   ab_df
+# }
+#
 "antibiotics"
 
-#' Dataset with ~2500 microorganisms
+#' Data set with taxonomic data from ITIS
 #'
-#' A dataset containing 2464 microorganisms. MO codes of the UMCG can be looked up using \code{\link{microorganisms.umcg}}.
-#' @format A data.frame with 2464 observations and 12 variables:
+#' A data set containing the complete microbial taxonomy of the kingdoms Bacteria, Fungi and Protozoa. MO codes can be looked up using \code{\link{as.mo}}.
+#' @inheritSection as.mo ITIS
+#' @format A \code{\link{data.frame}} with 18,833 observations and 15 variables:
 #' \describe{
-#'   \item{\code{bactid}}{ID of microorganism}
-#'   \item{\code{bactsys}}{Bactsyscode of microorganism}
-#'   \item{\code{family}}{Family name of microorganism}
-#'   \item{\code{genus}}{Genus name of microorganism, like \code{"Echerichia"}}
-#'   \item{\code{species}}{Species name of microorganism, like \code{"coli"}}
-#'   \item{\code{subspecies}}{Subspecies name of bio-/serovar of microorganism, like \code{"EHEC"}}
-#'   \item{\code{fullname}}{Full name, like \code{"Echerichia coli (EHEC)"}}
-#'   \item{\code{type}}{Type of microorganism, like \code{"Bacteria"} and \code{"Fungus/yeast"}}
-#'   \item{\code{gramstain}}{Gram of microorganism, like \code{"Negative rods"}}
-#'   \item{\code{aerobic}}{Logical whether bacteria is aerobic}
-#'   \item{\code{type_nl}}{Type of microorganism in Dutch, like \code{"Bacterie"} and \code{"Schimmel/gist"}}
-#'   \item{\code{gramstain_nl}}{Gram of microorganism in Dutch, like \code{"Negatieve staven"}}
+#'   \item{\code{mo}}{ID of microorganism}
+#'   \item{\code{tsn}}{Taxonomic Serial Number (TSN), as defined by ITIS}
+#'   \item{\code{genus}}{Taxonomic genus of the microorganism as found in ITIS, see Source}
+#'   \item{\code{species}}{Taxonomic species of the microorganism as found in ITIS, see Source}
+#'   \item{\code{subspecies}}{Taxonomic subspecies of the microorganism as found in ITIS, see Source}
+#'   \item{\code{fullname}}{Full name, like \code{"Echerichia coli"}}
+#'   \item{\code{family}}{Taxonomic family of the microorganism as found in ITIS, see Source}
+#'   \item{\code{order}}{Taxonomic order of the microorganism as found in ITIS, see Source}
+#'   \item{\code{class}}{Taxonomic class of the microorganism as found in ITIS, see Source}
+#'   \item{\code{phylum}}{Taxonomic phylum of the microorganism as found in ITIS, see Source}
+#'   \item{\code{subkingdom}}{Taxonomic subkingdom of the microorganism as found in ITIS, see Source}
+#'   \item{\code{gramstain}}{Gram of microorganism, like \code{"Gram negative"}}
+#'   \item{\code{type}}{Type of microorganism, like \code{"Bacteria"} and \code{"Fungi"}}
+#'   \item{\code{prevalence}}{A rounded integer based on prevalence of the microorganism. Used internally by \code{\link{as.mo}}, otherwise quite meaningless.}
+#'   \item{\code{ref}}{Author(s) and year of concerning publication as found in ITIS, see Source}
 #' }
-#  source MOLIS (LIS of Certe) - \url{https://www.certe.nl}
-# new <- microorganisms %>% filter(genus == "Bacteroides") %>% .[1,]
-# new[1, 'bactid'] <- "DIAPNU"
-# new[1, 'bactsys'] <- "DIAPNU"
-# new[1, 'family'] <- "Veillonellaceae"
-# new[1, 'genus'] <- "Dialister"
-# new[1, 'species'] <- "pneumosintes"
-# new[1, 'subspecies'] <- NA
-# new[1, 'fullname'] <- paste(new[1, 'genus'], new[1, 'species'])
-# microorganisms <- microorganisms %>% bind_rows(new) %>% arrange(bactid)
-#' @seealso \code{\link{guess_bactid}} \code{\link{antibiotics}} \code{\link{microorganisms.umcg}}
+#' @source [3] Integrated Taxonomic Information System (ITIS) on-line database, \url{https://www.itis.gov}.
+#' @seealso \code{\link{as.mo}} \code{\link{mo_property}} \code{\link{microorganisms.umcg}}
 "microorganisms"
 
-#' Translation table for UMCG with ~1100 microorganisms
+#' Data set with old taxonomic data from ITIS
 #'
-#' A dataset containing all bacteria codes of UMCG MMB. These codes can be joined to data with an ID from \code{\link{microorganisms}$bactid} (using \code{\link{left_join_microorganisms}}). GLIMS codes can also be translated to valid \code{bactid}'s with \code{\link{guess_bactid}}.
-#' @format A data.frame with 1090 observations and 2 variables:
+#' A data set containing old (previously valid or accepted) taxonomic names according to ITIS. This data set is used internally by \code{\link{as.mo}}.
+#' @inheritSection as.mo ITIS
+#' @format A \code{\link{data.frame}} with 2,383 observations and 4 variables:
 #' \describe{
-#'   \item{\code{mocode}}{Code of microorganism according to UMCG MMB}
-#'   \item{\code{bactid}}{Code of microorganism in \code{\link{microorganisms}}}
+#'   \item{\code{tsn}}{Old Taxonomic Serial Number (TSN), as defined by ITIS}
+#'   \item{\code{name}}{Old taxonomic name of the microorganism as found in ITIS, see Source}
+#'   \item{\code{tsn_new}}{New Taxonomic Serial Number (TSN), as defined by ITIS}
+#'   \item{\code{ref}}{Author(s) and year of concerning publication as found in ITIS, see Source}
 #' }
-# source MOLIS (LIS of Certe) - \url{https://www.certe.nl} \cr \cr GLIMS (LIS of UMCG) - \url{https://www.umcg.nl}
-#' @seealso \code{\link{guess_bactid}} \code{\link{microorganisms}}
+#' @source [3] Integrated Taxonomic Information System (ITIS) on-line database, \url{https://www.itis.gov}.
+#' @seealso \code{\link{as.mo}} \code{\link{mo_property}} \code{\link{microorganisms}}
+"microorganisms.old"
+
+#' Translation table for UMCG
+#'
+#' A data set containing all bacteria codes of UMCG MMB. These codes can be joined to data with an ID from \code{\link{microorganisms}$mo} (using \code{\link{left_join_microorganisms}}). GLIMS codes can also be translated to valid \code{MO}s with \code{\link{guess_mo}}.
+#' @format A \code{\link{tibble}} with 1,095 observations and 2 variables:
+#' \describe{
+#'   \item{\code{umcg}}{Code of microorganism according to UMCG MMB}
+#'   \item{\code{certe}}{Code of microorganism according to Certe MMB}
+#' }
+#' @seealso \code{\link{as.mo}} \code{\link{microorganisms.certe}} \code{\link{microorganisms}}
 "microorganisms.umcg"
 
-#' Dataset with 2000 blood culture isolates of septic patients
+#' Translation table for Certe
 #'
-#' An anonymised dataset containing 2000 microbial blood culture isolates with their full antibiograms found in septic patients in 4 different hospitals in the Netherlands, between 2001 and 2017. It is true, genuine data. This \code{data.frame} can be used to practice AMR analysis. For examples, press F1.
-#' @format A data.frame with 2000 observations and 49 variables:
+#' A data set containing all bacteria codes of Certe MMB. These codes can be joined to data with an ID from \code{\link{microorganisms}$mo} (using \code{\link{left_join_microorganisms}}). GLIMS codes can also be translated to valid \code{MO}s with \code{\link{guess_mo}}.
+#' @format A \code{\link{tibble}} with 2,664 observations and 2 variables:
+#' \describe{
+#'   \item{\code{certe}}{Code of microorganism according to Certe MMB}
+#'   \item{\code{mo}}{Code of microorganism in \code{\link{microorganisms}}}
+#' }
+#' @seealso \code{\link{as.mo}} \code{\link{microorganisms}}
+"microorganisms.certe"
+
+#' Data set with 2000 blood culture isolates of septic patients
+#'
+#' An anonymised data set containing 2,000 microbial blood culture isolates with their full antibiograms found in septic patients in 4 different hospitals in the Netherlands, between 2001 and 2017. It is true, genuine data. This \code{data.frame} can be used to practice AMR analysis. For examples, press F1.
+#' @format A \code{\link{tibble}} with 2,000 observations and 49 variables:
 #' \describe{
 #'   \item{\code{date}}{date of receipt at the laboratory}
 #'   \item{\code{hospital_id}}{ID of the hospital, from A to D}
@@ -290,7 +196,7 @@
 #'   \item{\code{age}}{age of the patient}
 #'   \item{\code{sex}}{sex of the patient}
 #'   \item{\code{patient_id}}{ID of the patient, first 10 characters of an SHA hash containing irretrievable information}
-#'   \item{\code{bactid}}{ID of microorganism, see \code{\link{microorganisms}}}
+#'   \item{\code{mo}}{ID of microorganism, see \code{\link{microorganisms}}}
 #'   \item{\code{peni:rifa}}{40 different antibiotics with class \code{rsi} (see \code{\link{as.rsi}}); these column names occur in \code{\link{antibiotics}} data set and can be translated with \code{\link{abname}}}
 #' }
 # source MOLIS (LIS of Certe) - \url{https://www.certe.nl}
@@ -299,15 +205,15 @@
 #' # PREPARATION #
 #' # ----------- #
 #'
-#' # Save this example dataset to an object, so we can edit it:
+#' # Save this example data set to an object, so we can edit it:
 #' my_data <- septic_patients
 #'
 #' # load the dplyr package to make data science A LOT easier
 #' library(dplyr)
 #'
-#' # Add first isolates to our dataset:
+#' # Add first isolates to our data set:
 #' my_data <- my_data %>%
-#'   mutate(first_isolates = first_isolate(my_data, "date", "patient_id", "bactid"))
+#'   mutate(first_isolates = first_isolate(my_data, "date", "patient_id", "mo"))
 #'
 #' # -------- #
 #' # ANALYSIS #
@@ -317,7 +223,7 @@
 #' #     and numbers (n) of E. coli, divided by hospital:
 #'
 #' my_data %>%
-#'   filter(bactid == guess_bactid("E. coli"),
+#'   filter(mo == guess_mo("E. coli"),
 #'          first_isolates == TRUE) %>%
 #'   group_by(hospital_id) %>%
 #'   summarise(n = n_rsi(amox),
@@ -328,7 +234,7 @@
 #' #    percentages of E. coli, trend over the years:
 #'
 #' my_data %>%
-#'   filter(bactid == guess_bactid("E. coli"),
+#'   filter(mo == guess_mo("E. coli"),
 #'          first_isolates == TRUE) %>%
 #'   group_by(year = format(date, "%Y")) %>%
 #'   summarise(n = n_rsi(amcl),

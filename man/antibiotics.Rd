@@ -3,17 +3,17 @@
 \docType{data}
 \name{antibiotics}
 \alias{antibiotics}
-\title{Dataset with 420 antibiotics}
-\format{A data.frame with 420 observations and 18 variables:
+\title{Data set with 423 antibiotics}
+\format{A \code{\link{tibble}} with 423 observations and 18 variables:
 \describe{
   \item{\code{atc}}{ATC code, like \code{J01CR02}}
-  \item{\code{molis}}{MOLIS code, like \code{amcl}}
+  \item{\code{certe}}{Certe code, like \code{amcl}}
   \item{\code{umcg}}{UMCG code, like \code{AMCL}}
-  \item{\code{abbr}}{Abbreviation as used by many countries, to be used for \code{\link{guess_atc}}}
-  \item{\code{official}}{Official name by the WHO, like \code{"Amoxicillin and enzyme inhibitor"}}
+  \item{\code{abbr}}{Abbreviation as used by many countries, used internally by \code{\link{as.atc}}}
+  \item{\code{official}}{Official name by the WHO, like \code{"Amoxicillin and beta-lactamase inhibitor"}}
   \item{\code{official_nl}}{Official name in the Netherlands, like \code{"Amoxicilline met enzymremmer"}}
   \item{\code{trivial_nl}}{Trivial name in Dutch, like \code{"Amoxicilline/clavulaanzuur"}}
-  \item{\code{trade_name}}{Trade name as used by many countries, to be used for \code{\link{guess_atc}}}
+  \item{\code{trade_name}}{Trade name as used by many countries (a total of 294), used internally by \code{\link{as.atc}}}
   \item{\code{oral_ddd}}{Defined Daily Dose (DDD), oral treatment}
   \item{\code{oral_units}}{Units of \code{ddd_units}}
   \item{\code{iv_ddd}}{Defined Daily Dose (DDD), parenteral treatment}
@@ -32,7 +32,7 @@
 antibiotics
 }
 \description{
-A dataset containing all antibiotics with a J0 code, with their DDD's. Properties were downloaded from the WHO, see Source.
+A data set containing all antibiotics with a J0 code and some other antimicrobial agents, with their DDDs. Except for trade names and abbreviations, all properties were downloaded from the WHO, see Source.
 }
 \seealso{
 \code{\link{microorganisms}}

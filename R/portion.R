@@ -18,16 +18,17 @@
 
 #' Calculate resistance of isolates
 #'
-#' @description These functions can be used to calculate the (co-)resistance of microbial isolates (i.e. percentage S, SI, I, IR or R). All functions can be used in \code{dplyr}s \code{\link[dplyr]{summarise}} and support grouped variables, see \emph{Examples}.
+#' @description These functions can be used to calculate the (co-)resistance of microbial isolates (i.e. percentage S, SI, I, IR or R). All functions support quasiquotation with pipes, can be used in \code{dplyr}s \code{\link[dplyr]{summarise}} and support grouped variables, see \emph{Examples}.
 #'
 #' \code{portion_R} and \code{portion_IR} can be used to calculate resistance, \code{portion_S} and \code{portion_SI} can be used to calculate susceptibility.\cr
-#' @param ab1 vector of antibiotic interpretations, they will be transformed internally with \code{\link{as.rsi}} if needed
-#' @param ab2 like \code{ab}, a vector of antibiotic interpretations. Use this to calculate (the lack of) co-resistance: the probability where one of two drugs have a resistant or susceptible result. See Examples.
+#' @param ... one or more vectors (or columns) with antibiotic interpretations. They will be transformed internally with \code{\link{as.rsi}} if needed. Use multiple columns to calculate (the lack of) co-resistance: the probability where one of two drugs have a resistant or susceptible result. See Examples.
 #' @param minimum minimal amount of available isolates. Any number lower than \code{minimum} will return \code{NA}. The default number of \code{30} isolates is advised by the CLSI as best practice, see Source.
-#' @param as_percent logical to indicate whether the output must be returned as percent (text), will else be a double
-#' @param data a code{data.frame} containing columns with class \code{rsi} (see \code{\link{as.rsi}})
+#' @param as_percent logical to indicate whether the output must be returned as a hundred fold with \% sign (a character). A value of \code{0.123456} will then be returned as \code{"12.3\%"}.
+#' @param data a \code{data.frame} containing columns with class \code{rsi} (see \code{\link{as.rsi}})
 #' @param translate_ab a column name of the \code{\link{antibiotics}} data set to translate the antibiotic abbreviations to, using \code{\link{abname}}. This can be set with \code{\link{getOption}("get_antibiotic_names")}.
 #' @details \strong{Remember that you should filter your table to let it contain only first isolates!} Use \code{\link{first_isolate}} to determine them in your data set.
+#'
+#' These functions are not meant to count isolates, but to calculate the portion of resistance/susceptibility. If a column has been transformed with \code{\link{as.rsi}}, just use e.g. \code{isolates[isolates == "R"]} to get the resistant ones. You could then calculate the \code{\link{length}} of it.
 #'
 #' \code{portion_df} takes any variable from \code{data} that has an \code{"rsi"} class (created with \code{\link{as.rsi}}) and calculates the portions R, I and S. The resulting \emph{tidy data} (see Source) \code{data.frame} will have three rows (S/I/R) and a column for each variable with class \code{"rsi"}.
 #'
@@ -41,13 +42,16 @@
 #'   For two antibiotics:
 #'   \out{<div style="text-align: center">}\figure{combi_therapy_2.png}\out{</div>}
 #'   \cr
-#'   Theoretically for three antibiotics:
+#'   For three antibiotics:
 #'   \out{<div style="text-align: center">}\figure{combi_therapy_3.png}\out{</div>}
+#'   \cr
+#'   And so on.
 #' }
 #' @source \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 4th Edition}, 2014, \emph{Clinical and Laboratory Standards Institute (CLSI)}. \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
 #'
 #' Wickham H. \strong{Tidy Data.} The Journal of Statistical Software, vol. 59, 2014. \url{http://vita.had.co.nz/papers/tidy-data.html}
-#' @seealso \code{\link{n_rsi}} to count cases with antimicrobial results.
+#' @seealso \code{\link[AMR]{count}_*} to count resistant and susceptibile isolates.\cr
+#' \code{\link{n_rsi}} to count all cases where antimicrobial results are available.
 #' @keywords resistance susceptibility rsi_df rsi antibiotics isolate isolates
 #' @return Double or, when \code{as_percent = TRUE}, a character.
 #' @rdname portion
@@ -65,11 +69,14 @@
 #' portion_S(septic_patients$amox)
 #' portion_SI(septic_patients$amox)
 #'
-#' # Since n_rsi counts available isolates (and is used as denominator),
-#' # you can calculate back to count e.g. non-susceptible isolates:
-#' portion_IR(septic_patients$amox) * n_rsi(septic_patients$amox)
-#'
+
+#' # Do the above with pipes:
 #' library(dplyr)
+#' septic_patients %>% portion_R(amox)
+#' septic_patients %>% portion_IR(amox)
+#' septic_patients %>% portion_S(amox)
+#' septic_patients %>% portion_SI(amox)
+#'
 #' septic_patients %>%
 #'   group_by(hospital_id) %>%
 #'   summarise(p = portion_S(cipr),
@@ -85,16 +92,15 @@
 #'
 #' # Calculate co-resistance between amoxicillin/clav acid and gentamicin,
 #' # so we can see that combination therapy does a lot more than mono therapy:
-#' portion_S(septic_patients$amcl) # S = 67.3%
-#' n_rsi(septic_patients$amcl)     # n = 1570
+#' septic_patients %>% portion_S(amcl)       # S = 67.3%
+#' septic_patients %>% n_rsi(amcl)           # n = 1570
 #'
-#' portion_S(septic_patients$gent) # S = 74.0%
-#' n_rsi(septic_patients$gent)     # n = 1842
+#' septic_patients %>% portion_S(gent)       # S = 74.0%
+#' septic_patients %>% n_rsi(gent)           # n = 1842
 #'
-#' with(septic_patients,
-#'      portion_S(amcl, gent))     # S = 92.1%
-#' with(septic_patients,           # n = 1504
-#'      n_rsi(amcl, gent))
+#' septic_patients %>% portion_S(amcl, gent) # S = 92.1%
+#' septic_patients %>% n_rsi(amcl, gent)     # n = 1504
+#'
 #'
 #' septic_patients %>%
 #'   group_by(hospital_id) %>%
@@ -126,77 +132,84 @@
 #'   summarise(p = portion_S(amox, metr),  # amoxicillin with metronidazole
 #'             n = n_rsi(amox, metr))
 #' }
-portion_R <- function(ab1,
-                      ab2 = NULL,
+portion_R <- function(...,
                       minimum = 30,
                       as_percent = FALSE) {
-  rsi_calc(type = "R",
-           ab1 = ab1,
-           ab2 = ab2,
+  rsi_calc(...,
+           type = "R",
            include_I = FALSE,
            minimum = minimum,
-           as_percent = as_percent)
+           as_percent = as_percent,
+           only_count = FALSE)
 }
 
 #' @rdname portion
 #' @export
-portion_IR <- function(ab1,
-                       ab2 = NULL,
+portion_IR <- function(...,
                        minimum = 30,
                        as_percent = FALSE) {
-  rsi_calc(type = "R",
-           ab1 = ab1,
-           ab2 = ab2,
+  rsi_calc(...,
+           type = "R",
            include_I = TRUE,
            minimum = minimum,
-           as_percent = as_percent)
+           as_percent = as_percent,
+           only_count = FALSE)
 }
 
 #' @rdname portion
 #' @export
-portion_I <- function(ab1,
+portion_I <- function(...,
                       minimum = 30,
                       as_percent = FALSE) {
-  rsi_calc(type = "I",
-           ab1 = ab1,
-           ab2 = NULL,
+  rsi_calc(...,
+           type = "I",
            include_I = FALSE,
            minimum = minimum,
-           as_percent = as_percent)
+           as_percent = as_percent,
+           only_count = FALSE)
 }
 
 #' @rdname portion
 #' @export
-portion_SI <- function(ab1,
-                       ab2 = NULL,
+portion_SI <- function(...,
                        minimum = 30,
                        as_percent = FALSE) {
-  rsi_calc(type = "S",
-           ab1 = ab1,
-           ab2 = ab2,
+  rsi_calc(...,
+           type = "S",
            include_I = TRUE,
            minimum = minimum,
-           as_percent = as_percent)
+           as_percent = as_percent,
+           only_count = FALSE)
 }
 
 #' @rdname portion
 #' @export
-portion_S <- function(ab1,
-                      ab2 = NULL,
+portion_S <- function(...,
                       minimum = 30,
                       as_percent = FALSE) {
-  rsi_calc(type = "S",
-           ab1 = ab1,
-           ab2 = ab2,
+  rsi_calc(...,
+           type = "S",
            include_I = FALSE,
            minimum = minimum,
-           as_percent = as_percent)
+           as_percent = as_percent,
+           only_count = FALSE)
 }
 
 #' @rdname portion
-#' @importFrom dplyr bind_rows summarise_if mutate group_vars select everything
+#' @importFrom dplyr %>% select_if bind_rows summarise_if mutate group_vars select everything
 #' @export
-portion_df <- function(data, translate_ab = getOption("get_antibiotic_names", "official")) {
+portion_df <- function(data,
+                       translate_ab = getOption("get_antibiotic_names", "official"),
+                       minimum = 30,
+                       as_percent = FALSE) {
+
+  if (!"data.frame" %in% class(data)) {
+    stop("`portion_df` must be called on a data.frame")
+  }
+
+  if (data %>% select_if(is.rsi) %>% ncol() == 0) {
+    stop("No columns with class 'rsi' found. See ?as.rsi.")
+  }
 
   if (as.character(translate_ab) == "TRUE") {
     translate_ab <- "official"
@@ -205,19 +218,25 @@ portion_df <- function(data, translate_ab = getOption("get_antibiotic_names", "o
 
   resS <- summarise_if(.tbl = data,
                        .predicate = is.rsi,
-                       .funs = portion_S) %>%
+                       .funs = portion_S,
+                       minimum = minimum,
+                       as_percent = as_percent) %>%
     mutate(Interpretation = "S") %>%
     select(Interpretation, everything())
 
   resI <- summarise_if(.tbl = data,
                        .predicate = is.rsi,
-                       .funs = portion_I) %>%
+                       .funs = portion_I,
+                       minimum = minimum,
+                       as_percent = as_percent) %>%
     mutate(Interpretation = "I") %>%
     select(Interpretation, everything())
 
   resR <- summarise_if(.tbl = data,
                        .predicate = is.rsi,
-                       .funs = portion_R) %>%
+                       .funs = portion_R,
+                       minimum = minimum,
+                       as_percent = as_percent) %>%
     mutate(Interpretation = "R") %>%
     select(Interpretation, everything())
 
@@ -225,7 +244,7 @@ portion_df <- function(data, translate_ab = getOption("get_antibiotic_names", "o
 
   res <- bind_rows(resS, resI, resR) %>%
     mutate(Interpretation = factor(Interpretation, levels = c("R", "I", "S"), ordered = TRUE)) %>%
-    tidyr::gather(Antibiotic, Percentage, -Interpretation, -data.groups)
+    tidyr::gather(Antibiotic, Value, -Interpretation, -data.groups)
 
   if (!translate_ab == FALSE) {
     if (!tolower(translate_ab) %in% tolower(colnames(AMR::antibiotics))) {
@@ -237,71 +256,47 @@ portion_df <- function(data, translate_ab = getOption("get_antibiotic_names", "o
   res
 }
 
-rsi_calc <- function(type,
-                     ab1,
-                     ab2,
-                     include_I,
-                     minimum,
-                     as_percent) {
 
-  if (NCOL(ab1) > 1) {
-    stop('`ab1` must be a vector of antimicrobial interpretations', call. = FALSE)
-  }
-  if (!is.logical(include_I)) {
-    stop('`include_I` must be logical', call. = FALSE)
-  }
-  if (!is.numeric(minimum)) {
-    stop('`minimum` must be numeric', call. = FALSE)
-  }
-  if (!is.logical(as_percent)) {
-    stop('`as_percent` must be logical', call. = FALSE)
-  }
+#' Calculate resistance of isolates
+#'
+#' This function is deprecated. Use the \code{\link{portion}} functions instead.
+#' @inheritParams portion
+#' @param ab1,ab2  vector (or column) with antibiotic interpretations. It will be transformed internally with \code{\link{as.rsi}} if needed.
+#' @param interpretation antimicrobial interpretation to check for
+#' @param ... deprecated parameters to support usage on older versions
+#' @importFrom dplyr tibble case_when
+#' @export
+rsi <- function(ab1,
+                ab2 = NULL,
+                interpretation = "IR",
+                minimum = 30,
+                as_percent = FALSE,
+                ...) {
 
-  print_warning <- FALSE
-  if (!is.rsi(ab1)) {
-    ab1 <- as.rsi(ab1)
-    print_warning <- TRUE
-  }
-  if (!is.null(ab2)) {
-    # ab_name <- paste(deparse(substitute(ab1)), "and", deparse(substitute(ab2)))
-    if (NCOL(ab2) > 1) {
-      stop('`ab2` must be a vector of antimicrobial interpretations', call. = FALSE)
-    }
-    if (!is.rsi(ab2)) {
-      ab2 <- as.rsi(ab2)
-      print_warning <- TRUE
-    }
-    x <- apply(X = data.frame(ab1 = as.integer(ab1),
-                              ab2 = as.integer(ab2)),
-               MARGIN = 1,
-               FUN = min)
+  if (all(is.null(ab2))) {
+    df <- tibble(ab1 = ab1)
   } else {
-    x <- ab1
-    # ab_name <- deparse(substitute(ab1))
+    df <- tibble(ab1 = ab1,
+                 ab2 = ab2)
   }
 
-  if (print_warning == TRUE) {
-    warning("Increase speed by transforming to class `rsi` on beforehand: df %>% mutate_at(vars(col10:col20), as.rsi)")
+  result <- case_when(
+    interpretation == "S"             ~ portion_S(df, minimum = minimum, as_percent = FALSE),
+    interpretation %in% c("SI", "IS") ~ portion_SI(df, minimum = minimum, as_percent = FALSE),
+    interpretation == "I"             ~ portion_I(df, minimum = minimum, as_percent = FALSE),
+    interpretation %in% c("RI", "IR") ~ portion_IR(df, minimum = minimum, as_percent = FALSE),
+    interpretation == "R"             ~ portion_R(df, minimum = minimum, as_percent = FALSE),
+    TRUE ~ -1
+  )
+  if (result == -1) {
+    stop("invalid interpretation")
   }
 
-  total <- length(x) - sum(is.na(x))
-  if (total < minimum) {
-    return(NA)
-  }
-
-  if (type == "S") {
-    found <- sum(as.integer(x) <= 1 + include_I, na.rm = TRUE)
-  } else if (type == "I") {
-    found <- sum(as.integer(x) == 2, na.rm = TRUE)
-  } else if (type == "R") {
-    found <- sum(as.integer(x) >= 3 - include_I, na.rm = TRUE)
-  } else {
-    stop("invalid type")
-  }
+  .Deprecated(new = paste0("portion_", interpretation))
 
   if (as_percent == TRUE) {
-    percent(found / total, force_zero = TRUE)
+    percent(result, force_zero = TRUE)
   } else {
-    found / total
+    result
   }
 }

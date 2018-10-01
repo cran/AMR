@@ -7,50 +7,64 @@ test_that("first isolates work", {
       first_isolate(tbl = septic_patients,
                     col_date = "date",
                     col_patient_id = "patient_id",
-                    col_bactid = "bactid",
+                    col_mo = "mo",
                     info = TRUE),
       na.rm = TRUE),
-    1331)
+    1315)
 
-  # septic_patients contains 1426 out of 2000 first *weighted* isolates
+  # septic_patients contains 1411 out of 2000 first *weighted* isolates
   expect_equal(
     suppressWarnings(
       sum(
         first_isolate(tbl = septic_patients %>% mutate(keyab = key_antibiotics(.)),
                       col_date = "date",
                       col_patient_id = "patient_id",
-                      col_bactid = "bactid",
+                      col_mo = "mo",
                       col_keyantibiotics = "keyab",
                       type = "keyantibiotics",
                       info = TRUE),
         na.rm = TRUE)),
-    1426)
-  # and 1430 when using points
+    1411)
+  # and 1435 when not ignoring I
   expect_equal(
     suppressWarnings(
       sum(
         first_isolate(tbl = septic_patients %>% mutate(keyab = key_antibiotics(.)),
                       col_date = "date",
                       col_patient_id = "patient_id",
-                      col_bactid = "bactid",
+                      col_mo = "mo",
+                      col_keyantibiotics = "keyab",
+                      ignore_I = FALSE,
+                      type = "keyantibiotics",
+                      info = TRUE),
+        na.rm = TRUE)),
+    1435)
+  # and 1416 when using points
+  expect_equal(
+    suppressWarnings(
+      sum(
+        first_isolate(tbl = septic_patients %>% mutate(keyab = key_antibiotics(.)),
+                      col_date = "date",
+                      col_patient_id = "patient_id",
+                      col_mo = "mo",
                       col_keyantibiotics = "keyab",
                       type = "points",
                       info = TRUE),
         na.rm = TRUE)),
-    1430)
+    1416)
 
-  # septic_patients contains 1176 out of 2000 first non-ICU isolates
+  # septic_patients contains 1161 out of 2000 first non-ICU isolates
   expect_equal(
     sum(
       first_isolate(septic_patients,
-                    col_bactid = "bactid",
+                    col_mo = "mo",
                     col_date = "date",
                     col_patient_id = "patient_id",
                     col_icu = "ward_icu",
                     info = TRUE,
                     icu_exclude = TRUE),
       na.rm = TRUE),
-    1176)
+    1161)
 
   # set 1500 random observations to be of specimen type 'Urine'
   random_rows <- sample(x = 1:2000, size = 1500, replace = FALSE)
@@ -62,7 +76,7 @@ test_that("first isolates work", {
                                                     "Other")),
                     col_date = "date",
                     col_patient_id = "patient_id",
-                    col_bactid = "bactid",
+                    col_mo = "mo",
                     col_specimen = "specimen",
                     filter_specimen = "Urine",
                     info = TRUE),
@@ -77,7 +91,7 @@ test_that("first isolates work", {
                                                     "Other")),
                     col_date = "date",
                     col_patient_id = "patient_id",
-                    col_bactid = "bactid",
+                    col_mo = "mo",
                     col_specimen = "specimen",
                     filter_specimen = "Urine",
                     col_icu = "ward_icu",
@@ -85,4 +99,40 @@ test_that("first isolates work", {
                     info = TRUE),
       na.rm = TRUE),
     1501)
+
+  # "No isolates found"
+  expect_message(septic_patients %>%
+                   mutate(specimen = "test") %>%
+                   mutate(first = first_isolate(., "date", "patient_id",
+                                                col_mo = "mo",
+                                                col_specimen = "specimen",
+                                                filter_specimen = "something_unexisting",
+                                                output_logical = FALSE)))
+
+  # printing of exclusion message
+  expect_output(septic_patients %>%
+                            first_isolate(col_date = "date",
+                                          col_mo = "mo",
+                                          col_patient_id = "patient_id",
+                                          col_testcode = "gender",
+                                          testcodes_exclude = "M"))
+
+  # errors
+  expect_error(first_isolate("date", "patient_id", col_mo = "mo"))
+  expect_error(first_isolate(septic_patients))
+  expect_error(first_isolate(septic_patients,
+                             col_date = "non-existing col",
+                             col_mo = "mo"))
+
+  # if mo is not an mo class, result should be the same
+  expect_identical(septic_patients %>%
+                   mutate(mo = as.character(mo)) %>%
+                   first_isolate(col_date = "date",
+                                 col_mo = "mo",
+                                 col_patient_id = "patient_id"),
+                   septic_patients %>%
+                     first_isolate(col_date = "date",
+                                   col_mo = "mo",
+                                   col_patient_id = "patient_id"))
+
 })
