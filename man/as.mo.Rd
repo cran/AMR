@@ -49,12 +49,20 @@ A microbial ID from this package (class: \code{mo}) typically looks like these e
   |   |    |    ----> subspecies, a 3-4 letter acronym
   |   |     ----> species, a 3-4 letter acronym
   |    ----> genus, a 5-7 letter acronym, mostly without vowels
-   ----> taxonomic kingdom, either Bacteria (B), Fungi (F) or Protozoa (P)
+   ----> taxonomic kingdom, either B (Bacteria), F (Fungi) or P (Protozoa)
 }
 
 Use the \code{\link{mo_property}} functions to get properties based on the returned code, see Examples.
 
-This function uses Artificial Intelligence (AI) to help getting more logical results, based on type of input and known prevalence of human pathogens. For example:
+This function uses Artificial Intelligence (AI) to help getting fast and logical results. It tries to find matches in this order:
+\itemize{
+  \item{Taxonomic kingdom: it first searches in bacteria, then fungi, then protozoa}
+  \item{Human pathogenic prevalence: it first searches in more prevalent microorganisms, then less prevalent ones}
+  \item{Valid MO codes and full names: it first searches in already valid MO code and known genus/species combinations}
+  \item{Breakdown of input values: from here it starts to breakdown input values to find possible matches}
+}
+
+A couple of effects because of these rules
 \itemize{
   \item{\code{"E. coli"} will return the ID of \emph{Escherichia coli} and not \emph{Entamoeba coli}, although the latter would alphabetically come first}
   \item{\code{"H. influenzae"} will return the ID of \emph{Haemophilus influenzae} and not \emph{Haematobacter influenzae} for the same reason}
@@ -68,9 +76,9 @@ This means that looking up human pathogenic microorganisms takes less time than 
 \section{ITIS}{
 
 \if{html}{\figure{itis_logo.jpg}{options: height=60px style=margin-bottom:5px} \cr}
-This package contains the \strong{complete microbial taxonomic data} (with all  seven taxonomic ranks - from subkingdom to subspecies) from the publicly available Integrated Taxonomic Information System (ITIS, \url{https://www.itis.gov}).
+This package contains the \strong{complete microbial taxonomic data} (with all eight taxonomic ranks - from kingdom to subspecies) from the publicly available Integrated Taxonomic Information System (ITIS, \url{https://www.itis.gov}).
 
-The complete taxonomic kingdoms Bacteria, Fungi and Protozoa are included in this package, as well as all previously accepted names known to ITIS. Furthermore, the responsible authors and year of publication are available too. This allows users to use authoritative taxonomic information for their data analyses on any microorganisms, not only human pathogens.
+All (sub)species from \strong{the taxonomic kingdoms Bacteria, Fungi and Protozoa are included in this package}, as well as all previously accepted names known to ITIS. Furthermore, the responsible authors and year of publication are available. This allows users to use authoritative taxonomic information for their data analysis on any microorganism, not only human pathogens. It also helps to quickly determine the Gram stain of bacteria, since all bacteria are classified into subkingdom Negibacteria or Posibacteria.
 
 ITIS is a partnership of U.S., Canadian, and Mexican agencies and taxonomic specialists [3].
 }
@@ -124,16 +132,15 @@ df$mo <- as.mo(df$microorganism_name)
 library(dplyr)
 df$mo <- df \%>\%
   select(microorganism_name) \%>\%
-  guess_mo()
+  as.mo()
 
 # and can even contain 2 columns, which is convenient for genus/species combinations:
 df$mo <- df \%>\%
   select(genus, species) \%>\%
-  guess_mo()
-
-# same result:
+  as.mo()
+# although this works easier and does the same:
 df <- df \%>\%
-  mutate(mo = guess_mo(paste(genus, species)))
+  mutate(mo = as.mo(paste(genus, species)))
 }
 }
 \seealso{

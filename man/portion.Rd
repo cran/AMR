@@ -15,29 +15,38 @@
 Wickham H. \strong{Tidy Data.} The Journal of Statistical Software, vol. 59, 2014. \url{http://vita.had.co.nz/papers/tidy-data.html}
 }
 \usage{
-portion_R(..., minimum = 30, as_percent = FALSE)
+portion_R(..., minimum = 30, as_percent = FALSE,
+  also_single_tested = FALSE)
 
-portion_IR(..., minimum = 30, as_percent = FALSE)
+portion_IR(..., minimum = 30, as_percent = FALSE,
+  also_single_tested = FALSE)
 
-portion_I(..., minimum = 30, as_percent = FALSE)
+portion_I(..., minimum = 30, as_percent = FALSE,
+  also_single_tested = FALSE)
 
-portion_SI(..., minimum = 30, as_percent = FALSE)
+portion_SI(..., minimum = 30, as_percent = FALSE,
+  also_single_tested = FALSE)
 
-portion_S(..., minimum = 30, as_percent = FALSE)
+portion_S(..., minimum = 30, as_percent = FALSE,
+  also_single_tested = FALSE)
 
 portion_df(data, translate_ab = getOption("get_antibiotic_names",
-  "official"), minimum = 30, as_percent = FALSE)
+  "official"), minimum = 30, as_percent = FALSE, combine_IR = FALSE)
 }
 \arguments{
 \item{...}{one or more vectors (or columns) with antibiotic interpretations. They will be transformed internally with \code{\link{as.rsi}} if needed. Use multiple columns to calculate (the lack of) co-resistance: the probability where one of two drugs have a resistant or susceptible result. See Examples.}
 
-\item{minimum}{minimal amount of available isolates. Any number lower than \code{minimum} will return \code{NA}. The default number of \code{30} isolates is advised by the CLSI as best practice, see Source.}
+\item{minimum}{the minimal amount of available isolates. Any number lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see Source.}
 
-\item{as_percent}{logical to indicate whether the output must be returned as a hundred fold with \% sign (a character). A value of \code{0.123456} will then be returned as \code{"12.3\%"}.}
+\item{as_percent}{a logical to indicate whether the output must be returned as a hundred fold with \% sign (a character). A value of \code{0.123456} will then be returned as \code{"12.3\%"}.}
+
+\item{also_single_tested}{a logical to indicate whether (in combination therapies) also observations should be included where not all antibiotics were tested, but at least one of the tested antibiotics contains a target interpretation (e.g. S in case of \code{portion_S} and R in case of \code{portion_R}). \strong{This would lead to selection bias in almost all cases.}}
 
 \item{data}{a \code{data.frame} containing columns with class \code{rsi} (see \code{\link{as.rsi}})}
 
 \item{translate_ab}{a column name of the \code{\link{antibiotics}} data set to translate the antibiotic abbreviations to, using \code{\link{abname}}. This can be set with \code{\link{getOption}("get_antibiotic_names")}.}
+
+\item{combine_IR}{a logical to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. IR (susceptible vs. non-susceptible)}
 }
 \value{
 Double or, when \code{as_percent = TRUE}, a character.
@@ -104,24 +113,24 @@ septic_patients \%>\%
 
 # Calculate co-resistance between amoxicillin/clav acid and gentamicin,
 # so we can see that combination therapy does a lot more than mono therapy:
-septic_patients \%>\% portion_S(amcl)       # S = 67.3\%
-septic_patients \%>\% n_rsi(amcl)           # n = 1570
+septic_patients \%>\% portion_S(amcl)       # S = 67.1\%
+septic_patients \%>\% count_all(amcl)       # n = 1576
 
 septic_patients \%>\% portion_S(gent)       # S = 74.0\%
-septic_patients \%>\% n_rsi(gent)           # n = 1842
+septic_patients \%>\% count_all(gent)       # n = 1855
 
-septic_patients \%>\% portion_S(amcl, gent) # S = 92.1\%
-septic_patients \%>\% n_rsi(amcl, gent)     # n = 1504
+septic_patients \%>\% portion_S(amcl, gent) # S = 92.0\%
+septic_patients \%>\% count_all(amcl, gent) # n = 1517
 
 
 septic_patients \%>\%
   group_by(hospital_id) \%>\%
   summarise(cipro_p = portion_S(cipr, as_percent = TRUE),
-            cipro_n = n_rsi(cipr),
+            cipro_n = count_all(cipr),
             genta_p = portion_S(gent, as_percent = TRUE),
-            genta_n = n_rsi(gent),
+            genta_n = count_all(gent),
             combination_p = portion_S(cipr, gent, as_percent = TRUE),
-            combination_n = n_rsi(cipr, gent))
+            combination_n = count_all(cipr, gent))
 
 # Get portions S/I/R immediately of all rsi columns
 septic_patients \%>\%
@@ -142,12 +151,11 @@ my_table \%>\%
   filter(first_isolate == TRUE,
          genus == "Helicobacter") \%>\%
   summarise(p = portion_S(amox, metr),  # amoxicillin with metronidazole
-            n = n_rsi(amox, metr))
+            n = count_all(amox, metr))
 }
 }
 \seealso{
-\code{\link[AMR]{count}_*} to count resistant and susceptibile isolates.\cr
-\code{\link{n_rsi}} to count all cases where antimicrobial results are available.
+\code{\link[AMR]{count}_*} to count resistant and susceptibile isolates.
 }
 \keyword{antibiotics}
 \keyword{isolate}

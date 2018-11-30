@@ -19,7 +19,7 @@
 #' Data set with 423 antibiotics
 #'
 #' A data set containing all antibiotics with a J0 code and some other antimicrobial agents, with their DDDs. Except for trade names and abbreviations, all properties were downloaded from the WHO, see Source.
-#' @format A \code{\link{tibble}} with 423 observations and 18 variables:
+#' @format A \code{\link{data.frame}} with 423 observations and 18 variables:
 #' \describe{
 #'   \item{\code{atc}}{ATC code, like \code{J01CR02}}
 #'   \item{\code{certe}}{Certe code, like \code{amcl}}
@@ -137,9 +137,9 @@
 #'   \item{\code{class}}{Taxonomic class of the microorganism as found in ITIS, see Source}
 #'   \item{\code{phylum}}{Taxonomic phylum of the microorganism as found in ITIS, see Source}
 #'   \item{\code{subkingdom}}{Taxonomic subkingdom of the microorganism as found in ITIS, see Source}
+#'   \item{\code{kingdom}}{Taxonomic kingdom of the microorganism as found in ITIS, see Source}
 #'   \item{\code{gramstain}}{Gram of microorganism, like \code{"Gram negative"}}
-#'   \item{\code{type}}{Type of microorganism, like \code{"Bacteria"} and \code{"Fungi"}}
-#'   \item{\code{prevalence}}{A rounded integer based on prevalence of the microorganism. Used internally by \code{\link{as.mo}}, otherwise quite meaningless.}
+#'   \item{\code{prevalence}}{An integer based on estimated prevalence of the microorganism in humans. Used internally by \code{\link{as.mo}}, otherwise quite meaningless. It has a value of 25 for manually added items and a value of 1000 for all unprevalent microorganisms whose genus was somewhere in the top 250 (with another species).}
 #'   \item{\code{ref}}{Author(s) and year of concerning publication as found in ITIS, see Source}
 #' }
 #' @source [3] Integrated Taxonomic Information System (ITIS) on-line database, \url{https://www.itis.gov}.
@@ -164,7 +164,7 @@
 #' Translation table for UMCG
 #'
 #' A data set containing all bacteria codes of UMCG MMB. These codes can be joined to data with an ID from \code{\link{microorganisms}$mo} (using \code{\link{left_join_microorganisms}}). GLIMS codes can also be translated to valid \code{MO}s with \code{\link{guess_mo}}.
-#' @format A \code{\link{tibble}} with 1,095 observations and 2 variables:
+#' @format A \code{\link{data.frame}} with 1,095 observations and 2 variables:
 #' \describe{
 #'   \item{\code{umcg}}{Code of microorganism according to UMCG MMB}
 #'   \item{\code{certe}}{Code of microorganism according to Certe MMB}
@@ -175,7 +175,7 @@
 #' Translation table for Certe
 #'
 #' A data set containing all bacteria codes of Certe MMB. These codes can be joined to data with an ID from \code{\link{microorganisms}$mo} (using \code{\link{left_join_microorganisms}}). GLIMS codes can also be translated to valid \code{MO}s with \code{\link{guess_mo}}.
-#' @format A \code{\link{tibble}} with 2,664 observations and 2 variables:
+#' @format A \code{\link{data.frame}} with 2,665 observations and 2 variables:
 #' \describe{
 #'   \item{\code{certe}}{Code of microorganism according to Certe MMB}
 #'   \item{\code{mo}}{Code of microorganism in \code{\link{microorganisms}}}
@@ -186,7 +186,7 @@
 #' Data set with 2000 blood culture isolates of septic patients
 #'
 #' An anonymised data set containing 2,000 microbial blood culture isolates with their full antibiograms found in septic patients in 4 different hospitals in the Netherlands, between 2001 and 2017. It is true, genuine data. This \code{data.frame} can be used to practice AMR analysis. For examples, press F1.
-#' @format A \code{\link{tibble}} with 2,000 observations and 49 variables:
+#' @format A \code{\link{data.frame}} with 2,000 observations and 49 variables:
 #' \describe{
 #'   \item{\code{date}}{date of receipt at the laboratory}
 #'   \item{\code{hospital_id}}{ID of the hospital, from A to D}
@@ -199,7 +199,6 @@
 #'   \item{\code{mo}}{ID of microorganism, see \code{\link{microorganisms}}}
 #'   \item{\code{peni:rifa}}{40 different antibiotics with class \code{rsi} (see \code{\link{as.rsi}}); these column names occur in \code{\link{antibiotics}} data set and can be translated with \code{\link{abname}}}
 #' }
-# source MOLIS (LIS of Certe) - \url{https://www.certe.nl}
 #' @examples
 #' # ----------- #
 #' # PREPARATION #
@@ -240,3 +239,31 @@
 #'   summarise(n = n_rsi(amcl),
 #'             p = portion_IR(amcl, minimum = 20))
 "septic_patients"
+
+#' Supplementary Data
+#'
+#' These \code{\link{data.table}s} are transformed from the \code{\link{microorganisms}} and \code{\link{microorganisms}} data sets to improve speed of \code{\link{as.mo}}. They are meant for internal use only, and are only mentioned here for reference.
+#' @rdname supplementary_data
+#' @name supplementary_data
+# # Renew data:
+# microorganismsDT <- data.table::as.data.table(AMR::microorganisms)
+# # sort on (1) bacteria, (2) fungi, (3) protozoa and then human pathogenic prevalence and then TSN:
+# data.table::setkey(microorganismsDT, kingdom, prevalence, fullname)
+# microorganisms.prevDT <- microorganismsDT[prevalence == 9999,]
+# microorganisms.unprevDT <- microorganismsDT[prevalence != 9999,]
+# microorganisms.oldDT <- data.table::as.data.table(AMR::microorganisms.old)
+# data.table::setkey(microorganisms.oldDT, tsn, name)
+# devtools::use_data(microorganismsDT, overwrite = TRUE)
+# devtools::use_data(microorganisms.prevDT, overwrite = TRUE)
+# devtools::use_data(microorganisms.unprevDT, overwrite = TRUE)
+# devtools::use_data(microorganisms.oldDT, overwrite = TRUE)
+"microorganismsDT"
+
+#' @rdname supplementary_data
+"microorganisms.prevDT"
+
+#' @rdname supplementary_data
+"microorganisms.unprevDT"
+
+#' @rdname supplementary_data
+"microorganisms.oldDT"

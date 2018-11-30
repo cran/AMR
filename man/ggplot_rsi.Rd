@@ -11,9 +11,10 @@
 \title{AMR bar plots with \code{ggplot}}
 \usage{
 ggplot_rsi(data, position = NULL, x = "Antibiotic",
-  fill = "Interpretation", facet = NULL, translate_ab = "official",
-  fun = count_df, nrow = NULL, datalabels = TRUE,
-  datalabels.size = 3, datalabels.colour = "grey15", ...)
+  fill = "Interpretation", facet = NULL, breaks = seq(0, 1, 0.1),
+  translate_ab = "official", fun = count_df, nrow = NULL,
+  datalabels = TRUE, datalabels.size = 3,
+  datalabels.colour = "grey15", ...)
 
 geom_rsi(position = NULL, x = c("Antibiotic", "Interpretation"),
   fill = "Interpretation", translate_ab = "official", fun = count_df,
@@ -21,7 +22,7 @@ geom_rsi(position = NULL, x = c("Antibiotic", "Interpretation"),
 
 facet_rsi(facet = c("Interpretation", "Antibiotic"), nrow = NULL)
 
-scale_y_percent()
+scale_y_percent(breaks = seq(0, 1, 0.1))
 
 scale_rsi_colours()
 
@@ -40,6 +41,8 @@ labels_rsi_count(position = NULL, x = "Antibiotic",
 \item{fill}{variable to categorise using the plots legend, either \code{"Antibiotic"} (default) or \code{"Interpretation"} or a grouping variable}
 
 \item{facet}{variable to split plots by, either \code{"Interpretation"} (default) or \code{"Antibiotic"} or a grouping variable}
+
+\item{breaks}{numeric vector of positions}
 
 \item{translate_ab}{a column name of the \code{\link{antibiotics}} data set to translate the antibiotic abbreviations into, using \code{\link{abname}}. Default behaviour is to translate to official names according to the WHO. Use \code{translate_ab = FALSE} to disable translation.}
 
@@ -68,7 +71,7 @@ At default, the names of antibiotics will be shown on the plots using \code{\lin
 
 \code{scale_y_percent} transforms the y axis to a 0 to 100\% range using \code{\link[ggplot2]{scale_continuous}}.
 
-\code{scale_rsi_colours} sets colours to the bars: green for S, yellow for I and red for R, using \code{\link[ggplot2]{scale_colour_brewer}}.
+\code{scale_rsi_colours} sets colours to the bars: green for S, yellow for I and red for R, using \code{\link[ggplot2]{scale_brewer}}.
 
 \code{theme_rsi} is a \code{ggplot \link[ggplot2]{theme}} with minimal distraction.
 

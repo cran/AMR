@@ -1,4 +1,89 @@
+# 0.5.0
+**Published on CRAN: 2018-12-01**
+
+#### New
+* Repository moved to GitLab: https://gitlab.com/msberends/AMR
+* Function `count_all` to get all available isolates (that like all `portion_*` and `count_*` functions also supports `summarise` and `group_by`), the old `n_rsi` is now an alias of `count_all`
+* Function `get_locale` to determine language for language-dependent output for some `mo_*` functions. This is now the default value for their `language` parameter, by which the system language will be used at default.
+* Data sets `microorganismsDT`, `microorganisms.prevDT`, `microorganisms.unprevDT` and `microorganisms.oldDT` to improve the speed of `as.mo`. They are for reference only, since they are primarily for internal use of `as.mo`.
+* Function `read.4D` to read from the 4D database of the MMB department of the UMCG
+* Functions `mo_authors` and `mo_year` to get specific values about the scientific reference of a taxonomic entry
+
+#### Changed
+* Functions `MDRO`, `BRMO`, `MRGN` and `EUCAST_exceptional_phenotypes` were renamed to `mdro`, `brmo`, `mrgn` and `eucast_exceptional_phenotypes`
+* `EUCAST_rules` was renamed to `eucast_rules`, the old function still exists as a deprecated function
+* Big changes to the `eucast_rules` function:
+  * Now also applies rules from the EUCAST 'Breakpoint tables for bacteria', version 8.1, 2018, http://www.eucast.org/clinical_breakpoints/ (see Source of the function)
+  * New parameter `rules` to specify which rules should be applied (expert rules, breakpoints, others or all)
+  * New parameter `verbose` which can be set to `TRUE` to get very specific messages about which columns and rows were affected
+  * Better error handling when rules cannot be applied (i.e. new values could not be inserted)
+  * The number of affected values will now only be measured once per row/column combination
+  * Data set `septic_patients` now reflects these changes
+  * Added parameter `pipe` for piperacillin (J01CA12), also to the `mdro` function
+  * Small fixes to EUCAST clinical breakpoint rules
+* Added column `kingdom` to the microorganisms data set, and function `mo_kingdom` to look up values
+* Tremendous speed improvement for `as.mo` (and subsequently all `mo_*` functions), as empty values wil be ignored *a priori*
+* Fewer than 3 characters as input for `as.mo` will return NA
+* Function `as.mo` (and all `mo_*` wrappers) now supports genus abbreviations with "species" attached
+  ```r
+  as.mo("E. species")        # B_ESCHR
+  mo_fullname("E. spp.")     # "Escherichia species"
+  as.mo("S. spp")            # B_STPHY
+  mo_fullname("S. species")  # "Staphylococcus species"
+  ```
+* Added parameter `combine_IR` (TRUE/FALSE) to functions `portion_df` and `count_df`, to indicate that all values of I and R must be merged into one, so the output only consists of S vs. IR (susceptible vs. non-susceptible)
+* Fix for `portion_*(..., as_percent = TRUE)` when minimal number of isolates would not be met
+* Added parameter `also_single_tested` for `portion_*` and `count_*` functions to also include cases where not all antibiotics were tested but at least one of the tested antibiotics includes the target antimicribial interpretation, see `?portion`
+* Using `portion_*` functions now throws a warning when total available isolate is below parameter `minimum`
+* Functions `as.mo`, `as.rsi`, `as.mic`, `as.atc` and `freq` will not set package name as attribute anymore
+* Frequency tables - `freq()`:
+  * Support for grouping variables, test with:
+    ```r
+    septic_patients %>% 
+      group_by(hospital_id) %>% 
+      freq(gender)
+    ```
+  * Support for (un)selecting columns:
+    ```r
+    septic_patients %>% 
+      freq(hospital_id) %>% 
+      select(-count, -cum_count) # only get item, percent, cum_percent
+    ```
+  * Check for `hms::is.hms`
+  * Now prints in markdown at default in non-interactive sessions
+  * No longer adds the factor level column and sorts factors on count again
+  * Support for class `difftime`
+  * New parameter `na`, to choose which character to print for empty values
+  * New parameter `header` to turn the header info off (default when `markdown = TRUE`)
+  * New parameter `title` to manually setbthe title of the frequency table
+* `first_isolate` now tries to find columns to use as input when parameters are left blank
+* Improvements for MDRO algorithm (function `mdro`)
+* Data set `septic_patients` is now a `data.frame`, not a tibble anymore
+* Removed diacritics from all authors (columns `microorganisms$ref` and `microorganisms.old$ref`) to comply with CRAN policy to only allow ASCII characters
+* Fix for `mo_property` not working properly
+* Fix for `eucast_rules` where some Streptococci would become ceftazidime R in EUCAST rule 4.5
+* Support for named vectors of class `mo`, useful for `top_freq()`
+* `ggplot_rsi` and `scale_y_percent` have `breaks` parameter
+* AI improvements for `as.mo`:
+  * `"CRS"` -> *Stenotrophomonas maltophilia*
+  * `"CRSM"` -> *Stenotrophomonas maltophilia*
+  * `"MSSA"` -> *Staphylococcus aureus*
+  * `"MSSE"` -> *Staphylococcus epidermidis*
+* Fix for `join` functions
+* Speed improvement for `is.rsi.eligible`, now 15-20 times faster
+* In `g.test`, when `sum(x)` is below 1000 or any of the expected values is below 5, Fisher's Exact Test will be suggested
+* `ab_name` will try to fall back on `as.atc` when no results are found
+* Removed the addin to view data sets
+* Percentages will now will rounded more logically (e.g. in `freq` function)
+
+#### Other
+* New dependency on package `crayon`, to support formatted text in the console
+* Dependency `tidyr` is now mandatory (went to `Import` field) since `portion_df` and `count_df` rely on it
+* Updated vignettes to comply with README
+
+
 # 0.4.0
+**Published on CRAN: 2018-10-01**
 
 #### New
 * The data set `microorganisms` now contains **all microbial taxonomic data from ITIS** (kingdoms Bacteria, Fungi and Protozoa), the Integrated Taxonomy Information System, available via https://itis.gov. The data set now contains more than 18,000 microorganisms with all known bacteria, fungi and protozoa according ITIS with genus, species, subspecies, family, order, class, phylum and subkingdom. The new data set `microorganisms.old` contains all previously known taxonomic names from those kingdoms.

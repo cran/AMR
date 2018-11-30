@@ -22,13 +22,10 @@ test_that("as.mo works", {
   expect_equal(as.character(as.mo("Bartonella")), "B_BRTNL")
   expect_equal(as.character(as.mo("C. difficile")), "B_CTRDM_DIF")
   expect_equal(as.character(as.mo("L. pneumophila")), "B_LGNLL_PNE")
-  # expect_equal(as.character(as.mo("L. non pneumophila")), "LEGNON")
-  # expect_equal(as.character(as.mo("S. beta-haemolytic")), "STCHAE")
   expect_equal(as.character(as.mo("Strepto")), "B_STRPTC")
   expect_equal(as.character(as.mo("Streptococcus")), "B_STRPTC") # not Peptostreptoccus
 
   expect_equal(as.character(as.mo(c("GAS", "GBS"))), c("B_STRPTC_GRA", "B_STRPTC_GRB"))
-
 
   expect_equal(as.character(as.mo("S. pyo")), "B_STRPTC_PYO") # not Actinomyces pyogenes
 
@@ -50,6 +47,9 @@ test_that("as.mo works", {
   expect_equal(as.character(as.mo("CPS")), "B_STPHY_CPS")
   expect_equal(as.character(as.mo("CoPS")), "B_STPHY_CPS")
 
+  expect_equal(as.character(as.mo(c("Gram negative", "Gram positive"))), c("B_GRAMN", "B_GRAMP"))
+
+  # prevalent MO
   expect_identical(
     as.character(
       as.mo(c("stau",
@@ -61,6 +61,24 @@ test_that("as.mo works", {
               "MRSA",
               "VISA"))),
     rep("B_STPHY_AUR", 8))
+  # unprevalent MO
+  expect_identical(
+    as.character(
+      as.mo(c("buno",
+              "BUNO",
+              "burnod",
+              "B. nodosa",
+              "B nodosa",
+              "Burkholderia nodosa"))),
+    rep("B_BRKHL_NOD", 6))
+
+  # empty values
+  expect_identical(as.character(as.mo(c("", NA, NaN))), rep(NA_character_, 3))
+  # too few characters
+  expect_warning(as.mo("ab"))
+
+  expect_equal(suppressWarnings(as.character(as.mo(c("Qq species", "", "CRS", "K. pneu rhino", "esco")))),
+               c(NA_character_, NA_character_, "B_STNTR_MAL", "B_KLBSL_PNE_RHI", "B_ESCHR_COL"))
 
   # check for Becker classification
   expect_identical(as.character(guess_mo("S. epidermidis", Becker = FALSE)), "B_STPHY_EPI")
@@ -143,6 +161,7 @@ test_that("as.mo works", {
 
   # check less prevalent MOs
   expect_equal(as.character(as.mo("Gomphosphaeria aponina delicatula")), "B_GMPHS_APO_DEL")
+  expect_equal(as.character(as.mo("Gomphosphaeria apo del")), "B_GMPHS_APO_DEL")
   expect_equal(as.character(as.mo("G apo deli")), "B_GMPHS_APO_DEL")
   expect_equal(as.character(as.mo("Gomphosphaeria  aponina")), "B_GMPHS_APO")
   expect_equal(as.character(as.mo("Gomphosphaeria  species")), "B_GMPHS")
@@ -152,6 +171,11 @@ test_that("as.mo works", {
 
   # check old names
   expect_equal(suppressMessages(as.character(as.mo("Escherichia blattae"))), "B_SHMWL_BLA")
+  # - Didymosphaeria spartinae (unprevalent)
+  expect_warning(suppressMessages(as.mo("D spartin", allow_uncertain = TRUE)))
+  # - was renames to Leptosphaeria obiones
+  expect_equal(suppressWarnings(suppressMessages(as.character(as.mo("D spartin", allow_uncertain = TRUE)))),
+                                "F_LPTSP_OBI")
 
   # check uncertain names
   expect_equal(suppressWarnings(as.character(as.mo("esco extra_text", allow_uncertain = FALSE))), NA_character_)
@@ -165,7 +189,25 @@ test_that("as.mo works", {
   expect_equal(as.character(as.mo(c("TestingOwnID", "E. coli"),
                                   reference_df = data.frame(a = "TestingOwnID", b = "B_ESCHR_COL"))),
                c("B_ESCHR_COL", "B_ESCHR_COL"))
-  expect_warning(as.character(as.mo("TestingOwnID",
-                                  reference_df = NULL)))
+  expect_warning(as.mo("TestingOwnID", reference_df = NULL))
+  expect_error(as.mo("E. coli", reference_df = data.frame(a = "TestingOwnID")))
+
+  # combination of existing mo and certe
+  expect_identical(as.character(as.mo(c("B_ESCHR_COL", "ESCCOL"))),
+                   c("B_ESCHR_COL", "B_ESCHR_COL"))
+
+  # TSN of prevalent and non prevalent ones
+  expect_equal(mo_TSN(c("Gomphosphaeria aponina delicatula", "Escherichia coli")),
+               c(717, 285))
+
+  expect_equal(mo_fullname(c("E. spp.",
+                             "E. spp",
+                             "E. species")),
+               rep("Escherichia species", 3))
+
+  # from different sources
+  expect_equal(as.character(as.mo(
+    c("PRTMIR", "bclcer", "B_ESCHR_COL"))),
+    c("B_PROTS_MIR", "B_BCLLS_CER", "B_ESCHR_COL"))
 
 })

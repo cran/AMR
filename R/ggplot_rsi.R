@@ -23,6 +23,7 @@
 #' @param position position adjustment of bars, either \code{"fill"} (default when \code{fun} is \code{\link{count_df}}), \code{"stack"} (default when \code{fun} is \code{\link{portion_df}}) or \code{"dodge"}
 #' @param x variable to show on x axis, either \code{"Antibiotic"} (default) or \code{"Interpretation"} or a grouping variable
 #' @param fill variable to categorise using the plots legend, either \code{"Antibiotic"} (default) or \code{"Interpretation"} or a grouping variable
+#' @param breaks numeric vector of positions
 #' @param facet variable to split plots by, either \code{"Interpretation"} (default) or \code{"Antibiotic"} or a grouping variable
 #' @param translate_ab a column name of the \code{\link{antibiotics}} data set to translate the antibiotic abbreviations into, using \code{\link{abname}}. Default behaviour is to translate to official names according to the WHO. Use \code{translate_ab = FALSE} to disable translation.
 #' @param fun function to transform \code{data}, either \code{\link{count_df}} (default) or \code{\link{portion_df}}
@@ -40,7 +41,7 @@
 #'
 #' \code{scale_y_percent} transforms the y axis to a 0 to 100\% range using \code{\link[ggplot2]{scale_continuous}}.
 #'
-#' \code{scale_rsi_colours} sets colours to the bars: green for S, yellow for I and red for R, using \code{\link[ggplot2]{scale_colour_brewer}}.
+#' \code{scale_rsi_colours} sets colours to the bars: green for S, yellow for I and red for R, using \code{\link[ggplot2]{scale_brewer}}.
 #'
 #' \code{theme_rsi} is a \code{ggplot \link[ggplot2]{theme}} with minimal distraction.
 #'
@@ -48,6 +49,7 @@
 #'
 #' \code{ggplot_rsi} is a wrapper around all above functions that uses data as first input. This makes it possible to use this function after a pipe (\code{\%>\%}). See Examples.
 #' @rdname ggplot_rsi
+#' @importFrom utils installed.packages
 #' @export
 #' @examples
 #' library(dplyr)
@@ -136,6 +138,7 @@ ggplot_rsi <- function(data,
                        fill = "Interpretation",
                        # params = list(),
                        facet = NULL,
+                       breaks = seq(0, 1, 0.1),
                        translate_ab = "official",
                        fun = count_df,
                        nrow = NULL,
@@ -189,7 +192,7 @@ ggplot_rsi <- function(data,
   if (fun_name == "portion_df"
       | (fun_name == "count_df" & position == "fill")) {
     # portions, so use y scale with percentage
-    p <- p + scale_y_percent()
+    p <- p + scale_y_percent(breaks = breaks)
   }
 
   if (fun_name == "count_df" & datalabels == TRUE) {
@@ -281,9 +284,9 @@ facet_rsi <- function(facet = c("Interpretation", "Antibiotic"), nrow = NULL) {
 
 #' @rdname ggplot_rsi
 #' @export
-scale_y_percent <- function() {
-  ggplot2::scale_y_continuous(breaks = seq(0, 1, 0.1),
-                              labels = percent(seq(0, 1, 0.1)))
+scale_y_percent <- function(breaks = seq(0, 1, 0.1)) {
+  ggplot2::scale_y_continuous(breaks = breaks,
+                              labels = percent(breaks))
 }
 
 #' @rdname ggplot_rsi

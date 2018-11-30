@@ -9,35 +9,43 @@
 \usage{
 frequency_tbl(x, ..., sort.count = TRUE,
   nmax = getOption("max.print.freq"), na.rm = TRUE, row.names = TRUE,
-  markdown = FALSE, digits = 2, quote = FALSE, sep = " ")
+  markdown = !interactive(), digits = 2, quote = FALSE,
+  header = !markdown, title = NULL, na = "<NA>", sep = " ")
 
 freq(x, ..., sort.count = TRUE, nmax = getOption("max.print.freq"),
-  na.rm = TRUE, row.names = TRUE, markdown = FALSE, digits = 2,
-  quote = FALSE, sep = " ")
+  na.rm = TRUE, row.names = TRUE, markdown = !interactive(),
+  digits = 2, quote = FALSE, header = !markdown, title = NULL,
+  na = "<NA>", sep = " ")
 
 top_freq(f, n)
 
 \method{print}{frequency_tbl}(x, nmax = getOption("max.print.freq",
-  default = 15), ...)
+  default = 15), markdown = !interactive(), header = !markdown, ...)
 }
 \arguments{
-\item{x}{vector of any class or a \code{\link{data.frame}}, \code{\link{tibble}} or \code{\link{table}}}
+\item{x}{vector of any class or a \code{\link{data.frame}}, \code{\link{tibble}} (may contain a grouping variable) or \code{\link{table}}}
 
 \item{...}{up to nine different columns of \code{x} when \code{x} is a \code{data.frame} or \code{tibble}, to calculate frequencies from - see Examples}
 
-\item{sort.count}{sort on count, i.e. frequencies. This will be \code{TRUE} at default for everything except for factors.}
+\item{sort.count}{sort on count, i.e. frequencies. This will be \code{TRUE} at default for everything except when using grouping variables.}
 
 \item{nmax}{number of row to print. The default, \code{15}, uses \code{\link{getOption}("max.print.freq")}. Use \code{nmax = 0}, \code{nmax = Inf}, \code{nmax = NULL} or \code{nmax = NA} to print all rows.}
 
-\item{na.rm}{a logical value indicating whether \code{NA} values should be removed from the frequency table. The header will always print the amount of \code{NA}s.}
+\item{na.rm}{a logical value indicating whether \code{NA} values should be removed from the frequency table. The header (if set) will always print the amount of \code{NA}s.}
 
 \item{row.names}{a logical value indicating whether row indices should be printed as \code{1:nrow(x)}}
 
-\item{markdown}{print table in markdown format (this forces \code{nmax = NA})}
+\item{markdown}{a logical value indicating whether the frequency table should be printed in markdown format. This will print all rows and is default behaviour in non-interactive R sessions (like when knitting RMarkdown files).}
 
 \item{digits}{how many significant digits are to be used for numeric values in the header (not for the items themselves, that depends on \code{\link{getOption}("digits")})}
 
 \item{quote}{a logical value indicating whether or not strings should be printed with surrounding quotes}
+
+\item{header}{a logical value indicating whether an informative header should be printed}
+
+\item{title}{text to show above frequency table, at default to tries to coerce from the variables passed to \code{x}}
+
+\item{na}{a character string to should be used to show empty (\code{NA}) values (only useful when \code{na.rm = FALSE})}
 
 \item{sep}{a character string to separate the terms when selecting multiple columns}
 
@@ -46,7 +54,7 @@ top_freq(f, n)
 \item{n}{number of top \emph{n} items to return, use -n for the bottom \emph{n} items. It will include more than \code{n} rows if there are ties.}
 }
 \value{
-A \code{data.frame} with an additional class \code{"frequency_tbl"}
+A \code{data.frame} (with an additional class \code{"frequency_tbl"}) with five columns: \code{item}, \code{count}, \code{percent}, \code{cum_count} and \code{cum_percent}.
 }
 \description{
 Create a frequency table of a vector with items or a data frame. Supports quasiquotation and markdown for reports. \code{top_freq} can be used to get the top/bottom \emph{n} items of a frequency table, with counts as names.
@@ -85,7 +93,8 @@ freq(septic_patients[, "hospital_id"])
 septic_patients$hospital_id \%>\% freq()
 septic_patients[, "hospital_id"] \%>\% freq()
 septic_patients \%>\% freq("hospital_id")
-septic_patients \%>\% freq(hospital_id)  #<- easiest to remember when you're used to tidyverse
+septic_patients \%>\% freq(hospital_id)  #<- easiest to remember (tidyverse)
+
 
 # you could also use `select` or `pull` to get your variables
 septic_patients \%>\%
@@ -93,11 +102,19 @@ septic_patients \%>\%
   select(mo) \%>\%
   freq()
 
+
 # multiple selected variables will be pasted together
 septic_patients \%>\%
   left_join_microorganisms \%>\%
   filter(hospital_id == "A") \%>\%
   freq(genus, species)
+
+
+# group a variable and analyse another
+septic_patients \%>\%
+  group_by(hospital_id) \%>\%
+  freq(gender)
+
 
 # get top 10 bugs of hospital A as a vector
 septic_patients \%>\%
@@ -105,31 +122,38 @@ septic_patients \%>\%
   freq(mo) \%>\%
   top_freq(10)
 
+
 # save frequency table to an object
 years <- septic_patients \%>\%
   mutate(year = format(date, "\%Y")) \%>\%
   freq(year)
 
+
 # show only the top 5
 years \%>\% print(nmax = 5)
 
+
 # save to an object with formatted percentages
 years <- format(years)
+
 
 # print a histogram of numeric values
 septic_patients \%>\%
   freq(age) \%>\%
   hist()
 
+
 # or print all points to a regular plot
 septic_patients \%>\%
   freq(age) \%>\%
   plot()
 
+
 # transform to a data.frame or tibble
 septic_patients \%>\%
   freq(age) \%>\%
   as.data.frame()
+
 
 # or transform (back) to a vector
 septic_patients \%>\%
@@ -142,22 +166,26 @@ identical(septic_patients \%>\%
             sort(),
           sort(septic_patients$age)) # TRUE
 
-# it also supports `table` objects:
+
+# it also supports `table` objects
 table(septic_patients$gender,
       septic_patients$age) \%>\%
   freq(sep = " **sep** ")
 
+
+# only get selected columns
+septic_patients \%>\%
+  freq(hospital_id) \%>\%
+  select(item, percent)
+
+septic_patients \%>\%
+  freq(hospital_id) \%>\%
+  select(-count, -cum_count)
+
+
 # check differences between frequency tables
 diff(freq(septic_patients$trim),
      freq(septic_patients$trsu))
-
-\dontrun{
-# send frequency table to clipboard (e.g. for pasting in Excel)
-septic_patients \%>\%
-  freq(age) \%>\%
-  format() \%>\%       # this will format the percentages
-  clipboard_export()
-}
 }
 \keyword{freq}
 \keyword{frequency}
