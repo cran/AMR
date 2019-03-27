@@ -3,31 +3,34 @@
 \docType{data}
 \name{microorganisms.old}
 \alias{microorganisms.old}
-\title{Data set with old taxonomic data from ITIS}
-\format{A \code{\link{data.frame}} with 2,383 observations and 4 variables:
+\title{Data set with previously accepted taxonomic names}
+\format{A \code{\link{data.frame}} with 16,911 observations and 4 variables:
 \describe{
-  \item{\code{tsn}}{Old Taxonomic Serial Number (TSN), as defined by ITIS}
-  \item{\code{name}}{Old taxonomic name of the microorganism as found in ITIS, see Source}
-  \item{\code{tsn_new}}{New Taxonomic Serial Number (TSN), as defined by ITIS}
-  \item{\code{ref}}{Author(s) and year of concerning publication as found in ITIS, see Source}
+  \item{\code{col_id}}{Catalogue of Life ID}
+  \item{\code{tsn_new}}{New Catalogue of Life ID}
+  \item{\code{fullname}}{Old taxonomic name of the microorganism}
+  \item{\code{ref}}{Author(s) and year of concerning scientific publication}
 }}
 \source{
-[3] Integrated Taxonomic Information System (ITIS) on-line database, \url{https://www.itis.gov}.
+[3] Catalogue of Life: Annual Checklist (public online database), \url{www.catalogueoflife.org}.
 }
 \usage{
 microorganisms.old
 }
 \description{
-A data set containing old (previously valid or accepted) taxonomic names according to ITIS. This data set is used internally by \code{\link{as.mo}}.
+A data set containing old (previously valid or accepted) taxonomic names according to the Catalogue of Life. This data set is used internally by \code{\link{as.mo}}.
 }
-\section{ITIS}{
+\section{Catalogue of Life}{
 
-\if{html}{\figure{itis_logo.jpg}{options: height=60px style=margin-bottom:5px} \cr}
-This package contains the \strong{complete microbial taxonomic data} (with all eight taxonomic ranks - from kingdom to subspecies) from the publicly available Integrated Taxonomic Information System (ITIS, \url{https://www.itis.gov}).
+\if{html}{\figure{logo_col.png}{options: height=40px style=margin-bottom:5px} \cr}
+This package contains the complete taxonomic tree of almost all microorganisms (~60,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
 
-All (sub)species from \strong{the taxonomic kingdoms Bacteria, Fungi and Protozoa are included in this package}, as well as all previously accepted names known to ITIS. Furthermore, the responsible authors and year of publication are available. This allows users to use authoritative taxonomic information for their data analysis on any microorganism, not only human pathogens. It also helps to quickly determine the Gram stain of bacteria, since all bacteria are classified into subkingdom Negibacteria or Posibacteria.
+\link[=catalogue_of_life]{Click here} for more information about the included taxa. The Catalogue of Life releases updates annually; check which version was included in this package with \code{\link{catalogue_of_life_version}()}.
+}
 
-ITIS is a partnership of U.S., Canadian, and Mexican agencies and taxonomic specialists [3].
+\section{Read more on our website!}{
+
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \seealso{

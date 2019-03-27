@@ -3,45 +3,67 @@
 \docType{data}
 \name{microorganisms}
 \alias{microorganisms}
-\title{Data set with taxonomic data from ITIS}
-\format{A \code{\link{data.frame}} with 18,833 observations and 15 variables:
+\title{Data set with ~65,000 microorganisms}
+\format{A \code{\link{data.frame}} with 65,629 observations and 16 variables:
 \describe{
-  \item{\code{mo}}{ID of microorganism}
-  \item{\code{tsn}}{Taxonomic Serial Number (TSN), as defined by ITIS}
-  \item{\code{genus}}{Taxonomic genus of the microorganism as found in ITIS, see Source}
-  \item{\code{species}}{Taxonomic species of the microorganism as found in ITIS, see Source}
-  \item{\code{subspecies}}{Taxonomic subspecies of the microorganism as found in ITIS, see Source}
+  \item{\code{mo}}{ID of microorganism as used by this package}
+  \item{\code{col_id}}{Catalogue of Life ID}
   \item{\code{fullname}}{Full name, like \code{"Echerichia coli"}}
-  \item{\code{family}}{Taxonomic family of the microorganism as found in ITIS, see Source}
-  \item{\code{order}}{Taxonomic order of the microorganism as found in ITIS, see Source}
-  \item{\code{class}}{Taxonomic class of the microorganism as found in ITIS, see Source}
-  \item{\code{phylum}}{Taxonomic phylum of the microorganism as found in ITIS, see Source}
-  \item{\code{subkingdom}}{Taxonomic subkingdom of the microorganism as found in ITIS, see Source}
-  \item{\code{kingdom}}{Taxonomic kingdom of the microorganism as found in ITIS, see Source}
-  \item{\code{gramstain}}{Gram of microorganism, like \code{"Gram negative"}}
-  \item{\code{prevalence}}{An integer based on estimated prevalence of the microorganism in humans. Used internally by \code{\link{as.mo}}, otherwise quite meaningless. It has a value of 25 for manually added items and a value of 1000 for all unprevalent microorganisms whose genus was somewhere in the top 250 (with another species).}
-  \item{\code{ref}}{Author(s) and year of concerning publication as found in ITIS, see Source}
+  \item{\code{kingdom}}{Taxonomic kingdom of the microorganism}
+  \item{\code{phylum}}{Taxonomic phylum of the microorganism}
+  \item{\code{class}}{Taxonomic class of the microorganism}
+  \item{\code{order}}{Taxonomic order of the microorganism}
+  \item{\code{family}}{Taxonomic family of the microorganism}
+  \item{\code{genus}}{Taxonomic genus of the microorganism}
+  \item{\code{species}}{Taxonomic species of the microorganism}
+  \item{\code{subspecies}}{Taxonomic subspecies of the microorganism}
+  \item{\code{rank}}{Taxonomic rank of the microorganism, like \code{"species"} or \code{"genus"}}
+  \item{\code{ref}}{Author(s) and year of concerning scientific publication}
+  \item{\code{species_id}}{ID of the species as used by the Catalogue of Life}
+  \item{\code{source}}{Either \code{"CoL"}, \code{"DSMZ"} (see source) or "manually added"}
+  \item{\code{prevalence}}{Prevalence of the microorganism, see \code{?as.mo}}
 }}
 \source{
-[3] Integrated Taxonomic Information System (ITIS) on-line database, \url{https://www.itis.gov}.
+Catalogue of Life: Annual Checklist (public online taxonomic database), \url{www.catalogueoflife.org} (check included annual version with \code{\link{catalogue_of_life_version}()}).
+
+Leibniz Institute DSMZ-German Collection of Microorganisms and Cell Cultures, Germany, Prokaryotic Nomenclature Up-to-Date, \url{http://www.dsmz.de/bacterial-diversity/prokaryotic-nomenclature-up-to-date} (check included version with \code{\link{catalogue_of_life_version}()}).
 }
 \usage{
 microorganisms
 }
 \description{
-A data set containing the complete microbial taxonomy of the kingdoms Bacteria, Fungi and Protozoa. MO codes can be looked up using \code{\link{as.mo}}.
+A data set containing the microbial taxonomy of six kingdoms from the Catalogue of Life. MO codes can be looked up using \code{\link{as.mo}}.
 }
-\section{ITIS}{
+\details{
+Manually added were:
+\itemize{
+  \item{9 species of \emph{Streptococcus} (beta haemolytic groups A, B, C, D, F, G, H, K and unspecified)}
+  \item{2 species of \emph{Staphylococcus} (coagulase-negative [CoNS] and coagulase-positive [CoPS])}
+  \item{3 other undefined (unknown, unknown Gram negatives and unknown Gram positives)}
+  \item{8,830 species from the DSMZ (Deutsche Sammlung von Mikroorganismen und Zellkulturen) that are not in the Catalogue of Life}
+}
+}
+\section{About the records from DSMZ (see source)}{
 
-\if{html}{\figure{itis_logo.jpg}{options: height=60px style=margin-bottom:5px} \cr}
-This package contains the \strong{complete microbial taxonomic data} (with all eight taxonomic ranks - from kingdom to subspecies) from the publicly available Integrated Taxonomic Information System (ITIS, \url{https://www.itis.gov}).
+Names of prokaryotes are defined as being validly published by the International Code of Nomenclature of Bacteria. Validly published are all names which are included in the Approved Lists of Bacterial Names and the names subsequently published in the International Journal of Systematic Bacteriology (IJSB) and, from January 2000, in the International Journal of Systematic and Evolutionary Microbiology (IJSEM) as original articles or in the validation lists.
 
-All (sub)species from \strong{the taxonomic kingdoms Bacteria, Fungi and Protozoa are included in this package}, as well as all previously accepted names known to ITIS. Furthermore, the responsible authors and year of publication are available. This allows users to use authoritative taxonomic information for their data analysis on any microorganism, not only human pathogens. It also helps to quickly determine the Gram stain of bacteria, since all bacteria are classified into subkingdom Negibacteria or Posibacteria.
+From: \url{https://www.dsmz.de/support/bacterial-nomenclature-up-to-date-downloads/readme.html}
+}
 
-ITIS is a partnership of U.S., Canadian, and Mexican agencies and taxonomic specialists [3].
+\section{Catalogue of Life}{
+
+\if{html}{\figure{logo_col.png}{options: height=40px style=margin-bottom:5px} \cr}
+This package contains the complete taxonomic tree of almost all microorganisms (~60,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
+
+\link[=catalogue_of_life]{Click here} for more information about the included taxa. The Catalogue of Life releases updates annually; check which version was included in this package with \code{\link{catalogue_of_life_version}()}.
+}
+
+\section{Read more on our website!}{
+
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \seealso{
-\code{\link{as.mo}} \code{\link{mo_property}} \code{\link{microorganisms.umcg}}
+\code{\link{as.mo}}, \code{\link{mo_property}}, \code{\link{microorganisms.codes}}
 }
 \keyword{datasets}

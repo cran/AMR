@@ -2,18 +2,21 @@
 # TITLE                                                                #
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
-# AUTHORS                                                              #
-# Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)           #
+# SOURCE                                                               #
+# https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# This program is free software; you can redistribute it and/or modify #
-# it under the terms of the GNU General Public License version 2.0,    #
-# as published by the Free Software Foundation.                        #
+# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
 #                                                                      #
-# This program is distributed in the hope that it will be useful,      #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        #
-# GNU General Public License for more details.                         #
+# This R package is free software; you can freely use and distribute   #
+# it for both personal and commercial purposes under the terms of the  #
+# GNU General Public License version 2.0 (GNU GPL-2), as published by  #
+# the Free Software Foundation.                                        #
+#                                                                      #
+# This R package was created for academic research and was publicly    #
+# released in the hope that it will be useful, but it comes WITHOUT    #
+# ANY WARRANTY OR LIABILITY.                                           #
+# Visit our website for more info: https://msberends.gitab.io/AMR.     #
 # ==================================================================== #
 
 #' Class 'mic'
@@ -27,6 +30,7 @@
 #' @export
 #' @importFrom dplyr %>%
 #' @seealso \code{\link{as.rsi}}
+#' @inheritSection AMR Read more on our website!
 #' @examples
 #' mic_data <- as.mic(c(">=32", "1.0", "1", "1.00", 8, "<=0.128", "8", "16", "16"))
 #' is.mic(mic_data)
@@ -61,6 +65,9 @@ as.mic <- function(x, na.rm = FALSE) {
     x <- gsub('[^0-9]+$', '', x)
     # remove last zeroes
     x <- gsub('([.].?)0+$', '\\1', x)
+    x <- gsub('(.*[.])0+$', '\\10', x)
+    # remove ending .0 again
+    x <- gsub('[.]+0$', '', x)
     # force to be character
     x <- as.character(x)
 
@@ -182,6 +189,15 @@ as.numeric.mic <- function(x, ...) {
   as.numeric(gsub('(<|=|>)+', '', as.character(x)))
 }
 
+#' @exportMethod droplevels.mic
+#' @export
+#' @noRd
+droplevels.mic <- function(x, exclude = if(anyNA(levels(x))) NULL else NA, ...) {
+  x <- droplevels.factor(x, exclude = exclude, ...)
+  class(x) <- c('mic', 'ordered', 'factor')
+  x
+}
+
 #' @exportMethod print.mic
 #' @export
 #' @importFrom dplyr %>% tibble group_by summarise pull
@@ -200,12 +216,12 @@ summary.mic <- function(object, ...) {
   n_total <- x %>% length()
   x <- x[!is.na(x)]
   n <- x %>% length()
-  lst <- c('mic',
-           n_total - n,
-           sort(x)[1] %>% as.character(),
-           sort(x)[n] %>% as.character())
-  names(lst) <- c("Mode", "<NA>", "Min.", "Max.")
-  lst
+  c(
+    "Class" = 'mic',
+    "<NA>" = n_total - n,
+    "Min." = sort(x)[1] %>% as.character(),
+    "Max." = sort(x)[n] %>% as.character()
+  )
 }
 
 #' @exportMethod plot.mic
@@ -230,11 +246,10 @@ barplot.mic <- function(height, ...) {
 #' @importFrom graphics barplot axis
 #' @importFrom dplyr %>% group_by summarise
 create_barplot_mic <- function(x, x_name, ...) {
-  data <- data.frame(mic = x, cnt = 1) %>%
+  data <- data.frame(mic = droplevels(x), cnt = 1) %>%
     group_by(mic) %>%
-    summarise(cnt = sum(cnt)) %>%
-    droplevels()
-  barplot(table(droplevels(x)),
+    summarise(cnt = sum(cnt))
+  barplot(table(droplevels.factor(x)),
           ylab = 'Frequency',
           xlab = 'MIC value',
           main = paste('MIC values of', x_name),

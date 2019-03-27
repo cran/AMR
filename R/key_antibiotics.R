@@ -2,18 +2,21 @@
 # TITLE                                                                #
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
-# AUTHORS                                                              #
-# Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)           #
+# SOURCE                                                               #
+# https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# This program is free software; you can redistribute it and/or modify #
-# it under the terms of the GNU General Public License version 2.0,    #
-# as published by the Free Software Foundation.                        #
+# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
 #                                                                      #
-# This program is distributed in the hope that it will be useful,      #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        #
-# GNU General Public License for more details.                         #
+# This R package is free software; you can freely use and distribute   #
+# it for both personal and commercial purposes under the terms of the  #
+# GNU General Public License version 2.0 (GNU GPL-2), as published by  #
+# the Free Software Foundation.                                        #
+#                                                                      #
+# This R package was created for academic research and was publicly    #
+# released in the hope that it will be useful, but it comes WITHOUT    #
+# ANY WARRANTY OR LIABILITY.                                           #
+# Visit our website for more info: https://msberends.gitab.io/AMR.     #
 # ==================================================================== #
 
 #' Key antibiotics for first \emph{weighted} isolates
@@ -22,11 +25,12 @@
 #' @param tbl table with antibiotics coloms, like \code{amox} and \code{amcl}.
 #' @param x,y characters to compare
 #' @inheritParams first_isolate
-#' @param universal_1,universal_2,universal_3,universal_4,universal_5,universal_6 column names of \strong{broad-spectrum} antibiotics, case-insensitive
-#' @param GramPos_1,GramPos_2,GramPos_3,GramPos_4,GramPos_5,GramPos_6 column names of antibiotics for \strong{Gram positives}, case-insensitive
-#' @param GramNeg_1,GramNeg_2,GramNeg_3,GramNeg_4,GramNeg_5,GramNeg_6 column names of antibiotics for \strong{Gram negatives}, case-insensitive
+#' @param universal_1,universal_2,universal_3,universal_4,universal_5,universal_6 column names of \strong{broad-spectrum} antibiotics, case-insensitive. At default, the columns containing these antibiotics will be guessed with \code{\link{guess_ab_col}}.
+#' @param GramPos_1,GramPos_2,GramPos_3,GramPos_4,GramPos_5,GramPos_6 column names of antibiotics for \strong{Gram positives}, case-insensitive. At default, the columns containing these antibiotics will be guessed with \code{\link{guess_ab_col}}.
+#' @param GramNeg_1,GramNeg_2,GramNeg_3,GramNeg_4,GramNeg_5,GramNeg_6 column names of antibiotics for \strong{Gram negatives}, case-insensitive. At default, the columns containing these antibiotics will be guessed with \code{\link{guess_ab_col}}.
 #' @param warnings give warning about missing antibiotic columns, they will anyway be ignored
-#' @details The function \code{key_antibiotics} returns a character vector with 12 antibiotic results for every isolate. These isolates can then be compared using \code{key_antibiotics_equal}, to check if two isolates have generally the same antibiogram. Missing and invalid values are replaced with a dot (\code{"."}). The \code{\link{first_isolate}} function only uses this function on the same microbial species from the same patient. Using this, an MRSA will be included after a susceptible \emph{S. aureus} (MSSA) found within the same episode (see \code{episode} parameter of \code{\link{first_isolate}}). Without key antibiotic comparison it wouldn't.
+#' @param ... other parameters passed on to function
+#' @details The function \code{key_antibiotics} returns a character vector with 12 antibiotic results for every isolate. These isolates can then be compared using \code{key_antibiotics_equal}, to check if two isolates have generally the same antibiogram. Missing and invalid values are replaced with a dot (\code{"."}). The \code{\link{first_isolate}} function only uses this function on the same microbial species from the same patient. Using this, an MRSA will be included after a susceptible \emph{S. aureus} (MSSA) found within the same episode (see \code{episode} parameter of \code{\link{first_isolate}}). Without key antibiotic comparison it would not.
 #'
 #'   At default, the antibiotics that are used for \strong{Gram positive bacteria} are (colum names): \cr
 #'   \code{"amox"}, \code{"amcl"}, \code{"cfur"}, \code{"pita"}, \code{"cipr"}, \code{"trsu"} (until here is universal), \code{"vanc"}, \code{"teic"}, \code{"tetr"}, \code{"eryt"}, \code{"oxac"}, \code{"rifa"}.
@@ -39,23 +43,23 @@
 #' @inheritSection first_isolate Key antibiotics
 #' @rdname key_antibiotics
 #' @export
-#' @importFrom dplyr %>% mutate if_else
+#' @importFrom dplyr %>% mutate if_else pull
+#' @importFrom crayon blue bold
 #' @seealso \code{\link{first_isolate}}
+#' @inheritSection AMR Read more on our website!
 #' @examples
 #' # septic_patients is a dataset available in the AMR package
 #' ?septic_patients
-#' my_patients <- septic_patients
-#'
+
 #' library(dplyr)
 #' # set key antibiotics to a new variable
-#' my_patients <- my_patients %>%
+#' my_patients <- septic_patients %>%
 #'   mutate(keyab = key_antibiotics(.)) %>%
 #'   mutate(
 #'     # now calculate first isolates
-#'     first_regular = first_isolate(., "date", "patient_id", "mo"),
+#'     first_regular = first_isolate(., col_keyantibiotics = FALSE),
 #'     # and first WEIGHTED isolates
-#'     first_weighted = first_isolate(., "date", "patient_id", "mo",
-#'                                    col_keyantibiotics = "keyab")
+#'     first_weighted = first_isolate(., col_keyantibiotics = "keyab")
 #'   )
 #'
 #' # Check the difference, in this data set it results in 7% more isolates:
@@ -68,39 +72,40 @@
 #' strainB <- "SSSIRSSSRSSS"
 #'
 #' key_antibiotics_equal(strainA, strainB)
-#' # TRUE, because I is ignored (as are missing values)
+#' # TRUE, because I is ignored (as well as missing values)
 #'
 #' key_antibiotics_equal(strainA, strainB, ignore_I = FALSE)
 #' # FALSE, because I is not ignored and so the 4th value differs
 key_antibiotics <- function(tbl,
-                            col_mo = "mo",
-                            universal_1 = "amox",
-                            universal_2 = "amcl",
-                            universal_3 = "cfur",
-                            universal_4 = "pita",
-                            universal_5 = "cipr",
-                            universal_6 = "trsu",
-                            GramPos_1 = "vanc",
-                            GramPos_2 = "teic",
-                            GramPos_3 = "tetr",
-                            GramPos_4 = "eryt",
-                            GramPos_5 = "oxac",
-                            GramPos_6 = "rifa",
-                            GramNeg_1 = "gent",
-                            GramNeg_2 = "tobr",
-                            GramNeg_3 = "coli",
-                            GramNeg_4 = "cfot",
-                            GramNeg_5 = "cfta",
-                            GramNeg_6 = "mero",
+                            col_mo = NULL,
+                            universal_1 = guess_ab_col(tbl, "amox"),
+                            universal_2 = guess_ab_col(tbl, "amcl"),
+                            universal_3 = guess_ab_col(tbl, "cfur"),
+                            universal_4 = guess_ab_col(tbl, "pita"),
+                            universal_5 = guess_ab_col(tbl, "cipr"),
+                            universal_6 = guess_ab_col(tbl, "trsu"),
+                            GramPos_1 = guess_ab_col(tbl, "vanc"),
+                            GramPos_2 = guess_ab_col(tbl, "teic"),
+                            GramPos_3 = guess_ab_col(tbl, "tetr"),
+                            GramPos_4 = guess_ab_col(tbl, "eryt"),
+                            GramPos_5 = guess_ab_col(tbl, "oxac"),
+                            GramPos_6 = guess_ab_col(tbl, "rifa"),
+                            GramNeg_1 = guess_ab_col(tbl, "gent"),
+                            GramNeg_2 = guess_ab_col(tbl, "tobr"),
+                            GramNeg_3 = guess_ab_col(tbl, "coli"),
+                            GramNeg_4 = guess_ab_col(tbl, "cfot"),
+                            GramNeg_5 = guess_ab_col(tbl, "cfta"),
+                            GramNeg_6 = guess_ab_col(tbl, "mero"),
                             warnings = TRUE,
-                            col_bactid = "bactid") {
+                            ...) {
 
-  if (col_bactid %in% colnames(tbl)) {
-    col_mo <- col_bactid
-    warning("Use of `col_bactid` is deprecated. Use `col_mo` instead.")
+  # try to find columns based on type
+  # -- mo
+  if (is.null(col_mo)) {
+    col_mo <- search_type_in_df(tbl = tbl, type = "mo")
   }
-  if (!col_mo %in% colnames(tbl)) {
-    stop('Column ', col_mo, ' not found.', call. = FALSE)
+  if (is.null(col_mo)) {
+    stop("`col_mo` must be set.", call. = FALSE)
   }
 
   # check columns
@@ -133,20 +138,19 @@ key_antibiotics <- function(tbl,
   gram_positive = c(universal,
                     GramPos_1, GramPos_2, GramPos_3,
                     GramPos_4, GramPos_5, GramPos_6)
-  gram_positive <- gram_positive[!is.na(gram_positive)]
+  gram_positive <- gram_positive[!is.null(gram_positive)]
 
   gram_negative = c(universal,
                     GramNeg_1, GramNeg_2, GramNeg_3,
                     GramNeg_4, GramNeg_5, GramNeg_6)
-  gram_negative <- gram_negative[!is.na(gram_negative)]
+  gram_negative <- gram_negative[!is.null(gram_negative)]
 
-  if (!tbl %>% pull(col_mo) %>% is.mo()) {
-    tbl[, col_mo] <- as.mo(tbl[, col_mo])
-  }
-  # join microorganisms
-  tbl <- tbl %>% left_join_microorganisms(col_mo)
-
-  tbl$key_ab <- NA_character_
+  # join to microorganisms data set
+  tbl <- tbl %>%
+    mutate_at(vars(col_mo), as.mo) %>%
+    left_join_microorganisms(by = col_mo) %>%
+    mutate(key_ab = NA_character_,
+           gramstain = mo_gramstain(pull(., col_mo)))
 
   # Gram +
   tbl <- tbl %>% mutate(key_ab =

@@ -1,7 +1,10 @@
-## ----setup, include = FALSE, results = 'markup'--------------------------
+## ----setup, include = FALSE, results = 'asis'----------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#"
+  comment = "#",
+  results = 'asis',
+  fig.width = 7.5,
+  fig.height = 4.5
 )
 library(dplyr)
 library(AMR)
@@ -12,21 +15,22 @@ septic_patients %>% freq(gender)
 ## ---- echo = TRUE, results = 'hide'--------------------------------------
 my_patients <- septic_patients %>% left_join_microorganisms()
 
-## ---- echo = TRUE--------------------------------------------------------
+## ---- echo = TRUE, results = 'markup'------------------------------------
 colnames(microorganisms)
 
-## ---- echo = TRUE--------------------------------------------------------
+## ---- echo = TRUE, results = 'markup'------------------------------------
 dim(septic_patients)
 dim(my_patients)
 
 ## ---- echo = TRUE--------------------------------------------------------
-my_patients %>% freq(genus, species)
+my_patients %>%
+  freq(genus, species, nmax = 15)
 
 ## ---- echo = TRUE--------------------------------------------------------
 # # get age distribution of unique patients
 septic_patients %>% 
   distinct(patient_id, .keep_all = TRUE) %>% 
-  freq(age, nmax = 5)
+  freq(age, nmax = 5, header = TRUE)
 
 ## ---- echo = TRUE--------------------------------------------------------
 septic_patients %>%
@@ -34,17 +38,15 @@ septic_patients %>%
 
 ## ---- echo = TRUE--------------------------------------------------------
 septic_patients %>%
-  freq(hospital_id, sort.count = TRUE)
+  freq(hospital_id, sort.count = FALSE)
 
 ## ---- echo = TRUE--------------------------------------------------------
 septic_patients %>%
-  select(amox) %>% 
-  freq()
+  freq(amox, header = TRUE)
 
 ## ---- echo = TRUE--------------------------------------------------------
 septic_patients %>%
-  select(date) %>% 
-  freq(nmax = 5)
+  freq(date, nmax = 5, header = TRUE)
 
 ## ---- echo = TRUE--------------------------------------------------------
 my_df <- septic_patients %>% freq(age)
@@ -64,8 +66,4 @@ septic_patients %>%
 ## ---- echo = TRUE--------------------------------------------------------
 septic_patients %>%
   freq(hospital_id, markdown = TRUE)
-
-## ---- echo = FALSE-------------------------------------------------------
-# this will print "2018" in 2018, and "2018-yyyy" after 2018.
-yrs <- paste(unique(c(2018, format(Sys.Date(), "%Y"))), collapse = "-")
 

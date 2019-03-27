@@ -1,5 +1,197 @@
-# 0.5.0
-**Published on CRAN: 2018-12-01**
+# AMR 0.6.0
+
+**New website!**
+
+We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.gitlab.io/AMR/) (built with the great [`pkgdown`](https://pkgdown.r-lib.org/))
+
+* Contains the complete manual of this package and all of its functions with an explanation of their parameters
+* Contains a comprehensive tutorial about how to conduct antimicrobial resistance analysis, import data from WHONET or SPSS and many more.
+
+#### New
+* **BREAKING**: removed deprecated functions, parameters and references to 'bactid'. Use `as.mo()` to identify an MO code.
+* Catalogue of Life as a new taxonomic source for data about microorganisms, which also contains all ITIS data we used previously. The `microorganisms` data set now contains:
+  * All ~55,000 (sub)species from the kingdoms of Archaea, Bacteria and Protozoa
+  * All ~3,000 (sub)species from these orders of the kingdom of Fungi: Eurotiales, Onygenales, Pneumocystales, Saccharomycetales and Schizosaccharomycetales (covering at least like all species of *Aspergillus*, *Candida*, *Pneumocystis*, *Saccharomyces* and *Trichophyton*)
+  * All ~2,000 (sub)species from ~100 other relevant genera, from the kingdoms of Animalia and Plantae (like *Strongyloides* and *Taenia*)
+  * All ~15,000 previously accepted names of included (sub)species that have been taxonomically renamed
+  * The responsible author(s) and year of scientific publication
+  
+    This data is updated annually - check the included version with the new function `catalogue_of_life_version()`.
+  * Due to this change, some `mo` codes changed (e.g. *Streptococcus* changed from `B_STRPTC` to `B_STRPT`). A translation table is  used internally to support older microorganism IDs, so users will not notice this difference.
+  * New function `mo_rank()` for the taxonomic rank (genus, species, infraspecies, etc.)
+  * New function `mo_url()` to get the direct URL of a species from the Catalogue of Life
+* Support for data from [WHONET](https://whonet.org/) and [EARS-Net](https://ecdc.europa.eu/en/about-us/partnerships-and-networks/disease-and-laboratory-networks/ears-net) (European Antimicrobial Resistance Surveillance Network):
+  * Exported files from WHONET can be read and used in this package. For functions like `first_isolate()` and `eucast_rules()`, all parameters will be filled in automatically.
+  * This package now knows all antibiotic abbrevations by EARS-Net (which are also being used by WHONET) - the `antibiotics` data set now contains a column `ears_net`.
+  * The function `as.mo()` now knows all WHONET species abbreviations too, because almost 2,000 microbial abbreviations were added to the `microorganisms.codes` data set.
+* New filters for antimicrobial classes. Use these functions to filter isolates on results in one of more antibiotics from a specific class:
+  ```r
+  filter_aminoglycosides()
+  filter_carbapenems()
+  filter_cephalosporins()
+  filter_1st_cephalosporins()
+  filter_2nd_cephalosporins()
+  filter_3rd_cephalosporins()
+  filter_4th_cephalosporins()
+  filter_fluoroquinolones()
+  filter_glycopeptides()
+  filter_macrolides()
+  filter_tetracyclines()
+  ```
+  The `antibiotics` data set will be searched, after which the input data will be checked for column names with a value in any abbreviations, codes or official names found in the `antibiotics` data set.
+  For example:
+  ```r
+  septic_patients %>% filter_glycopeptides(result = "R")
+  # Filtering on glycopeptide antibacterials: any of `vanc` or `teic` is R
+  septic_patients %>% filter_glycopeptides(result = "R", scope = "all")
+  # Filtering on glycopeptide antibacterials: all of `vanc` and `teic` is R
+  ```
+* All `ab_*` functions are deprecated and replaced by `atc_*` functions:
+  ```r
+  ab_property -> atc_property()
+  ab_name -> atc_name()
+  ab_official -> atc_official()
+  ab_trivial_nl -> atc_trivial_nl()
+  ab_certe -> atc_certe()
+  ab_umcg -> atc_umcg()
+  ab_tradenames -> atc_tradenames()
+  ```
+  These functions use `as.atc()` internally. The old `atc_property` has been renamed `atc_online_property()`. This is done for two reasons: firstly, not all ATC codes are of antibiotics (ab) but can also be of antivirals or antifungals. Secondly, the input must have class `atc` or must be coerable to this class. Properties of these classes should start with the same class name, analogous to `as.mo()` and e.g. `mo_genus`.
+* New functions `set_mo_source()` and `get_mo_source()` to use your own predefined MO codes as input for `as.mo()` and consequently all `mo_*` functions
+* Support for the upcoming [`dplyr`](https://dplyr.tidyverse.org) version 0.8.0
+* New function `guess_ab_col()` to find an antibiotic column in a table
+* New function `mo_failures()` to review values that could not be coerced to a valid MO code, using `as.mo()`. This latter function will now only show a maximum of 10 uncoerced values and will refer to `mo_failures()`.
+* New function `mo_uncertainties()` to review values that could be coerced to a valid MO code using `as.mo()`, but with uncertainty.
+* New function `mo_renamed()` to get a list of all returned values from `as.mo()` that have had taxonomic renaming
+* New function `age()` to calculate the (patients) age in years
+* New function `age_groups()` to split ages into custom or predefined groups (like children or elderly). This allows for easier demographic antimicrobial resistance analysis per age group.
+* New function `ggplot_rsi_predict()` as well as the base R `plot()` function can now be used for resistance prediction calculated with `resistance_predict()`:
+  ```r
+  x <- resistance_predict(septic_patients, col_ab = "amox")
+  plot(x)
+  ggplot_rsi_predict(x)
+  ```
+* Functions `filter_first_isolate()` and `filter_first_weighted_isolate()` to shorten and fasten filtering on data sets with antimicrobial results, e.g.:
+  ```r
+  septic_patients %>% filter_first_isolate(...)
+  # or
+  filter_first_isolate(septic_patients, ...)
+  ```
+  is equal to:
+  ```r
+  septic_patients %>%
+    mutate(only_firsts = first_isolate(septic_patients, ...)) %>%
+    filter(only_firsts == TRUE) %>%
+    select(-only_firsts)
+  ```
+* New function `availability()` to check the number of available (non-empty) results in a `data.frame`
+* New vignettes about how to conduct AMR analysis, predict antimicrobial resistance, use the *G*-test and more. These are also available (and even easier readable) on our website: https://msberends.gitlab.io/AMR.
+
+#### Changed
+* Function `eucast_rules()`:
+  * Updated EUCAST Clinical breakpoints to [version 9.0 of 1 January 2019](http://www.eucast.org/clinical_breakpoints/), the data set `septic_patients` now reflects these changes
+  * Fixed a critical bug where some rules that depend on previous applied rules would not be applied adequately
+  * Emphasised in manual that penicillin is meant as benzylpenicillin (ATC [J01CE01](https://www.whocc.no/atc_ddd_index/?code=J01CE01))
+  * New info is returned when running this function, stating exactly what has been changed or added. Use `eucast_rules(..., verbose = TRUE)` to get a data set with all changed per bug and drug combination.
+* Removed data sets `microorganisms.oldDT`, `microorganisms.prevDT`, `microorganisms.unprevDT` and `microorganismsDT` since they were no longer needed and only contained info already available in the `microorganisms` data set
+* Added 65 antibiotics to the `antibiotics` data set, from the [Pharmaceuticals Community Register](http://ec.europa.eu/health/documents/community-register/html/atc.htm) of the European Commission
+* Removed columns `atc_group1_nl` and `atc_group2_nl` from the `antibiotics` data set
+* Functions `atc_ddd()` and `atc_groups()` have been renamed `atc_online_ddd()` and `atc_online_groups()`. The old functions are deprecated and will be removed in a future version.
+* Function `guess_mo()` is now deprecated in favour of `as.mo()` and will be removed in future versions
+* Function `guess_atc()` is now deprecated in favour of `as.atc()` and will be removed in future versions
+* Improvements for `as.mo()`:
+  * Now handles incorrect spelling, like `i` instead of `y` and `f` instead of `ph`:
+    ```r
+    # mo_fullname() uses as.mo() internally
+    
+    mo_fullname("Sthafilokockus aaureuz")
+    #> [1] "Staphylococcus aureus"
+    
+    mo_fullname("S. klossi")
+    #> [1] "Staphylococcus kloosii"
+    ```
+  * Uncertainty of the algorithm is now divided into four levels, 0 to 3, where the default `allow_uncertain = TRUE` is equal to uncertainty level 2. Run `?as.mo` for more info about these levels.
+    ```r
+    # equal:
+    as.mo(..., allow_uncertain = TRUE)
+    as.mo(..., allow_uncertain = 2)
+    
+    # also equal:
+    as.mo(..., allow_uncertain = FALSE)
+    as.mo(..., allow_uncertain = 0)
+    ```
+    Using `as.mo(..., allow_uncertain = 3)` could lead to very unreliable results.
+  * Implemented the latest publication of Becker *et al.* (2019), for categorising coagulase-negative *Staphylococci*
+  * All microbial IDs that found are now saved to a local file `~/.Rhistory_mo`. Use the new function `clean_mo_history()` to delete this file, which resets the algorithms.
+  * Incoercible results will now be considered 'unknown', MO code `UNKNOWN`. On foreign systems, properties of these will be translated to all languages already previously supported: German, Dutch, French, Italian, Spanish and Portuguese:
+    ```r
+    mo_genus("qwerty", language = "es")
+    # Warning: 
+    # one unique value (^= 100.0%) could not be coerced and is considered 'unknown': "qwerty". Use mo_failures() to review it.
+    #> [1] "(género desconocido)"
+    ```
+  * Fix for vector containing only empty values
+  * Finds better results when input is in other languages
+  * Better handling for subspecies
+  * Better handling for *Salmonellae*, especially the 'city like' serovars like *Salmonella London*
+  * Understanding of highly virulent *E. coli* strains like EIEC, EPEC and STEC
+  * There will be looked for uncertain results at default - these results will be returned with an informative warning
+  * Manual (help page) now contains more info about the algorithms
+  * Progress bar will be shown when it takes more than 3 seconds to get results
+  * Support for formatted console text
+  * Console will return the percentage of uncoercable input
+* Function `first_isolate()`:
+  * Fixed a bug where distances between dates would not be calculated right - in the `septic_patients` data set this yielded a difference of 0.15% more isolates
+  * Will now use a column named like "patid" for the patient ID (parameter `col_patientid`), when this parameter was left blank
+  * Will now use a column named like "key(...)ab" or "key(...)antibiotics" for the key antibiotics (parameter `col_keyantibiotics()`), when this parameter was left blank
+  * Removed parameter `output_logical`, the function will now always return a logical value
+  * Renamed parameter `filter_specimen` to `specimen_group`, although using `filter_specimen` will still work
+* A note to the manual pages of the `portion` functions, that low counts can influence the outcome and that the `portion` functions may camouflage this, since they only return the portion (albeit being dependent on the `minimum` parameter)
+* Merged data sets `microorganisms.certe` and `microorganisms.umcg` into `microorganisms.codes`
+* Function `mo_taxonomy()` now contains the kingdom too
+* Reduce false positives for `is.rsi.eligible()` using the new `threshold` parameter
+* New colours for `scale_rsi_colours()`
+* Summaries of class `mo` will now return the top 3 and the unique count, e.g. using `summary(mo)`
+* Small text updates to summaries of class `rsi` and `mic`
+* Function `as.rsi()`:
+  * Now gives a warning when inputting MIC values
+  * Now accepts high and low resistance: `"HIGH S"` will return `S`
+* Frequency tables (`freq()` function):
+  * Support for tidyverse quasiquotation! Now you can create frequency tables of function outcomes:
+    ```r
+    # Determine genus of microorganisms (mo) in `septic_patients` data set:
+    # OLD WAY
+    septic_patients %>%
+      mutate(genus = mo_genus(mo)) %>%
+      freq(genus)
+    # NEW WAY
+    septic_patients %>% 
+      freq(mo_genus(mo))
+    
+    # Even supports grouping variables:
+    septic_patients %>%
+      group_by(gender) %>% 
+      freq(mo_genus(mo))
+    ```
+  * Header info is now available as a list, with the `header` function
+  * The parameter `header` is now set to `TRUE` at default, even for markdown
+  * Added header info for class `mo` to show unique count of families, genera and species
+  * Now honours the `decimal.mark` setting, which just like `format` defaults to `getOption("OutDec")`
+  * The new `big.mark` parameter will at default be `","` when `decimal.mark = "."` and `"."` otherwise
+  * Fix for header text where all observations are `NA`
+  * New parameter `droplevels` to exclude empty factor levels when input is a factor
+  * Factor levels will be in header when present in input data (maximum of 5)
+  * Fix for using `select()` on frequency tables
+* Function `scale_y_percent()` now contains the `limits` parameter
+* Automatic parameter filling for `mdro()`, `key_antibiotics()` and `eucast_rules()`
+* Updated examples for resistance prediction (`resistance_predict()` function)
+* Fix for `as.mic()` to support more values ending in (several) zeroes
+* if using different lengths of pattern and x in `%like%`, it will now return the call
+
+#### Other
+* Updated licence text to emphasise GPL 2.0 and that this is an R package.
+
+# AMR 0.5.0
 
 #### New
 * Repository moved to GitLab: https://gitlab.com/msberends/AMR
@@ -82,8 +274,7 @@
 * Updated vignettes to comply with README
 
 
-# 0.4.0
-**Published on CRAN: 2018-10-01**
+# AMR 0.4.0
 
 #### New
 * The data set `microorganisms` now contains **all microbial taxonomic data from ITIS** (kingdoms Bacteria, Fungi and Protozoa), the Integrated Taxonomy Information System, available via https://itis.gov. The data set now contains more than 18,000 microorganisms with all known bacteria, fungi and protozoa according ITIS with genus, species, subspecies, family, order, class, phylum and subkingdom. The new data set `microorganisms.old` contains all previously known taxonomic names from those kingdoms.
@@ -114,7 +305,7 @@
 * Functions `count_R`, `count_IR`, `count_I`, `count_SI` and `count_S` to selectively count resistant or susceptible isolates
   * Extra function `count_df` (which works like `portion_df`) to get all counts of S, I and R of a data set with antibiotic columns, with support for grouped variables
 * Function `is.rsi.eligible` to check for columns that have valid antimicrobial results, but do not have the `rsi` class yet. Transform the columns of your raw data with: `data %>% mutate_if(is.rsi.eligible, as.rsi)`
-* Functions `as.mo` and `is.mo` as replacements for `as.bactid` and `is.bactid` (since the `microoganisms` data set not only contains bacteria). These last two functions are deprecated and will be removed in a future release. The `as.mo` function determines microbial IDs using Artificial Intelligence (AI):
+* Functions `as.mo` and `is.mo` as replacements for `as.bactid` and `is.bactid` (since the `microoganisms` data set not only contains bacteria). These last two functions are deprecated and will be removed in a future release. The `as.mo` function determines microbial IDs using intelligent rules:
   ```r
   as.mo("E. coli")
   # [1] B_ESCHR_COL
@@ -194,8 +385,7 @@
 #### Other
 * More unit tests to ensure better integrity of functions
 
-# 0.3.0
-**Published on CRAN: 2018-08-14**
+# AMR 0.3.0
 
 #### New
 * **BREAKING**: `rsi_df` was removed in favour of new functions `portion_R`, `portion_IR`, `portion_I`, `portion_SI` and `portion_S` to selectively calculate resistance or susceptibility. These functions are 20 to 30 times faster than the old `rsi` function. The old function still works, but is deprecated.
@@ -265,8 +455,7 @@
   * Windows: https://ci.appveyor.com/project/msberends/amr
 * Added thesis advisors to DESCRIPTION file
 
-# 0.2.0
-**Published on CRAN: 2018-05-03**
+# AMR 0.2.0
 
 #### New
 * Full support for Windows, Linux and macOS
@@ -276,7 +465,6 @@
 * Function `guess_atc` to **determine the ATC** of an antibiotic based on name, trade name, or known abbreviations
 * Function `freq` to create **frequency tables**, with additional info in a header
 * Function `MDRO` to **determine Multi Drug Resistant Organisms (MDRO)** with support for country-specific guidelines.
-  * Suggest your own via [https://github.com/msberends/AMR/issues/new](https://github.com/msberends/AMR/issues/new?title=New%20guideline%20for%20MDRO&body=%3C--%20Please%20add%20your%20country%20code,%20guideline%20name,%20version%20and%20source%20below%20and%20remove%20this%20line--%3E)
   * [Exceptional resistances defined by EUCAST](http://www.eucast.org/expert_rules_and_intrinsic_resistance) are also supported instead of countries alone
   * Functions `BRMO` and `MRGN` are wrappers for Dutch and German guidelines, respectively
 * New algorithm to determine weighted isolates, can now be `"points"` or `"keyantibiotics"`, see `?first_isolate`
@@ -302,8 +490,7 @@
 * Added build tests for Linux and macOS using Travis CI (https://travis-ci.org/msberends/AMR)
 * Added line coverage checking using CodeCov (https://codecov.io/gh/msberends/AMR/tree/master/R)
 
-# 0.1.1
-**Published on CRAN: 2018-03-14**
+# AMR 0.1.1
 
 * `EUCAST_rules` applies for amoxicillin even if ampicillin is missing
 * Edited column names to comply with GLIMS, the laboratory information system
@@ -311,7 +498,6 @@
 * Renamed 'Daily Defined Dose' to 'Defined Daily Dose'
 * Added barplots for `rsi` and `mic` classes
 
-# 0.1.0
-**Published on CRAN: 2018-02-22**
+# AMR 0.1.0
 
 * First submission to CRAN.

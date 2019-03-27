@@ -2,18 +2,21 @@
 # TITLE                                                                #
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
-# AUTHORS                                                              #
-# Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)           #
+# SOURCE                                                               #
+# https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# This program is free software; you can redistribute it and/or modify #
-# it under the terms of the GNU General Public License version 2.0,    #
-# as published by the Free Software Foundation.                        #
+# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
 #                                                                      #
-# This program is distributed in the hope that it will be useful,      #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        #
-# GNU General Public License for more details.                         #
+# This R package is free software; you can freely use and distribute   #
+# it for both personal and commercial purposes under the terms of the  #
+# GNU General Public License version 2.0 (GNU GPL-2), as published by  #
+# the Free Software Foundation.                                        #
+#                                                                      #
+# This R package was created for academic research and was publicly    #
+# released in the hope that it will be useful, but it comes WITHOUT    #
+# ANY WARRANTY OR LIABILITY.                                           #
+# Visit our website for more info: https://msberends.gitab.io/AMR.     #
 # ==================================================================== #
 
 #' Count isolates
@@ -35,6 +38,7 @@
 #' @rdname count
 #' @name count
 #' @export
+#' @inheritSection AMR Read more on our website!
 #' @examples
 #' # septic_patients is a data set available in the AMR package. It is true, genuine data.
 #' ?septic_patients
@@ -43,7 +47,7 @@
 #' count_R(septic_patients$amox)
 #' count_IR(septic_patients$amox)
 #'
-#' # Or susceptibile isolates
+#' # Or susceptible isolates
 #' count_S(septic_patients$amox)
 #' count_SI(septic_patients$amox)
 #'
@@ -65,7 +69,7 @@
 #'             S  = count_S(cipr),
 #'             n1 = count_all(cipr), # the actual total; sum of all three
 #'             n2 = n_rsi(cipr),     # same - analogous to n_distinct
-#'             total = n())          # NOT the amount of tested isolates!
+#'             total = n())          # NOT the number of tested isolates!
 #'
 #' # Count co-resistance between amoxicillin/clav acid and gentamicin,
 #' # so we can see that combination therapy does a lot more than mono therapy.

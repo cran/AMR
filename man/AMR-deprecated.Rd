@@ -2,21 +2,53 @@
 % Please edit documentation in R/deprecated.R
 \name{AMR-deprecated}
 \alias{AMR-deprecated}
-\alias{as.bactid}
-\alias{is.bactid}
-\alias{guess_bactid}
 \alias{ratio}
+\alias{guess_mo}
+\alias{guess_atc}
+\alias{ab_property}
+\alias{ab_atc}
+\alias{ab_official}
+\alias{ab_name}
+\alias{ab_trivial_nl}
+\alias{ab_certe}
+\alias{ab_umcg}
+\alias{ab_tradenames}
+\alias{atc_ddd}
+\alias{atc_groups}
 \title{Deprecated functions}
 \usage{
-as.bactid(...)
-
-is.bactid(...)
-
-guess_bactid(...)
-
 ratio(x, ratio)
+
+guess_mo(...)
+
+guess_atc(...)
+
+ab_property(...)
+
+ab_atc(...)
+
+ab_official(...)
+
+ab_name(...)
+
+ab_trivial_nl(...)
+
+ab_certe(...)
+
+ab_umcg(...)
+
+ab_tradenames(...)
+
+atc_ddd(...)
+
+atc_groups(...)
 }
 \description{
-These functions are \link{Deprecated}. They will be removed in a future release. Using the functions will give a warning with the name of the function it has been replaced by.
+These functions are so-called '\link{Deprecated}'. They will be removed in a future release. Using the functions will give a warning with the name of the function it has been replaced by (if there is one).
 }
+\section{Read more on our website!}{
+
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+}
+
 \keyword{internal}

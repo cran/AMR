@@ -10,10 +10,12 @@ as.rsi(x)
 
 is.rsi(x)
 
-is.rsi.eligible(x)
+is.rsi.eligible(x, threshold = 0.05)
 }
 \arguments{
 \item{x}{vector}
+
+\item{threshold}{maximum fraction of \code{x} that is allowed to fail transformation, see Examples}
 }
 \value{
 Ordered factor with new class \code{rsi}
@@ -24,6 +26,11 @@ This transforms a vector to a new class \code{rsi}, which is an ordered factor w
 \details{
 The function \code{is.rsi.eligible} returns \code{TRUE} when a columns contains only valid antimicrobial interpretations (S and/or I and/or R), and \code{FALSE} otherwise.
 }
+\section{Read more on our website!}{
+
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+}
+
 \examples{
 rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370)))
 rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370), "A", "B", "C"))
@@ -36,11 +43,20 @@ plot(rsi_data)    # for percentages
 barplot(rsi_data) # for frequencies
 freq(rsi_data)    # frequency table with informative header
 
-# fastest way to transform all columns with already valid AB results to class `rsi`:
+# using dplyr's mutate
 library(dplyr)
+septic_patients \%>\%
+  mutate_at(vars(peni:rifa), as.rsi)
+
+
+# fastest way to transform all columns with already valid AB results to class `rsi`:
 septic_patients \%>\%
   mutate_if(is.rsi.eligible,
             as.rsi)
+
+# default threshold of `is.rsi.eligible` is 5\%.
+is.rsi.eligible(WHONET$`First name`) # fails, >80\% is invalid
+is.rsi.eligible(WHONET$`First name`, threshold = 0.9) # succeeds
 }
 \seealso{
 \code{\link{as.mic}}

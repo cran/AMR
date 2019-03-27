@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Matthijs S. Berends" />
+
+<meta name="date" content="2019-03-27" />
+
+<title>Benchmarks</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#header {
+text-align: center;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Benchmarks</h1>
+<h4 class="author">Matthijs S. Berends</h4>
+<h4 class="date">27 March 2019</h4>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#repetitive-results">Repetitive results</a></li>
+<li><a href="#precalculated-results">Precalculated results</a></li>
+<li><a href="#results-in-other-languages">Results in other languages</a></li>
+</ul>
+</div>
+
+<p>One of the most important features of this package is the complete microbial taxonomic database, supplied by the <a href="http://catalogueoflife.org">Catalogue of Life</a>. We created a function <code>as.mo()</code> that transforms any user input value to a valid microbial ID by using intelligent rules combined with the taxonomic tree of Catalogue of Life.</p>
+<p>Using the <code>microbenchmark</code> package, we can review the calculation performance of this function. Its function <code>microbenchmark()</code> runs different input expressions independently of each other and measures their time-to-result.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">library</span>(microbenchmark)</a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="kw">library</span>(AMR)</a></code></pre></div>
+<p>In the next test, we try to ‘coerce’ different input values for <em>Staphylococcus aureus</em>. The actual result is the same every time: it returns its MO code <code>B_STPHY_AUR</code> (<em>B</em> stands for <em>Bacteria</em>, the taxonomic kingdom).</p>
+<p>But the calculation time differs a lot:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">S.aureus &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(<span class="kw">as.mo</span>(<span class="st">&quot;sau&quot;</span>),</a>
+<a class="sourceLine" id="cb2-2" title="2">                           <span class="kw">as.mo</span>(<span class="st">&quot;stau&quot;</span>),</a>
+<a class="sourceLine" id="cb2-3" title="3">                           <span class="kw">as.mo</span>(<span class="st">&quot;staaur&quot;</span>),</a>
+<a class="sourceLine" id="cb2-4" title="4">                           <span class="kw">as.mo</span>(<span class="st">&quot;STAAUR&quot;</span>),</a>
+<a class="sourceLine" id="cb2-5" title="5">                           <span class="kw">as.mo</span>(<span class="st">&quot;S. aureus&quot;</span>),</a>
+<a class="sourceLine" id="cb2-6" title="6">                           <span class="kw">as.mo</span>(<span class="st">&quot;S.  aureus&quot;</span>),</a>
+<a class="sourceLine" id="cb2-7" title="7">                           <span class="kw">as.mo</span>(<span class="st">&quot;Staphylococcus aureus&quot;</span>),</a>
+<a class="sourceLine" id="cb2-8" title="8">                           <span class="dt">times =</span> <span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb2-9" title="9"><span class="kw">print</span>(S.aureus, <span class="dt">unit =</span> <span class="st">&quot;ms&quot;</span>, <span class="dt">signif =</span> <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb2-10" title="10"><span class="co">#&gt; Unit: milliseconds</span></a>
+<a class="sourceLine" id="cb2-11" title="11"><span class="co">#&gt;                            expr  min   lq mean median   uq  max neval</span></a>
+<a class="sourceLine" id="cb2-12" title="12"><span class="co">#&gt;                    as.mo(&quot;sau&quot;) 18.0 18.0 23.0   19.0 19.0 62.0    10</span></a>
+<a class="sourceLine" id="cb2-13" title="13"><span class="co">#&gt;                   as.mo(&quot;stau&quot;) 47.0 48.0 61.0   48.0 91.0 93.0    10</span></a>
+<a class="sourceLine" id="cb2-14" title="14"><span class="co">#&gt;                 as.mo(&quot;staaur&quot;) 18.0 18.0 24.0   18.0 20.0 62.0    10</span></a>
+<a class="sourceLine" id="cb2-15" title="15"><span class="co">#&gt;                 as.mo(&quot;STAAUR&quot;) 18.0 18.0 18.0   18.0 18.0 19.0    10</span></a>
+<a class="sourceLine" id="cb2-16" title="16"><span class="co">#&gt;              as.mo(&quot;S. aureus&quot;) 29.0 29.0 33.0   29.0 29.0 73.0    10</span></a>
+<a class="sourceLine" id="cb2-17" title="17"><span class="co">#&gt;             as.mo(&quot;S.  aureus&quot;) 29.0 29.0 29.0   29.0 29.0 30.0    10</span></a>
+<a class="sourceLine" id="cb2-18" title="18"><span class="co">#&gt;  as.mo(&quot;Staphylococcus aureus&quot;)  8.2  8.2  8.3    8.3  8.3  8.6    10</span></a></code></pre></div>
+<p>In the table above, all measurements are shown in milliseconds (thousands of seconds). A value of 5 milliseconds means it can determine 200 input values per second. It case of 100 milliseconds, this is only 10 input values per second. The second input is the only one that has to be looked up thoroughly. All the others are known codes (the first one is a WHONET code) or common laboratory codes, or common full organism names like the last one. Full organism names are always preferred.</p>
+<p>To achieve this speed, the <code>as.mo</code> function also takes into account the prevalence of human pathogenic microorganisms. The downside is of course that less prevalent microorganisms will be determined less fast. See this example for the ID of <em>Thermus islandicus</em> (<code>B_THERMS_ISL</code>), a bug probably never found before in humans:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1">T.islandicus &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(<span class="kw">as.mo</span>(<span class="st">&quot;theisl&quot;</span>),</a>
+<a class="sourceLine" id="cb3-2" title="2">                               <span class="kw">as.mo</span>(<span class="st">&quot;THEISL&quot;</span>),</a>
+<a class="sourceLine" id="cb3-3" title="3">                               <span class="kw">as.mo</span>(<span class="st">&quot;T. islandicus&quot;</span>),</a>
+<a class="sourceLine" id="cb3-4" title="4">                               <span class="kw">as.mo</span>(<span class="st">&quot;T.  islandicus&quot;</span>),</a>
+<a class="sourceLine" id="cb3-5" title="5">                               <span class="kw">as.mo</span>(<span class="st">&quot;Thermus islandicus&quot;</span>),</a>
+<a class="sourceLine" id="cb3-6" title="6">                               <span class="dt">times =</span> <span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb3-7" title="7"><span class="kw">print</span>(T.islandicus, <span class="dt">unit =</span> <span class="st">&quot;ms&quot;</span>, <span class="dt">signif =</span> <span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb3-8" title="8"><span class="co">#&gt; Unit: milliseconds</span></a>
+<a class="sourceLine" id="cb3-9" title="9"><span class="co">#&gt;                         expr min  lq mean median  uq max neval</span></a>
+<a class="sourceLine" id="cb3-10" title="10"><span class="co">#&gt;              as.mo(&quot;theisl&quot;) 460 460  490    490 520 540    10</span></a>
+<a class="sourceLine" id="cb3-11" title="11"><span class="co">#&gt;              as.mo(&quot;THEISL&quot;) 460 470  500    510 510 530    10</span></a>
+<a class="sourceLine" id="cb3-12" title="12"><span class="co">#&gt;       as.mo(&quot;T. islandicus&quot;)  73  73   74     73  74  75    10</span></a>
+<a class="sourceLine" id="cb3-13" title="13"><span class="co">#&gt;      as.mo(&quot;T.  islandicus&quot;)  73  74   89     76 120 120    10</span></a>
+<a class="sourceLine" id="cb3-14" title="14"><span class="co">#&gt;  as.mo(&quot;Thermus islandicus&quot;)  73  74   98     96 120 120    10</span></a></code></pre></div>
+<p>That takes 8.9 times as much time on average. A value of 100 milliseconds means it can only determine ~10 different input values per second. We can conclude that looking up arbitrary codes of less prevalent microorganisms is the worst way to go, in terms of calculation performance. Full names (like <em>Thermus islandicus</em>) are almost fast - these are the most probable input from most data sets.</p>
+<p>In the figure below, we compare <em>Escherichia coli</em> (which is very common) with <em>Prevotella brevis</em> (which is moderately common) and with <em>Thermus islandicus</em> (which is very uncommon):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">par</span>(<span class="dt">mar =</span> <span class="kw">c</span>(<span class="dv">5</span>, <span class="dv">16</span>, <span class="dv">4</span>, <span class="dv">2</span>)) <span class="co"># set more space for left margin text (16)</span></a>
+<a class="sourceLine" id="cb4-2" title="2"></a>
+<a class="sourceLine" id="cb4-3" title="3"><span class="kw">boxplot</span>(<span class="kw">microbenchmark</span>(<span class="kw">as.mo</span>(<span class="st">&quot;Thermus islandicus&quot;</span>),</a>
+<a class="sourceLine" id="cb4-4" title="4">                       <span class="kw">as.mo</span>(<span class="st">&quot;Prevotella brevis&quot;</span>),</a>
+<a class="sourceLine" id="cb4-5" title="5">                       <span class="kw">as.mo</span>(<span class="st">&quot;Escherichia coli&quot;</span>),</a>
+<a class="sourceLine" id="cb4-6" title="6">                       <span class="kw">as.mo</span>(<span class="st">&quot;T. islandicus&quot;</span>),</a>
+<a class="sourceLine" id="cb4-7" title="7">                       <span class="kw">as.mo</span>(<span class="st">&quot;P. brevis&quot;</span>),</a>
+<a class="sourceLine" id="cb4-8" title="8">                       <span class="kw">as.mo</span>(<span class="st">&quot;E. coli&quot;</span>),</a>
+<a class="sourceLine" id="cb4-9" title="9">                       <span class="dt">times =</span> <span class="dv">10</span>),</a>
+<a class="sourceLine" id="cb4-10" title="10">        <span class="dt">horizontal =</span> <span class="ot">TRUE</span>, <span class="dt">las =</span> <span class="dv">1</span>, <span class="dt">unit =</span> <span class="st">&quot;s&quot;</span>, <span class="dt">log =</span> <span class="ot">FALSE</span>,</a>
+<a class="sourceLine" id="cb4-11" title="11">        <span class="dt">xlab =</span> <span class="st">&quot;&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;Time in seconds&quot;</span>, <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="fl">0.5</span>),</a>
+<a class="sourceLine" id="cb4-12" title="12">        <span class="dt">main =</span> <span class="st">&quot;Benchmarks per prevalence&quot;</span>)</a></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>In reality, the <code>as.mo()</code> functions <strong>learns from its own output to speed up determinations for next times</strong>. In above figure, this effect was disabled to show the difference with the boxplot below - when you would use <code>as.mo()</code> yourself:</p>
+<pre><code>#&gt; File /home/uscloud/.Rhistory_mo removed.</code></pre>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>The highest outliers are the first times. All next determinations were done in only thousands of seconds.</p>
+<p>Still, uncommon microorganisms take a lot more time than common microorganisms, especially the first time. To relieve this pitfall and further improve performance, two important calculations take almost no time at all: <strong>repetitive results</strong> and <strong>already precalculated results</strong>.</p>
+<div id="repetitive-results" class="section level3">
+<h3>Repetitive results</h3>
+<p>Repetitive results are unique values that are present more than once. Unique values will only be calculated once by <code>as.mo()</code>. We will use <code>mo_fullname()</code> for this test - a helper function that returns the full microbial name (genus, species and possibly subspecies) which uses <code>as.mo()</code> internally.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">library</span>(dplyr)</a>
+<a class="sourceLine" id="cb6-2" title="2"><span class="co"># take all MO codes from the septic_patients data set</span></a>
+<a class="sourceLine" id="cb6-3" title="3">x &lt;-<span class="st"> </span>septic_patients<span class="op">$</span>mo <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb6-4" title="4"><span class="st">  </span><span class="co"># keep only the unique ones</span></a>
+<a class="sourceLine" id="cb6-5" title="5"><span class="st">  </span><span class="kw">unique</span>() <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb6-6" title="6"><span class="st">  </span><span class="co"># pick 50 of them at random</span></a>
+<a class="sourceLine" id="cb6-7" title="7"><span class="st">  </span><span class="kw">sample</span>(<span class="dv">50</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb6-8" title="8"><span class="st">  </span><span class="co"># paste that 10,000 times</span></a>
+<a class="sourceLine" id="cb6-9" title="9"><span class="st">  </span><span class="kw">rep</span>(<span class="dv">10000</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb6-10" title="10"><span class="st">  </span><span class="co"># scramble it</span></a>
+<a class="sourceLine" id="cb6-11" title="11"><span class="st">  </span><span class="kw">sample</span>()</a>
+<a class="sourceLine" id="cb6-12" title="12">  </a>
+<a class="sourceLine" id="cb6-13" title="13"><span class="co"># got indeed 50 times 10,000 = half a million?</span></a>
+<a class="sourceLine" id="cb6-14" title="14"><span class="kw">length</span>(x)</a>
+<a class="sourceLine" id="cb6-15" title="15"><span class="co">#&gt; [1] 500000</span></a>
+<a class="sourceLine" id="cb6-16" title="16"></a>
+<a class="sourceLine" id="cb6-17" title="17"><span class="co"># and how many unique values do we have?</span></a>
+<a class="sourceLine" id="cb6-18" title="18"><span class="kw">n_distinct</span>(x)</a>
+<a class="sourceLine" id="cb6-19" title="19"><span class="co">#&gt; [1] 50</span></a>
+<a class="sourceLine" id="cb6-20" title="20"></a>
+<a class="sourceLine" id="cb6-21" title="21"><span class="co"># now let&#39;s see:</span></a>
+<a class="sourceLine" id="cb6-22" title="22">run_it &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(<span class="kw">mo_fullname</span>(x),</a>
+<a class="sourceLine" id="cb6-23" title="23">                         <span class="dt">times =</span> <span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb6-24" title="24"><span class="kw">print</span>(run_it, <span class="dt">unit =</span> <span class="st">&quot;ms&quot;</span>, <span class="dt">signif =</span> <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb6-25" title="25"><span class="co">#&gt; Unit: milliseconds</span></a>
+<a class="sourceLine" id="cb6-26" title="26"><span class="co">#&gt;            expr min  lq mean median  uq max neval</span></a>
+<a class="sourceLine" id="cb6-27" title="27"><span class="co">#&gt;  mo_fullname(x) 772 780  821    806 826 971    10</span></a></code></pre></div>
+<p>So transforming 500,000 values (!!) of 50 unique values only takes 0.81 seconds (806 ms). You only lose time on your unique input values.</p>
+</div>
+<div id="precalculated-results" class="section level3">
+<h3>Precalculated results</h3>
+<p>What about precalculated results? If the input is an already precalculated result of a helper function like <code>mo_fullname()</code>, it almost doesn’t take any time at all (see ‘C’ below):</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1">run_it &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(<span class="dt">A =</span> <span class="kw">mo_fullname</span>(<span class="st">&quot;B_STPHY_AUR&quot;</span>),</a>
+<a class="sourceLine" id="cb7-2" title="2">                         <span class="dt">B =</span> <span class="kw">mo_fullname</span>(<span class="st">&quot;S. aureus&quot;</span>),</a>
+<a class="sourceLine" id="cb7-3" title="3">                         <span class="dt">C =</span> <span class="kw">mo_fullname</span>(<span class="st">&quot;Staphylococcus aureus&quot;</span>),</a>
+<a class="sourceLine" id="cb7-4" title="4">                         <span class="dt">times =</span> <span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb7-5" title="5"><span class="kw">print</span>(run_it, <span class="dt">unit =</span> <span class="st">&quot;ms&quot;</span>, <span class="dt">signif =</span> <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb7-6" title="6"><span class="co">#&gt; Unit: milliseconds</span></a>
+<a class="sourceLine" id="cb7-7" title="7"><span class="co">#&gt;  expr    min     lq   mean median     uq   max neval</span></a>
+<a class="sourceLine" id="cb7-8" title="8"><span class="co">#&gt;     A 12.200 12.400 16.900 12.500 12.800 56.50    10</span></a>
+<a class="sourceLine" id="cb7-9" title="9"><span class="co">#&gt;     B 26.300 26.500 26.800 26.600 27.000 27.80    10</span></a>
+<a class="sourceLine" id="cb7-10" title="10"><span class="co">#&gt;     C  0.614  0.931  0.899  0.959  0.985  1.01    10</span></a></code></pre></div>
+<p>So going from <code>mo_fullname(&quot;Staphylococcus aureus&quot;)</code> to <code>&quot;Staphylococcus aureus&quot;</code> takes 0.001 seconds - it doesn’t even start calculating <em>if the result would be the same as the expected resulting value</em>. That goes for all helper functions:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1">run_it &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(<span class="dt">A =</span> <span class="kw">mo_species</span>(<span class="st">&quot;aureus&quot;</span>),</a>
+<a class="sourceLine" id="cb8-2" title="2">                         <span class="dt">B =</span> <span class="kw">mo_genus</span>(<span class="st">&quot;Staphylococcus&quot;</span>),</a>
+<a class="sourceLine" id="cb8-3" title="3">                         <span class="dt">C =</span> <span class="kw">mo_fullname</span>(<span class="st">&quot;Staphylococcus aureus&quot;</span>),</a>
+<a class="sourceLine" id="cb8-4" title="4">                         <span class="dt">D =</span> <span class="kw">mo_family</span>(<span class="st">&quot;Staphylococcaceae&quot;</span>),</a>
+<a class="sourceLine" id="cb8-5" title="5">                         <span class="dt">E =</span> <span class="kw">mo_order</span>(<span class="st">&quot;Bacillales&quot;</span>),</a>
+<a class="sourceLine" id="cb8-6" title="6">                         <span class="dt">F =</span> <span class="kw">mo_class</span>(<span class="st">&quot;Bacilli&quot;</span>),</a>
+<a class="sourceLine" id="cb8-7" title="7">                         <span class="dt">G =</span> <span class="kw">mo_phylum</span>(<span class="st">&quot;Firmicutes&quot;</span>),</a>
+<a class="sourceLine" id="cb8-8" title="8">                         <span class="dt">H =</span> <span class="kw">mo_kingdom</span>(<span class="st">&quot;Bacteria&quot;</span>),</a>
+<a class="sourceLine" id="cb8-9" title="9">                         <span class="dt">times =</span> <span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb8-10" title="10"><span class="kw">print</span>(run_it, <span class="dt">unit =</span> <span class="st">&quot;ms&quot;</span>, <span class="dt">signif =</span> <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb8-11" title="11"><span class="co">#&gt; Unit: milliseconds</span></a>
+<a class="sourceLine" id="cb8-12" title="12"><span class="co">#&gt;  expr   min    lq  mean median    uq   max neval</span></a>
+<a class="sourceLine" id="cb8-13" title="13"><span class="co">#&gt;     A 0.488 0.551 0.612  0.607 0.673 0.725    10</span></a>
+<a class="sourceLine" id="cb8-14" title="14"><span class="co">#&gt;     B 0.647 0.684 0.772  0.745 0.865 0.920    10</span></a>
+<a class="sourceLine" id="cb8-15" title="15"><span class="co">#&gt;     C 0.808 1.070 1.200  1.170 1.290 1.730    10</span></a>
+<a class="sourceLine" id="cb8-16" title="16"><span class="co">#&gt;     D 0.534 0.577 0.636  0.650 0.680 0.749    10</span></a>
+<a class="sourceLine" id="cb8-17" title="17"><span class="co">#&gt;     E 0.565 0.621 0.648  0.631 0.682 0.730    10</span></a>
+<a class="sourceLine" id="cb8-18" title="18"><span class="co">#&gt;     F 0.530 0.565 0.616  0.629 0.636 0.757    10</span></a>
+<a class="sourceLine" id="cb8-19" title="19"><span class="co">#&gt;     G 0.537 0.588 0.650  0.632 0.701 0.840    10</span></a>
+<a class="sourceLine" id="cb8-20" title="20"><span class="co">#&gt;     H 0.489 0.554 0.595  0.597 0.634 0.709    10</span></a></code></pre></div>
+<p>Of course, when running <code>mo_phylum(&quot;Firmicutes&quot;)</code> the function has zero knowledge about the actual microorganism, namely <em>S. aureus</em>. But since the result would be <code>&quot;Firmicutes&quot;</code> too, there is no point in calculating the result. And because this package ‘knows’ all phyla of all known bacteria (according to the Catalogue of Life), it can just return the initial value immediately.</p>
+</div>
+<div id="results-in-other-languages" class="section level3">
+<h3>Results in other languages</h3>
+<p>When the system language is non-English and supported by this <code>AMR</code> package, some functions will have a translated result. This almost does’t take extra time:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">mo_fullname</span>(<span class="st">&quot;CoNS&quot;</span>, <span class="dt">language =</span> <span class="st">&quot;en&quot;</span>) <span class="co"># or just mo_fullname(&quot;CoNS&quot;) on an English system</span></a>
+<a class="sourceLine" id="cb9-2" title="2"><span class="co">#&gt; [1] &quot;Coagulase-negative Staphylococcus (CoNS)&quot;</span></a>
+<a class="sourceLine" id="cb9-3" title="3"></a>
+<a class="sourceLine" id="cb9-4" title="4"><span class="kw">mo_fullname</span>(<span class="st">&quot;CoNS&quot;</span>, <span class="dt">language =</span> <span class="st">&quot;es&quot;</span>) <span class="co"># or just mo_fullname(&quot;CoNS&quot;) on a Spanish system</span></a>
+<a class="sourceLine" id="cb9-5" title="5"><span class="co">#&gt; [1] &quot;Staphylococcus coagulasa negativo (SCN)&quot;</span></a>
+<a class="sourceLine" id="cb9-6" title="6"></a>
+<a class="sourceLine" id="cb9-7" title="7"><span class="kw">mo_fullname</span>(<span class="st">&quot;CoNS&quot;</span>, <span class="dt">language =</span> <span class="st">&quot;nl&quot;</span>) <span class="co"># or just mo_fullname(&quot;CoNS&quot;) on a Dutch system</span></a>
+<a class="sourceLine" id="cb9-8" title="8"><span class="co">#&gt; [1] &quot;Coagulase-negatieve Staphylococcus (CNS)&quot;</span></a>
+<a class="sourceLine" id="cb9-9" title="9"></a>
+<a class="sourceLine" id="cb9-10" title="10">run_it &lt;-<span class="st"> </span><span class="kw">microbenchmark</span>(<span class="dt">en =</span> <span class="kw">mo_fullname</span>(<span class="st">&quot;CoNS&quot;</span>, <span class="dt">language =</span> <span class="st">&quot;en&quot;</span>),</a>
+<a class="sourceLine" id="cb9-11" title="11">                         <span class="dt">de =</span> <span class="kw">mo_fullname</span>(<span class="st">&quot;CoNS&quot;</span>, <span class="dt">language =</span> <span class="st">&quot;de&quot;</span>),</a>
+<a class="sourceLine" id="cb9-12" title="12">                         <span class="dt">nl =</span> <span class="kw">mo_fullname</span>(<span class="st">&quot;CoNS&quot;</span>, <span class="dt">language =</span> <span class="st">&quot;nl&quot;</span>),</a>
+<a class="sourceLine" id="cb9-13" title="13">                         <span class="dt">es =</span> <span class="kw">mo_fullname</span>(<span class="st">&quot;CoNS&quot;</span>, <span class="dt">language =</span> <span class="st">&quot;es&quot;</span>),</a>
+<a class="sourceLine" id="cb9-14" title="14">                         <span class="dt">it =</span> <span class="kw">mo_fullname</span>(<span class="st">&quot;CoNS&quot;</span>, <span class="dt">language =</span> <span class="st">&quot;it&quot;</span>),</a>
+<a class="sourceLine" id="cb9-15" title="15">                         <span class="dt">fr =</span> <span class="kw">mo_fullname</span>(<span class="st">&quot;CoNS&quot;</span>, <span class="dt">language =</span> <span class="st">&quot;fr&quot;</span>),</a>
+<a class="sourceLine" id="cb9-16" title="16">                         <span class="dt">pt =</span> <span class="kw">mo_fullname</span>(<span class="st">&quot;CoNS&quot;</span>, <span class="dt">language =</span> <span class="st">&quot;pt&quot;</span>),</a>
+<a class="sourceLine" id="cb9-17" title="17">                         <span class="dt">times =</span> <span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb9-18" title="18"><span class="kw">print</span>(run_it, <span class="dt">unit =</span> <span class="st">&quot;ms&quot;</span>, <span class="dt">signif =</span> <span class="dv">4</span>)</a>
+<a class="sourceLine" id="cb9-19" title="19"><span class="co">#&gt; Unit: milliseconds</span></a>
+<a class="sourceLine" id="cb9-20" title="20"><span class="co">#&gt;  expr   min    lq  mean median    uq   max neval</span></a>
+<a class="sourceLine" id="cb9-21" title="21"><span class="co">#&gt;    en 18.71 19.22 19.35  19.28 19.32 20.65    10</span></a>
+<a class="sourceLine" id="cb9-22" title="22"><span class="co">#&gt;    de 31.24 31.39 31.92  31.72 31.88 33.36    10</span></a>
+<a class="sourceLine" id="cb9-23" title="23"><span class="co">#&gt;    nl 31.45 31.86 41.02  32.02 33.15 77.54    10</span></a>
+<a class="sourceLine" id="cb9-24" title="24"><span class="co">#&gt;    es 31.17 31.34 40.61  31.86 32.08 76.53    10</span></a>
+<a class="sourceLine" id="cb9-25" title="25"><span class="co">#&gt;    it 31.14 31.71 31.76  31.83 31.96 31.99    10</span></a>
+<a class="sourceLine" id="cb9-26" title="26"><span class="co">#&gt;    fr 31.38 31.50 36.18  31.80 31.93 76.34    10</span></a>
+<a class="sourceLine" id="cb9-27" title="27"><span class="co">#&gt;    pt 31.36 31.82 45.10  31.86 76.20 76.38    10</span></a></code></pre></div>
+<p>Currently supported are German, Dutch, Spanish, Italian, French and Portuguese.</p>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

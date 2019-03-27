@@ -11,15 +11,15 @@
 \alias{mo_order}
 \alias{mo_class}
 \alias{mo_phylum}
-\alias{mo_subkingdom}
 \alias{mo_kingdom}
 \alias{mo_type}
 \alias{mo_gramstain}
-\alias{mo_TSN}
 \alias{mo_ref}
 \alias{mo_authors}
 \alias{mo_year}
+\alias{mo_rank}
 \alias{mo_taxonomy}
+\alias{mo_url}
 \title{Property of a microorganism}
 \usage{
 mo_fullname(x, language = get_locale(), ...)
@@ -32,23 +32,19 @@ mo_species(x, language = get_locale(), ...)
 
 mo_genus(x, language = get_locale(), ...)
 
-mo_family(x, ...)
+mo_family(x, language = get_locale(), ...)
 
-mo_order(x, ...)
+mo_order(x, language = get_locale(), ...)
 
-mo_class(x, ...)
+mo_class(x, language = get_locale(), ...)
 
-mo_phylum(x, ...)
+mo_phylum(x, language = get_locale(), ...)
 
-mo_subkingdom(x, ...)
-
-mo_kingdom(x, ...)
+mo_kingdom(x, language = get_locale(), ...)
 
 mo_type(x, language = get_locale(), ...)
 
 mo_gramstain(x, language = get_locale(), ...)
-
-mo_TSN(x, ...)
 
 mo_ref(x, ...)
 
@@ -56,7 +52,11 @@ mo_authors(x, ...)
 
 mo_year(x, ...)
 
-mo_taxonomy(x, ...)
+mo_rank(x, ...)
+
+mo_taxonomy(x, language = get_locale(), ...)
+
+mo_url(x, open = FALSE, ...)
 
 mo_property(x, property = "fullname", language = get_locale(), ...)
 }
@@ -67,12 +67,15 @@ mo_property(x, property = "fullname", language = get_locale(), ...)
 
 \item{...}{other parameters passed on to \code{\link{as.mo}}}
 
+\item{open}{browse the URL using \code{\link[utils]{browseURL}()}}
+
 \item{property}{one of the column names of one of the \code{\link{microorganisms}} data set or \code{"shortname"}}
 }
 \value{
 \itemize{
-  \item{An \code{integer} in case of \code{mo_TSN} and \code{mo_year}}
+  \item{An \code{integer} in case of \code{mo_year}}
   \item{A \code{list} in case of \code{mo_taxonomy}}
+  \item{A named \code{character} in case of \code{mo_url}}
   \item{A \code{character} in all other cases}
 }
 }
@@ -80,50 +83,56 @@ mo_property(x, property = "fullname", language = get_locale(), ...)
 Use these functions to return a specific property of a microorganism from the \code{\link{microorganisms}} data set. All input values will be evaluated internally with \code{\link{as.mo}}.
 }
 \details{
-All functions will return the most recently known taxonomic property according to ITIS, except for \code{mo_ref}, \code{mo_authors} and \code{mo_year}. This leads to the following results:
+All functions will return the most recently known taxonomic property according to the Catalogue of Life, except for \code{mo_ref}, \code{mo_authors} and \code{mo_year}. This leads to the following results:
 \itemize{
   \item{\code{mo_fullname("Chlamydia psittaci")} will return \code{"Chlamydophila psittaci"} (with a warning about the renaming)}
   \item{\code{mo_ref("Chlamydia psittaci")} will return \code{"Page, 1968"} (with a warning about the renaming)}
   \item{\code{mo_ref("Chlamydophila psittaci")} will return \code{"Everett et al., 1999"} (without a warning)}
 }
+
+The Gram stain - \code{mo_gramstain()} - will be determined on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002) who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram positive - all other bacteria are considered Gram negative. Species outside the kingdom of Bacteria will return a value \code{NA}.
+
+The function \code{mo_url()} will return the direct URL to the online database entry, which also shows the scientific reference of the concerned species.
 }
 \section{Supported languages}{
 
 Supported languages are \code{"en"} (English), \code{"de"} (German), \code{"nl"} (Dutch), \code{"es"} (Spanish), \code{"it"} (Italian), \code{"fr"} (French), and \code{"pt"} (Portuguese).
 }
 
-\section{ITIS}{
+\section{Catalogue of Life}{
 
-\if{html}{\figure{itis_logo.jpg}{options: height=60px style=margin-bottom:5px} \cr}
-This package contains the \strong{complete microbial taxonomic data} (with all eight taxonomic ranks - from kingdom to subspecies) from the publicly available Integrated Taxonomic Information System (ITIS, \url{https://www.itis.gov}).
+\if{html}{\figure{logo_col.png}{options: height=40px style=margin-bottom:5px} \cr}
+This package contains the complete taxonomic tree of almost all microorganisms (~60,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
 
-All (sub)species from \strong{the taxonomic kingdoms Bacteria, Fungi and Protozoa are included in this package}, as well as all previously accepted names known to ITIS. Furthermore, the responsible authors and year of publication are available. This allows users to use authoritative taxonomic information for their data analysis on any microorganism, not only human pathogens. It also helps to quickly determine the Gram stain of bacteria, since all bacteria are classified into subkingdom Negibacteria or Posibacteria.
-
-ITIS is a partnership of U.S., Canadian, and Mexican agencies and taxonomic specialists [3].
+\link[=catalogue_of_life]{Click here} for more information about the included taxa. The Catalogue of Life releases updates annually; check which version was included in this package with \code{\link{catalogue_of_life_version}()}.
 }
 
 \section{Source}{
 
 [1] Becker K \emph{et al.} \strong{Coagulase-Negative Staphylococci}. 2014. Clin Microbiol Rev. 27(4): 870–926. \url{https://dx.doi.org/10.1128/CMR.00109-13}
 
-[2] Lancefield RC \strong{A serological differentiation of human and other groups of hemolytic streptococci}. 1933. J Exp Med. 57(4): 571–95. \url{https://dx.doi.org/10.1084/jem.57.4.571}
+[2] Becker K \emph{et al.} \strong{Implications of identifying the recently defined members of the S. aureus complex, S. argenteus and S. schweitzeri: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).}. 2019. Clin Microbiol Infect. 2019 Mar 11. \url{https://doi.org/10.1016/j.cmi.2019.02.028}
 
-[3] Integrated Taxonomic Information System (ITIS). Retrieved September 2018. \url{http://www.itis.gov}
+[3] Lancefield RC \strong{A serological differentiation of human and other groups of hemolytic streptococci}. 1933. J Exp Med. 57(4): 571–95. \url{https://dx.doi.org/10.1084/jem.57.4.571}
+
+[4] Catalogue of Life: Annual Checklist (public online taxonomic database), \url{www.catalogueoflife.org} (check included annual version with \code{\link{catalogue_of_life_version}()}).
+}
+
+\section{Read more on our website!}{
+
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
-# All properties of Escherichia coli
-## taxonomic properties
+## taxonomic tree
 mo_kingdom("E. coli")         # "Bacteria"
-mo_subkingdom("E. coli")      # "Negibacteria"
 mo_phylum("E. coli")          # "Proteobacteria"
 mo_class("E. coli")           # "Gammaproteobacteria"
 mo_order("E. coli")           # "Enterobacteriales"
 mo_family("E. coli")          # "Enterobacteriaceae"
 mo_genus("E. coli")           # "Escherichia"
 mo_species("E. coli")         # "coli"
-mo_subspecies("E. coli")      # NA
-mo_TSN("E. coli")             # 285 (Taxonomic Serial Number)
+mo_subspecies("E. coli")      # ""
 
 ## colloquial properties
 mo_fullname("E. coli")        # "Escherichia coli"
@@ -132,10 +141,12 @@ mo_shortname("E. coli")       # "E. coli"
 ## other properties
 mo_gramstain("E. coli")       # "Gram negative"
 mo_type("E. coli")            # "Bacteria" (equal to kingdom)
+mo_rank("E. coli")            # "species"
+mo_url("E. coli")             # get the direct url to the Catalogue of Life
 
 ## scientific reference
-mo_ref("E. coli")             # "Castellani and Chalmers, 1919"
-mo_authors("E. coli")         # "Castellani and Chalmers"
+mo_ref("E. coli")             # "Castellani et al., 1919"
+mo_authors("E. coli")         # "Castellani et al."
 mo_year("E. coli")            # 1919
 
 
@@ -160,7 +171,7 @@ mo_shortname("K. pneu rh")    # "K. pneumoniae"
 
 # Becker classification, see ?as.mo
 mo_fullname("S. epi")                     # "Staphylococcus epidermidis"
-mo_fullname("S. epi", Becker = TRUE)      # "Coagulase Negative Staphylococcus (CoNS)"
+mo_fullname("S. epi", Becker = TRUE)      # "Coagulase-negative Staphylococcus (CoNS)"
 mo_shortname("S. epi")                    # "S. epidermidis"
 mo_shortname("S. epi", Becker = TRUE)     # "CoNS"
 
@@ -171,7 +182,7 @@ mo_shortname("S. pyo")                    # "S. pyogenes"
 mo_shortname("S. pyo", Lancefield = TRUE) # "GAS" ('Group A streptococci')
 
 
-# Language support for German, Dutch, Spanish, Portuguese, Italian and French
+# language support for German, Dutch, Spanish, Portuguese, Italian and French
 mo_gramstain("E. coli", language = "de")  # "Gramnegativ"
 mo_gramstain("E. coli", language = "nl")  # "Gram-negatief"
 mo_gramstain("E. coli", language = "es")  # "Gram negativo"
@@ -189,7 +200,7 @@ mo_fullname("S. pyogenes",
             language = "nl")              # "Streptococcus groep A"
 
 
-# Get a list with the complete taxonomy (subkingdom to subspecies)
+# get a list with the complete taxonomy (kingdom to subspecies)
 mo_taxonomy("E. coli")
 }
 \seealso{

@@ -2,26 +2,30 @@
 # TITLE                                                                #
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
-# AUTHORS                                                              #
-# Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)           #
+# SOURCE                                                               #
+# https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# This program is free software; you can redistribute it and/or modify #
-# it under the terms of the GNU General Public License version 2.0,    #
-# as published by the Free Software Foundation.                        #
+# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
 #                                                                      #
-# This program is distributed in the hope that it will be useful,      #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        #
-# GNU General Public License for more details.                         #
+# This R package is free software; you can freely use and distribute   #
+# it for both personal and commercial purposes under the terms of the  #
+# GNU General Public License version 2.0 (GNU GPL-2), as published by  #
+# the Free Software Foundation.                                        #
+#                                                                      #
+# This R package was created for academic research and was publicly    #
+# released in the hope that it will be useful, but it comes WITHOUT    #
+# ANY WARRANTY OR LIABILITY.                                           #
+# Visit our website for more info: https://msberends.gitab.io/AMR.     #
 # ==================================================================== #
 
-#' Data set with 423 antibiotics
+#' Data set with ~500 antibiotics
 #'
 #' A data set containing all antibiotics with a J0 code and some other antimicrobial agents, with their DDDs. Except for trade names and abbreviations, all properties were downloaded from the WHO, see Source.
-#' @format A \code{\link{data.frame}} with 423 observations and 18 variables:
+#' @format A \code{\link{data.frame}} with 488 observations and 17 variables:
 #' \describe{
-#'   \item{\code{atc}}{ATC code, like \code{J01CR02}}
+#'   \item{\code{atc}}{ATC code (Anatomical Therapeutic Chemical), like \code{J01CR02}}
+#'   \item{\code{ears_net}}{EARS-Net code (European Antimicrobial Resistance Surveillance Network), like \code{AMC}}
 #'   \item{\code{certe}}{Certe code, like \code{amcl}}
 #'   \item{\code{umcg}}{UMCG code, like \code{AMCL}}
 #'   \item{\code{abbr}}{Abbreviation as used by many countries, used internally by \code{\link{as.atc}}}
@@ -35,12 +39,18 @@
 #'   \item{\code{iv_units}}{Units of \code{iv_ddd}}
 #'   \item{\code{atc_group1}}{ATC group, like \code{"Macrolides, lincosamides and streptogramins"}}
 #'   \item{\code{atc_group2}}{Subgroup of \code{atc_group1}, like \code{"Macrolides"}}
-#'   \item{\code{atc_group1_nl}}{ATC group in Dutch, like \code{"Macroliden, lincosamiden en streptograminen"}}
-#'   \item{\code{atc_group2_nl}}{Subgroup of \code{atc_group1} in Dutch, like \code{"Macroliden"}}
 #'   \item{\code{useful_gramnegative}}{\code{FALSE} if not useful according to EUCAST, \code{NA} otherwise (see Source)}
 #'   \item{\code{useful_grampositive}}{\code{FALSE} if not useful according to EUCAST, \code{NA} otherwise (see Source)}
 #' }
-#' @source - World Health Organization: \url{https://www.whocc.no/atc_ddd_index/} \cr - EUCAST - Expert rules intrinsic exceptional V3.1 \cr - MOLIS (LIS of Certe): \url{https://www.certe.nl} \cr - GLIMS (LIS of UMCG): \url{https://www.umcg.nl}
+#' @source World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://www.whocc.no/atc_ddd_index/}
+#'
+#' Table antibiotic coding EARSS (from WHONET 5.3): \url{http://www.madsonline.dk/Tutorials/landskoder_antibiotika_WM.pdf}
+#'
+#' EUCAST Expert Rules, Intrinsic Resistance and Exceptional Phenotypes Tables. Version 3.1, 2016: \url{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf}
+#'
+#' European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}
+#' @inheritSection WHOCC WHOCC
+#' @inheritSection AMR Read more on our website!
 #' @seealso \code{\link{microorganisms}}
 # use this later to further fill AMR::antibiotics
 # drug <- "Ciprofloxacin"
@@ -120,72 +130,87 @@
 #
 "antibiotics"
 
-#' Data set with taxonomic data from ITIS
+#' Data set with ~65,000 microorganisms
 #'
-#' A data set containing the complete microbial taxonomy of the kingdoms Bacteria, Fungi and Protozoa. MO codes can be looked up using \code{\link{as.mo}}.
-#' @inheritSection as.mo ITIS
-#' @format A \code{\link{data.frame}} with 18,833 observations and 15 variables:
+#' A data set containing the microbial taxonomy of six kingdoms from the Catalogue of Life. MO codes can be looked up using \code{\link{as.mo}}.
+#' @inheritSection catalogue_of_life Catalogue of Life
+#' @format A \code{\link{data.frame}} with 65,629 observations and 16 variables:
 #' \describe{
-#'   \item{\code{mo}}{ID of microorganism}
-#'   \item{\code{tsn}}{Taxonomic Serial Number (TSN), as defined by ITIS}
-#'   \item{\code{genus}}{Taxonomic genus of the microorganism as found in ITIS, see Source}
-#'   \item{\code{species}}{Taxonomic species of the microorganism as found in ITIS, see Source}
-#'   \item{\code{subspecies}}{Taxonomic subspecies of the microorganism as found in ITIS, see Source}
+#'   \item{\code{mo}}{ID of microorganism as used by this package}
+#'   \item{\code{col_id}}{Catalogue of Life ID}
 #'   \item{\code{fullname}}{Full name, like \code{"Echerichia coli"}}
-#'   \item{\code{family}}{Taxonomic family of the microorganism as found in ITIS, see Source}
-#'   \item{\code{order}}{Taxonomic order of the microorganism as found in ITIS, see Source}
-#'   \item{\code{class}}{Taxonomic class of the microorganism as found in ITIS, see Source}
-#'   \item{\code{phylum}}{Taxonomic phylum of the microorganism as found in ITIS, see Source}
-#'   \item{\code{subkingdom}}{Taxonomic subkingdom of the microorganism as found in ITIS, see Source}
-#'   \item{\code{kingdom}}{Taxonomic kingdom of the microorganism as found in ITIS, see Source}
-#'   \item{\code{gramstain}}{Gram of microorganism, like \code{"Gram negative"}}
-#'   \item{\code{prevalence}}{An integer based on estimated prevalence of the microorganism in humans. Used internally by \code{\link{as.mo}}, otherwise quite meaningless. It has a value of 25 for manually added items and a value of 1000 for all unprevalent microorganisms whose genus was somewhere in the top 250 (with another species).}
-#'   \item{\code{ref}}{Author(s) and year of concerning publication as found in ITIS, see Source}
+#'   \item{\code{kingdom}}{Taxonomic kingdom of the microorganism}
+#'   \item{\code{phylum}}{Taxonomic phylum of the microorganism}
+#'   \item{\code{class}}{Taxonomic class of the microorganism}
+#'   \item{\code{order}}{Taxonomic order of the microorganism}
+#'   \item{\code{family}}{Taxonomic family of the microorganism}
+#'   \item{\code{genus}}{Taxonomic genus of the microorganism}
+#'   \item{\code{species}}{Taxonomic species of the microorganism}
+#'   \item{\code{subspecies}}{Taxonomic subspecies of the microorganism}
+#'   \item{\code{rank}}{Taxonomic rank of the microorganism, like \code{"species"} or \code{"genus"}}
+#'   \item{\code{ref}}{Author(s) and year of concerning scientific publication}
+#'   \item{\code{species_id}}{ID of the species as used by the Catalogue of Life}
+#'   \item{\code{source}}{Either \code{"CoL"}, \code{"DSMZ"} (see source) or "manually added"}
+#'   \item{\code{prevalence}}{Prevalence of the microorganism, see \code{?as.mo}}
 #' }
-#' @source [3] Integrated Taxonomic Information System (ITIS) on-line database, \url{https://www.itis.gov}.
-#' @seealso \code{\link{as.mo}} \code{\link{mo_property}} \code{\link{microorganisms.umcg}}
+#' @details Manually added were:
+#' \itemize{
+#'   \item{9 species of \emph{Streptococcus} (beta haemolytic groups A, B, C, D, F, G, H, K and unspecified)}
+#'   \item{2 species of \emph{Staphylococcus} (coagulase-negative [CoNS] and coagulase-positive [CoPS])}
+#'   \item{3 other undefined (unknown, unknown Gram negatives and unknown Gram positives)}
+#'   \item{8,830 species from the DSMZ (Deutsche Sammlung von Mikroorganismen und Zellkulturen) that are not in the Catalogue of Life}
+#' }
+#' @section About the records from DSMZ (see source):
+#' Names of prokaryotes are defined as being validly published by the International Code of Nomenclature of Bacteria. Validly published are all names which are included in the Approved Lists of Bacterial Names and the names subsequently published in the International Journal of Systematic Bacteriology (IJSB) and, from January 2000, in the International Journal of Systematic and Evolutionary Microbiology (IJSEM) as original articles or in the validation lists.
+#'
+#' From: \url{https://www.dsmz.de/support/bacterial-nomenclature-up-to-date-downloads/readme.html}
+#' @source Catalogue of Life: Annual Checklist (public online taxonomic database), \url{www.catalogueoflife.org} (check included annual version with \code{\link{catalogue_of_life_version}()}).
+#'
+#' Leibniz Institute DSMZ-German Collection of Microorganisms and Cell Cultures, Germany, Prokaryotic Nomenclature Up-to-Date, \url{http://www.dsmz.de/bacterial-diversity/prokaryotic-nomenclature-up-to-date} (check included version with \code{\link{catalogue_of_life_version}()}).
+#' @inheritSection AMR Read more on our website!
+#' @seealso \code{\link{as.mo}}, \code{\link{mo_property}}, \code{\link{microorganisms.codes}}
 "microorganisms"
 
-#' Data set with old taxonomic data from ITIS
+catalogue_of_life <- list(
+  year = 2018,
+  version = "Catalogue of Life: {year} Annual Checklist",
+  url_CoL = "http://www.catalogueoflife.org/annual-checklist/{year}/",
+  url_DSMZ = "https://www.dsmz.de/microorganisms/pnu/bacterial_nomenclature_info_mm.php",
+  yearmonth_DSMZ = "February 2019"
+)
+
+#' Data set with previously accepted taxonomic names
 #'
-#' A data set containing old (previously valid or accepted) taxonomic names according to ITIS. This data set is used internally by \code{\link{as.mo}}.
-#' @inheritSection as.mo ITIS
-#' @format A \code{\link{data.frame}} with 2,383 observations and 4 variables:
+#' A data set containing old (previously valid or accepted) taxonomic names according to the Catalogue of Life. This data set is used internally by \code{\link{as.mo}}.
+#' @inheritSection catalogue_of_life Catalogue of Life
+#' @format A \code{\link{data.frame}} with 16,911 observations and 4 variables:
 #' \describe{
-#'   \item{\code{tsn}}{Old Taxonomic Serial Number (TSN), as defined by ITIS}
-#'   \item{\code{name}}{Old taxonomic name of the microorganism as found in ITIS, see Source}
-#'   \item{\code{tsn_new}}{New Taxonomic Serial Number (TSN), as defined by ITIS}
-#'   \item{\code{ref}}{Author(s) and year of concerning publication as found in ITIS, see Source}
+#'   \item{\code{col_id}}{Catalogue of Life ID}
+#'   \item{\code{tsn_new}}{New Catalogue of Life ID}
+#'   \item{\code{fullname}}{Old taxonomic name of the microorganism}
+#'   \item{\code{ref}}{Author(s) and year of concerning scientific publication}
 #' }
-#' @source [3] Integrated Taxonomic Information System (ITIS) on-line database, \url{https://www.itis.gov}.
+#' @source [3] Catalogue of Life: Annual Checklist (public online database), \url{www.catalogueoflife.org}.
+#' @inheritSection AMR Read more on our website!
 #' @seealso \code{\link{as.mo}} \code{\link{mo_property}} \code{\link{microorganisms}}
 "microorganisms.old"
 
-#' Translation table for UMCG
+#' Translation table for microorganism codes
 #'
-#' A data set containing all bacteria codes of UMCG MMB. These codes can be joined to data with an ID from \code{\link{microorganisms}$mo} (using \code{\link{left_join_microorganisms}}). GLIMS codes can also be translated to valid \code{MO}s with \code{\link{guess_mo}}.
-#' @format A \code{\link{data.frame}} with 1,095 observations and 2 variables:
+#' A data set containing commonly used codes for microorganisms, from laboratory systems and WHONET. Define your own with \code{\link{set_mo_source}}.
+#' @format A \code{\link{data.frame}} with 5,171 observations and 2 variables:
 #' \describe{
-#'   \item{\code{umcg}}{Code of microorganism according to UMCG MMB}
-#'   \item{\code{certe}}{Code of microorganism according to Certe MMB}
+#'   \item{\code{certe}}{Commonly used code of a microorganism}
+#'   \item{\code{mo}}{ID of the microorganism in the \code{\link{microorganisms}} data set}
 #' }
-#' @seealso \code{\link{as.mo}} \code{\link{microorganisms.certe}} \code{\link{microorganisms}}
-"microorganisms.umcg"
-
-#' Translation table for Certe
-#'
-#' A data set containing all bacteria codes of Certe MMB. These codes can be joined to data with an ID from \code{\link{microorganisms}$mo} (using \code{\link{left_join_microorganisms}}). GLIMS codes can also be translated to valid \code{MO}s with \code{\link{guess_mo}}.
-#' @format A \code{\link{data.frame}} with 2,665 observations and 2 variables:
-#' \describe{
-#'   \item{\code{certe}}{Code of microorganism according to Certe MMB}
-#'   \item{\code{mo}}{Code of microorganism in \code{\link{microorganisms}}}
-#' }
+#' @inheritSection catalogue_of_life Catalogue of Life
+#' @inheritSection AMR Read more on our website!
 #' @seealso \code{\link{as.mo}} \code{\link{microorganisms}}
-"microorganisms.certe"
+"microorganisms.codes"
 
-#' Data set with 2000 blood culture isolates of septic patients
+#' Data set with 2,000 blood culture isolates from septic patients
 #'
-#' An anonymised data set containing 2,000 microbial blood culture isolates with their full antibiograms found in septic patients in 4 different hospitals in the Netherlands, between 2001 and 2017. It is true, genuine data. This \code{data.frame} can be used to practice AMR analysis. For examples, press F1.
+#' An anonymised data set containing 2,000 microbial blood culture isolates with their full antibiograms found in septic patients in 4 different hospitals in the Netherlands, between 2001 and 2017. It is true, genuine data. This \code{data.frame} can be used to practice AMR analysis. For examples, please read \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{the tutorial on our website}.
 #' @format A \code{\link{data.frame}} with 2,000 observations and 49 variables:
 #' \describe{
 #'   \item{\code{date}}{date of receipt at the laboratory}
@@ -194,76 +219,45 @@
 #'   \item{\code{ward_clinical}}{logical to determine if ward is a regular clinical ward}
 #'   \item{\code{ward_outpatient}}{logical to determine if ward is an outpatient clinic}
 #'   \item{\code{age}}{age of the patient}
-#'   \item{\code{sex}}{sex of the patient}
+#'   \item{\code{gender}}{gender of the patient}
 #'   \item{\code{patient_id}}{ID of the patient, first 10 characters of an SHA hash containing irretrievable information}
-#'   \item{\code{mo}}{ID of microorganism, see \code{\link{microorganisms}}}
+#'   \item{\code{mo}}{ID of microorganism created with \code{\link{as.mo}}, see also \code{\link{microorganisms}}}
 #'   \item{\code{peni:rifa}}{40 different antibiotics with class \code{rsi} (see \code{\link{as.rsi}}); these column names occur in \code{\link{antibiotics}} data set and can be translated with \code{\link{abname}}}
 #' }
-#' @examples
-#' # ----------- #
-#' # PREPARATION #
-#' # ----------- #
-#'
-#' # Save this example data set to an object, so we can edit it:
-#' my_data <- septic_patients
-#'
-#' # load the dplyr package to make data science A LOT easier
-#' library(dplyr)
-#'
-#' # Add first isolates to our data set:
-#' my_data <- my_data %>%
-#'   mutate(first_isolates = first_isolate(my_data, "date", "patient_id", "mo"))
-#'
-#' # -------- #
-#' # ANALYSIS #
-#' # -------- #
-#'
-#' # 1. Get the amoxicillin resistance percentages (p)
-#' #     and numbers (n) of E. coli, divided by hospital:
-#'
-#' my_data %>%
-#'   filter(mo == guess_mo("E. coli"),
-#'          first_isolates == TRUE) %>%
-#'   group_by(hospital_id) %>%
-#'   summarise(n = n_rsi(amox),
-#'             p = portion_IR(amox))
-#'
-#'
-#' # 2. Get the amoxicillin/clavulanic acid resistance
-#' #    percentages of E. coli, trend over the years:
-#'
-#' my_data %>%
-#'   filter(mo == guess_mo("E. coli"),
-#'          first_isolates == TRUE) %>%
-#'   group_by(year = format(date, "%Y")) %>%
-#'   summarise(n = n_rsi(amcl),
-#'             p = portion_IR(amcl, minimum = 20))
+#' @inheritSection AMR Read more on our website!
 "septic_patients"
 
-#' Supplementary Data
+#' Data set with 500 isolates - WHONET example
 #'
-#' These \code{\link{data.table}s} are transformed from the \code{\link{microorganisms}} and \code{\link{microorganisms}} data sets to improve speed of \code{\link{as.mo}}. They are meant for internal use only, and are only mentioned here for reference.
-#' @rdname supplementary_data
-#' @name supplementary_data
-# # Renew data:
-# microorganismsDT <- data.table::as.data.table(AMR::microorganisms)
-# # sort on (1) bacteria, (2) fungi, (3) protozoa and then human pathogenic prevalence and then TSN:
-# data.table::setkey(microorganismsDT, kingdom, prevalence, fullname)
-# microorganisms.prevDT <- microorganismsDT[prevalence == 9999,]
-# microorganisms.unprevDT <- microorganismsDT[prevalence != 9999,]
-# microorganisms.oldDT <- data.table::as.data.table(AMR::microorganisms.old)
-# data.table::setkey(microorganisms.oldDT, tsn, name)
-# devtools::use_data(microorganismsDT, overwrite = TRUE)
-# devtools::use_data(microorganisms.prevDT, overwrite = TRUE)
-# devtools::use_data(microorganisms.unprevDT, overwrite = TRUE)
-# devtools::use_data(microorganisms.oldDT, overwrite = TRUE)
-"microorganismsDT"
-
-#' @rdname supplementary_data
-"microorganisms.prevDT"
-
-#' @rdname supplementary_data
-"microorganisms.unprevDT"
-
-#' @rdname supplementary_data
-"microorganisms.oldDT"
+#' This example data set has the exact same structure as an export file from WHONET. Such files can be used with this package, as this example data set shows. The data itself was based on our \code{\link{septic_patients}} data set.
+#' @format A \code{\link{data.frame}} with 500 observations and 53 variables:
+#' \describe{
+#'   \item{\code{Identification number}}{ID of the sample}
+#'   \item{\code{Specimen number}}{ID of the specimen}
+#'   \item{\code{Organism}}{Name of the microorganism. Before analysis, you should transform this to a valid microbial class, using \code{\link{as.mo}}.}
+#'   \item{\code{Country}}{Country of origin}
+#'   \item{\code{Laboratory}}{Name of laboratory}
+#'   \item{\code{Last name}}{Last name of patient}
+#'   \item{\code{First name}}{Initial of patient}
+#'   \item{\code{Sex}}{Gender of patient}
+#'   \item{\code{Age}}{Age of patient}
+#'   \item{\code{Age category}}{Age group, can also be looked up using \code{\link{age_groups}}}
+#'   \item{\code{Date of admission}}{Date of hospital admission}
+#'   \item{\code{Specimen date}}{Date when specimen was received at laboratory}
+#'   \item{\code{Specimen type}}{Specimen type or group}
+#'   \item{\code{Specimen type (Numeric)}}{Translation of \code{"Specimen type"}}
+#'   \item{\code{Reason}}{Reason of request with Differential Diagnosis}
+#'   \item{\code{Isolate number}}{ID of isolate}
+#'   \item{\code{Organism type}}{Type of microorganism, can also be looked up using \code{\link{mo_type}}}
+#'   \item{\code{Serotype}}{Serotype of microorganism}
+#'   \item{\code{Beta-lactamase}}{Microorganism produces beta-lactamase?}
+#'   \item{\code{ESBL}}{Microorganism produces extended spectrum beta-lactamase?}
+#'   \item{\code{Carbapenemase}}{Microorganism produces carbapenemase?}
+#'   \item{\code{MRSA screening test}}{Microorganism is possible MRSA?}
+#'   \item{\code{Inducible clindamycin resistance}}{Clindamycin can be induced?}
+#'   \item{\code{Comment}}{Other comments}
+#'   \item{\code{Date of data entry}}{Date this data was entered in WHONET}
+#'   \item{\code{AMP_ND10:CIP_EE}}{27 different antibiotics. You can lookup the abbreviatons in the \code{\link{antibiotics}} data set, or use e.g. \code{\link{atc_name}("AMP")} to get the official name immediately. Before analysis, you should transform this to a valid antibiotic class, using \code{\link{as.rsi}}.}
+#' }
+#' @inheritSection AMR Read more on our website!
+"WHONET"

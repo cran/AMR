@@ -2,78 +2,31 @@
 # TITLE                                                                #
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
-# AUTHORS                                                              #
-# Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)           #
+# SOURCE                                                               #
+# https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# This program is free software; you can redistribute it and/or modify #
-# it under the terms of the GNU General Public License version 2.0,    #
-# as published by the Free Software Foundation.                        #
+# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
 #                                                                      #
-# This program is distributed in the hope that it will be useful,      #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        #
-# GNU General Public License for more details.                         #
+# This R package is free software; you can freely use and distribute   #
+# it for both personal and commercial purposes under the terms of the  #
+# GNU General Public License version 2.0 (GNU GPL-2), as published by  #
+# the Free Software Foundation.                                        #
+#                                                                      #
+# This R package was created for academic research and was publicly    #
+# released in the hope that it will be useful, but it comes WITHOUT    #
+# ANY WARRANTY OR LIABILITY.                                           #
+# Visit our website for more info: https://msberends.gitab.io/AMR.     #
 # ==================================================================== #
 
 #' Deprecated functions
 #'
-#' These functions are \link{Deprecated}. They will be removed in a future release. Using the functions will give a warning with the name of the function it has been replaced by.
+#' These functions are so-called '\link{Deprecated}'. They will be removed in a future release. Using the functions will give a warning with the name of the function it has been replaced by (if there is one).
+#' @inheritSection AMR Read more on our website!
 #' @export
 #' @keywords internal
 #' @name AMR-deprecated
 #' @rdname AMR-deprecated
-as.bactid <- function(...) {
-  .Deprecated("as.mo", package = "AMR")
-  as.mo(...)
-}
-
-#' @rdname AMR-deprecated
-#' @export
-is.bactid <- function(...) {
-  .Deprecated(new = "is.mo", package = "AMR")
-  is.mo(...)
-}
-
-#' @rdname AMR-deprecated
-#' @export
-guess_bactid <- function(...) {
-  .Deprecated(new = "guess_mo", package = "AMR")
-  guess_mo(...)
-}
-
-#' @exportMethod print.bactid
-#' @export
-#' @noRd
-print.bactid <- function(x, ...) {
-  cat("Class 'bactid'\n")
-  print.default(as.character(x), quote = FALSE)
-}
-
-#' @exportMethod as.data.frame.bactid
-#' @export
-#' @noRd
-as.data.frame.bactid <- function (x, ...) {
-  # same as as.data.frame.character but with removed stringsAsFactors
-  nm <- paste(deparse(substitute(x), width.cutoff = 500L),
-              collapse = " ")
-  if (!"nm" %in% names(list(...))) {
-    as.data.frame.vector(x, ..., nm = nm)
-  } else {
-    as.data.frame.vector(x, ...)
-  }
-}
-
-#' @exportMethod pull.bactid
-#' @export
-#' @importFrom dplyr pull
-#' @noRd
-pull.bactid <- function(.data, ...) {
-  pull(as.data.frame(.data), ...)
-}
-
-#' @rdname AMR-deprecated
-#' @export
 ratio <- function(x, ratio) {
   .Deprecated(package = "AMR")
 
@@ -93,3 +46,88 @@ ratio <- function(x, ratio) {
   }
   sum(x, na.rm = TRUE) * (ratio / sum(ratio, na.rm = TRUE))
 }
+
+#' @rdname AMR-deprecated
+#' @export
+guess_mo <- function(...) {
+  .Deprecated(new = "as.mo", package = "AMR")
+  as.mo(...)
+}
+
+#' @rdname AMR-deprecated
+#' @export
+guess_atc <- function(...) {
+  .Deprecated(new = "as.atc", package = "AMR")
+  as.atc(...)
+}
+
+#' @rdname AMR-deprecated
+#' @export
+ab_property <- function(...) {
+  .Deprecated(new = "atc_property", package = "AMR")
+  atc_property(...)
+}
+
+#' @rdname AMR-deprecated
+#' @export
+ab_atc <- function(...) {
+  .Deprecated(new = "as.atc", package = "AMR")
+  as.atc(...)
+}
+
+#' @rdname AMR-deprecated
+#' @export
+ab_official <- function(...) {
+  .Deprecated(new = "atc_official", package = "AMR")
+  atc_official(...)
+}
+
+#' @rdname AMR-deprecated
+#' @export
+ab_name <- function(...) {
+  .Deprecated(new = "atc_name", package = "AMR")
+  atc_name(...)
+}
+
+#' @rdname AMR-deprecated
+#' @export
+ab_trivial_nl <- function(...) {
+  .Deprecated(new = "atc_trivial_nl", package = "AMR")
+  atc_trivial_nl(...)
+}
+
+#' @rdname AMR-deprecated
+#' @export
+ab_certe <- function(...) {
+  .Deprecated(new = "atc_certe", package = "AMR")
+  atc_certe(...)
+}
+
+#' @rdname AMR-deprecated
+#' @export
+ab_umcg <- function(...) {
+  .Deprecated(new = "atc_umcg", package = "AMR")
+  atc_umcg(...)
+}
+
+#' @rdname AMR-deprecated
+#' @export
+ab_tradenames <- function(...) {
+  .Deprecated(new = "atc_tradenames", package = "AMR")
+  atc_tradenames(...)
+}
+
+#' @rdname AMR-deprecated
+#' @export
+atc_ddd <- function(...) {
+  .Deprecated(new = "atc_online_ddd", package = "AMR")
+  atc_online_ddd(...)
+}
+
+#' @rdname AMR-deprecated
+#' @export
+atc_groups <- function(...) {
+  .Deprecated(new = "atc_online_groups", package = "AMR")
+  atc_online_groups(...)
+}
+

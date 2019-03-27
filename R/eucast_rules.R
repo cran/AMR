@@ -2,18 +2,21 @@
 # TITLE                                                                #
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
-# AUTHORS                                                              #
-# Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)           #
+# SOURCE                                                               #
+# https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# This program is free software; you can redistribute it and/or modify #
-# it under the terms of the GNU General Public License version 2.0,    #
-# as published by the Free Software Foundation.                        #
+# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
 #                                                                      #
-# This program is distributed in the hope that it will be useful,      #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        #
-# GNU General Public License for more details.                         #
+# This R package is free software; you can freely use and distribute   #
+# it for both personal and commercial purposes under the terms of the  #
+# GNU General Public License version 2.0 (GNU GPL-2), as published by  #
+# the Free Software Foundation.                                        #
+#                                                                      #
+# This R package was created for academic research and was publicly    #
+# released in the hope that it will be useful, but it comes WITHOUT    #
+# ANY WARRANTY OR LIABILITY.                                           #
+# Visit our website for more info: https://msberends.gitab.io/AMR.     #
 # ==================================================================== #
 
 #' EUCAST rules
@@ -22,83 +25,83 @@
 #' @param tbl table with antibiotic columns, like e.g. \code{amox} and \code{amcl}
 #' @param info print progress
 #' @param rules a character vector that specifies which rules should be applied - one or more of \code{c("breakpoints", "expert", "other", "all")}
-#' @param verbose a logical to indicate whether extensive info should be returned as a \code{data.frame} with info about which rows and columns are effected
-#' @param amcl,amik,amox,ampi,azit,azlo,aztr,cefa,cfep,cfot,cfox,cfra,cfta,cftr,cfur,chlo,cipr,clar,clin,clox,coli,czol,dapt,doxy,erta,eryt,fosf,fusi,gent,imip,kana,levo,linc,line,mero,mezl,mino,moxi,nali,neom,neti,nitr,norf,novo,oflo,oxac,peni,pipe,pita,poly,pris,qida,rifa,roxi,siso,teic,tetr,tica,tige,tobr,trim,trsu,vanc column name of an antibiotic, see Details
-#' @param col_bactid deprecated, use \code{col_mo} instead.
+#' @param verbose a logical to indicate whether extensive info should be returned as a \code{data.frame} with info about which rows and columns are effected. It runs all EUCAST rules, but will not be applied to an output - only an informative \code{data.frame} with changes will be returned as output.
+#' @param amcl,amik,amox,ampi,azit,azlo,aztr,cefa,cfep,cfot,cfox,cfra,cfta,cftr,cfur,chlo,cipr,clar,clin,clox,coli,czol,dapt,doxy,erta,eryt,fosf,fusi,gent,imip,kana,levo,linc,line,mero,mezl,mino,moxi,nali,neom,neti,nitr,norf,novo,oflo,oxac,peni,pipe,pita,poly,pris,qida,rifa,roxi,siso,teic,tetr,tica,tige,tobr,trim,trsu,vanc column name of an antibiotic, see Antibiotics
 #' @param ... parameters that are passed on to \code{eucast_rules}
 #' @inheritParams first_isolate
-#' @details To define antibiotics column names, input a text or use \code{NA} to skip a column (e.g. \code{tica = NA}). Non-existing columns will anyway be skipped with a warning. See the Antibiotics section for an explanation of the abbreviations.
 #' @section Antibiotics:
+#' To define antibiotics column names, leave as it is to determine it automatically with \code{\link{guess_ab_col}} or input a text (case-insensitive) or use \code{NULL} to skip a column (e.g. \code{tica = NULL}). Non-existing columns will anyway be skipped with a warning.
+#'
 #' Abbrevations of the column containing antibiotics in the form: \strong{abbreviation}: generic name (\emph{ATC code})
 #'
-#'  \strong{amcl}: amoxicillin+clavulanic acid (\emph{J01CR02}),
-#'  \strong{amik}: amikacin (\emph{J01GB06}),
-#'  \strong{amox}: amoxicillin (\emph{J01CA04}),
-#'  \strong{ampi}: ampicillin (\emph{J01CA01}),
-#'  \strong{azit}: azithromycin (\emph{J01FA10}),
-#'  \strong{azlo}: azlocillin (\emph{J01CA09}),
-#'  \strong{aztr}: aztreonam (\emph{J01DF01}),
-#'  \strong{cefa}: cefaloridine (\emph{J01DB02}),
-#'  \strong{cfep}: cefepime (\emph{J01DE01}),
-#'  \strong{cfot}: cefotaxime (\emph{J01DD01}),
-#'  \strong{cfox}: cefoxitin (\emph{J01DC01}),
-#'  \strong{cfra}: cefradine (\emph{J01DB09}),
-#'  \strong{cfta}: ceftazidime (\emph{J01DD02}),
-#'  \strong{cftr}: ceftriaxone (\emph{J01DD04}),
-#'  \strong{cfur}: cefuroxime (\emph{J01DC02}),
-#'  \strong{chlo}: chloramphenicol (\emph{J01BA01}),
-#'  \strong{cipr}: ciprofloxacin (\emph{J01MA02}),
-#'  \strong{clar}: clarithromycin (\emph{J01FA09}),
-#'  \strong{clin}: clindamycin (\emph{J01FF01}),
-#'  \strong{clox}: flucloxacillin (\emph{J01CF05}),
-#'  \strong{coli}: colistin (\emph{J01XB01}),
-#'  \strong{czol}: cefazolin (\emph{J01DB04}),
-#'  \strong{dapt}: daptomycin (\emph{J01XX09}),
-#'  \strong{doxy}: doxycycline (\emph{J01AA02}),
-#'  \strong{erta}: ertapenem (\emph{J01DH03}),
-#'  \strong{eryt}: erythromycin (\emph{J01FA01}),
-#'  \strong{fosf}: fosfomycin (\emph{J01XX01}),
-#'  \strong{fusi}: fusidic acid (\emph{J01XC01}),
-#'  \strong{gent}: gentamicin (\emph{J01GB03}),
-#'  \strong{imip}: imipenem (\emph{J01DH51}),
-#'  \strong{kana}: kanamycin (\emph{J01GB04}),
-#'  \strong{levo}: levofloxacin (\emph{J01MA12}),
-#'  \strong{linc}: lincomycin (\emph{J01FF02}),
-#'  \strong{line}: linezolid (\emph{J01XX08}),
-#'  \strong{mero}: meropenem (\emph{J01DH02}),
-#'  \strong{mezl}: mezlocillin (\emph{J01CA10}),
-#'  \strong{mino}: minocycline (\emph{J01AA08}),
-#'  \strong{moxi}: moxifloxacin (\emph{J01MA14}),
-#'  \strong{nali}: nalidixic acid (\emph{J01MB02}),
-#'  \strong{neom}: neomycin (\emph{J01GB05}),
-#'  \strong{neti}: netilmicin (\emph{J01GB07}),
-#'  \strong{nitr}: nitrofurantoin (\emph{J01XE01}),
-#'  \strong{norf}: norfloxacin (\emph{J01MA06}),
-#'  \strong{novo}: novobiocin (an ATCvet code: \emph{QJ01XX95}),
-#'  \strong{oflo}: ofloxacin (\emph{J01MA01}),
-#'  \strong{peni}: penicillin (\emph{J01RA01}),
-#'  \strong{pipe}: piperacillin (\emph{J01CA12}),
-#'  \strong{pita}: piperacillin+tazobactam (\emph{J01CR05}),
-#'  \strong{poly}: polymyxin B (\emph{J01XB02}),
-#'  \strong{pris}: pristinamycin (\emph{J01FG01}),
-#'  \strong{qida}: quinupristin/dalfopristin (\emph{J01FG02}),
-#'  \strong{rifa}: rifampicin (\emph{J04AB02}),
-#'  \strong{roxi}: roxithromycin (\emph{J01FA06}),
-#'  \strong{siso}: sisomicin (\emph{J01GB08}),
-#'  \strong{teic}: teicoplanin (\emph{J01XA02}),
-#'  \strong{tetr}: tetracycline (\emph{J01AA07}),
-#'  \strong{tica}: ticarcillin (\emph{J01CA13}),
-#'  \strong{tige}: tigecycline (\emph{J01AA12}),
-#'  \strong{tobr}: tobramycin (\emph{J01GB01}),
-#'  \strong{trim}: trimethoprim (\emph{J01EA01}),
-#'  \strong{trsu}: sulfamethoxazole and trimethoprim (\emph{J01EE01}),
-#'  \strong{vanc}: vancomycin (\emph{J01XA01}).
+#'  \strong{amcl}: amoxicillin+clavulanic acid (\href{https://www.whocc.no/atc_ddd_index/?code=J01CR02}{J01CR02}),
+#'  \strong{amik}: amikacin (\href{https://www.whocc.no/atc_ddd_index/?code=J01GB06}{J01GB06}),
+#'  \strong{amox}: amoxicillin (\href{https://www.whocc.no/atc_ddd_index/?code=J01CA04}{J01CA04}),
+#'  \strong{ampi}: ampicillin (\href{https://www.whocc.no/atc_ddd_index/?code=J01CA01}{J01CA01}),
+#'  \strong{azit}: azithromycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01FA10}{J01FA10}),
+#'  \strong{azlo}: azlocillin (\href{https://www.whocc.no/atc_ddd_index/?code=J01CA09}{J01CA09}),
+#'  \strong{aztr}: aztreonam (\href{https://www.whocc.no/atc_ddd_index/?code=J01DF01}{J01DF01}),
+#'  \strong{cefa}: cefaloridine (\href{https://www.whocc.no/atc_ddd_index/?code=J01DB02}{J01DB02}),
+#'  \strong{cfep}: cefepime (\href{https://www.whocc.no/atc_ddd_index/?code=J01DE01}{J01DE01}),
+#'  \strong{cfot}: cefotaxime (\href{https://www.whocc.no/atc_ddd_index/?code=J01DD01}{J01DD01}),
+#'  \strong{cfox}: cefoxitin (\href{https://www.whocc.no/atc_ddd_index/?code=J01DC01}{J01DC01}),
+#'  \strong{cfra}: cefradine (\href{https://www.whocc.no/atc_ddd_index/?code=J01DB09}{J01DB09}),
+#'  \strong{cfta}: ceftazidime (\href{https://www.whocc.no/atc_ddd_index/?code=J01DD02}{J01DD02}),
+#'  \strong{cftr}: ceftriaxone (\href{https://www.whocc.no/atc_ddd_index/?code=J01DD04}{J01DD04}),
+#'  \strong{cfur}: cefuroxime (\href{https://www.whocc.no/atc_ddd_index/?code=J01DC02}{J01DC02}),
+#'  \strong{chlo}: chloramphenicol (\href{https://www.whocc.no/atc_ddd_index/?code=J01BA01}{J01BA01}),
+#'  \strong{cipr}: ciprofloxacin (\href{https://www.whocc.no/atc_ddd_index/?code=J01MA02}{J01MA02}),
+#'  \strong{clar}: clarithromycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01FA09}{J01FA09}),
+#'  \strong{clin}: clindamycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01FF01}{J01FF01}),
+#'  \strong{clox}: flucloxacillin (\href{https://www.whocc.no/atc_ddd_index/?code=J01CF05}{J01CF05}),
+#'  \strong{coli}: colistin (\href{https://www.whocc.no/atc_ddd_index/?code=J01XB01}{J01XB01}),
+#'  \strong{czol}: cefazolin (\href{https://www.whocc.no/atc_ddd_index/?code=J01DB04}{J01DB04}),
+#'  \strong{dapt}: daptomycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01XX09}{J01XX09}),
+#'  \strong{doxy}: doxycycline (\href{https://www.whocc.no/atc_ddd_index/?code=J01AA02}{J01AA02}),
+#'  \strong{erta}: ertapenem (\href{https://www.whocc.no/atc_ddd_index/?code=J01DH03}{J01DH03}),
+#'  \strong{eryt}: erythromycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01FA01}{J01FA01}),
+#'  \strong{fosf}: fosfomycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01XX01}{J01XX01}),
+#'  \strong{fusi}: fusidic acid (\href{https://www.whocc.no/atc_ddd_index/?code=J01XC01}{J01XC01}),
+#'  \strong{gent}: gentamicin (\href{https://www.whocc.no/atc_ddd_index/?code=J01GB03}{J01GB03}),
+#'  \strong{imip}: imipenem (\href{https://www.whocc.no/atc_ddd_index/?code=J01DH51}{J01DH51}),
+#'  \strong{kana}: kanamycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01GB04}{J01GB04}),
+#'  \strong{levo}: levofloxacin (\href{https://www.whocc.no/atc_ddd_index/?code=J01MA12}{J01MA12}),
+#'  \strong{linc}: lincomycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01FF02}{J01FF02}),
+#'  \strong{line}: linezolid (\href{https://www.whocc.no/atc_ddd_index/?code=J01XX08}{J01XX08}),
+#'  \strong{mero}: meropenem (\href{https://www.whocc.no/atc_ddd_index/?code=J01DH02}{J01DH02}),
+#'  \strong{mezl}: mezlocillin (\href{https://www.whocc.no/atc_ddd_index/?code=J01CA10}{J01CA10}),
+#'  \strong{mino}: minocycline (\href{https://www.whocc.no/atc_ddd_index/?code=J01AA08}{J01AA08}),
+#'  \strong{moxi}: moxifloxacin (\href{https://www.whocc.no/atc_ddd_index/?code=J01MA14}{J01MA14}),
+#'  \strong{nali}: nalidixic acid (\href{https://www.whocc.no/atc_ddd_index/?code=J01MB02}{J01MB02}),
+#'  \strong{neom}: neomycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01GB05}{J01GB05}),
+#'  \strong{neti}: netilmicin (\href{https://www.whocc.no/atc_ddd_index/?code=J01GB07}{J01GB07}),
+#'  \strong{nitr}: nitrofurantoin (\href{https://www.whocc.no/atc_ddd_index/?code=J01XE01}{J01XE01}),
+#'  \strong{norf}: norfloxacin (\href{https://www.whocc.no/atc_ddd_index/?code=J01MA06}{J01MA06}),
+#'  \strong{novo}: novobiocin (an ATCvet code: \href{https://www.whocc.no/atc_ddd_index/?code=QJ01XX95}{QJ01XX95}),
+#'  \strong{oflo}: ofloxacin (\href{https://www.whocc.no/atc_ddd_index/?code=J01MA01}{J01MA01}),
+#'  \strong{peni}: (benzyl)penicillin (\href{https://www.whocc.no/atc_ddd_index/?code=J01CE01}{J01CE01}),
+#'  \strong{pipe}: piperacillin (\href{https://www.whocc.no/atc_ddd_index/?code=J01CA12}{J01CA12}),
+#'  \strong{pita}: piperacillin+tazobactam (\href{https://www.whocc.no/atc_ddd_index/?code=J01CR05}{J01CR05}),
+#'  \strong{poly}: polymyxin B (\href{https://www.whocc.no/atc_ddd_index/?code=J01XB02}{J01XB02}),
+#'  \strong{pris}: pristinamycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01FG01}{J01FG01}),
+#'  \strong{qida}: quinupristin/dalfopristin (\href{https://www.whocc.no/atc_ddd_index/?code=J01FG02}{J01FG02}),
+#'  \strong{rifa}: rifampicin (\href{https://www.whocc.no/atc_ddd_index/?code=J04AB02}{J04AB02}),
+#'  \strong{roxi}: roxithromycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01FA06}{J01FA06}),
+#'  \strong{siso}: sisomicin (\href{https://www.whocc.no/atc_ddd_index/?code=J01GB08}{J01GB08}),
+#'  \strong{teic}: teicoplanin (\href{https://www.whocc.no/atc_ddd_index/?code=J01XA02}{J01XA02}),
+#'  \strong{tetr}: tetracycline (\href{https://www.whocc.no/atc_ddd_index/?code=J01AA07}{J01AA07}),
+#'  \strong{tica}: ticarcillin (\href{https://www.whocc.no/atc_ddd_index/?code=J01CA13}{J01CA13}),
+#'  \strong{tige}: tigecycline (\href{https://www.whocc.no/atc_ddd_index/?code=J01AA12}{J01AA12}),
+#'  \strong{tobr}: tobramycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01GB01}{J01GB01}),
+#'  \strong{trim}: trimethoprim (\href{https://www.whocc.no/atc_ddd_index/?code=J01EA01}{J01EA01}),
+#'  \strong{trsu}: sulfamethoxazole and trimethoprim (\href{https://www.whocc.no/atc_ddd_index/?code=J01EE01}{J01EE01}),
+#'  \strong{vanc}: vancomycin (\href{https://www.whocc.no/atc_ddd_index/?code=J01XA01}{J01XA01}).
 #' @keywords interpretive eucast reading resistance
 #' @rdname eucast_rules
 #' @export
 #' @importFrom dplyr %>% select pull mutate_at vars
 #' @importFrom crayon bold bgGreen bgYellow bgRed black green blue italic strip_style
-#' @return The input of \code{tbl}, possibly with edited values of antibiotics. Or, if \code{verbose = TRUE}, a \code{data.frame} with verbose info.
+#' @return The input of \code{tbl}, possibly with edited values of antibiotics. Or, if \code{verbose = TRUE}, a \code{data.frame} with all original and new values of the affected bug-drug combinations.
 #' @source
 #'   \itemize{
 #'     \item{
@@ -111,10 +114,11 @@
 #'       \url{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf}
 #'     }
 #'     \item{
-#'       EUCAST Breakpoint tables for interpretation of MICs and zone diameters. Version 8.1, 2018. \cr
-#'       \url{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Breakpoint_tables/v_8.1_Breakpoint_Tables.xlsx}
+#'       EUCAST Breakpoint tables for interpretation of MICs and zone diameters. Version 9.0, 2019. \cr
+#'       \url{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Breakpoint_tables/v_9.0_Breakpoint_Tables.xlsx}
 #'     }
 #'   }
+#' @inheritSection AMR Read more on our website!
 #' @examples
 #' a <- eucast_rules(septic_patients)
 #'
@@ -140,7 +144,9 @@
 #' # 4  Klebsiella pneumoniae    -    -    -    -    -    S    S
 #' # 5 Pseudomonas aeruginosa    -    -    -    -    -    S    S
 #'
-#' b <- eucast_rules(a, "mo") # 18 results are forced as R or S
+#'
+#' # apply EUCAST rules: 18 results are forced as R or S
+#' b <- eucast_rules(a)
 #'
 #' b
 #' #                       mo vanc amox coli cfta cfur peni cfox
@@ -149,77 +155,81 @@
 #' # 3       Escherichia coli    R    -    -    -    -    R    S
 #' # 4  Klebsiella pneumoniae    R    R    -    -    -    R    S
 #' # 5 Pseudomonas aeruginosa    R    R    -    -    R    R    R
+#'
+#'
+#' # do not apply EUCAST rules, but rather get a a data.frame
+#' # with 18 rows, containing all details about the transformations:
+#' c <- eucast_rules(a, verbose = TRUE)
 eucast_rules <- function(tbl,
                          col_mo = NULL,
                          info = TRUE,
                          rules = c("breakpoints", "expert", "other", "all"),
                          verbose = FALSE,
-                         amcl = 'amcl',
-                         amik = 'amik',
-                         amox = 'amox',
-                         ampi = 'ampi',
-                         azit = 'azit',
-                         azlo = 'azlo',
-                         aztr = 'aztr',
-                         cefa = 'cefa',
-                         cfep = 'cfep',
-                         cfot = 'cfot',
-                         cfox = 'cfox',
-                         cfra = 'cfra',
-                         cfta = 'cfta',
-                         cftr = 'cftr',
-                         cfur = 'cfur',
-                         chlo = 'chlo',
-                         cipr = 'cipr',
-                         clar = 'clar',
-                         clin = 'clin',
-                         clox = 'clox',
-                         coli = 'coli',
-                         czol = 'czol',
-                         dapt = 'dapt',
-                         doxy = 'doxy',
-                         erta = 'erta',
-                         eryt = 'eryt',
-                         fosf = 'fosf',
-                         fusi = 'fusi',
-                         gent = 'gent',
-                         imip = 'imip',
-                         kana = 'kana',
-                         levo = 'levo',
-                         linc = 'linc',
-                         line = 'line',
-                         mero = 'mero',
-                         mezl = 'mezl',
-                         mino = 'mino',
-                         moxi = 'moxi',
-                         nali = 'nali',
-                         neom = 'neom',
-                         neti = 'neti',
-                         nitr = 'nitr',
-                         norf = 'norf',
-                         novo = 'novo',
-                         oflo = 'oflo',
-                         oxac = 'oxac',
-                         peni = 'peni',
-                         pipe = 'pipe',
-                         pita = 'pita',
-                         poly = 'poly',
-                         pris = 'pris',
-                         qida = 'qida',
-                         rifa = 'rifa',
-                         roxi = 'roxi',
-                         siso = 'siso',
-                         teic = 'teic',
-                         tetr = 'tetr',
-                         tica = 'tica',
-                         tige = 'tige',
-                         tobr = 'tobr',
-                         trim = 'trim',
-                         trsu = 'trsu',
-                         vanc = 'vanc',
-                         col_bactid = NULL) {
+                         amcl = guess_ab_col(),
+                         amik = guess_ab_col(),
+                         amox = guess_ab_col(),
+                         ampi = guess_ab_col(),
+                         azit = guess_ab_col(),
+                         azlo = guess_ab_col(),
+                         aztr = guess_ab_col(),
+                         cefa = guess_ab_col(),
+                         cfep = guess_ab_col(),
+                         cfot = guess_ab_col(),
+                         cfox = guess_ab_col(),
+                         cfra = guess_ab_col(),
+                         cfta = guess_ab_col(),
+                         cftr = guess_ab_col(),
+                         cfur = guess_ab_col(),
+                         chlo = guess_ab_col(),
+                         cipr = guess_ab_col(),
+                         clar = guess_ab_col(),
+                         clin = guess_ab_col(),
+                         clox = guess_ab_col(),
+                         coli = guess_ab_col(),
+                         czol = guess_ab_col(),
+                         dapt = guess_ab_col(),
+                         doxy = guess_ab_col(),
+                         erta = guess_ab_col(),
+                         eryt = guess_ab_col(),
+                         fosf = guess_ab_col(),
+                         fusi = guess_ab_col(),
+                         gent = guess_ab_col(),
+                         imip = guess_ab_col(),
+                         kana = guess_ab_col(),
+                         levo = guess_ab_col(),
+                         linc = guess_ab_col(),
+                         line = guess_ab_col(),
+                         mero = guess_ab_col(),
+                         mezl = guess_ab_col(),
+                         mino = guess_ab_col(),
+                         moxi = guess_ab_col(),
+                         nali = guess_ab_col(),
+                         neom = guess_ab_col(),
+                         neti = guess_ab_col(),
+                         nitr = guess_ab_col(),
+                         norf = guess_ab_col(),
+                         novo = guess_ab_col(),
+                         oflo = guess_ab_col(),
+                         oxac = guess_ab_col(),
+                         peni = guess_ab_col(),
+                         pipe = guess_ab_col(),
+                         pita = guess_ab_col(),
+                         poly = guess_ab_col(),
+                         pris = guess_ab_col(),
+                         qida = guess_ab_col(),
+                         rifa = guess_ab_col(),
+                         roxi = guess_ab_col(),
+                         siso = guess_ab_col(),
+                         teic = guess_ab_col(),
+                         tetr = guess_ab_col(),
+                         tica = guess_ab_col(),
+                         tige = guess_ab_col(),
+                         tobr = guess_ab_col(),
+                         trim = guess_ab_col(),
+                         trsu = guess_ab_col(),
+                         vanc = guess_ab_col()) {
 
-  EUCAST_VERSION_BREAKPOINTS <- "8.1, 2018"
+  EUCAST_VERSION_BREAKPOINTS <- "9.0, 2019"
   EUCAST_VERSION_EXPERT_RULES <- "3.1, 2016"
 
   if (!is.data.frame(tbl)) {
@@ -228,12 +238,11 @@ eucast_rules <- function(tbl,
 
   # try to find columns based on type
   # -- mo
-  if (!is.null(col_bactid)) {
-    col_mo <- col_bactid
-    warning("Use of `col_bactid` is deprecated. Use `col_mo` instead.")
-  } else if (is.null(col_mo) & "mo" %in% lapply(tbl, class)) {
-    col_mo <- colnames(tbl)[lapply(tbl, class) == "mo"]
-    message("NOTE: Using column `", col_mo, "` as input for `col_mo`.")
+  if (is.null(col_mo)) {
+    col_mo <- search_type_in_df(tbl = tbl, type = "mo")
+  }
+  if (is.null(col_mo)) {
+    stop("`col_mo` must be set.", call. = FALSE)
   }
 
   if (!all(rules %in% c("breakpoints", "expert", "other", "all"))) {
@@ -265,12 +274,80 @@ eucast_rules <- function(tbl,
   }
 
   # check columns
+  if (identical(amcl, as.name("guess_ab_col"))) { amcl <- guess_ab_col(tbl, "amcl", verbose = verbose) }
+  if (identical(amik, as.name("guess_ab_col"))) { amik <- guess_ab_col(tbl, "amik", verbose = verbose) }
+  if (identical(amox, as.name("guess_ab_col"))) { amox <- guess_ab_col(tbl, "amox", verbose = verbose) }
+  if (identical(ampi, as.name("guess_ab_col"))) { ampi <- guess_ab_col(tbl, "ampi", verbose = verbose) }
+  if (identical(azit, as.name("guess_ab_col"))) { azit <- guess_ab_col(tbl, "azit", verbose = verbose) }
+  if (identical(azlo, as.name("guess_ab_col"))) { azlo <- guess_ab_col(tbl, "azlo", verbose = verbose) }
+  if (identical(aztr, as.name("guess_ab_col"))) { aztr <- guess_ab_col(tbl, "aztr", verbose = verbose) }
+  if (identical(cefa, as.name("guess_ab_col"))) { cefa <- guess_ab_col(tbl, "cefa", verbose = verbose) }
+  if (identical(cfep, as.name("guess_ab_col"))) { cfep <- guess_ab_col(tbl, "cfep", verbose = verbose) }
+  if (identical(cfot, as.name("guess_ab_col"))) { cfot <- guess_ab_col(tbl, "cfot", verbose = verbose) }
+  if (identical(cfox, as.name("guess_ab_col"))) { cfox <- guess_ab_col(tbl, "cfox", verbose = verbose) }
+  if (identical(cfra, as.name("guess_ab_col"))) { cfra <- guess_ab_col(tbl, "cfra", verbose = verbose) }
+  if (identical(cfta, as.name("guess_ab_col"))) { cfta <- guess_ab_col(tbl, "cfta", verbose = verbose) }
+  if (identical(cftr, as.name("guess_ab_col"))) { cftr <- guess_ab_col(tbl, "cftr", verbose = verbose) }
+  if (identical(cfur, as.name("guess_ab_col"))) { cfur <- guess_ab_col(tbl, "cfur", verbose = verbose) }
+  if (identical(chlo, as.name("guess_ab_col"))) { chlo <- guess_ab_col(tbl, "chlo", verbose = verbose) }
+  if (identical(cipr, as.name("guess_ab_col"))) { cipr <- guess_ab_col(tbl, "cipr", verbose = verbose) }
+  if (identical(clar, as.name("guess_ab_col"))) { clar <- guess_ab_col(tbl, "clar", verbose = verbose) }
+  if (identical(clin, as.name("guess_ab_col"))) { clin <- guess_ab_col(tbl, "clin", verbose = verbose) }
+  if (identical(clox, as.name("guess_ab_col"))) { clox <- guess_ab_col(tbl, "clox", verbose = verbose) }
+  if (identical(coli, as.name("guess_ab_col"))) { coli <- guess_ab_col(tbl, "coli", verbose = verbose) }
+  if (identical(czol, as.name("guess_ab_col"))) { czol <- guess_ab_col(tbl, "czol", verbose = verbose) }
+  if (identical(dapt, as.name("guess_ab_col"))) { dapt <- guess_ab_col(tbl, "dapt", verbose = verbose) }
+  if (identical(doxy, as.name("guess_ab_col"))) { doxy <- guess_ab_col(tbl, "doxy", verbose = verbose) }
+  if (identical(erta, as.name("guess_ab_col"))) { erta <- guess_ab_col(tbl, "erta", verbose = verbose) }
+  if (identical(eryt, as.name("guess_ab_col"))) { eryt <- guess_ab_col(tbl, "eryt", verbose = verbose) }
+  if (identical(fosf, as.name("guess_ab_col"))) { fosf <- guess_ab_col(tbl, "fosf", verbose = verbose) }
+  if (identical(fusi, as.name("guess_ab_col"))) { fusi <- guess_ab_col(tbl, "fusi", verbose = verbose) }
+  if (identical(gent, as.name("guess_ab_col"))) { gent <- guess_ab_col(tbl, "gent", verbose = verbose) }
+  if (identical(imip, as.name("guess_ab_col"))) { imip <- guess_ab_col(tbl, "imip", verbose = verbose) }
+  if (identical(kana, as.name("guess_ab_col"))) { kana <- guess_ab_col(tbl, "kana", verbose = verbose) }
+  if (identical(levo, as.name("guess_ab_col"))) { levo <- guess_ab_col(tbl, "levo", verbose = verbose) }
+  if (identical(linc, as.name("guess_ab_col"))) { linc <- guess_ab_col(tbl, "linc", verbose = verbose) }
+  if (identical(line, as.name("guess_ab_col"))) { line <- guess_ab_col(tbl, "line", verbose = verbose) }
+  if (identical(mero, as.name("guess_ab_col"))) { mero <- guess_ab_col(tbl, "mero", verbose = verbose) }
+  if (identical(mezl, as.name("guess_ab_col"))) { mezl <- guess_ab_col(tbl, "mezl", verbose = verbose) }
+  if (identical(mino, as.name("guess_ab_col"))) { mino <- guess_ab_col(tbl, "mino", verbose = verbose) }
+  if (identical(moxi, as.name("guess_ab_col"))) { moxi <- guess_ab_col(tbl, "moxi", verbose = verbose) }
+  if (identical(nali, as.name("guess_ab_col"))) { nali <- guess_ab_col(tbl, "nali", verbose = verbose) }
+  if (identical(neom, as.name("guess_ab_col"))) { neom <- guess_ab_col(tbl, "neom", verbose = verbose) }
+  if (identical(neti, as.name("guess_ab_col"))) { neti <- guess_ab_col(tbl, "neti", verbose = verbose) }
+  if (identical(nitr, as.name("guess_ab_col"))) { nitr <- guess_ab_col(tbl, "nitr", verbose = verbose) }
+  if (identical(norf, as.name("guess_ab_col"))) { norf <- guess_ab_col(tbl, "norf", verbose = verbose) }
+  if (identical(novo, as.name("guess_ab_col"))) { novo <- guess_ab_col(tbl, "novo", verbose = verbose) }
+  if (identical(oflo, as.name("guess_ab_col"))) { oflo <- guess_ab_col(tbl, "oflo", verbose = verbose) }
+  if (identical(oxac, as.name("guess_ab_col"))) { oxac <- guess_ab_col(tbl, "oxac", verbose = verbose) }
+  if (identical(peni, as.name("guess_ab_col"))) { peni <- guess_ab_col(tbl, "peni", verbose = verbose) }
+  if (identical(pipe, as.name("guess_ab_col"))) { pipe <- guess_ab_col(tbl, "pipe", verbose = verbose) }
+  if (identical(pita, as.name("guess_ab_col"))) { pita <- guess_ab_col(tbl, "pita", verbose = verbose) }
+  if (identical(poly, as.name("guess_ab_col"))) { poly <- guess_ab_col(tbl, "poly", verbose = verbose) }
+  if (identical(pris, as.name("guess_ab_col"))) { pris <- guess_ab_col(tbl, "pris", verbose = verbose) }
+  if (identical(qida, as.name("guess_ab_col"))) { qida <- guess_ab_col(tbl, "qida", verbose = verbose) }
+  if (identical(rifa, as.name("guess_ab_col"))) { rifa <- guess_ab_col(tbl, "rifa", verbose = verbose) }
+  if (identical(roxi, as.name("guess_ab_col"))) { roxi <- guess_ab_col(tbl, "roxi", verbose = verbose) }
+  if (identical(siso, as.name("guess_ab_col"))) { siso <- guess_ab_col(tbl, "siso", verbose = verbose) }
+  if (identical(teic, as.name("guess_ab_col"))) { teic <- guess_ab_col(tbl, "teic", verbose = verbose) }
+  if (identical(tetr, as.name("guess_ab_col"))) { tetr <- guess_ab_col(tbl, "tetr", verbose = verbose) }
+  if (identical(tica, as.name("guess_ab_col"))) { tica <- guess_ab_col(tbl, "tica", verbose = verbose) }
+  if (identical(tige, as.name("guess_ab_col"))) { tige <- guess_ab_col(tbl, "tige", verbose = verbose) }
+  if (identical(tobr, as.name("guess_ab_col"))) { tobr <- guess_ab_col(tbl, "tobr", verbose = verbose) }
+  if (identical(trim, as.name("guess_ab_col"))) { trim <- guess_ab_col(tbl, "trim", verbose = verbose) }
+  if (identical(trsu, as.name("guess_ab_col"))) { trsu <- guess_ab_col(tbl, "trsu", verbose = verbose) }
+  if (identical(vanc, as.name("guess_ab_col"))) { vanc <- guess_ab_col(tbl, "vanc", verbose = verbose) }
   col.list <- c(amcl, amik, amox, ampi, azit, azlo, aztr, cefa, cfra, cfep, cfot,
                 cfox, cfta, cftr, cfur, chlo, cipr, clar, clin, clox, coli,
                 czol, dapt, doxy, erta, eryt, fosf, fusi, gent, imip, kana,
                 levo, linc, line, mero, mezl, mino, moxi, nali, neom, neti, nitr,
                 novo, norf, oflo, oxac, peni, pipe, pita, poly, pris, qida, rifa,
                 roxi, siso, teic, tetr, tica, tige, tobr, trim, trsu, vanc)
+  if (length(col.list) < 63) {
+    warning('Some columns do not exist -- THIS MAY STRONGLY INFLUENCE THE OUTCOME.',
+            immediate. = TRUE,
+            call. = FALSE)
+  }
   col.list <- check_available_columns(tbl = tbl, col.list = col.list, info = info)
   amcl <- col.list[amcl]
   amik <- col.list[amik]
@@ -336,22 +413,31 @@ eucast_rules <- function(tbl,
   trsu <- col.list[trsu]
   vanc <- col.list[vanc]
 
-  amount_changed <- 0
-  amount_affected_rows <- integer(0)
-  verbose_info <- data.frame(rule_type = character(0),
-                             rule_set = character(0),
-                             force_to = character(0),
-                             found = integer(0),
-                             changed = integer(0),
-                             target_columns = integer(0),
-                             target_rows = integer(0),
+  number_added_S <- 0
+  number_added_I <- 0
+  number_added_R <- 0
+  number_changed_to_S <- 0
+  number_changed_to_I <- 0
+  number_changed_to_R <- 0
+
+  number_affected_rows <- integer(0)
+  verbose_info <- data.frame(row = integer(0),
+                             col = character(0),
+                             mo = character(0),
+                             mo_fullname = character(0),
+                             old = character(0),
+                             new = character(0),
+                             rule_source = character(0),
+                             rule_group = character(0),
                              stringsAsFactors = FALSE)
 
   # helper function for editing the table
   edit_rsi <- function(to, rule, rows, cols) {
-    cols <- cols[!is.na(cols)]
+    cols <- unique(cols[!is.na(cols) & !is.null(cols)])
     if (length(rows) > 0 & length(cols) > 0) {
+      before_df <- tbl_original
       before <- as.character(unlist(as.list(tbl_original[rows, cols])))
+
       tryCatch(
         # insert into original table
         tbl_original[rows, cols] <<- to,
@@ -368,31 +454,87 @@ eucast_rules <- function(tbl,
           stop(e, call. = FALSE)
         }
       )
+      suppressMessages(
+        suppressWarnings(
+          tbl[rows, cols] <<- to
+      ))
+
       after <- as.character(unlist(as.list(tbl_original[rows, cols])))
-      amount_changed <<- amount_changed + sum(before != after, na.rm = TRUE)
-      amount_affected_rows <<- unique(c(amount_affected_rows, rows))
-      changed_results <<- changed_results + sum(before != after, na.rm = TRUE) # will be reset at start of every rule
+
+      tbl[rows, cols] <<- tbl_original[rows, cols]
+
+      number_newly_added_S <- sum(!before %in% c("S", "I", "R") & after == "S", na.rm = TRUE)
+      number_newly_added_I <- sum(!before %in% c("S", "I", "R") & after == "I", na.rm = TRUE)
+      number_newly_added_R <- sum(!before %in% c("S", "I", "R") & after == "R", na.rm = TRUE)
+      number_newly_changed_to_S <- sum(before %in% c("I", "R") & after == "S", na.rm = TRUE)
+      number_newly_changed_to_I <- sum(before %in% c("S", "R") & after == "I", na.rm = TRUE)
+      number_newly_changed_to_R <- sum(before %in% c("S", "I") & after == "R", na.rm = TRUE)
+
+      # totals
+      number_added_S <<- number_added_S + number_newly_added_S
+      number_added_I <<- number_added_I + number_newly_added_I
+      number_added_R <<- number_added_R + number_newly_added_R
+      number_changed_to_S <<- number_changed_to_S + number_newly_changed_to_S
+      number_changed_to_I <<- number_changed_to_I + number_newly_changed_to_I
+      number_changed_to_R <<- number_changed_to_R + number_newly_changed_to_R
+      number_affected_rows <<- unique(c(number_affected_rows, rows))
+
+      # will be reset at start of every rule
+      changed_results <<- changed_results +
+        number_newly_added_S +
+        number_newly_added_I +
+        number_newly_added_R +
+        number_newly_changed_to_S +
+        number_newly_changed_to_I +
+        number_newly_changed_to_R
 
       if (verbose == TRUE) {
-        for (i in 1:length(cols)) {
-          # add new row for every affected column
-          verbose_new <- data.frame(rule_type = strip_style(rule[1]),
-                                    rule_set = strip_style(rule[2]),
-                                    force_to = to,
-                                    found = length(before),
-                                    changed = sum(before != after, na.rm = TRUE),
-                                    target_column = cols[i],
-                                    stringsAsFactors = FALSE)
-          verbose_new$target_rows <- list(unname(rows))
-          rownames(verbose_new) <- NULL
-          verbose_info <<- rbind(verbose_info, verbose_new)
+        for (r in 1:length(rows)) {
+          for (c in 1:length(cols)) {
+            old <- before_df[rows[r], cols[c]]
+            new <- tbl[rows[r], cols[c]]
+            if (!identical(old, new)) {
+              verbose_new <- data.frame(row = rows[r],
+                                        col = cols[c],
+                                        mo = tbl_original[rows[r], col_mo],
+                                        mo_fullname = "",
+                                        old = old,
+                                        new = new,
+                                        rule_source = strip_style(rule[1]),
+                                        rule_group = strip_style(rule[2]),
+                                        stringsAsFactors = FALSE)
+              verbose_info <<- rbind(verbose_info, verbose_new)
+            }
+          }
         }
+        # verbose_new <- data.frame(row = integer(0),
+        #                           col = character(0),
+        #                           old = character(0),
+        #                           new = character(0),
+        #                           rule_source = character(0),
+        #                           rule_group = character(0),
+        #                           stringsAsFactors = FALSE)
+        # a <<- rule
+        # for (i in 1:length(cols)) {
+        #   # add new row for every affected column
+        #   verbose_new <- data.frame(rule_type = strip_style(rule[1]),
+        #                             rule_set = strip_style(rule[2]),
+        #                             force_to = to,
+        #                             found = length(before),
+        #                             changed = sum(before != after, na.rm = TRUE),
+        #                             target_column = cols[i],
+        #                             stringsAsFactors = FALSE)
+        #   verbose_new$target_rows <- list(unname(rows))
+        #   rownames(verbose_new) <- NULL
+        #   verbose_info <<- rbind(verbose_info, verbose_new)
+        # }
 
       }
     }
   }
+
   na.rm <- function(col) {
-    if (is.na(col)) {
+    if (is.null(col)) {
       ""
     } else {
       col
@@ -405,7 +547,35 @@ eucast_rules <- function(tbl,
   # join to microorganisms data set
   tbl <- tbl %>%
     mutate_at(vars(col_mo), as.mo) %>%
-    left_join_microorganisms(by = col_mo, suffix = c("_oldcols", ""))
+    left_join_microorganisms(by = col_mo, suffix = c("_oldcols", "")) %>%
+    mutate(gramstain = mo_gramstain(pull(., col_mo))) %>%
+    as.data.frame(stringsAsFactors = FALSE)
+
+  if (info == TRUE) {
+    cat("\nRules by the European Committee on Antimicrobial Susceptibility Testing (EUCAST)\n")
+  }
+
+  # since ampicillin ^= amoxicillin, get the first from the latter (not in original EUCAST table)
+  if (!is.null(ampi) & !is.null(amox)) {
+    if (verbose == TRUE) {
+      cat("\n VERBOSE: transforming",
+          length(which(tbl[, amox] == "S" & !tbl[, ampi] %in% c("S", "I", "R"))),
+          "empty ampicillin fields to 'S' based on amoxicillin. ")
+      cat("\n VERBOSE: transforming",
+          length(which(tbl[, amox] == "I" & !tbl[, ampi] %in% c("S", "I", "R"))),
+          "empty ampicillin fields to 'I' based on amoxicillin. ")
+      cat("\n VERBOSE: transforming",
+          length(which(tbl[, amox] == "R" & !tbl[, ampi] %in% c("S", "I", "R"))),
+          "empty ampicillin fields to 'R' based on amoxicillin. \n")
+    }
+    tbl[which(tbl[, amox] == "S" & !tbl[, ampi] %in% c("S", "I", "R")), ampi] <- "S"
+    tbl[which(tbl[, amox] == "I" & !tbl[, ampi] %in% c("S", "I", "R")), ampi] <- "I"
+    tbl[which(tbl[, amox] == "R" & !tbl[, ampi] %in% c("S", "I", "R")), ampi] <- "R"
+  } else if (is.null(ampi) & !is.null(amox)) {
+    # ampicillin column is missing, but amoxicillin is available
+    message(blue(paste0("NOTE: Using column `", bold(amox), "` as input for ampicillin (J01CA01) since many EUCAST rules depend on it.")))
+    ampi <- amox
+  }
 
   # antibiotic classes
   aminoglycosides <- c(tobr, gent, kana, neom, neti, siso)
@@ -420,28 +590,6 @@ eucast_rules <- function(tbl,
   ureidopenicillins <- c(pipe, pita, azlo, mezl)
   fluoroquinolones <- c(oflo, cipr, norf, levo, moxi)
   all_betalactam <- c(aminopenicillins, ureidopenicillins, cephalosporins, carbapenems, amcl, oxac, clox, peni)
-
-  if (info == TRUE) {
-    cat("Rules by the European Committee on Antimicrobial Susceptibility Testing (EUCAST)\n")
-  }
-
-  # since ampicillin ^= amoxicillin, get the first from the latter (not in original table)
-  if (!is.na(ampi) & !is.na(amox)) {
-    if (verbose == TRUE) {
-      cat(bgGreen("\n VERBOSE: transforming",
-                  length(which(tbl[, amox] == "S" & !tbl[, ampi] %in% c("S", "I", "R"))),
-                  "empty ampicillin fields to 'S' based on amoxicillin. "))
-      cat(bgGreen("\n VERBOSE: transforming",
-                  length(which(tbl[, amox] == "I" & !tbl[, ampi] %in% c("S", "I", "R"))),
-                  "empty ampicillin fields to 'I' based on amoxicillin. "))
-      cat(bgGreen("\n VERBOSE: transforming",
-                  length(which(tbl[, amox] == "R" & !tbl[, ampi] %in% c("S", "I", "R"))),
-                  "empty ampicillin fields to 'R' based on amoxicillin. \n"))
-    }
-    tbl[which(tbl[, amox] == "S" & !tbl[, ampi] %in% c("S", "I", "R")), ampi] <- "S"
-    tbl[which(tbl[, amox] == "I" & !tbl[, ampi] %in% c("S", "I", "R")), ampi] <- "I"
-    tbl[which(tbl[, amox] == "R" & !tbl[, ampi] %in% c("S", "I", "R")), ampi] <- "R"
-  }
 
   if (any(c("all", "breakpoints") %in% rules)) {
     # BREAKPOINTS -------------------------------------------------------------
@@ -459,21 +607,21 @@ eucast_rules <- function(tbl,
       cat(rule)
     }
 
-    if (!is.na(ampi)) {
+    if (!is.null(ampi)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$order == 'Enterobacteriales'
                             & tbl[, ampi] == 'S'),
                cols = amox)
     }
-    if (!is.na(ampi)) {
+    if (!is.null(ampi)) {
       edit_rsi(to = 'I',
                rule = c(rule_group, rule),
                rows = which(tbl$order == 'Enterobacteriales'
                             & tbl[, ampi] == 'I'),
                cols = amox)
     }
-    if (!is.na(ampi)) {
+    if (!is.null(ampi)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$order == 'Enterobacteriales'
@@ -490,7 +638,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(peni) & !is.na(cfox)) {
+    if (!is.null(peni) & !is.null(cfox)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == "Staphylococcus"
@@ -504,21 +652,21 @@ eucast_rules <- function(tbl,
                             & tbl[, cfox] == 'S'),
                cols = c(oxac, clox))
     }
-    if (!is.na(cfox)) {
+    if (!is.null(cfox)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == "Staphylococcus"
                             & tbl[, cfox] == 'R'),
                cols = all_betalactam)
     }
-    if (!is.na(ampi)) {
+    if (!is.null(ampi)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Staphylococcus saprophyticus"
                             & tbl[, ampi] == 'S'),
                cols = c(amox, amcl, pipe, pita))
     }
-    if (!is.na(cfox)) {
+    if (!is.null(cfox)) {
       # inferred from cefoxitin
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
@@ -536,14 +684,14 @@ eucast_rules <- function(tbl,
                             & tbl[, cfox] == 'R'),
                cols = c(carbapenems, cephalosporins[cephalosporins != na.rm(cfta)]))
     }
-    if (!is.na(norf)) {
+    if (!is.null(norf)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == "Staphylococcus"
                             & tbl[, norf] == 'S'),
                cols = c(cipr, levo, moxi, oflo))
     }
-    if (!is.na(eryt)) {
+    if (!is.null(eryt)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == "Staphylococcus"
@@ -560,7 +708,7 @@ eucast_rules <- function(tbl,
                             & tbl[, eryt] == 'R'),
                cols = c(azit, clar, roxi))
     }
-    if (!is.na(tetr)) {
+    if (!is.null(tetr)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == "Staphylococcus"
@@ -577,14 +725,14 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(ampi)) { # penicillin group
+    if (!is.null(ampi)) { # penicillin group
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Enterococcus faecium"
                             & tbl[, ampi] == 'R'),
                cols = all_betalactam)
     }
-    if (!is.na(ampi)) {
+    if (!is.null(ampi)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == "Enterococcus"
@@ -601,7 +749,7 @@ eucast_rules <- function(tbl,
                             & tbl[, ampi] == 'R'),
                cols = c(amox, amcl, pipe, pita))
     }
-    if (!is.na(norf)) {
+    if (!is.null(norf)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == "Enterococcus"
@@ -628,7 +776,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(peni)) {
+    if (!is.null(peni)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Streptococcus (pyogenes|agalactiae|dysgalactiae|group A|group B|group C|group G)"
@@ -645,14 +793,14 @@ eucast_rules <- function(tbl,
                             & tbl[, peni] == 'R'),
                cols = c(aminopenicillins, ureidopenicillins, cephalosporins, carbapenems, clox, amcl))
     }
-    if (!is.na(norf)) {
+    if (!is.null(norf)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Streptococcus (pyogenes|agalactiae|dysgalactiae|group A|group B|group C|group G)"
                             & tbl[, norf] == 'S'),
                cols = c(levo, moxi))
     }
-    if (!is.na(eryt)) {
+    if (!is.null(eryt)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Streptococcus (pyogenes|agalactiae|dysgalactiae|group A|group B|group C|group G)"
@@ -669,7 +817,7 @@ eucast_rules <- function(tbl,
                             & tbl[, eryt] == 'R'),
                cols = c(azit, clar, roxi))
     }
-    if (!is.na(tetr)) {
+    if (!is.null(tetr)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Streptococcus (pyogenes|agalactiae|dysgalactiae|group A|group B|group C|group G)"
@@ -686,14 +834,14 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(peni)) {
+    if (!is.null(peni)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Streptococcus pneumoniae"
                             & tbl[, peni] == 'S'),
                cols = c(ampi, amox, amcl, pipe, pita))
     }
-    if (!is.na(ampi)) {
+    if (!is.null(ampi)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Streptococcus pneumoniae"
@@ -710,14 +858,14 @@ eucast_rules <- function(tbl,
                             & tbl[, ampi] == 'R'),
                cols = c(amox, amcl, pipe, pita))
     }
-    if (!is.na(norf)) {
+    if (!is.null(norf)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Streptococcus pneumoniae"
                             & tbl[, norf] == 'S'),
                cols = c(levo, moxi))
     }
-    if (!is.na(eryt)) {
+    if (!is.null(eryt)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Streptococcus pneumoniae"
@@ -734,7 +882,7 @@ eucast_rules <- function(tbl,
                             & tbl[, eryt] == 'R'),
                cols = c(azit, clar, roxi))
     }
-    if (!is.na(tetr)) {
+    if (!is.null(tetr)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Streptococcus pneumoniae"
@@ -756,14 +904,14 @@ eucast_rules <- function(tbl,
                         "intermedius", "mitis", "mutans", "oligofermentans", "oralis",
                         "parasanguinis", "peroris", "pseudopneumoniae", "salivarius",
                         "sanguinis", "sinensis", "sobrinus", "thermophilus", "vestibularis")
-    if (!is.na(peni)) {
+    if (!is.null(peni)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == "Streptococcus" & tbl$species %in% viridans_group
                             & tbl[, peni] == 'S'),
                cols = c(ampi, amox, amcl, pipe, pita))
     }
-    if (!is.na(ampi)) {
+    if (!is.null(ampi)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == "Streptococcus" & tbl$species %in% viridans_group
@@ -790,7 +938,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(ampi)) {
+    if (!is.null(ampi)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Haemophilus influenzae"
@@ -807,14 +955,14 @@ eucast_rules <- function(tbl,
                             & tbl[, ampi] == 'R'),
                cols = c(amox, pipe))
     }
-    if (!is.na(peni)) {
+    if (!is.null(peni)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Haemophilus influenzae"
                             & tbl[, peni] == 'S'),
                cols = c(ampi, amox, amcl, pipe, pita))
     }
-    if (!is.na(amcl)) {
+    if (!is.null(amcl)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Haemophilus influenzae"
@@ -831,14 +979,14 @@ eucast_rules <- function(tbl,
                             & tbl[, amcl] == 'R'),
                cols = pita)
     }
-    if (!is.na(nali)) {
+    if (!is.null(nali)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Haemophilus influenzae"
                             & tbl[, nali] == 'S'),
                cols = c(cipr, levo, moxi, oflo))
     }
-    if (!is.na(tetr)) {
+    if (!is.null(tetr)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Haemophilus influenzae"
@@ -855,7 +1003,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(amcl)) {
+    if (!is.null(amcl)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Moraxella catarrhalis"
@@ -872,14 +1020,14 @@ eucast_rules <- function(tbl,
                             & tbl[, amcl] == 'R'),
                cols = pita)
     }
-    if (!is.na(nali)) {
+    if (!is.null(nali)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Moraxella catarrhalis"
                             & tbl[, nali] == 'S'),
                cols = c(cipr, levo, moxi, oflo))
     }
-    if (!is.na(eryt)) {
+    if (!is.null(eryt)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Moraxella catarrhalis"
@@ -896,7 +1044,7 @@ eucast_rules <- function(tbl,
                             & tbl[, eryt] == 'R'),
                cols = c(azit, clar, roxi))
     }
-    if (!is.na(tetr)) {
+    if (!is.null(tetr)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Moraxella catarrhalis"
@@ -913,7 +1061,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(peni)) {
+    if (!is.null(peni)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$genus %in% c("Clostridium", "Actinomyces", "Propionibacterium",
@@ -949,7 +1097,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(peni)) {
+    if (!is.null(peni)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$genus %in% c("Bacteroides", "Prevotella", "Porphyromonas",
@@ -979,7 +1127,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(peni)) {
+    if (!is.null(peni)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Pasteurella multocida"
@@ -1006,7 +1154,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(eryt)) {
+    if (!is.null(eryt)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Campylobacter (jejuni|coli)"
@@ -1023,7 +1171,7 @@ eucast_rules <- function(tbl,
                             & tbl[, eryt] == 'R'),
                cols = c(azit, clar))
     }
-    if (!is.na(tetr)) {
+    if (!is.null(tetr)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Campylobacter (jejuni|coli)"
@@ -1050,7 +1198,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(norf)) {
+    if (!is.null(norf)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Aerococcus (sanguinicola|urinae)"
@@ -1067,7 +1215,7 @@ eucast_rules <- function(tbl,
                             & tbl[, norf] == 'R'),
                cols = fluoroquinolones)
     }
-    if (!is.na(cipr)) {
+    if (!is.null(cipr)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Aerococcus (sanguinicola|urinae)"
@@ -1094,7 +1242,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(peni)) {
+    if (!is.null(peni)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Kingella kingae"
@@ -1111,7 +1259,7 @@ eucast_rules <- function(tbl,
                             & tbl[, peni] == 'R'),
                cols = c(ampi, amox))
     }
-    if (!is.na(eryt)) {
+    if (!is.null(eryt)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Kingella kingae"
@@ -1128,7 +1276,7 @@ eucast_rules <- function(tbl,
                             & tbl[, eryt] == 'R'),
                cols = c(azit, clar))
     }
-    if (!is.na(tetr)) {
+    if (!is.null(tetr)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% "^Kingella kingae"
@@ -1430,7 +1578,7 @@ eucast_rules <- function(tbl,
       cat(rule)
     }
     # rule 8.3
-    if (!is.na(peni)) {
+    if (!is.null(peni)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% '^Streptococcus (pyogenes|agalactiae|dysgalactiae|group A|group B|group C|group G)'
@@ -1438,14 +1586,14 @@ eucast_rules <- function(tbl,
                cols = c(aminopenicillins, cephalosporins, carbapenems))
     }
     # rule 8.6
-    if (!is.na(ampi)) {
+    if (!is.null(ampi)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == 'Enterococcus'
                             & tbl[, ampi] == 'R'),
                cols = c(ureidopenicillins, carbapenems))
     }
-    if (!is.na(amox)) {
+    if (!is.null(amox)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == 'Enterococcus'
@@ -1464,7 +1612,7 @@ eucast_rules <- function(tbl,
       cat(rule)
     }
     # rule 9.3
-    if (!is.na(tica) & !is.na(pipe)) {
+    if (!is.null(tica) & !is.null(pipe)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$family == 'Enterobacteriaceae'
@@ -1484,7 +1632,7 @@ eucast_rules <- function(tbl,
       cat(rule)
     }
     # rule 10.2
-    # if (!is.na(ampi)) {
+    # if (!is.null(ampi)) {
     # you should know first if the are B-lactamase positive, so do not run for now
     # edit_rsi(to = 'R',
     #          rule = c(rule_group, rule),
@@ -1504,7 +1652,7 @@ eucast_rules <- function(tbl,
       cat(rule)
     }
     # rule 11.1
-    if (!is.na(eryt)) {
+    if (!is.null(eryt)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl[, eryt] == 'S'),
@@ -1530,7 +1678,7 @@ eucast_rules <- function(tbl,
       cat(rule)
     }
     # rule 12.2
-    if (!is.na(tobr)) {
+    if (!is.null(tobr)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == 'Staphylococcus'
@@ -1538,7 +1686,7 @@ eucast_rules <- function(tbl,
                cols = c(kana, amik))
     }
     # rule 12.3
-    if (!is.na(gent)) {
+    if (!is.null(gent)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == 'Staphylococcus'
@@ -1546,7 +1694,7 @@ eucast_rules <- function(tbl,
                cols = aminoglycosides)
     }
     # rule 12.8
-    if (!is.na(gent) & !is.na(tobr)) {
+    if (!is.null(gent) & !is.null(tobr)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$family == 'Enterobacteriaceae'
@@ -1555,7 +1703,7 @@ eucast_rules <- function(tbl,
                cols = gent)
     }
     # rule 12.9
-    if (!is.na(gent) & !is.na(tobr)) {
+    if (!is.null(gent) & !is.null(tobr)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$family == 'Enterobacteriaceae'
@@ -1576,7 +1724,7 @@ eucast_rules <- function(tbl,
       cat(rule)
     }
     # rule 13.2
-    if (!is.na(moxi)) {
+    if (!is.null(moxi)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$genus == 'Staphylococcus'
@@ -1584,7 +1732,7 @@ eucast_rules <- function(tbl,
                cols = fluoroquinolones)
     }
     # rule 13.4
-    if (!is.na(moxi)) {
+    if (!is.null(moxi)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% '^Streptococcus pneumoniae'
@@ -1592,7 +1740,7 @@ eucast_rules <- function(tbl,
                cols = fluoroquinolones)
     }
     # rule 13.5
-    if (!is.na(cipr)) {
+    if (!is.null(cipr)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$family == 'Enterobacteriaceae'
@@ -1600,7 +1748,7 @@ eucast_rules <- function(tbl,
                cols = fluoroquinolones)
     }
     # rule 13.8
-    if (!is.na(cipr)) {
+    if (!is.null(cipr)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl$fullname %like% '^Neisseria gonorrhoeae'
@@ -1627,7 +1775,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(amcl)) {
+    if (!is.null(amcl)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl[, amcl] == 'R'),
@@ -1642,7 +1790,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(pita)) {
+    if (!is.null(pita)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl[, pita] == 'R'),
@@ -1657,7 +1805,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(trsu)) {
+    if (!is.null(trsu)) {
       edit_rsi(to = 'R',
                rule = c(rule_group, rule),
                rows = which(tbl[, trsu] == 'R'),
@@ -1672,7 +1820,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(ampi)) {
+    if (!is.null(ampi)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl[, ampi] == 'S'),
@@ -1687,7 +1835,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(pipe)) {
+    if (!is.null(pipe)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl[, pipe] == 'S'),
@@ -1702,7 +1850,7 @@ eucast_rules <- function(tbl,
       changed_results <- 0
       cat(rule)
     }
-    if (!is.na(trim)) {
+    if (!is.null(trim)) {
       edit_rsi(to = 'S',
                rule = c(rule_group, rule),
                rows = which(tbl[, trim] == 'S'),
@@ -1725,20 +1873,46 @@ eucast_rules <- function(tbl,
     } else {
       wouldve <- ""
     }
-    if (amount_changed == 0) {
-      colour <- green
+    if (sum(number_added_S, number_added_I, number_added_R,
+            number_changed_to_S, number_changed_to_I, number_changed_to_R,
+            na.rm = TRUE) == 0) {
+      colour <- green # is function
     } else {
-      colour <- blue
+      colour <- blue # is function
+    }
+    decimal.mark <- getOption("OutDec")
+    big.mark <- ifelse(decimal.mark != ",", ",", ".")
+    formatnr <- function(x) {
+      format(x, big.mark = big.mark, decimal.mark = decimal.mark)
     }
     cat(bold(paste('\n=> EUCAST rules', paste0(wouldve, 'affected'),
-             amount_affected_rows %>% length() %>% format(big.mark = ","),
-             'out of', nrow(tbl_original) %>% format(big.mark = ","),
-             'rows ->',
-             colour(paste0(wouldve, 'changed'),
-                    amount_changed %>% format(big.mark = ","), 'test results.\n\n'))))
+             number_affected_rows %>% length() %>% formatnr(),
+             'out of', nrow(tbl_original) %>% formatnr(),
+             'rows\n')))
+    total_added <- number_added_S + number_added_I + number_added_R
+    total_changed <- number_changed_to_S + number_changed_to_I + number_changed_to_R
+    cat(colour(paste0("   -> ", wouldve, "added ",
+                      bold(formatnr(total_added), "test results"),
+                      if(total_added > 0)
+                        paste0(" (", formatnr(number_added_S), " as S; ",
+                               formatnr(number_added_I), " as I; ",
+                               formatnr(number_added_R), " as R)"),
+                      "\n")))
+    cat(colour(paste0("   -> ", wouldve, "changed ",
+                      bold(formatnr(total_changed), "test results"),
+                      if(total_changed > 0)
+                        paste0(" (", formatnr(number_changed_to_S), " to S; ",
+                               formatnr(number_changed_to_I), " to I; ",
+                               formatnr(number_changed_to_R), " to R)"),
+                      "\n")))
   }
 
   if (verbose == TRUE) {
+    suppressWarnings(
+      suppressMessages(
+        verbose_info$mo_fullname <- mo_fullname(verbose_info$mo)
+      )
+    )
     return(verbose_info)
   }
 

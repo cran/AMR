@@ -1,3 +1,24 @@
+# ==================================================================== #
+# TITLE                                                                #
+# Antimicrobial Resistance (AMR) Analysis                              #
+#                                                                      #
+# SOURCE                                                               #
+# https://gitlab.com/msberends/AMR                                     #
+#                                                                      #
+# LICENCE                                                              #
+# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+#                                                                      #
+# This R package is free software; you can freely use and distribute   #
+# it for both personal and commercial purposes under the terms of the  #
+# GNU General Public License version 2.0 (GNU GPL-2), as published by  #
+# the Free Software Foundation.                                        #
+#                                                                      #
+# This R package was created for academic research and was publicly    #
+# released in the hope that it will be useful, but it comes WITHOUT    #
+# ANY WARRANTY OR LIABILITY.                                           #
+# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# ==================================================================== #
+
 context("freq.R")
 
 test_that("frequency table works", {
@@ -13,7 +34,7 @@ test_that("frequency table works", {
 
   expect_output(print(septic_patients %>% freq(age)))
   expect_output(print(septic_patients %>% freq(age, nmax = 5)))
-  expect_output(print(septic_patients %>% freq(age, nmax = Inf)))
+  expect_output(print(septic_patients %>% freq(age, nmax = Inf, markdown = FALSE)))
   expect_output(print(freq(septic_patients$age, nmax = Inf)))
   expect_output(print(freq(septic_patients$age, nmax = NA)))
   expect_output(print(freq(septic_patients$age, nmax = NULL)))
@@ -26,8 +47,11 @@ test_that("frequency table works", {
   expect_output(print(freq(septic_patients$age, markdown = TRUE, title = "TITLE")))
 
   # character
-  expect_output(print(freq(septic_patients$mo)))
   expect_output(suppressWarnings(print(freq(microorganisms$fullname))))
+  # mo
+  expect_output(print(freq(septic_patients$mo)))
+  # rsi
+  expect_output(print(freq(septic_patients$amox)))
   # integer
   expect_output(print(freq(septic_patients$age)))
   # date
@@ -67,6 +91,12 @@ test_that("frequency table works", {
   expect_output(print(septic_patients %>% group_by(gender) %>% freq(hospital_id)))
   expect_output(print(septic_patients %>% group_by(gender) %>% freq(amox, quote = TRUE)))
   expect_output(print(septic_patients %>% group_by(gender) %>% freq(amox, markdown = TRUE)))
+
+  # quasiquotation
+  expect_output(print(septic_patients %>% freq(mo_genus(mo))))
+  expect_output(print(septic_patients %>% freq(mo, mo_genus(mo))))
+  expect_output(print(septic_patients %>% group_by(gender) %>% freq(mo_genus(mo))))
+  expect_output(print(septic_patients %>% group_by(gender) %>% freq(mo, mo_genus(mo))))
 
   # top 5
   expect_equal(

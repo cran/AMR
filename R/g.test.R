@@ -2,18 +2,21 @@
 # TITLE                                                                #
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
-# AUTHORS                                                              #
-# Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)           #
+# SOURCE                                                               #
+# https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# This program is free software; you can redistribute it and/or modify #
-# it under the terms of the GNU General Public License version 2.0,    #
-# as published by the Free Software Foundation.                        #
+# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
 #                                                                      #
-# This program is distributed in the hope that it will be useful,      #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        #
-# GNU General Public License for more details.                         #
+# This R package is free software; you can freely use and distribute   #
+# it for both personal and commercial purposes under the terms of the  #
+# GNU General Public License version 2.0 (GNU GPL-2), as published by  #
+# the Free Software Foundation.                                        #
+#                                                                      #
+# This R package was created for academic research and was publicly    #
+# released in the hope that it will be useful, but it comes WITHOUT    #
+# ANY WARRANTY OR LIABILITY.                                           #
+# Visit our website for more info: https://msberends.gitab.io/AMR.     #
 # ==================================================================== #
 
 #' \emph{G}-test for Count Data
@@ -41,7 +44,7 @@
 #'
 #' It is also possible to do a \emph{G}-test of independence with more than two nominal variables. For example, Jackson et al. (2013) also had data for children under 3, so you could do an analysis of old vs. young, thigh vs. arm, and reaction vs. no reaction, all analyzed together.
 #'
-#' Fisher's exact test (\code{\link{fisher.test}}) is more accurate than the \emph{G}-test of independence when the expected numbers are small, so it is recommend to only use the \emph{G}-test if your total sample size is greater than 1000.
+#' Fisher's exact test (\code{\link{fisher.test}}) is an \strong{exact} test, where the \emph{G}-test is still only an \strong{approximation}. For any 2x2 table, Fisher's Exact test may be slower but will still run in seconds, even if the sum of your observations is multiple millions.
 #'
 #' The \emph{G}-test of independence is an alternative to the chi-square test of independence (\code{\link{chisq.test}}), and they will give approximately the same results.
 #' @section How the test works:
@@ -69,6 +72,7 @@
 #' }
 #' @export
 #' @importFrom stats pchisq complete.cases
+#' @inheritSection AMR Read more on our website!
 #' @examples
 #' # = EXAMPLE 1 =
 #' # Shivrain et al. (2006) crossed clearfield rice (which are resistant
@@ -79,7 +83,7 @@
 #' # by a single gene with two co-dominant alleles, you would expect a 1:2:1
 #' # ratio.
 #'
-#' x <- c(772, 1611, 737)#'
+#' x <- c(772, 1611, 737)
 #' G <- g.test(x, p = c(1, 2, 1) / 4)
 #' # G$p.value = 0.12574.
 #'
@@ -151,6 +155,9 @@ g.test <- function(x,
     nc <- as.integer(ncol(x))
     if (is.na(nr) || is.na(nc) || is.na(nr * nc))
       stop("invalid nrow(x) or ncol(x)", domain = NA)
+    # add fisher.test suggestion
+    if (nr == 2 && nc == 2)
+      warning("`fisher.test()` is always more reliable for 2x2 tables and although must slower, often only takes seconds.")
     sr <- rowSums(x)
     sc <- colSums(x)
     E <- outer(sr, sc, "*")/n
@@ -217,15 +224,9 @@ g.test <- function(x,
   }
   names(STATISTIC) <- "X-squared"
   names(PARAMETER) <- "df"
-  # if (any(E < 5) && is.finite(PARAMETER))
-  #   warning("G-statistic approximation may be incorrect")
+  if (any(E < 5) && is.finite(PARAMETER))
+    warning("G-statistic approximation may be incorrect due to E < 5")
 
-  # suggest fisher.test when total is < 1000 (John McDonald, Handbook of Biological Statistics, 2014)
-  if (sum(x, na.rm = TRUE) < 1000 && is.finite(PARAMETER)) {
-    warning("G-statistic approximation may be incorrect, consider Fisher's Exact test")
-  } else if (any(E < 5) && is.finite(PARAMETER)) {
-    warning("G-statistic approximation may be incorrect, consider Fisher's Exact test")
-  }
   structure(list(statistic = STATISTIC, parameter = PARAMETER,
                  p.value = PVAL, method = METHOD, data.name = DNAME,
                  observed = x, expected = E, residuals = (x - E)/sqrt(E),

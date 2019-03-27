@@ -4,28 +4,37 @@
 \alias{freq}
 \alias{frequency_tbl}
 \alias{top_freq}
+\alias{header}
 \alias{print.frequency_tbl}
 \title{Frequency table}
 \usage{
 frequency_tbl(x, ..., sort.count = TRUE,
   nmax = getOption("max.print.freq"), na.rm = TRUE, row.names = TRUE,
   markdown = !interactive(), digits = 2, quote = FALSE,
-  header = !markdown, title = NULL, na = "<NA>", sep = " ")
+  header = TRUE, title = NULL, na = "<NA>", droplevels = TRUE,
+  sep = " ", decimal.mark = getOption("OutDec"),
+  big.mark = ifelse(decimal.mark != ",", ",", "."))
 
 freq(x, ..., sort.count = TRUE, nmax = getOption("max.print.freq"),
   na.rm = TRUE, row.names = TRUE, markdown = !interactive(),
-  digits = 2, quote = FALSE, header = !markdown, title = NULL,
-  na = "<NA>", sep = " ")
+  digits = 2, quote = FALSE, header = TRUE, title = NULL,
+  na = "<NA>", droplevels = TRUE, sep = " ",
+  decimal.mark = getOption("OutDec"), big.mark = ifelse(decimal.mark !=
+  ",", ",", "."))
 
 top_freq(f, n)
 
+header(f, property = NULL)
+
 \method{print}{frequency_tbl}(x, nmax = getOption("max.print.freq",
-  default = 15), markdown = !interactive(), header = !markdown, ...)
+  default = 15), markdown = !interactive(), header = TRUE,
+  decimal.mark = getOption("OutDec"), big.mark = ifelse(decimal.mark !=
+  ",", ",", "."), ...)
 }
 \arguments{
 \item{x}{vector of any class or a \code{\link{data.frame}}, \code{\link{tibble}} (may contain a grouping variable) or \code{\link{table}}}
 
-\item{...}{up to nine different columns of \code{x} when \code{x} is a \code{data.frame} or \code{tibble}, to calculate frequencies from - see Examples}
+\item{...}{up to nine different columns of \code{x} when \code{x} is a \code{data.frame} or \code{tibble}, to calculate frequencies from - see Examples. Also supports quasiquotion.}
 
 \item{sort.count}{sort on count, i.e. frequencies. This will be \code{TRUE} at default for everything except when using grouping variables.}
 
@@ -35,7 +44,7 @@ top_freq(f, n)
 
 \item{row.names}{a logical value indicating whether row indices should be printed as \code{1:nrow(x)}}
 
-\item{markdown}{a logical value indicating whether the frequency table should be printed in markdown format. This will print all rows and is default behaviour in non-interactive R sessions (like when knitting RMarkdown files).}
+\item{markdown}{a logical value indicating whether the frequency table should be printed in markdown format. This will print all rows (except when \code{nmax} is defined) and is default behaviour in non-interactive R sessions (like when knitting RMarkdown files).}
 
 \item{digits}{how many significant digits are to be used for numeric values in the header (not for the items themselves, that depends on \code{\link{getOption}("digits")})}
 
@@ -45,19 +54,32 @@ top_freq(f, n)
 
 \item{title}{text to show above frequency table, at default to tries to coerce from the variables passed to \code{x}}
 
-\item{na}{a character string to should be used to show empty (\code{NA}) values (only useful when \code{na.rm = FALSE})}
+\item{na}{a character string that should be used to show empty (\code{NA}) values (only useful when \code{na.rm = FALSE})}
+
+\item{droplevels}{a logical value indicating whether in factors empty levels should be dropped}
 
 \item{sep}{a character string to separate the terms when selecting multiple columns}
+
+\item{decimal.mark}{%
+    used for prettying (longish) numerical and complex sequences.
+    Passed to \code{\link{prettyNum}}: that help page explains the details.}
+
+\item{big.mark}{%
+    used for prettying (longish) numerical and complex sequences.
+    Passed to \code{\link{prettyNum}}: that help page explains the details.}
 
 \item{f}{a frequency table}
 
 \item{n}{number of top \emph{n} items to return, use -n for the bottom \emph{n} items. It will include more than \code{n} rows if there are ties.}
+
+\item{property}{property in header to return this value directly}
 }
 \value{
 A \code{data.frame} (with an additional class \code{"frequency_tbl"}) with five columns: \code{item}, \code{count}, \code{percent}, \code{cum_count} and \code{cum_percent}.
 }
 \description{
-Create a frequency table of a vector with items or a data frame. Supports quasiquotation and markdown for reports. \code{top_freq} can be used to get the top/bottom \emph{n} items of a frequency table, with counts as names.
+Create a frequency table of a vector with items or a \code{data.frame}. Supports quasiquotation and markdown for reports. Best practice is: \code{data \%>\% freq(var)}.\cr
+\code{top_freq} can be used to get the top/bottom \emph{n} items of a frequency table, with counts as names.
 }
 \details{
 Frequency tables (or frequency distributions) are summaries of the distribution of values in a sample. With the `freq` function, you can create univariate frequency tables. Multiple variables will be pasted into one variable, so it forces a univariate distribution. This package also has a vignette available to explain the use of this function further, run \code{browseVignettes("AMR")} to read it.
@@ -81,9 +103,15 @@ For dates and times of any class, these additional values will be calculated wit
   \item{Median, using \code{\link[stats]{median}}, with percentage since oldest}
 }
 
+In factors, all factor levels that are not existing in the input data will be dropped.
 
 The function \code{top_freq} uses \code{\link[dplyr]{top_n}} internally and will include more than \code{n} rows if there are ties.
 }
+\section{Read more on our website!}{
+
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+}
+
 \examples{
 library(dplyr)
 
@@ -106,8 +134,11 @@ septic_patients \%>\%
 # multiple selected variables will be pasted together
 septic_patients \%>\%
   left_join_microorganisms \%>\%
-  filter(hospital_id == "A") \%>\%
   freq(genus, species)
+
+# functions as quasiquotation are also supported
+septic_patients \%>\%
+  freq(mo_genus(mo), mo_species(mo))
 
 
 # group a variable and analyse another

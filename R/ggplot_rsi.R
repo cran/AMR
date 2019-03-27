@@ -2,21 +2,24 @@
 # TITLE                                                                #
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
-# AUTHORS                                                              #
-# Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)           #
+# SOURCE                                                               #
+# https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# This program is free software; you can redistribute it and/or modify #
-# it under the terms of the GNU General Public License version 2.0,    #
-# as published by the Free Software Foundation.                        #
+# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
 #                                                                      #
-# This program is distributed in the hope that it will be useful,      #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        #
-# GNU General Public License for more details.                         #
+# This R package is free software; you can freely use and distribute   #
+# it for both personal and commercial purposes under the terms of the  #
+# GNU General Public License version 2.0 (GNU GPL-2), as published by  #
+# the Free Software Foundation.                                        #
+#                                                                      #
+# This R package was created for academic research and was publicly    #
+# released in the hope that it will be useful, but it comes WITHOUT    #
+# ANY WARRANTY OR LIABILITY.                                           #
+# Visit our website for more info: https://msberends.gitab.io/AMR.     #
 # ==================================================================== #
 
-#' AMR bar plots with \code{ggplot}
+#' AMR plots with \code{ggplot2}
 #'
 #' Use these functions to create bar plots for antimicrobial resistance analysis. All functions rely on internal \code{\link[ggplot2]{ggplot}} functions.
 #' @param data a \code{data.frame} with column(s) of class \code{"rsi"} (see \code{\link{as.rsi}})
@@ -24,6 +27,7 @@
 #' @param x variable to show on x axis, either \code{"Antibiotic"} (default) or \code{"Interpretation"} or a grouping variable
 #' @param fill variable to categorise using the plots legend, either \code{"Antibiotic"} (default) or \code{"Interpretation"} or a grouping variable
 #' @param breaks numeric vector of positions
+#' @param limits numeric vector of length two providing limits of the scale, use \code{NA} to refer to the existing minimum or maximum
 #' @param facet variable to split plots by, either \code{"Interpretation"} (default) or \code{"Antibiotic"} or a grouping variable
 #' @param translate_ab a column name of the \code{\link{antibiotics}} data set to translate the antibiotic abbreviations into, using \code{\link{abname}}. Default behaviour is to translate to official names according to the WHO. Use \code{translate_ab = FALSE} to disable translation.
 #' @param fun function to transform \code{data}, either \code{\link{count_df}} (default) or \code{\link{portion_df}}
@@ -51,6 +55,7 @@
 #' @rdname ggplot_rsi
 #' @importFrom utils installed.packages
 #' @export
+#' @inheritSection AMR Read more on our website!
 #' @examples
 #' library(dplyr)
 #' library(ggplot2)
@@ -86,6 +91,17 @@
 #'              size = 1,
 #'              linetype = 2,
 #'              alpha = 0.25)
+#'
+#' # resistance of ciprofloxacine per age group
+#' septic_patients %>%
+#'   mutate(first_isolate = first_isolate(.)) %>%
+#'   filter(first_isolate == TRUE,
+#'          mo == as.mo("E. coli")) %>%
+#'   # `age_group` is also a function of this package:
+#'   group_by(age_group = age_groups(age)) %>%
+#'   select(age_group,
+#'          cipr) %>%
+#'   ggplot_rsi(x = "age_group")
 #' \donttest{
 #'
 #' # for colourblind mode, use divergent colours from the viridis package:
@@ -139,6 +155,7 @@ ggplot_rsi <- function(data,
                        # params = list(),
                        facet = NULL,
                        breaks = seq(0, 1, 0.1),
+                       limits = NULL,
                        translate_ab = "official",
                        fun = count_df,
                        nrow = NULL,
@@ -147,9 +164,7 @@ ggplot_rsi <- function(data,
                        datalabels.colour = "grey15",
                        ...) {
 
-  if (!"ggplot2" %in% rownames(installed.packages())) {
-    stop('this function requires the ggplot2 package.', call. = FALSE)
-  }
+  stopifnot_installed_package("ggplot2")
 
   fun_name <- deparse(substitute(fun))
   if (!fun_name %in% c("portion_df", "count_df")) {
@@ -192,7 +207,7 @@ ggplot_rsi <- function(data,
   if (fun_name == "portion_df"
       | (fun_name == "count_df" & position == "fill")) {
     # portions, so use y scale with percentage
-    p <- p + scale_y_percent(breaks = breaks)
+    p <- p + scale_y_percent(breaks = breaks, limits = limits)
   }
 
   if (fun_name == "count_df" & datalabels == TRUE) {
@@ -217,6 +232,8 @@ geom_rsi <- function(position = NULL,
                      translate_ab = "official",
                      fun = count_df,
                      ...)  {
+
+  stopifnot_installed_package("ggplot2")
 
   fun_name <- deparse(substitute(fun))
   if (!fun_name %in% c("portion_df", "count_df", "fun")) {
@@ -262,6 +279,8 @@ geom_rsi <- function(position = NULL,
 #' @export
 facet_rsi <- function(facet = c("Interpretation", "Antibiotic"), nrow = NULL) {
 
+  stopifnot_installed_package("ggplot2")
+
    facet <- facet[1]
 
   # we work with aes_string later on
@@ -284,20 +303,29 @@ facet_rsi <- function(facet = c("Interpretation", "Antibiotic"), nrow = NULL) {
 
 #' @rdname ggplot_rsi
 #' @export
-scale_y_percent <- function(breaks = seq(0, 1, 0.1)) {
+scale_y_percent <- function(breaks = seq(0, 1, 0.1), limits = NULL) {
+  stopifnot_installed_package("ggplot2")
+
+  if (all(breaks[breaks != 0] > 1)) {
+    breaks <- breaks / 100
+  }
   ggplot2::scale_y_continuous(breaks = breaks,
-                              labels = percent(breaks))
+                              labels = percent(breaks),
+                              limits = limits)
 }
 
 #' @rdname ggplot_rsi
 #' @export
 scale_rsi_colours <- function() {
-  ggplot2::scale_fill_brewer(palette = "RdYlGn")
+  stopifnot_installed_package("ggplot2")
+  #ggplot2::scale_fill_brewer(palette = "RdYlGn")
+  ggplot2::scale_fill_manual(values = c("#b22222", "#ae9c20", "#7cfc00"))
 }
 
 #' @rdname ggplot_rsi
 #' @export
 theme_rsi <- function() {
+  stopifnot_installed_package("ggplot2")
   ggplot2::theme_minimal() +
     ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(),
                    panel.grid.minor = ggplot2::element_blank(),
@@ -310,6 +338,7 @@ labels_rsi_count <- function(position = NULL,
                              x = "Antibiotic",
                              datalabels.size = 3,
                              datalabels.colour = "grey15") {
+  stopifnot_installed_package("ggplot2")
   if (is.null(position)) {
     position <- "fill"
   }
@@ -335,3 +364,4 @@ getlbls <- function(data) {
                         " (n=", Value, ")")) %>%
     mutate(lbl = ifelse(lbl == "0.0% (n=0)", "", lbl))
 }
+

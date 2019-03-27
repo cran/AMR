@@ -3,10 +3,11 @@
 \docType{data}
 \name{antibiotics}
 \alias{antibiotics}
-\title{Data set with 423 antibiotics}
-\format{A \code{\link{data.frame}} with 423 observations and 18 variables:
+\title{Data set with ~500 antibiotics}
+\format{A \code{\link{data.frame}} with 488 observations and 17 variables:
 \describe{
-  \item{\code{atc}}{ATC code, like \code{J01CR02}}
+  \item{\code{atc}}{ATC code (Anatomical Therapeutic Chemical), like \code{J01CR02}}
+  \item{\code{ears_net}}{EARS-Net code (European Antimicrobial Resistance Surveillance Network), like \code{AMC}}
   \item{\code{certe}}{Certe code, like \code{amcl}}
   \item{\code{umcg}}{UMCG code, like \code{AMCL}}
   \item{\code{abbr}}{Abbreviation as used by many countries, used internally by \code{\link{as.atc}}}
@@ -20,13 +21,17 @@
   \item{\code{iv_units}}{Units of \code{iv_ddd}}
   \item{\code{atc_group1}}{ATC group, like \code{"Macrolides, lincosamides and streptogramins"}}
   \item{\code{atc_group2}}{Subgroup of \code{atc_group1}, like \code{"Macrolides"}}
-  \item{\code{atc_group1_nl}}{ATC group in Dutch, like \code{"Macroliden, lincosamiden en streptograminen"}}
-  \item{\code{atc_group2_nl}}{Subgroup of \code{atc_group1} in Dutch, like \code{"Macroliden"}}
   \item{\code{useful_gramnegative}}{\code{FALSE} if not useful according to EUCAST, \code{NA} otherwise (see Source)}
   \item{\code{useful_grampositive}}{\code{FALSE} if not useful according to EUCAST, \code{NA} otherwise (see Source)}
 }}
 \source{
-- World Health Organization: \url{https://www.whocc.no/atc_ddd_index/} \cr - EUCAST - Expert rules intrinsic exceptional V3.1 \cr - MOLIS (LIS of Certe): \url{https://www.certe.nl} \cr - GLIMS (LIS of UMCG): \url{https://www.umcg.nl}
+World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://www.whocc.no/atc_ddd_index/}
+
+Table antibiotic coding EARSS (from WHONET 5.3): \url{http://www.madsonline.dk/Tutorials/landskoder_antibiotika_WM.pdf}
+
+EUCAST Expert Rules, Intrinsic Resistance and Exceptional Phenotypes Tables. Version 3.1, 2016: \url{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf}
+
+European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}
 }
 \usage{
 antibiotics
@@ -34,6 +39,21 @@ antibiotics
 \description{
 A data set containing all antibiotics with a J0 code and some other antimicrobial agents, with their DDDs. Except for trade names and abbreviations, all properties were downloaded from the WHO, see Source.
 }
+\section{WHOCC}{
+
+\if{html}{\figure{logo_who.png}{options: height=60px style=margin-bottom:5px} \cr}
+This package contains \strong{all ~500 antimicrobial drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}).
+
+These have become the gold standard for international drug utilisation monitoring and research.
+
+The WHOCC is located in Oslo at the Norwegian Institute of Public Health and funded by the Norwegian government. The European Commission is the executive of the European Union and promotes its general interest.
+}
+
+\section{Read more on our website!}{
+
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+}
+
 \seealso{
 \code{\link{microorganisms}}
 }

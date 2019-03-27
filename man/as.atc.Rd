@@ -3,13 +3,10 @@
 \name{as.atc}
 \alias{as.atc}
 \alias{atc}
-\alias{guess_atc}
 \alias{is.atc}
 \title{Transform to ATC code}
 \usage{
 as.atc(x)
-
-guess_atc(x)
 
 is.atc(x)
 }
@@ -28,6 +25,21 @@ Use the \code{\link{ab_property}} functions to get properties based on the retur
 In the ATC classification system, the active substances are classified in a hierarchy with five different levels.  The system has fourteen main anatomical/pharmacological groups or 1st levels. Each ATC main group is divided into 2nd levels which could be either pharmacological or therapeutic groups.  The 3rd and 4th levels are chemical, pharmacological or therapeutic subgroups and the 5th level is the chemical substance.  The 2nd, 3rd and 4th levels are often used to identify pharmacological subgroups when that is considered more appropriate than therapeutic or chemical subgroups.
   Source: \url{https://www.whocc.no/atc/structure_and_principles/}
 }
+\section{WHOCC}{
+
+\if{html}{\figure{logo_who.png}{options: height=60px style=margin-bottom:5px} \cr}
+This package contains \strong{all ~500 antimicrobial drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}).
+
+These have become the gold standard for international drug utilisation monitoring and research.
+
+The WHOCC is located in Oslo at the Norwegian Institute of Public Health and funded by the Norwegian government. The European Commission is the executive of the European Union and promotes its general interest.
+}
+
+\section{Read more on our website!}{
+
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+}
+
 \examples{
 # These examples all return "J01FA01", the ATC code of Erythromycin:
 as.atc("J01FA01")
@@ -42,8 +54,8 @@ as.atc("Pediamycin") # Trade name
 
 # Use ab_* functions to get a specific property based on an ATC code
 Cipro <- as.atc("cipro") # returns `J01MA02`
-ab_official(Cipro)       # returns "Ciprofloxacin"
-ab_umcg(Cipro)           # returns "CIPR", the code used in the UMCG
+atc_official(Cipro)      # returns "Ciprofloxacin"
+atc_umcg(Cipro)          # returns "CIPR", the code used in the UMCG
 }
 \seealso{
 \code{\link{antibiotics}} for the dataframe that is being used to determine ATCs.

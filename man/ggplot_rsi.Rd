@@ -8,12 +8,12 @@
 \alias{scale_rsi_colours}
 \alias{theme_rsi}
 \alias{labels_rsi_count}
-\title{AMR bar plots with \code{ggplot}}
+\title{AMR plots with \code{ggplot2}}
 \usage{
 ggplot_rsi(data, position = NULL, x = "Antibiotic",
   fill = "Interpretation", facet = NULL, breaks = seq(0, 1, 0.1),
-  translate_ab = "official", fun = count_df, nrow = NULL,
-  datalabels = TRUE, datalabels.size = 3,
+  limits = NULL, translate_ab = "official", fun = count_df,
+  nrow = NULL, datalabels = TRUE, datalabels.size = 3,
   datalabels.colour = "grey15", ...)
 
 geom_rsi(position = NULL, x = c("Antibiotic", "Interpretation"),
@@ -22,7 +22,7 @@ geom_rsi(position = NULL, x = c("Antibiotic", "Interpretation"),
 
 facet_rsi(facet = c("Interpretation", "Antibiotic"), nrow = NULL)
 
-scale_y_percent(breaks = seq(0, 1, 0.1))
+scale_y_percent(breaks = seq(0, 1, 0.1), limits = NULL)
 
 scale_rsi_colours()
 
@@ -43,6 +43,8 @@ labels_rsi_count(position = NULL, x = "Antibiotic",
 \item{facet}{variable to split plots by, either \code{"Interpretation"} (default) or \code{"Antibiotic"} or a grouping variable}
 
 \item{breaks}{numeric vector of positions}
+
+\item{limits}{numeric vector of length two providing limits of the scale, use \code{NA} to refer to the existing minimum or maximum}
 
 \item{translate_ab}{a column name of the \code{\link{antibiotics}} data set to translate the antibiotic abbreviations into, using \code{\link{abname}}. Default behaviour is to translate to official names according to the WHO. Use \code{translate_ab = FALSE} to disable translation.}
 
@@ -79,6 +81,11 @@ At default, the names of antibiotics will be shown on the plots using \code{\lin
 
 \code{ggplot_rsi} is a wrapper around all above functions that uses data as first input. This makes it possible to use this function after a pipe (\code{\%>\%}). See Examples.
 }
+\section{Read more on our website!}{
+
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+}
+
 \examples{
 library(dplyr)
 library(ggplot2)
@@ -114,6 +121,17 @@ septic_patients \%>\%
              size = 1,
              linetype = 2,
              alpha = 0.25)
+
+# resistance of ciprofloxacine per age group
+septic_patients \%>\%
+  mutate(first_isolate = first_isolate(.)) \%>\%
+  filter(first_isolate == TRUE,
+         mo == as.mo("E. coli")) \%>\%
+  # `age_group` is also a function of this package:
+  group_by(age_group = age_groups(age)) \%>\%
+  select(age_group,
+         cipr) \%>\%
+  ggplot_rsi(x = "age_group")
 \donttest{
 
 # for colourblind mode, use divergent colours from the viridis package:

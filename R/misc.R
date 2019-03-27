@@ -2,18 +2,21 @@
 # TITLE                                                                #
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
-# AUTHORS                                                              #
-# Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)           #
+# SOURCE                                                               #
+# https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# This program is free software; you can redistribute it and/or modify #
-# it under the terms of the GNU General Public License version 2.0,    #
-# as published by the Free Software Foundation.                        #
+# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
 #                                                                      #
-# This program is distributed in the hope that it will be useful,      #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        #
-# GNU General Public License for more details.                         #
+# This R package is free software; you can freely use and distribute   #
+# it for both personal and commercial purposes under the terms of the  #
+# GNU General Public License version 2.0 (GNU GPL-2), as published by  #
+# the Free Software Foundation.                                        #
+#                                                                      #
+# This R package was created for academic research and was publicly    #
+# released in the hope that it will be useful, but it comes WITHOUT    #
+# ANY WARRANTY OR LIABILITY.                                           #
+# Visit our website for more info: https://msberends.gitab.io/AMR.     #
 # ==================================================================== #
 
 # No export, no Rd
@@ -27,12 +30,24 @@ addin_insert_like <- function() {
 }
 
 # No export, no Rd
-percent <- function(x, round = 1, force_zero = FALSE, ...) {
-
+# works exactly like round(), but rounds `round(44.55, 1)` as 44.6 instead of 44.5 and adds decimal zeroes until `digits` is reached
+round2 <- function(x, digits = 0, force_zero = TRUE) {
   # https://stackoverflow.com/a/12688836/4575331
-  round2 <- function(x, n) (trunc((abs(x) * 10 ^ n) + 0.5) / 10 ^ n) * sign(x)
+  val <- (trunc((abs(x) * 10 ^ digits) + 0.5) / 10 ^ digits) * sign(x)
+  if (digits > 0 & force_zero == TRUE) {
+    val[val != as.integer(val)] <- paste0(val[val != as.integer(val)],
+                                          strrep("0", max(0, digits - nchar(gsub(".*[.](.*)$", "\\1", val[val != as.integer(val)])))))
+  }
+  val
+}
 
-  val <- round2(x, round + 2) # round up 0.5
+# No export, no Rd
+percent <- function(x, round = 1, force_zero = FALSE, decimal.mark = getOption("OutDec"), ...) {
+
+  decimal.mark.options <- getOption("OutDec")
+  options(OutDec = ".")
+
+  val <- round2(x, round + 2, force_zero = FALSE) # round up 0.5
   val <- round(x = val * 100, digits = round) # remove floating point error
 
   if (force_zero == TRUE) {
@@ -46,22 +61,28 @@ percent <- function(x, round = 1, force_zero = FALSE, ...) {
   }
   pct <- base::paste0(val, "%")
   pct[pct %in% c("NA%", "NaN%")] <- NA_character_
+  if (decimal.mark != ".") {
+    pct <- gsub(".", decimal.mark, pct, fixed = TRUE)
+  }
+  options(OutDec = decimal.mark.options)
   pct
 }
 
 check_available_columns <- function(tbl, col.list, info = TRUE) {
   # check columns
-  col.list <- col.list[!is.na(col.list)]
+  col.list <- col.list[!is.na(col.list) & !is.null(col.list)]
   names(col.list) <- col.list
   col.list.bak <- col.list
   # are they available as upper case or lower case then?
   for (i in 1:length(col.list)) {
-    if (toupper(col.list[i]) %in% colnames(tbl)) {
+    if (is.null(col.list[i]) | isTRUE(is.na(col.list[i]))) {
+      col.list[i] <- NULL
+    } else if (toupper(col.list[i]) %in% colnames(tbl)) {
       col.list[i] <- toupper(col.list[i])
     } else if (tolower(col.list[i]) %in% colnames(tbl)) {
       col.list[i] <- tolower(col.list[i])
     } else if (!col.list[i] %in% colnames(tbl)) {
-      col.list[i] <- NA
+      col.list[i] <- NULL
     }
   }
   if (!all(col.list %in% colnames(tbl))) {
@@ -103,4 +124,79 @@ size_humanreadable <- function(bytes, decimals = 1) {
 
   out <- paste(sprintf(paste0("%.", decimals, "f"), bytes / (1024 ^ factor)), size[factor + 1])
   out
+}
+
+#' @importFrom crayon blue bold red
+#' @importFrom dplyr %>% pull
+search_type_in_df <- function(tbl, type) {
+  # try to find columns based on type
+  found <- NULL
+
+  colnames(tbl) <- trimws(colnames(tbl))
+
+  # -- mo
+  if (type == "mo") {
+    if ("mo" %in% lapply(tbl, class)) {
+      found <- colnames(tbl)[lapply(tbl, class) == "mo"][1]
+    } else if (any(colnames(tbl) %like% "^(mo|microorganism|organism|bacteria)")) {
+      found <- colnames(tbl)[colnames(tbl) %like% "^(mo|microorganism|organism|bacteria)"][1]
+    } else if (any(colnames(tbl) %like% "species")) {
+      found <- colnames(tbl)[colnames(tbl) %like% "species"][1]
+    }
+
+  }
+  # -- key antibiotics
+  if (type == "keyantibiotics") {
+    if (any(colnames(tbl) %like% "^key.*(ab|antibiotics)")) {
+      found <- colnames(tbl)[colnames(tbl) %like% "^key.*(ab|antibiotics)"][1]
+    }
+  }
+  # -- date
+  if (type == "date") {
+    if (any(colnames(tbl) %like% "^(specimen date|specimen_date|spec_date)")) {
+      # WHONET support
+      found <- colnames(tbl)[colnames(tbl) %like% "^(specimen date|specimen_date|spec_date)"][1]
+      if (!any(class(tbl %>% pull(found)) %in% c("Date", "POSIXct"))) {
+        stop(red(paste0("ERROR: Found column `", bold(found), "` to be used as input for `col_", type,
+                        "`, but this column contains no valid dates. Transform its values to valid dates first.")),
+             call. = FALSE)
+      }
+    } else {
+      for (i in 1:ncol(tbl)) {
+        if (any(class(tbl %>% pull(i)) %in% c("Date", "POSIXct"))) {
+          found <- colnames(tbl)[i]
+          break
+        }
+      }
+    }
+  }
+  # -- patient id
+  if (type == "patient_id") {
+    if (any(colnames(tbl) %like% "^(identification |patient|patid)")) {
+      found <- colnames(tbl)[colnames(tbl) %like% "^(identification |patient|patid)"][1]
+    }
+  }
+  # -- specimen
+  if (type == "specimen") {
+    if (any(colnames(tbl) %like% "(specimen type|spec_type)")) {
+      found <- colnames(tbl)[colnames(tbl) %like% "(specimen type|spec_type)"][1]
+    } else if (any(colnames(tbl) %like% "^(specimen)")) {
+      found <- colnames(tbl)[colnames(tbl) %like% "^(specimen)"][1]
+    }
+  }
+
+  if (!is.null(found)) {
+    msg <- paste0("NOTE: Using column `", bold(found), "` as input for `col_", type, "`.")
+    if (type %in% c("keyantibiotics", "specimen")) {
+      msg <- paste(msg, "Use", bold(paste0("col_", type), " = FALSE"), "to prevent this.")
+    }
+    message(blue(msg))
+  }
+  found
+}
+
+stopifnot_installed_package <- function(package) {
+  if (!package %in% base::rownames(utils::installed.packages())) {
+    stop("this function requires the ", package, " package.", call. = FALSE)
+  }
 }

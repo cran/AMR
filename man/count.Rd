@@ -58,6 +58,11 @@ These functions are meant to count isolates. Use the \code{\link{portion}_*} fun
 
 \code{count_df} takes any variable from \code{data} that has an \code{"rsi"} class (created with \code{\link{as.rsi}}) and counts the amounts of R, I and S. The resulting \emph{tidy data} (see Source) \code{data.frame} will have three rows (S/I/R) and a column for each variable with class \code{"rsi"}.
 }
+\section{Read more on our website!}{
+
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+}
+
 \examples{
 # septic_patients is a data set available in the AMR package. It is true, genuine data.
 ?septic_patients
@@ -66,7 +71,7 @@ These functions are meant to count isolates. Use the \code{\link{portion}_*} fun
 count_R(septic_patients$amox)
 count_IR(septic_patients$amox)
 
-# Or susceptibile isolates
+# Or susceptible isolates
 count_S(septic_patients$amox)
 count_SI(septic_patients$amox)
 
@@ -88,7 +93,7 @@ septic_patients \%>\%
             S  = count_S(cipr),
             n1 = count_all(cipr), # the actual total; sum of all three
             n2 = n_rsi(cipr),     # same - analogous to n_distinct
-            total = n())          # NOT the amount of tested isolates!
+            total = n())          # NOT the number of tested isolates!
 
 # Count co-resistance between amoxicillin/clav acid and gentamicin,
 # so we can see that combination therapy does a lot more than mono therapy.

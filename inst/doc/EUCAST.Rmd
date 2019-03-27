@@ -1,0 +1,42 @@
+---
+title: "How to apply EUCAST rules"
+author: "Matthijs S. Berends"
+date: '`r format(Sys.Date(), "%d %B %Y")`'
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{How to apply EUCAST rules}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE, results = 'markup'}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7.5,
+  fig.height = 4.5
+)
+```
+
+## Introduction
+
+What are EUCAST rules? The European Committee on Antimicrobial Susceptibility Testing (EUCAST) states [on their website](http://www.eucast.org/expert_rules_and_intrinsic_resistance/):
+
+> *EUCAST expert rules are a tabulated collection of expert knowledge on intrinsic resistances, exceptional resistance phenotypes and interpretive rules that may be applied to antimicrobial susceptibility testing in order to reduce errors and make appropriate recommendations for reporting particular resistances.*
+
+In Europe, a lot of medical microbiological laboratories already apply these rules ([Brown *et al.*, 2015](https://www.eurosurveillance.org/content/10.2807/1560-7917.ES2015.20.2.21008)). Our package features their latest insights on intrinsic resistance and exceptional phenotypes (version 9.0, 2019). Moreover, the `eucast_rules()` function we use for this purpose can also apply additional rules, like forcing <help title="ATC: J01CA01">ampicillin</help> = R in isolates when <help title="ATC: J01CR02">amoxicillin/clavulanic acid</help> = R.
+
+*(more will be available soon)*
+
+### Benefit for empiric therapy success estimation
+
+*(will be available soon)*
+
+## Examples
+
+*(will be available soon)*
