@@ -10,7 +10,17 @@ library(dplyr)
 library(AMR)
 
 ## ---- echo = TRUE--------------------------------------------------------
-septic_patients %>% freq(gender)
+# Any of these will work:
+# freq(septic_patients$gender)
+# freq(septic_patients[, "gender"])
+
+# Using tidyverse:
+# septic_patients$gender %>% freq()
+# septic_patients[, "gender"] %>% freq()
+# septic_patients %>% freq("gender")
+
+# Probably the fastest and easiest:
+septic_patients %>% freq(gender)  
 
 ## ---- echo = TRUE, results = 'hide'--------------------------------------
 my_patients <- septic_patients %>% left_join_microorganisms()
@@ -42,7 +52,7 @@ septic_patients %>%
 
 ## ---- echo = TRUE--------------------------------------------------------
 septic_patients %>%
-  freq(amox, header = TRUE)
+  freq(AMX, header = TRUE)
 
 ## ---- echo = TRUE--------------------------------------------------------
 septic_patients %>%
@@ -57,13 +67,13 @@ dim(my_df)
 
 ## ---- echo = TRUE--------------------------------------------------------
 septic_patients %>%
-  freq(amox, na.rm = FALSE)
+  freq(AMX, na.rm = FALSE)
 
 ## ---- echo = TRUE--------------------------------------------------------
 septic_patients %>%
   freq(hospital_id, row.names = FALSE)
 
-## ---- echo = TRUE--------------------------------------------------------
+## ---- echo = TRUE, results = 'markup'------------------------------------
 septic_patients %>%
-  freq(hospital_id, markdown = TRUE)
+  freq(hospital_id, markdown = FALSE)
 

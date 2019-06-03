@@ -16,7 +16,7 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 context("rsi.R")
@@ -47,10 +47,60 @@ test_that("rsi works", {
   library(dplyr)
   # 40 rsi columns
   expect_equal(septic_patients %>%
-                 mutate_at(vars(peni:rifa), as.character) %>%
+                 mutate_at(vars(PEN:RIF), as.character) %>%
                  lapply(is.rsi.eligible) %>%
                  as.logical() %>%
                  sum(),
                40)
 
+})
+
+test_that("mic2rsi works", {
+  expect_equal(as.character(
+    as.rsi(x = as.mic(0.125),
+                      mo = "B_STRPT_PNE",
+                      ab = "AMX",
+                      guideline = "EUCAST")),
+    "S")
+  expect_equal(as.character(
+    as.rsi(x = as.mic(4),
+           mo = "B_STRPT_PNE",
+           ab = "AMX",
+           guideline = "EUCAST")),
+    "R")
+
+  expect_true(septic_patients %>%
+                mutate(amox_mic = as.mic(2)) %>%
+                select(mo, amox_mic) %>%
+                as.rsi() %>%
+                pull(amox_mic) %>%
+                is.rsi())
+})
+
+test_that("disk2rsi works", {
+  expect_equal(as.character(
+    as.rsi(x = as.disk(22),
+           mo = "B_STRPT_PNE",
+           ab = "ERY",
+           guideline = "CLSI")),
+    "S")
+  expect_equal(as.character(
+    as.rsi(x = as.disk(18),
+           mo = "B_STRPT_PNE",
+           ab = "ERY",
+           guideline = "CLSI")),
+    "I")
+  expect_equal(as.character(
+    as.rsi(x = as.disk(10),
+           mo = "B_STRPT_PNE",
+           ab = "ERY",
+           guideline = "CLSI")),
+    "R")
+
+  expect_true(septic_patients %>%
+                mutate(amox_disk = as.disk(15)) %>%
+                select(mo, amox_disk) %>%
+                as.rsi(guideline = "CLSI") %>%
+                pull(amox_disk) %>%
+                is.rsi())
 })

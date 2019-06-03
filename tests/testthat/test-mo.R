@@ -16,7 +16,7 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 context("mo.R")
@@ -200,6 +200,9 @@ test_that("as.mo works", {
   expect_equal(suppressWarnings(as.character(as.mo("esco extra_text", allow_uncertain = FALSE))), "UNKNOWN")
   expect_equal(suppressWarnings(as.character(as.mo("esco extra_text", allow_uncertain = TRUE))), "B_ESCHR_COL")
   expect_warning(as.mo("esco extra_text", allow_uncertain = TRUE))
+  expect_equal(suppressWarnings(as.character(as.mo("unexisting aureus", allow_uncertain = 3))), "B_STPHY_AUR")
+  expect_equal(suppressWarnings(as.character(as.mo("unexisting staphy", allow_uncertain = 3))), "B_STPHY")
+  expect_equal(suppressWarnings(as.character(as.mo("Staphylococcus aureus unexisting", allow_uncertain = 3))), "B_STPHY_AUR")
 
   # predefined reference_df
   expect_equal(as.character(as.mo("TestingOwnID",
@@ -243,5 +246,27 @@ test_that("as.mo works", {
 
   # summary
   expect_equal(length(summary(septic_patients$mo)), 6)
+
+  # WHONET codes and NA/NaN
+  expect_equal(as.character(as.mo(c("xxx", "na", "nan"), debug = TRUE)),
+               rep(NA_character_, 3))
+  expect_equal(as.character(as.mo("con")), "UNKNOWN")
+  expect_equal(as.character(as.mo("xxx")), NA_character_)
+  expect_equal(as.character(as.mo(c("xxx", "con"))), c(NA_character_, "UNKNOWN"))
+    expect_equal(as.character(as.mo(c("other", "none", "unknown"))),
+               rep("UNKNOWN", 3))
+
+  expect_null(mo_failures())
+  expect_true(septic_patients %>% pull(mo) %>% is.mo())
+
+  expect_equal(get_mo_code("test", "mo"), "test")
+  expect_equal(length(get_mo_code("Escherichia", "genus")),
+               nrow(AMR::microorganisms[base::which(AMR::microorganisms[, "genus"] %in% "Escherichia"),]))
+
+  expect_error(translate_allow_uncertain(5))
+
+  # very old MO codes (<= v0.5.0)
+  expect_equal(as.character(as.mo("F_CCCCS_NEO")), "F_CRYPT_NEO")
+  expect_equal(as.character(as.mo("F_CANDD_GLB")), "F_CANDD_GLA")
 
 })

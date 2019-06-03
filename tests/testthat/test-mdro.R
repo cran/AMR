@@ -16,7 +16,7 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 context("mdro.R")
@@ -24,33 +24,84 @@ context("mdro.R")
 test_that("mdro works", {
   library(dplyr)
 
-  expect_error(suppressWarnings(mdro(septic_patients, "invalid", col_mo = "mo", info = TRUE)))
-  expect_error(suppressWarnings(mdro(septic_patients, "fr", info = TRUE)))
-  expect_error(suppressWarnings(mdro(septic_patients, country = c("de", "nl"), info = TRUE)))
-  expect_error(suppressWarnings(mdro(septic_patients, col_mo = "invalid", info = TRUE)))
+  expect_error(mdro(septic_patients, country = "invalid", col_mo = "mo", info = TRUE))
+  expect_error(mdro(septic_patients, country = "fr", info = TRUE))
+  expect_error(mdro(septic_patients, country = c("de", "nl"), info = TRUE))
+  expect_error(mdro(septic_patients, col_mo = "invalid", info = TRUE))
 
-  outcome <- suppressWarnings(mdro(septic_patients))
-  outcome <- suppressWarnings(eucast_exceptional_phenotypes(septic_patients, info = TRUE))
+  outcome <- mdro(septic_patients)
+  outcome <- eucast_exceptional_phenotypes(septic_patients, info = TRUE)
   # check class
   expect_equal(outcome %>% class(), c('ordered', 'factor'))
 
-  outcome <- suppressWarnings(mdro(septic_patients, "nl", info = TRUE))
+  outcome <- mdro(septic_patients, "nl", info = TRUE)
   # check class
   expect_equal(outcome %>% class(), c('ordered', 'factor'))
 
   # septic_patients should have these finding using Dutch guidelines
   expect_equal(outcome %>% freq() %>% pull(count),
-               c(1989, 9, 2)) # 1989 neg, 9 pos, 2 unconfirmed
+               c(1969, 25, 6)) # 1969 neg, 25 unconfirmed, 6 pos
 
-  expect_equal(
-    suppressWarnings(
-      brmo(septic_patients, info = FALSE)),
-    suppressWarnings(
-      mdro(septic_patients, "nl", info = FALSE)
-    )
-  )
+  expect_equal(brmo(septic_patients, info = FALSE),
+               mdro(septic_patients, country = "nl", info = FALSE))
 
   # still working on German guidelines
   expect_error(suppressWarnings(mrgn(septic_patients, info = TRUE)))
+
+  # test Dutch P. aeruginosa MDRO
+  expect_equal(
+    as.character(mdro(data.frame(mo = as.mo("P. aeruginosa"),
+                                 cfta = "S",
+                                 cipr = "S",
+                                 mero = "S",
+                                 imip = "S",
+                                 gent = "S",
+                                 tobr = "S",
+                                 pita = "S"),
+                      country = "nl",
+                      col_mo = "mo",
+                      info = FALSE)),
+    "Negative")
+  expect_equal(
+    as.character(mdro(data.frame(mo = as.mo("P. aeruginosa"),
+                                 cefta = "R",
+                                 cipr = "R",
+                                 mero = "R",
+                                 imip = "R",
+                                 gent = "R",
+                                 tobr = "R",
+                                 pita = "R"),
+                      country = "nl",
+                      col_mo = "mo",
+                      info = FALSE)),
+    "Positive")
+
+  # MDR TB
+  expect_equal(
+    # select only rifampicine, mo will be determined automatically (as M. tuberculosis),
+    # number of mono-resistant strains should be equal to number of rifampicine-resistant strains
+    septic_patients %>% select(RIF) %>% mdr_tb() %>% freq() %>% pull(count) %>% .[2],
+    count_R(septic_patients$RIF))
+
+  sample_rsi <- function() {
+    sample(c("S", "I", "R"),
+           size = 5000,
+           prob = c(0.5, 0.1, 0.4),
+           replace = TRUE)
+  }
+  expect_gt(
+    #suppressWarnings(
+      data.frame(rifampicin = sample_rsi(),
+                 inh = sample_rsi(),
+                 gatifloxacin = sample_rsi(),
+                 eth = sample_rsi(),
+                 pza = sample_rsi(),
+                 MFX = sample_rsi(),
+                 KAN = sample_rsi()) %>%
+        mdr_tb() %>%
+        n_distinct()
+      #)
+      ,
+    2)
 
 })

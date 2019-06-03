@@ -9,22 +9,22 @@
 Methodology of this function is based on: \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 4th Edition}, 2014, \emph{Clinical and Laboratory Standards Institute (CLSI)}. \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
 }
 \usage{
-first_isolate(tbl, col_date = NULL, col_patient_id = NULL,
+first_isolate(x, col_date = NULL, col_patient_id = NULL,
   col_mo = NULL, col_testcode = NULL, col_specimen = NULL,
   col_icu = NULL, col_keyantibiotics = NULL, episode_days = 365,
   testcodes_exclude = NULL, icu_exclude = FALSE,
   specimen_group = NULL, type = "keyantibiotics", ignore_I = TRUE,
   points_threshold = 2, info = TRUE, ...)
 
-filter_first_isolate(tbl, col_date = NULL, col_patient_id = NULL,
+filter_first_isolate(x, col_date = NULL, col_patient_id = NULL,
   col_mo = NULL, ...)
 
-filter_first_weighted_isolate(tbl, col_date = NULL,
+filter_first_weighted_isolate(x, col_date = NULL,
   col_patient_id = NULL, col_mo = NULL, col_keyantibiotics = NULL,
   ...)
 }
 \arguments{
-\item{tbl}{a \code{data.frame} containing isolates.}
+\item{x}{a \code{data.frame} containing isolates.}
 
 \item{col_date}{column name of the result date (or date that is was received on the lab), defaults to the first column of with a date class}
 
@@ -68,18 +68,18 @@ Determine first (weighted) isolates of all microorganisms of every patient per e
 \strong{WHY THIS IS SO IMPORTANT} \cr
 To conduct an analysis of antimicrobial resistance, you should only include the first isolate of every patient per episode \href{https://www.ncbi.nlm.nih.gov/pubmed/17304462}{[1]}. If you would not do this, you could easily get an overestimate or underestimate of the resistance of an antibiotic. Imagine that a patient was admitted with an MRSA and that it was found in 5 different blood cultures the following week. The resistance percentage of oxacillin of all \emph{S. aureus} isolates would be overestimated, because you included this MRSA more than once. It would be \href{https://en.wikipedia.org/wiki/Selection_bias}{selection bias}.
 
-The function \code{filter_first_isolate} is essentially equal to:
+The functions \code{filter_first_isolate} and \code{filter_first_weighted_isolate} are helper functions to quickly filter on first isolates. The function \code{filter_first_isolate} is essentially equal to:
 \preformatted{
- tbl \%>\%
-   mutate(only_firsts = first_isolate(tbl, ...)) \%>\%
+ x \%>\%
+   mutate(only_firsts = first_isolate(x, ...)) \%>\%
    filter(only_firsts == TRUE) \%>\%
    select(-only_firsts)
 }
 The function \code{filter_first_weighted_isolate} is essentially equal to:
 \preformatted{
- tbl \%>\%
+ x \%>\%
    mutate(keyab = key_antibiotics(.)) \%>\%
-   mutate(only_weighted_firsts = first_isolate(tbl,
+   mutate(only_weighted_firsts = first_isolate(x,
                                                col_keyantibiotics = "keyab", ...)) \%>\%
    filter(only_weighted_firsts == TRUE) \%>\%
    select(-only_weighted_firsts)
@@ -90,15 +90,15 @@ The function \code{filter_first_weighted_isolate} is essentially equal to:
     There are two ways to determine whether isolates can be included as first \emph{weighted} isolates which will give generally the same results: \cr
 
     \strong{1. Using} \code{type = "keyantibiotics"} \strong{and parameter} \code{ignore_I} \cr
-    Any difference from S to R (or vice versa) will (re)select an isolate as a first weighted isolate. With \code{ignore_I = FALSE}, also differences from I to S|R (or vice versa) will lead to this. This is a reliable method and 30-35 times faster than method 2. \cr
+    Any difference from S to R (or vice versa) will (re)select an isolate as a first weighted isolate. With \code{ignore_I = FALSE}, also differences from I to S|R (or vice versa) will lead to this. This is a reliable method and 30-35 times faster than method 2. Read more about this in the \code{\link{key_antibiotics}} function. \cr
 
     \strong{2. Using} \code{type = "points"} \strong{and parameter} \code{points_threshold} \cr
-    A difference from I to S|R (or vice versa) means 0.5 points, a difference from S to R (or vice versa) means 1 point. When the sum of points exceeds \code{points_threshold}, an isolate will be (re)selected as a first weighted isolate.
+    A difference from I to S|R (or vice versa) means 0.5 points, a difference from S to R (or vice versa) means 1 point. When the sum of points exceeds \code{points_threshold}, which default to \code{2}, an isolate will be (re)selected as a first weighted isolate.
 }
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -124,19 +124,19 @@ septic_patients \%>\%
 # Now let's see if first isolates matter:
 A <- septic_patients \%>\%
   group_by(hospital_id) \%>\%
-  summarise(count = n_rsi(gent),            # gentamicin availability
-            resistance = portion_IR(gent))  # gentamicin resistance
+  summarise(count = n_rsi(GEN),            # gentamicin availability
+            resistance = portion_IR(GEN))  # gentamicin resistance
 
 B <- septic_patients \%>\%
-  filter_first_weighted_isolate() \%>\%       # the 1st isolate filter
+  filter_first_weighted_isolate() \%>\%      # the 1st isolate filter
   group_by(hospital_id) \%>\%
-  summarise(count = n_rsi(gent),            # gentamicin availability
-            resistance = portion_IR(gent))  # gentamicin resistance
+  summarise(count = n_rsi(GEN),            # gentamicin availability
+            resistance = portion_IR(GEN))  # gentamicin resistance
 
 # Have a look at A and B.
 # B is more reliable because every isolate is only counted once.
-# Gentamicin resitance in hospital D appears to be 5.4\% higher than
-# when you (erroneously) would have used all isolates!
+# Gentamicin resitance in hospital D appears to be 3.1\% higher than
+# when you (erroneously) would have used all isolates for analysis.
 
 
 ## OTHER EXAMPLES:
@@ -144,39 +144,39 @@ B <- septic_patients \%>\%
 \dontrun{
 
 # set key antibiotics to a new variable
-tbl$keyab <- key_antibiotics(tbl)
+x$keyab <- key_antibiotics(x)
 
-tbl$first_isolate <-
-  first_isolate(tbl)
+x$first_isolate <-
+  first_isolate(x)
 
-tbl$first_isolate_weighed <-
-  first_isolate(tbl,
+x$first_isolate_weighed <-
+  first_isolate(x,
                 col_keyantibiotics = 'keyab')
 
-tbl$first_blood_isolate <-
-  first_isolate(tbl,
+x$first_blood_isolate <-
+  first_isolate(x,
                 specimen_group = 'Blood')
 
-tbl$first_blood_isolate_weighed <-
-  first_isolate(tbl,
+x$first_blood_isolate_weighed <-
+  first_isolate(x,
                 specimen_group = 'Blood',
                 col_keyantibiotics = 'keyab')
 
-tbl$first_urine_isolate <-
-  first_isolate(tbl,
+x$first_urine_isolate <-
+  first_isolate(x,
                 specimen_group = 'Urine')
 
-tbl$first_urine_isolate_weighed <-
-  first_isolate(tbl,
+x$first_urine_isolate_weighed <-
+  first_isolate(x,
                 specimen_group = 'Urine',
                 col_keyantibiotics = 'keyab')
 
-tbl$first_resp_isolate <-
-  first_isolate(tbl,
+x$first_resp_isolate <-
+  first_isolate(x,
                 specimen_group = 'Respiratory')
 
-tbl$first_resp_isolate_weighed <-
-  first_isolate(tbl,
+x$first_resp_isolate_weighed <-
+  first_isolate(x,
                 specimen_group = 'Respiratory',
                 col_keyantibiotics = 'keyab')
 }

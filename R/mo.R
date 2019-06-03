@@ -16,7 +16,7 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Transform to microorganism ID
@@ -60,13 +60,13 @@
 #'
 #' The algorithm uses data from the Catalogue of Life (see below) and from one other source (see \code{?microorganisms}).
 #'
-#' \strong{Self-learning algoritm} \cr
-#' The \code{as.mo()} function gains experience from previously determined microbial IDs and learns from it. This drastically improves both speed and reliability. Use \code{clean_mo_history()} to reset the algorithms. Only experience from your current \code{AMR} package version is used. This is done because in the future the taxonomic tree (which is included in this package) may change for any organism and it consequently has to rebuild its knowledge.
-#'
-#' Usually, any guess after the first try runs 80-95\% faster than the first try.
-#'
-#' For now, learning only works per session. If R is closed or terminated, the algorithms reset. This will probably be resolved in a next version.
-#'
+# \strong{Self-learning algoritm} \cr
+# The \code{as.mo()} function gains experience from previously determined microbial IDs and learns from it. This drastically improves both speed and reliability. Use \code{clean_mo_history()} to reset the algorithms. Only experience from your current \code{AMR} package version is used. This is done because in the future the taxonomic tree (which is included in this package) may change for any organism and it consequently has to rebuild its knowledge.
+#
+# Usually, any guess after the first try runs 80-95\% faster than the first try.
+#
+# For now, learning only works per session. If R is closed or terminated, the algorithms reset. This will probably be resolved in a next version.
+#
 #' \strong{Intelligent rules} \cr
 #' This function uses intelligent rules to help getting fast and logical results. It tries to find matches in this order:
 #' \itemize{
@@ -111,26 +111,26 @@
 #' Use \code{mo_renamed()} to get a vector with all values that could be coerced based on an old, previously accepted taxonomic name.
 #'
 #' \strong{Microbial prevalence of pathogens in humans} \cr
-#' The intelligent rules takes into account microbial prevalence of pathogens in humans. It uses three groups and all (sub)species are in only one group. These groups are:
+#' The intelligent rules take into account microbial prevalence of pathogens in humans. It uses three groups and all (sub)species are in only one group. These groups are:
 #' \itemize{
 #'   \item{1 (most prevalent): class is Gammaproteobacteria \strong{or} genus is one of: \emph{Enterococcus}, \emph{Staphylococcus}, \emph{Streptococcus}.}
 #'   \item{2: phylum is one of: Proteobacteria, Firmicutes, Actinobacteria, Sarcomastigophora \strong{or} genus is one of: \emph{Aspergillus}, \emph{Bacteroides}, \emph{Candida}, \emph{Capnocytophaga}, \emph{Chryseobacterium}, \emph{Cryptococcus}, \emph{Elisabethkingia}, \emph{Flavobacterium}, \emph{Fusobacterium}, \emph{Giardia}, \emph{Leptotrichia}, \emph{Mycoplasma}, \emph{Prevotella}, \emph{Rhodotorula}, \emph{Treponema}, \emph{Trichophyton}, \emph{Ureaplasma}.}
 #'   \item{3 (least prevalent): all others.}
 #' }
 #'
-#' Group 1 contains all common Gram negatives, like all Enterobacteriaceae and e.g. \emph{Pseudomonas} and \emph{Legionella}.
+#' Group 1 contains all common Gram positives and Gram negatives, like all Enterobacteriaceae and e.g. \emph{Pseudomonas} and \emph{Legionella}.
 #'
-#' Group 2 probably contains all other microbial pathogens ever found in humans.
+#' Group 2 probably contains less microbial pathogens; all other members of phyla that were found in humans in the Northern Netherlands between 2001 and 2018.
 #' @inheritSection catalogue_of_life Catalogue of Life
-#  (source as a section, so it can be inherited by other man pages)
+#  (source as a section here, so it can be inherited by other man pages:)
 #' @section Source:
 #' [1] Becker K \emph{et al.} \strong{Coagulase-Negative Staphylococci}. 2014. Clin Microbiol Rev. 27(4): 870–926. \url{https://dx.doi.org/10.1128/CMR.00109-13}
 #'
-#' [2] Becker K \emph{et al.} \strong{Implications of identifying the recently defined members of the S. aureus complex, S. argenteus and S. schweitzeri: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).}. 2019. Clin Microbiol Infect. 2019 Mar 11. \url{https://doi.org/10.1016/j.cmi.2019.02.028}
+#' [2] Becker K \emph{et al.} \strong{Implications of identifying the recently defined members of the \emph{S. aureus} complex, \emph{S. argenteus} and \emph{S. schweitzeri}: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).} 2019. Clin Microbiol Infect. \url{https://doi.org/10.1016/j.cmi.2019.02.028}
 #'
 #' [3] Lancefield RC \strong{A serological differentiation of human and other groups of hemolytic streptococci}. 1933. J Exp Med. 57(4): 571–95. \url{https://dx.doi.org/10.1084/jem.57.4.571}
 #'
-#' [4] Catalogue of Life: Annual Checklist (public online taxonomic database), \url{www.catalogueoflife.org} (check included annual version with \code{\link{catalogue_of_life_version}()}).
+#' [4] Catalogue of Life: Annual Checklist (public online taxonomic database), \url{http://www.catalogueoflife.org} (check included annual version with \code{\link{catalogue_of_life_version}()}).
 #' @export
 #' @return Character (vector) with class \code{"mo"}
 #' @seealso \code{\link{microorganisms}} for the \code{data.frame} that is being used to determine ID's. \cr
@@ -191,12 +191,15 @@
 #' }
 as.mo <- function(x, Becker = FALSE, Lancefield = FALSE, allow_uncertain = TRUE, reference_df = get_mo_source(), ...) {
   if (!"AMR" %in% base::.packages()) {
-    library("AMR")
+    require("AMR")
     # check onLoad() in R/zzz.R: data tables are created there.
   }
 
+  # WHONET: xxx = no growth
+  x[tolower(as.character(paste0(x, ""))) %in% c("", "xxx", "na", "nan")] <- NA_character_
+
   uncertainty_level <- translate_allow_uncertain(allow_uncertain)
-  mo_hist <- get_mo_history(x, uncertainty_level, force = isTRUE(list(...)$force_mo_history))
+  # mo_hist <- get_mo_history(x, uncertainty_level, force = isTRUE(list(...)$force_mo_history))
 
   if (mo_source_isvalid(reference_df)
       & isFALSE(Becker)
@@ -229,12 +232,11 @@ as.mo <- function(x, Becker = FALSE, Lancefield = FALSE, allow_uncertain = TRUE,
              & isFALSE(Lancefield)) {
     y <- x
 
-
-  } else if (!any(is.na(mo_hist))
-             & isFALSE(Becker)
-             & isFALSE(Lancefield)) {
-    # check previously found results
-    y <- mo_hist
+  # } else if (!any(is.na(mo_hist))
+  #            & isFALSE(Becker)
+  #            & isFALSE(Lancefield)) {
+  #   # check previously found results
+  #   y <- mo_hist
 
   } else if (all(tolower(x) %in% microorganismsDT$fullname_lower)
              & isFALSE(Becker)
@@ -262,7 +264,8 @@ as.mo <- function(x, Becker = FALSE, Lancefield = FALSE, allow_uncertain = TRUE,
     y <- mo_validate(x = x, property = "mo",
                      Becker = Becker, Lancefield = Lancefield,
                      allow_uncertain = uncertainty_level, reference_df = reference_df,
-                     force_mo_history = isTRUE(list(...)$force_mo_history))
+                     force_mo_history = isTRUE(list(...)$force_mo_history),
+                     ...)
   }
 
 
@@ -293,9 +296,12 @@ exec_as.mo <- function(x,
                        debug = FALSE) {
 
   if (!"AMR" %in% base::.packages()) {
-    library("AMR")
+    require("AMR")
     # check onLoad() in R/zzz.R: data tables are created there.
   }
+
+  # WHONET: xxx = no growth
+  x[tolower(as.character(paste0(x, ""))) %in% c("", "xxx", "na", "nan")] <- NA_character_
 
   if (initial_search == TRUE) {
     options(mo_failures = NULL)
@@ -336,12 +342,11 @@ exec_as.mo <- function(x,
   # only check the uniques, which is way faster
   x <- unique(x)
   # remove empty values (to later fill them in again with NAs)
-  # ("xxx" is WHONET code for 'no growth' and "con" is WHONET code for 'contamination')
+  # ("xxx" is WHONET code for 'no growth')
   x <- x[!is.na(x)
          & !is.null(x)
          & !identical(x, "")
-         & !identical(x, "xxx")
-         & !identical(x, "con")]
+         & !identical(x, "xxx")]
 
   # conversion of old MO codes from v0.5.0 (ITIS) to later versions (Catalogue of Life)
   if (any(x %like% "^[BFP]_[A-Z]{3,7}") & !all(x %in% microorganisms$mo)) {
@@ -350,6 +355,18 @@ exec_as.mo <- function(x,
       rightpart <- gsub("^[BFP]_[A-Z]{3,7}(.*)", "\\1", x)
       leftpart <- mo_codes_v0.5.0[leftpart]
       x[!is.na(leftpart)] <- paste0(leftpart[!is.na(leftpart)], rightpart[!is.na(leftpart)])
+    }
+    # now check if some are still old
+    still_old <- x[x %in% names(mo_codes_v0.5.0)]
+    if (length(still_old) > 0) {
+      x[x %in% names(mo_codes_v0.5.0)] <- data.frame(old = still_old, stringsAsFactors = FALSE) %>%
+        left_join(data.frame(old = names(mo_codes_v0.5.0),
+                             new = mo_codes_v0.5.0,
+                             stringsAsFactors = FALSE), by = "old") %>%
+        # if they couldn't be found, replace them with the old ones again,
+        # so they will throw a warning in the end
+        mutate(new = ifelse(is.na(new), old, new)) %>%
+        pull(new)
     }
   }
 
@@ -440,10 +457,19 @@ exec_as.mo <- function(x,
 
   } else if (!all(x %in% AMR::microorganisms[, property])) {
 
+    strip_whitespace <- function(x) {
+      # all whitespaces (tab, new lines, etc.) should be one space
+      # and spaces before and after should be omitted
+      trimws(gsub("[\\s]+", " ", x, perl = TRUE), which = "both")
+    }
+
+    x <- strip_whitespace(x)
     x_backup <- x
 
     # remove spp and species
-    x <- trimws(gsub(" +(spp.?|ssp.?|sp.? |ss ?.?|subsp.?|subspecies|biovar |serovar |species)", " ", x_backup, ignore.case = TRUE), which = "both")
+    x <- gsub(" +(spp.?|ssp.?|sp.? |ss ?.?|subsp.?|subspecies|biovar |serovar |species)", " ", x_backup, ignore.case = TRUE)
+    x <- strip_whitespace(x)
+
     x_backup_without_spp <- x
     x_species <- paste(x, "species")
     # translate to English for supported languages of mo_property
@@ -471,8 +497,8 @@ exec_as.mo <- function(x,
     x <- gsub("e+", "e+", x, ignore.case = TRUE)
     x <- gsub("o+", "o+", x, ignore.case = TRUE)
 
-    # but spaces before and after should be omitted
-    x <- trimws(x, which = "both")
+    x <- strip_whitespace(x)
+
     x_trimmed <- x
     x_trimmed_species <- paste(x_trimmed, "species")
     x_trimmed_without_group <- gsub(" gro.u.p$", "", x_trimmed, ignore.case = TRUE)
@@ -535,7 +561,8 @@ exec_as.mo <- function(x,
         next
       }
 
-      if (any(tolower(x_backup_without_spp[i]) %in% c(NA, "", "xxx", "con", "na", "nan"))) {
+      # WHONET: xxx = no growth
+      if (tolower(as.character(paste0(x_backup_without_spp[i], ""))) %in% c("", "xxx", "na", "nan")) {
         x[i] <- NA_character_
         next
       }
@@ -549,24 +576,26 @@ exec_as.mo <- function(x,
         next
       }
 
-      if (nchar(gsub("[^a-zA-Z]", "", x_trimmed[i])) < 3) {
+      # check for very small input, but ignore the O antigens of E. coli
+      if (nchar(gsub("[^a-zA-Z]", "", x_trimmed[i])) < 3
+          & !x_backup_without_spp[i] %like% "O?(26|103|104|104|111|121|145|157)") {
         # check if search term was like "A. species", then return first genus found with ^A
-        if (x_backup[i] %like% "[a-z]+ species" | x_backup[i] %like% "[a-z] spp[.]?") {
-          # get mo code of first hit
-          found <- microorganismsDT[fullname %like% x_withspaces_start_only[i], mo]
-          if (length(found) > 0) {
-            mo_code <- found[1L] %>% strsplit("_") %>% unlist() %>% .[1:2] %>% paste(collapse = "_")
-            found <- microorganismsDT[mo == mo_code, ..property][[1]]
-            # return first genus that begins with x_trimmed, e.g. when "E. spp."
-            if (length(found) > 0) {
-              x[i] <- found[1L]
-              if (initial_search == TRUE) {
-                set_mo_history(x_backup[i], get_mo_code(x[i], property), 0, force = force_mo_history)
-              }
-              next
-            }
-          }
-        }
+        # if (x_backup[i] %like% "[a-z]+ species" | x_backup[i] %like% "[a-z] spp[.]?") {
+        #   # get mo code of first hit
+        #   found <- microorganismsDT[fullname %like% x_withspaces_start_only[i], mo]
+        #   if (length(found) > 0) {
+        #     mo_code <- found[1L] %>% strsplit("_") %>% unlist() %>% .[1:2] %>% paste(collapse = "_")
+        #     found <- microorganismsDT[mo == mo_code, ..property][[1]]
+        #     # return first genus that begins with x_trimmed, e.g. when "E. spp."
+        #     if (length(found) > 0) {
+        #       x[i] <- found[1L]
+        #       if (initial_search == TRUE) {
+        #         set_mo_history(x_backup[i], get_mo_code(x[i], property), 0, force = force_mo_history)
+        #       }
+        #       next
+        #     }
+        #   }
+        # }
         # fewer than 3 chars and not looked for species, add as failure
         x[i] <- microorganismsDT[mo == "UNKNOWN", ..property][[1]]
         if (initial_search == TRUE) {
@@ -610,7 +639,8 @@ exec_as.mo <- function(x,
           }
           next
         }
-        if (toupper(x_backup_without_spp[i]) %in% c("EHEC", "EPEC", "EIEC", "STEC", "ATEC")) {
+        if (toupper(x_backup_without_spp[i]) %in% c("EHEC", "EPEC", "EIEC", "STEC", "ATEC")
+            | x_backup_without_spp[i] %like% "O?(26|103|104|104|111|121|145|157)") {
           x[i] <- microorganismsDT[mo == 'B_ESCHR_COL', ..property][[1]][1L]
           if (initial_search == TRUE) {
             set_mo_history(x_backup[i], get_mo_code(x[i], property), 0, force = force_mo_history)
@@ -1044,7 +1074,7 @@ exec_as.mo <- function(x,
               }
             }
           }
-          # (6) try to strip off one element from start and check the remains (only allow 2-part name outcome) ----
+          # (6) try to strip off one element from start and check the remains (only allow >= 2-part name outcome) ----
           x_strip <- a.x_backup %>% strsplit(" ") %>% unlist()
           if (length(x_strip) > 1 & nchar(g.x_backup_without_spp) >= 6) {
             for (i in 2:(length(x_strip))) {
@@ -1053,8 +1083,8 @@ exec_as.mo <- function(x,
               if (!empty_result(found)) {
                 found_result <- found
                 found <- microorganismsDT[mo == found_result[1L], ..property][[1]]
-                # uncertainty level 2 only if the fullname contains a space (otherwise it will be found with lvl 3)
-                if (microorganismsDT[mo == found_result[1L], fullname][[1]] %like% " ") {
+                # uncertainty level 2 only if searched part contains a space (otherwise it will be found with lvl 3)
+                if (x_strip_collapsed %like% " ") {
                   uncertainties <<- rbind(uncertainties,
                                           data.frame(uncertainty = 2,
                                                      input = a.x_backup,
@@ -1245,8 +1275,7 @@ exec_as.mo <- function(x,
   x_input_unique_nonempty <- unique(x_input[!is.na(x_input)
                                             & !is.null(x_input)
                                             & !identical(x_input, "")
-                                            & !identical(x_input, "xxx")
-                                            & !identical(x_input, "con")])
+                                            & !identical(x_input, "xxx")])
 
   # left join the found results to the original input values (x_input)
   df_found <- data.frame(input = as.character(x_input_unique_nonempty),

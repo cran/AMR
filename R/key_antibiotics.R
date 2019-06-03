@@ -16,14 +16,14 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Key antibiotics for first \emph{weighted} isolates
 #'
 #' These function can be used to determine first isolates (see \code{\link{first_isolate}}). Using key antibiotics to determine first isolates is more reliable than without key antibiotics. These selected isolates will then be called first \emph{weighted} isolates.
-#' @param tbl table with antibiotics coloms, like \code{amox} and \code{amcl}.
-#' @param x,y characters to compare
+#' @param x table with antibiotics coloms, like \code{AMX} or \code{amox}
+#' @param y,z characters to compare
 #' @inheritParams first_isolate
 #' @param universal_1,universal_2,universal_3,universal_4,universal_5,universal_6 column names of \strong{broad-spectrum} antibiotics, case-insensitive. At default, the columns containing these antibiotics will be guessed with \code{\link{guess_ab_col}}.
 #' @param GramPos_1,GramPos_2,GramPos_3,GramPos_4,GramPos_5,GramPos_6 column names of antibiotics for \strong{Gram positives}, case-insensitive. At default, the columns containing these antibiotics will be guessed with \code{\link{guess_ab_col}}.
@@ -76,33 +76,33 @@
 #'
 #' key_antibiotics_equal(strainA, strainB, ignore_I = FALSE)
 #' # FALSE, because I is not ignored and so the 4th value differs
-key_antibiotics <- function(tbl,
+key_antibiotics <- function(x,
                             col_mo = NULL,
-                            universal_1 = guess_ab_col(tbl, "amox"),
-                            universal_2 = guess_ab_col(tbl, "amcl"),
-                            universal_3 = guess_ab_col(tbl, "cfur"),
-                            universal_4 = guess_ab_col(tbl, "pita"),
-                            universal_5 = guess_ab_col(tbl, "cipr"),
-                            universal_6 = guess_ab_col(tbl, "trsu"),
-                            GramPos_1 = guess_ab_col(tbl, "vanc"),
-                            GramPos_2 = guess_ab_col(tbl, "teic"),
-                            GramPos_3 = guess_ab_col(tbl, "tetr"),
-                            GramPos_4 = guess_ab_col(tbl, "eryt"),
-                            GramPos_5 = guess_ab_col(tbl, "oxac"),
-                            GramPos_6 = guess_ab_col(tbl, "rifa"),
-                            GramNeg_1 = guess_ab_col(tbl, "gent"),
-                            GramNeg_2 = guess_ab_col(tbl, "tobr"),
-                            GramNeg_3 = guess_ab_col(tbl, "coli"),
-                            GramNeg_4 = guess_ab_col(tbl, "cfot"),
-                            GramNeg_5 = guess_ab_col(tbl, "cfta"),
-                            GramNeg_6 = guess_ab_col(tbl, "mero"),
+                            universal_1 = guess_ab_col(x, "AMX"),
+                            universal_2 = guess_ab_col(x, "AMC"),
+                            universal_3 = guess_ab_col(x, "CXM"),
+                            universal_4 = guess_ab_col(x, "TZP"),
+                            universal_5 = guess_ab_col(x, "CIP"),
+                            universal_6 = guess_ab_col(x, "SXT"),
+                            GramPos_1 = guess_ab_col(x, "VAN"),
+                            GramPos_2 = guess_ab_col(x, "TEC"),
+                            GramPos_3 = guess_ab_col(x, "TCY"),
+                            GramPos_4 = guess_ab_col(x, "ERY"),
+                            GramPos_5 = guess_ab_col(x, "OXA"),
+                            GramPos_6 = guess_ab_col(x, "RIF"),
+                            GramNeg_1 = guess_ab_col(x, "GEN"),
+                            GramNeg_2 = guess_ab_col(x, "TOB"),
+                            GramNeg_3 = guess_ab_col(x, "COL"),
+                            GramNeg_4 = guess_ab_col(x, "CTX"),
+                            GramNeg_5 = guess_ab_col(x, "CAZ"),
+                            GramNeg_6 = guess_ab_col(x, "MEM"),
                             warnings = TRUE,
                             ...) {
 
   # try to find columns based on type
   # -- mo
   if (is.null(col_mo)) {
-    col_mo <- search_type_in_df(tbl = tbl, type = "mo")
+    col_mo <- search_type_in_df(x = x, type = "mo")
   }
   if (is.null(col_mo)) {
     stop("`col_mo` must be set.", call. = FALSE)
@@ -112,7 +112,36 @@ key_antibiotics <- function(tbl,
   col.list <- c(universal_1, universal_2, universal_3, universal_4, universal_5, universal_6,
                 GramPos_1, GramPos_2, GramPos_3, GramPos_4, GramPos_5, GramPos_6,
                 GramNeg_1, GramNeg_2, GramNeg_3, GramNeg_4, GramNeg_5, GramNeg_6)
-  col.list <- check_available_columns(tbl = tbl, col.list = col.list, info = warnings)
+  check_available_columns <- function(x, col.list, info = TRUE) {
+    # check columns
+    col.list <- col.list[!is.na(col.list) & !is.null(col.list)]
+    names(col.list) <- col.list
+    col.list.bak <- col.list
+    # are they available as upper case or lower case then?
+    for (i in 1:length(col.list)) {
+      if (is.null(col.list[i]) | isTRUE(is.na(col.list[i]))) {
+        col.list[i] <- NA
+      } else if (toupper(col.list[i]) %in% colnames(x)) {
+        col.list[i] <- toupper(col.list[i])
+      } else if (tolower(col.list[i]) %in% colnames(x)) {
+        col.list[i] <- tolower(col.list[i])
+      } else if (!col.list[i] %in% colnames(x)) {
+        col.list[i] <- NA
+      }
+    }
+    if (!all(col.list %in% colnames(x))) {
+      if (info == TRUE) {
+        warning('Some columns do not exist and will be ignored: ',
+                col.list.bak[!(col.list %in% colnames(x))] %>% toString(),
+                '.\nTHIS MAY STRONGLY INFLUENCE THE OUTCOME.',
+                immediate. = TRUE,
+                call. = FALSE)
+      }
+    }
+    col.list
+  }
+
+  col.list <- check_available_columns(x = x, col.list = col.list, info = warnings)
   universal_1 <- col.list[universal_1]
   universal_2 <- col.list[universal_2]
   universal_3 <- col.list[universal_3]
@@ -139,37 +168,45 @@ key_antibiotics <- function(tbl,
                     GramPos_1, GramPos_2, GramPos_3,
                     GramPos_4, GramPos_5, GramPos_6)
   gram_positive <- gram_positive[!is.null(gram_positive)]
+  gram_positive <- gram_positive[!is.na(gram_positive)]
+  if (length(gram_positive) < 12) {
+    warning("only using ", length(gram_positive), " different antibiotics as key antibiotics for Gram positives. See ?key_antibiotics.", call. = FALSE)
+  }
 
   gram_negative = c(universal,
                     GramNeg_1, GramNeg_2, GramNeg_3,
                     GramNeg_4, GramNeg_5, GramNeg_6)
   gram_negative <- gram_negative[!is.null(gram_negative)]
+  gram_negative <- gram_negative[!is.na(gram_negative)]
+  if (length(gram_negative) < 12) {
+    warning("only using ", length(gram_negative), " different antibiotics as key antibiotics for Gram negatives. See ?key_antibiotics.", call. = FALSE)
+  }
 
   # join to microorganisms data set
-  tbl <- tbl %>%
+  x <- x %>%
     mutate_at(vars(col_mo), as.mo) %>%
     left_join_microorganisms(by = col_mo) %>%
     mutate(key_ab = NA_character_,
            gramstain = mo_gramstain(pull(., col_mo)))
 
   # Gram +
-  tbl <- tbl %>% mutate(key_ab =
-                          if_else(gramstain == "Gram positive",
-                                  apply(X = tbl[, gram_positive],
-                                        MARGIN = 1,
-                                        FUN = function(x) paste(x, collapse = "")),
-                                  key_ab))
+  x <- x %>% mutate(key_ab =
+                      if_else(gramstain == "Gram positive",
+                              apply(X = x[, gram_positive],
+                                    MARGIN = 1,
+                                    FUN = function(x) paste(x, collapse = "")),
+                              key_ab))
 
   # Gram -
-  tbl <- tbl %>% mutate(key_ab =
-                          if_else(gramstain == "Gram negative",
-                                  apply(X = tbl[, gram_negative],
-                                        MARGIN = 1,
-                                        FUN = function(x) paste(x, collapse = "")),
-                                  key_ab))
+  x <- x %>% mutate(key_ab =
+                      if_else(gramstain == "Gram negative",
+                              apply(X = x[, gram_negative],
+                                    MARGIN = 1,
+                                    FUN = function(x) paste(x, collapse = "")),
+                              key_ab))
 
   # format
-  key_abs <- tbl %>%
+  key_abs <- x %>%
     pull(key_ab) %>%
     gsub('(NA|NULL)', '.', .) %>%
     gsub('[^SIR]', '.', ., ignore.case = TRUE)
@@ -181,13 +218,15 @@ key_antibiotics <- function(tbl,
 #' @importFrom dplyr progress_estimated %>%
 #' @rdname key_antibiotics
 #' @export
-key_antibiotics_equal <- function(x,
-                                  y,
+key_antibiotics_equal <- function(y,
+                                  z,
                                   type = c("keyantibiotics", "points"),
                                   ignore_I = TRUE,
                                   points_threshold = 2,
                                   info = FALSE) {
-  # x is active row, y is lag
+  # y is active row, z is lag
+  x <- y
+  y <- z
 
   type <- type[1]
 

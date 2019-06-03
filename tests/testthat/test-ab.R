@@ -16,22 +16,47 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
-context("atc_property.R")
+context("ab.R")
 
-test_that("atc_property works", {
-  expect_equal(atc_certe("amox"), "amox")
-  expect_equal(atc_name("amox", language = "en"), "Amoxicillin")
-  expect_equal(atc_name("amox", language = "nl"), "Amoxicilline")
-  expect_equal(atc_official("amox", language = "en"), "Amoxicillin")
-  expect_equal(atc_trivial_nl("amox"), "Amoxicilline")
-  expect_equal(atc_umcg("amox"), "AMOX")
-  expect_equal(class(atc_tradenames("amox")), "character")
-  expect_equal(class(atc_tradenames(c("amox", "amox"))), "list")
+test_that("as.ab works", {
+  expect_equal(as.character(as.ab(c("J01FA01",
+                                    "J 01 FA 01",
+                                    "Erythromycin",
+                                    "eryt",
+                                    "   eryt 123",
+                                    "ERYT",
+                                    "ERY",
+                                    "erytromicine",
+                                    "Erythrocin",
+                                    "Romycin"))),
+               rep("ERY", 10))
 
-  expect_error(atc_property("amox", "invalid property"))
-  expect_error(atc_name("amox", language = "INVALID"))
-  expect_output(print(atc_name("amox", language = NULL)))
+  expect_identical(class(as.ab("amox")), "ab")
+  expect_identical(class(pull(antibiotics, ab)), "ab")
+  expect_true(is.ab(as.ab("amox")))
+  expect_output(print(as.ab("amox")))
+  expect_output(print(data.frame(a = as.ab("amox"))))
+
+  expect_warning(as.ab("Z00ZZ00")) # not yet available in data set
+  expect_warning(as.ab("UNKNOWN"))
+  expect_warning(as.ab(""))
+
+  expect_output(print(as.ab("amox")))
+
+  expect_identical(class(pull(antibiotics, ab)), "ab")
+
+  # first 5 chars of official name
+  expect_equal(as.character(as.atc(c("nitro", "cipro"))),
+               c("J01XE01", "J01MA02"))
+
+  # EARS-Net
+  expect_equal(as.character(as.atc("AMX")),
+               "J01CA04")
+
+  expect_equal(as.character(as.ab("Phloxapen")),
+               "FLC")
+
 })

@@ -1,7 +1,8 @@
 ## ----setup, include = FALSE, results = 'markup'--------------------------
 knitr::opts_chunk$set(
+  warning = FALSE,
   collapse = TRUE,
-  comment = "#>",
+  comment = "#",
   fig.width = 7.5,
   fig.height = 5
 )
@@ -10,8 +11,8 @@ knitr::opts_chunk$set(
 knitr::kable(dplyr::tibble(date = Sys.Date(),
                            patient_id = c("abcd", "abcd", "efgh"),
                            mo = "Escherichia coli", 
-                           amox = c("S", "S", "R"),
-                           cipr = c("S", "R", "S")), 
+                           AMX = c("S", "S", "R"),
+                           CIP = c("S", "R", "S")), 
              align = "c")
 
 ## ----lib packages, message = FALSE---------------------------------------
@@ -49,13 +50,13 @@ data <- data.frame(date = sample(dates, size = sample_size, replace = TRUE),
                                      prob = c(0.30, 0.35, 0.15, 0.20)),
                    bacteria = sample(bacteria, size = sample_size, replace = TRUE,
                                      prob = c(0.50, 0.25, 0.15, 0.10)),
-                   amox = sample(ab_interpretations, size = sample_size, replace = TRUE,
+                   AMX = sample(ab_interpretations, size = sample_size, replace = TRUE,
                                  prob = c(0.60, 0.05, 0.35)),
-                   amcl = sample(ab_interpretations, size = sample_size, replace = TRUE,
+                   AMC = sample(ab_interpretations, size = sample_size, replace = TRUE,
                                  prob = c(0.75, 0.10, 0.15)),
-                   cipr = sample(ab_interpretations, size = sample_size, replace = TRUE,
+                   CIP = sample(ab_interpretations, size = sample_size, replace = TRUE,
                                  prob = c(0.80, 0.00, 0.20)),
-                   gent = sample(ab_interpretations, size = sample_size, replace = TRUE,
+                   GEN = sample(ab_interpretations, size = sample_size, replace = TRUE,
                                  prob = c(0.92, 0.00, 0.08))
                    )
 
@@ -80,7 +81,7 @@ data <- data %>%
 
 ## ----transform abx-------------------------------------------------------
 data <- data %>%
-  mutate_at(vars(amox:gent), as.rsi)
+  mutate_at(vars(AMX:GEN), as.rsi)
 
 ## ----eucast, warning = FALSE, message = FALSE----------------------------
 data <- eucast_rules(data, col_mo = "bacteria")
@@ -109,7 +110,7 @@ weighted_df <- data %>%
   # only most prevalent patient
   filter(patient_id == top_freq(freq(., patient_id), 1)[1]) %>% 
   arrange(date) %>%
-  select(date, patient_id, bacteria, amox:gent, first) %>% 
+  select(date, patient_id, bacteria, AMX:GEN, first) %>% 
   # maximum of 10 rows
   .[1:min(10, nrow(.)),] %>% 
   mutate(isolate = row_number()) %>% 
@@ -118,7 +119,7 @@ weighted_df <- data %>%
 weighted_df %>% 
   knitr::kable(align = "c")
 
-## ----1st weighted--------------------------------------------------------
+## ----1st weighted, warning = FALSE---------------------------------------
 data <- data %>% 
   mutate(keyab = key_antibiotics(.)) %>% 
   mutate(first_weighted = first_isolate(.))
@@ -129,7 +130,7 @@ weighted_df2 <- data %>%
   # only most prevalent patient
   filter(patient_id == top_freq(freq(., patient_id), 1)[1]) %>% 
   arrange(date) %>%
-  select(date, patient_id, bacteria, amox:gent, first, first_weighted) %>% 
+  select(date, patient_id, bacteria, AMX:GEN, first, first_weighted) %>% 
   # maximum of 10 rows
   .[1:min(10, nrow(.)),] %>% 
   mutate(isolate = row_number()) %>% 
@@ -163,53 +164,53 @@ data_1st %>%
   freq(genus, species, header = TRUE)
 
 ## ------------------------------------------------------------------------
-data_1st %>% portion_IR(amox)
+data_1st %>% portion_R(AMX)
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  data_1st %>%
 #    group_by(hospital) %>%
-#    summarise(amoxicillin = portion_IR(amox))
+#    summarise(amoxicillin = portion_R(AMX))
 
 ## ---- echo = FALSE-------------------------------------------------------
 data_1st %>% 
   group_by(hospital) %>% 
-  summarise(amoxicillin = portion_IR(amox)) %>% 
+  summarise(amoxicillin = portion_R(AMX)) %>% 
   knitr::kable(align = "c", big.mark = ",")
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  data_1st %>%
 #    group_by(hospital) %>%
-#    summarise(amoxicillin = portion_IR(amox),
-#              available = n_rsi(amox))
+#    summarise(amoxicillin = portion_R(AMX),
+#              available = n_rsi(AMX))
 
 ## ---- echo = FALSE-------------------------------------------------------
 data_1st %>% 
   group_by(hospital) %>% 
-  summarise(amoxicillin = portion_IR(amox),
-            available = n_rsi(amox)) %>% 
+  summarise(amoxicillin = portion_R(AMX),
+            available = n_rsi(AMX)) %>% 
   knitr::kable(align = "c", big.mark = ",")
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  data_1st %>%
 #    group_by(genus) %>%
-#    summarise(amoxiclav = portion_S(amcl),
-#              gentamicin = portion_S(gent),
-#              amoxiclav_genta = portion_S(amcl, gent))
+#    summarise(amoxiclav = portion_SI(AMC),
+#              gentamicin = portion_SI(GEN),
+#              amoxiclav_genta = portion_SI(AMC, GEN))
 
 ## ---- echo = FALSE-------------------------------------------------------
 data_1st %>% 
   group_by(genus) %>% 
-  summarise(amoxiclav = portion_S(amcl),
-            gentamicin = portion_S(gent),
-            amoxiclav_genta = portion_S(amcl, gent)) %>% 
+  summarise(amoxiclav = portion_SI(AMC),
+            gentamicin = portion_SI(GEN),
+            amoxiclav_genta = portion_SI(AMC, GEN)) %>% 
   knitr::kable(align = "c", big.mark = ",")
 
 ## ----plot 1--------------------------------------------------------------
 data_1st %>% 
   group_by(genus) %>% 
-  summarise("1. Amoxi/clav" = portion_S(amcl),
-            "2. Gentamicin" = portion_S(gent),
-            "3. Amoxi/clav + gent" = portion_S(amcl, gent)) %>% 
+  summarise("1. Amoxi/clav" = portion_SI(AMC),
+            "2. Gentamicin" = portion_SI(GEN),
+            "3. Amoxi/clav + genta" = portion_SI(AMC, GEN)) %>% 
   tidyr::gather("Antibiotic", "S", -genus) %>%
   ggplot(aes(x = genus,
              y = S,
@@ -247,7 +248,7 @@ ggplot(data_1st %>% group_by(genus)) +
   scale_rsi_colours() +
   # show percentages on y axis
   scale_y_percent(breaks = 0:4 * 25) +
-  # turn 90 degrees, make it bars instead of columns
+  # turn 90 degrees, to make it bars instead of columns
   coord_flip() +
   # add labels
   labs(title = "Resistance per genus and antibiotic", 
@@ -268,7 +269,7 @@ data_1st %>%
 ## ---- echo = FALSE, results = 'asis'-------------------------------------
 septic_patients %>%
   filter(hospital_id %in% c("A", "D")) %>%
-  select(hospital_id, fosf) %>%
+  select(hospital_id, FOS) %>%
   group_by(hospital_id) %>%
   count_df(combine_IR = TRUE) %>%
   tidyr::spread(hospital_id, Value) %>%
@@ -280,7 +281,7 @@ septic_patients %>%
 ## ------------------------------------------------------------------------
 septic_patients %>%
   filter(hospital_id %in% c("A", "D")) %>% # filter on only hospitals A and D
-  select(hospital_id, fosf) %>%            # select the hospitals and fosfomycin
+  select(hospital_id, FOS) %>%             # select the hospitals and fosfomycin
   group_by(hospital_id) %>%                # group on the hospitals
   count_df(combine_IR = TRUE) %>%          # count all isolates per group (hospital_id)
   tidyr::spread(hospital_id, Value) %>%    # transform output so A and D are columns

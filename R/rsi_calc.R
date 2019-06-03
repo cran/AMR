@@ -16,7 +16,7 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' @importFrom dplyr %>% pull all_vars any_vars filter_all funs mutate_all
@@ -71,6 +71,11 @@ rsi_calc <- function(...,
       # support for: with(septic_patients, portion_S(amcl, gent))
       x <- as.data.frame(rlang::list2(...))
     }
+  }
+
+  if (is.null(x)) {
+    warning("argument is NULL (check if columns exist): returning NA", call. = FALSE)
+    return(NA)
   }
 
   print_warning <- FALSE
@@ -144,4 +149,89 @@ rsi_calc <- function(...,
   } else {
     result
   }
+}
+
+rsi_calc_df <- function(type, # "portion" or "count"
+                        data,
+                        translate_ab = "name",
+                        language = get_locale(),
+                        minimum = 30,
+                        as_percent = FALSE,
+                        combine_SI = TRUE,
+                        combine_IR = FALSE,
+                        combine_SI_missing = FALSE) {
+
+  if (!"data.frame" %in% class(data)) {
+    stop(paste0("`", type, "_df` must be called on a data.frame"), call. = FALSE)
+  }
+
+  if (isTRUE(combine_IR) & isTRUE(combine_SI_missing)) {
+    combine_SI <- FALSE
+  }
+  if (isTRUE(combine_SI) & isTRUE(combine_IR)) {
+    stop("either `combine_SI` or `combine_IR` can be TRUE", call. = FALSE)
+  }
+
+  if (data %>% select_if(is.rsi) %>% ncol() == 0) {
+    stop("No columns with class 'rsi' found. See ?as.rsi.", call. = FALSE)
+  }
+
+  if (as.character(translate_ab) %in% c("TRUE", "official")) {
+    translate_ab <- "name"
+  }
+
+  get_summaryfunction <- function(int) {
+    # look for portion_S, count_S, etc:
+    int_fn <- get(paste0(type, "_", int), envir = asNamespace("AMR"))
+
+    if (type == "portion") {
+      summ <- summarise_if(.tbl = data,
+                           .predicate = is.rsi,
+                           .funs = int_fn,
+                           minimum = minimum,
+                           as_percent = as_percent)
+    } else if (type == "count") {
+      summ <- summarise_if(.tbl = data,
+                           .predicate = is.rsi,
+                           .funs = int_fn)
+    }
+    summ %>%
+      mutate(Interpretation = int) %>%
+      select(Interpretation, everything())
+  }
+
+  resS <- get_summaryfunction("S")
+  resI <- get_summaryfunction("I")
+  resR <- get_summaryfunction("R")
+  resSI <- get_summaryfunction("SI")
+  resIR <- get_summaryfunction("IR")
+  data.groups <- group_vars(data)
+
+  if (isFALSE(combine_SI) & isFALSE(combine_IR)) {
+    res <- bind_rows(resS, resI, resR) %>%
+      mutate(Interpretation = factor(Interpretation,
+                                     levels = c("S", "I", "R"),
+                                     ordered = TRUE))
+
+  } else if (isTRUE(combine_IR)) {
+    res <- bind_rows(resS, resIR) %>%
+      mutate(Interpretation = factor(Interpretation,
+                                     levels = c("S", "IR"),
+                                     ordered = TRUE))
+
+  } else if (isTRUE(combine_SI)) {
+    res <- bind_rows(resSI, resR) %>%
+      mutate(Interpretation = factor(Interpretation,
+                                     levels = c("SI", "R"),
+                                     ordered = TRUE))
+  }
+
+  res <- res %>%
+    tidyr::gather(Antibiotic, Value, -Interpretation, -data.groups)
+
+  if (!translate_ab == FALSE) {
+    res <- res %>% mutate(Antibiotic = ab_property(Antibiotic, property = translate_ab, language = language))
+  }
+
+  res
 }

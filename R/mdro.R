@@ -16,20 +16,32 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Determine multidrug-resistant organisms (MDRO)
 #'
 #' Determine which isolates are multidrug-resistant organisms (MDRO) according to country-specific guidelines.
-#' @param tbl table with antibiotic columns, like e.g. \code{amox} and \code{amcl}
-#' @param country country code to determine guidelines. EUCAST rules will be used when left empty, see Details. Should be or a code from the \href{https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements}{list of ISO 3166-1 alpha-2 country codes}. Case-insensitive. Currently supported are \code{de} (Germany) and \code{nl} (the Netherlands).
+#' @param x table with antibiotic columns, like e.g. \code{AMX} and \code{AMC}
+#' @param country country code to determine guidelines. Should be or a code from the \href{https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements}{list of ISO 3166-1 alpha-2 country codes}. Case-insensitive.
+#' @param guideline a specific guideline to mention. For some countries this will be determined automatically, see Details. EUCAST guidelines will be used when left empty, see Details.
 #' @param info print progress
 #' @inheritParams eucast_rules
-#' @param metr column name of an antibiotic, see Antibiotics
-#' @param ... parameters that are passed on to methods
+#' @param verbose print additional info: missing antibiotic columns per parameter
 #' @inheritSection eucast_rules Antibiotics
-#' @details When \code{country} will be left blank, guidelines will be taken from EUCAST Expert Rules Version 3.1 "Intrinsic Resistance and Exceptional Phenotypes Tables" (\url{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf}).
+#' @details When \code{country} is set, the parameter guideline will be ignored as these guidelines will be used:
+#'
+#' \itemize{
+#'   \item{\code{country = "nl"}: Rijksinstituut voor Volksgezondheid en Milieu "WIP-richtlijn BRMO (Bijzonder Resistente Micro-Organismen) [ZKH]" (\href{https://www.rivm.nl/Documenten_en_publicaties/Professioneel_Praktisch/Richtlijnen/Infectieziekten/WIP_Richtlijnen/WIP_Richtlijnen/Ziekenhuizen/WIP_richtlijn_BRMO_Bijzonder_Resistente_Micro_Organismen_ZKH}{link})}
+#' }
+#'
+#' Please suggest your own country's specific guidelines by letting us know: \url{https://gitlab.com/msberends/AMR/issues/new}.
+#'
+#' Other currently supported guidelines are:
+#' \itemize{
+#'   \item{\code{guideline = "eucast"}: EUCAST Expert Rules Version 3.1 "Intrinsic Resistance and Exceptional Phenotypes Tables" (\href{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf}{link})}
+#'   \item{\code{guideline = "tb"}: World Health Organization "Companion handbook to the WHO guidelines for the programmatic management of drug-resistant tuberculosis" (\href{https://www.who.int/tb/publications/pmdt_companionhandbook/en/}{link})}
+#' }
 #' @return Ordered factor with levels \code{Negative < Positive, unconfirmed < Positive}.
 #' @rdname mdro
 #' @importFrom dplyr %>%
@@ -42,439 +54,444 @@
 #' septic_patients %>%
 #'   mutate(EUCAST = mdro(.),
 #'          BRMO = brmo(.))
-mdro <- function(tbl,
+mdro <- function(x,
                  country = NULL,
+                 guideline = NULL,
                  col_mo = NULL,
                  info = TRUE,
-                 amcl = guess_ab_col(),
-                 amik = guess_ab_col(),
-                 amox = guess_ab_col(),
-                 ampi = guess_ab_col(),
-                 azit = guess_ab_col(),
-                 aztr = guess_ab_col(),
-                 cefa = guess_ab_col(),
-                 cfra = guess_ab_col(),
-                 cfep = guess_ab_col(),
-                 cfot = guess_ab_col(),
-                 cfox = guess_ab_col(),
-                 cfta = guess_ab_col(),
-                 cftr = guess_ab_col(),
-                 cfur = guess_ab_col(),
-                 chlo = guess_ab_col(),
-                 cipr = guess_ab_col(),
-                 clar = guess_ab_col(),
-                 clin = guess_ab_col(),
-                 clox = guess_ab_col(),
-                 coli = guess_ab_col(),
-                 czol = guess_ab_col(),
-                 dapt = guess_ab_col(),
-                 doxy = guess_ab_col(),
-                 erta = guess_ab_col(),
-                 eryt = guess_ab_col(),
-                 fosf = guess_ab_col(),
-                 fusi = guess_ab_col(),
-                 gent = guess_ab_col(),
-                 imip = guess_ab_col(),
-                 kana = guess_ab_col(),
-                 levo = guess_ab_col(),
-                 linc = guess_ab_col(),
-                 line = guess_ab_col(),
-                 mero = guess_ab_col(),
-                 metr = guess_ab_col(),
-                 mino = guess_ab_col(),
-                 moxi = guess_ab_col(),
-                 nali = guess_ab_col(),
-                 neom = guess_ab_col(),
-                 neti = guess_ab_col(),
-                 nitr = guess_ab_col(),
-                 novo = guess_ab_col(),
-                 norf = guess_ab_col(),
-                 oflo = guess_ab_col(),
-                 peni = guess_ab_col(),
-                 pipe = guess_ab_col(),
-                 pita = guess_ab_col(),
-                 poly = guess_ab_col(),
-                 qida = guess_ab_col(),
-                 rifa = guess_ab_col(),
-                 roxi = guess_ab_col(),
-                 siso = guess_ab_col(),
-                 teic = guess_ab_col(),
-                 tetr = guess_ab_col(),
-                 tica = guess_ab_col(),
-                 tige = guess_ab_col(),
-                 tobr = guess_ab_col(),
-                 trim = guess_ab_col(),
-                 trsu = guess_ab_col(),
-                 vanc = guess_ab_col()) {
+                 verbose = FALSE,
+                 ...) {
 
-  if (!is.data.frame(tbl)) {
-    stop("`tbl` must be a data frame.", call. = FALSE)
+  if (!is.data.frame(x)) {
+    stop("`x` must be a data frame.", call. = FALSE)
   }
+
+  if (length(guideline) > 1) {
+    stop("`guideline` must be a length one character string.", call. = FALSE)
+  }
+  if (length(country) > 1) {
+    stop("`country` must be a length one character string.", call. = FALSE)
+  }
+  if (!is.null(country)) {
+    guideline <- country
+  }
+  if (is.null(guideline)) {
+    guideline <- "eucast"
+  }
+  if (!tolower(guideline) %in% c("nl", "de", "eucast", "tb")) {
+    stop("invalid guideline: ", guideline, call. = FALSE)
+  }
+  guideline <- list(code = tolower(guideline))
 
   # try to find columns based on type
   # -- mo
   if (is.null(col_mo)) {
-    col_mo <- search_type_in_df(tbl = tbl, type = "mo")
+    col_mo <- search_type_in_df(x = x, type = "mo")
+  }
+  if (is.null(col_mo) & guideline$code == "tb") {
+    message(blue("NOTE: No column found as input for `col_mo`,",
+                 bold("assuming all records contain",
+                      italic("Mycobacterium tuberculosis.\n"))))
+    x$mo <- AMR::as.mo("Mycobacterium tuberculosis")
+    col_mo <- "mo"
   }
   if (is.null(col_mo)) {
     stop("`col_mo` must be set.", call. = FALSE)
   }
 
-  # strip whitespaces
   if (length(country) > 1) {
-    stop('`country` must be a length one character string.', call. = FALSE)
+    stop("`country` must be a length one character string.", call. = FALSE)
   }
 
-  if (is.null(country)) {
-    country <- 'EUCAST'
-  }
-  country <- trimws(country)
-  if (tolower(country) != 'eucast' & !country %like% '^[a-z]{2}$') {
-    stop('This is not a valid ISO 3166-1 alpha-2 country code: "', country, '". Please see ?mdro.', call. = FALSE)
-  }
+  if (guideline$code == "eucast") {
+    guideline$name <- "EUCAST Expert Rules, \"Intrinsic Resistance and Exceptional Phenotypes Tables\""
+    guideline$author <- "EUCAST (European Committee on Antimicrobial Susceptibility Testing)"
+    guideline$version <- "3.1"
+    guideline$source <- "http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf"
 
-  # create list and make country code case-independent
-  guideline <- list(country = list(code = tolower(country)))
+  } else if (guideline$code == "tb") {
+    guideline$name <- "Companion handbook to the WHO guidelines for the programmatic management of drug-resistant tuberculosis"
+    guideline$author <- "WHO (World Health Organization)"
+    guideline$version <- "WHO/HTM/TB/2014.11"
+    guideline$source <- "https://www.who.int/tb/publications/pmdt_companionhandbook/en/"
 
-  if (guideline$country$code == 'eucast') {
-    guideline$country$name <- '(European guidelines)'
-    guideline$name <- 'EUCAST Expert Rules, "Intrinsic Resistance and Exceptional Phenotypes Tables"'
-    guideline$version <- 'Version 3.1'
-    guideline$source <- 'http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf'
     # support per country:
-  } else if (guideline$country$code == 'de') {
-    guideline$country$name <- 'Germany'
-    guideline$name <- ''
-    guideline$version <- ''
-    guideline$source <- ''
-  } else if (guideline$country$code == 'nl') {
-    guideline$country$name <- 'The Netherlands'
-    guideline$name <- 'WIP-Richtlijn BRMO'
-    guideline$version <- 'Revision as of December 2017'
-    guideline$source <- 'https://www.rivm.nl/Documenten_en_publicaties/Professioneel_Praktisch/Richtlijnen/Infectieziekten/WIP_Richtlijnen/WIP_Richtlijnen/Ziekenhuizen/WIP_richtlijn_BRMO_Bijzonder_Resistente_Micro_Organismen_ZKH'
-    # add here more countries like this:
-    # } else if (country$code == 'xx') {
-    #   country$name <- 'country name'
+  } else if (guideline$code == "de") {
+    guideline$name <- "Germany"
+    guideline$name <- ""
+    guideline$version <- ""
+    guideline$source <- ""
+  } else if (guideline$code == "nl") {
+    guideline$name <- "WIP-Richtlijn Bijzonder Resistente Micro-organismen (BRMO)"
+    guideline$author <- "RIVM (Rijksinstituut voor de Volksgezondheid)"
+    guideline$version <- "Revision as of December 2017"
+    guideline$source <- "https://www.rivm.nl/Documenten_en_publicaties/Professioneel_Praktisch/Richtlijnen/Infectieziekten/WIP_Richtlijnen/WIP_Richtlijnen/Ziekenhuizen/WIP_richtlijn_BRMO_Bijzonder_Resistente_Micro_Organismen_ZKH"
+  # add here more countries like this:
+  # } else if (country$code == "xx") {
+  #   country$name <- "country name"
   } else {
-    stop('This country code is currently unsupported: ', guideline$country$code, call. = FALSE)
+    stop("This guideline is currently unsupported: ", guideline$code, call. = FALSE)
   }
 
   if (info == TRUE) {
     cat("Determining multidrug-resistant organisms (MDRO), according to:\n",
-        "Guideline: ", red(paste0(guideline$name, ", ", guideline$version, "\n")),
-        "Country  : ", red(paste0(guideline$country$name, "\n")),
-        "Source   : ", blue(paste0(guideline$source, "\n")),
+        "Guideline: ", red(guideline$name), "\n",
+        "Version:   ", red(guideline$version), "\n",
+        "Author:    ",    red(guideline$author), "\n",
+        "Source:    ", blue(guideline$source), "\n",
         "\n", sep = "")
   }
 
-  # check columns
-  if (identical(amcl, as.name("guess_ab_col"))) { amcl <- guess_ab_col(tbl, "amcl", verbose = info) }
-  if (identical(amik, as.name("guess_ab_col"))) { amik <- guess_ab_col(tbl, "amik", verbose = info) }
-  if (identical(amox, as.name("guess_ab_col"))) { amox <- guess_ab_col(tbl, "amox", verbose = info) }
-  if (identical(ampi, as.name("guess_ab_col"))) { ampi <- guess_ab_col(tbl, "ampi", verbose = info) }
-  if (identical(azit, as.name("guess_ab_col"))) { azit <- guess_ab_col(tbl, "azit", verbose = info) }
-  if (identical(aztr, as.name("guess_ab_col"))) { aztr <- guess_ab_col(tbl, "aztr", verbose = info) }
-  if (identical(cefa, as.name("guess_ab_col"))) { cefa <- guess_ab_col(tbl, "cefa", verbose = info) }
-  if (identical(cfra, as.name("guess_ab_col"))) { cfra <- guess_ab_col(tbl, "cfra", verbose = info) }
-  if (identical(cfep, as.name("guess_ab_col"))) { cfep <- guess_ab_col(tbl, "cfep", verbose = info) }
-  if (identical(cfot, as.name("guess_ab_col"))) { cfot <- guess_ab_col(tbl, "cfot", verbose = info) }
-  if (identical(cfox, as.name("guess_ab_col"))) { cfox <- guess_ab_col(tbl, "cfox", verbose = info) }
-  if (identical(cfta, as.name("guess_ab_col"))) { cfta <- guess_ab_col(tbl, "cfta", verbose = info) }
-  if (identical(cftr, as.name("guess_ab_col"))) { cftr <- guess_ab_col(tbl, "cftr", verbose = info) }
-  if (identical(cfur, as.name("guess_ab_col"))) { cfur <- guess_ab_col(tbl, "cfur", verbose = info) }
-  if (identical(chlo, as.name("guess_ab_col"))) { chlo <- guess_ab_col(tbl, "chlo", verbose = info) }
-  if (identical(cipr, as.name("guess_ab_col"))) { cipr <- guess_ab_col(tbl, "cipr", verbose = info) }
-  if (identical(clar, as.name("guess_ab_col"))) { clar <- guess_ab_col(tbl, "clar", verbose = info) }
-  if (identical(clin, as.name("guess_ab_col"))) { clin <- guess_ab_col(tbl, "clin", verbose = info) }
-  if (identical(clox, as.name("guess_ab_col"))) { clox <- guess_ab_col(tbl, "clox", verbose = info) }
-  if (identical(coli, as.name("guess_ab_col"))) { coli <- guess_ab_col(tbl, "coli", verbose = info) }
-  if (identical(czol, as.name("guess_ab_col"))) { czol <- guess_ab_col(tbl, "czol", verbose = info) }
-  if (identical(dapt, as.name("guess_ab_col"))) { dapt <- guess_ab_col(tbl, "dapt", verbose = info) }
-  if (identical(doxy, as.name("guess_ab_col"))) { doxy <- guess_ab_col(tbl, "doxy", verbose = info) }
-  if (identical(erta, as.name("guess_ab_col"))) { erta <- guess_ab_col(tbl, "erta", verbose = info) }
-  if (identical(eryt, as.name("guess_ab_col"))) { eryt <- guess_ab_col(tbl, "eryt", verbose = info) }
-  if (identical(fosf, as.name("guess_ab_col"))) { fosf <- guess_ab_col(tbl, "fosf", verbose = info) }
-  if (identical(fusi, as.name("guess_ab_col"))) { fusi <- guess_ab_col(tbl, "fusi", verbose = info) }
-  if (identical(gent, as.name("guess_ab_col"))) { gent <- guess_ab_col(tbl, "gent", verbose = info) }
-  if (identical(imip, as.name("guess_ab_col"))) { imip <- guess_ab_col(tbl, "imip", verbose = info) }
-  if (identical(kana, as.name("guess_ab_col"))) { kana <- guess_ab_col(tbl, "kana", verbose = info) }
-  if (identical(levo, as.name("guess_ab_col"))) { levo <- guess_ab_col(tbl, "levo", verbose = info) }
-  if (identical(linc, as.name("guess_ab_col"))) { linc <- guess_ab_col(tbl, "linc", verbose = info) }
-  if (identical(line, as.name("guess_ab_col"))) { line <- guess_ab_col(tbl, "line", verbose = info) }
-  if (identical(mero, as.name("guess_ab_col"))) { mero <- guess_ab_col(tbl, "mero", verbose = info) }
-  if (identical(metr, as.name("guess_ab_col"))) { metr <- guess_ab_col(tbl, "metr", verbose = info) }
-  if (identical(mino, as.name("guess_ab_col"))) { mino <- guess_ab_col(tbl, "mino", verbose = info) }
-  if (identical(moxi, as.name("guess_ab_col"))) { moxi <- guess_ab_col(tbl, "moxi", verbose = info) }
-  if (identical(nali, as.name("guess_ab_col"))) { nali <- guess_ab_col(tbl, "nali", verbose = info) }
-  if (identical(neom, as.name("guess_ab_col"))) { neom <- guess_ab_col(tbl, "neom", verbose = info) }
-  if (identical(neti, as.name("guess_ab_col"))) { neti <- guess_ab_col(tbl, "neti", verbose = info) }
-  if (identical(nitr, as.name("guess_ab_col"))) { nitr <- guess_ab_col(tbl, "nitr", verbose = info) }
-  if (identical(novo, as.name("guess_ab_col"))) { novo <- guess_ab_col(tbl, "novo", verbose = info) }
-  if (identical(norf, as.name("guess_ab_col"))) { norf <- guess_ab_col(tbl, "norf", verbose = info) }
-  if (identical(oflo, as.name("guess_ab_col"))) { oflo <- guess_ab_col(tbl, "oflo", verbose = info) }
-  if (identical(peni, as.name("guess_ab_col"))) { peni <- guess_ab_col(tbl, "peni", verbose = info) }
-  if (identical(pipe, as.name("guess_ab_col"))) { pipe <- guess_ab_col(tbl, "pipe", verbose = info) }
-  if (identical(pita, as.name("guess_ab_col"))) { pita <- guess_ab_col(tbl, "pita", verbose = info) }
-  if (identical(poly, as.name("guess_ab_col"))) { poly <- guess_ab_col(tbl, "poly", verbose = info) }
-  if (identical(qida, as.name("guess_ab_col"))) { qida <- guess_ab_col(tbl, "qida", verbose = info) }
-  if (identical(rifa, as.name("guess_ab_col"))) { rifa <- guess_ab_col(tbl, "rifa", verbose = info) }
-  if (identical(roxi, as.name("guess_ab_col"))) { roxi <- guess_ab_col(tbl, "roxi", verbose = info) }
-  if (identical(siso, as.name("guess_ab_col"))) { siso <- guess_ab_col(tbl, "siso", verbose = info) }
-  if (identical(teic, as.name("guess_ab_col"))) { teic <- guess_ab_col(tbl, "teic", verbose = info) }
-  if (identical(tetr, as.name("guess_ab_col"))) { tetr <- guess_ab_col(tbl, "tetr", verbose = info) }
-  if (identical(tica, as.name("guess_ab_col"))) { tica <- guess_ab_col(tbl, "tica", verbose = info) }
-  if (identical(tige, as.name("guess_ab_col"))) { tige <- guess_ab_col(tbl, "tige", verbose = info) }
-  if (identical(tobr, as.name("guess_ab_col"))) { tobr <- guess_ab_col(tbl, "tobr", verbose = info) }
-  if (identical(trim, as.name("guess_ab_col"))) { trim <- guess_ab_col(tbl, "trim", verbose = info) }
-  if (identical(trsu, as.name("guess_ab_col"))) { trsu <- guess_ab_col(tbl, "trsu", verbose = info) }
-  if (identical(vanc, as.name("guess_ab_col"))) { vanc <- guess_ab_col(tbl, "vanc", verbose = info) }
-  col.list <- c(amcl, amik, amox, ampi, azit, aztr, cefa, cfra, cfep, cfot,
-                cfox, cfta, cftr, cfur, chlo, cipr, clar, clin, clox, coli,
-                czol, dapt, doxy, erta, eryt, fosf, fusi, gent, imip, kana,
-                levo, linc, line, mero, metr, mino, moxi, nali, neom, neti,
-                nitr, novo, norf, oflo, peni, pipe, pita, poly, qida, rifa,
-                roxi, siso, teic, tetr, tica, tige, tobr, trim, trsu, vanc)
-  if (length(col.list) < 60) {
-    warning('Some columns do not exist -- THIS MAY STRONGLY INFLUENCE THE OUTCOME.',
-            immediate. = TRUE,
-            call. = FALSE)
+  if (guideline$code == "tb") {
+    cols_ab <- get_column_abx(x = x,
+                              soft_dependencies = c("CAP",
+                                                    "ETH",
+                                                    "GAT",
+                                                    "INH",
+                                                    "PZA",
+                                                    "RIF",
+                                                    "RIB",
+                                                    "RFP"),
+                              verbose = verbose, ...)
+  } else {
+    cols_ab <- get_column_abx(x = x, verbose = verbose, ...)
   }
-  col.list <- check_available_columns(tbl = tbl, col.list = col.list, info = info)
-  amcl <- col.list[amcl]
-  amik <- col.list[amik]
-  amox <- col.list[amox]
-  ampi <- col.list[ampi]
-  azit <- col.list[azit]
-  aztr <- col.list[aztr]
-  cefa <- col.list[cefa]
-  cfra <- col.list[cfra]
-  cfep <- col.list[cfep]
-  cfot <- col.list[cfot]
-  cfox <- col.list[cfox]
-  cfta <- col.list[cfta]
-  cftr <- col.list[cftr]
-  cfur <- col.list[cfur]
-  chlo <- col.list[chlo]
-  cipr <- col.list[cipr]
-  clar <- col.list[clar]
-  clin <- col.list[clin]
-  clox <- col.list[clox]
-  coli <- col.list[coli]
-  czol <- col.list[czol]
-  dapt <- col.list[dapt]
-  doxy <- col.list[doxy]
-  erta <- col.list[erta]
-  eryt <- col.list[eryt]
-  fosf <- col.list[fosf]
-  fusi <- col.list[fusi]
-  gent <- col.list[gent]
-  imip <- col.list[imip]
-  kana <- col.list[kana]
-  levo <- col.list[levo]
-  linc <- col.list[linc]
-  line <- col.list[line]
-  mero <- col.list[mero]
-  metr <- col.list[metr]
-  mino <- col.list[mino]
-  moxi <- col.list[moxi]
-  nali <- col.list[nali]
-  neom <- col.list[neom]
-  neti <- col.list[neti]
-  nitr <- col.list[nitr]
-  novo <- col.list[novo]
-  norf <- col.list[norf]
-  oflo <- col.list[oflo]
-  peni <- col.list[peni]
-  pipe <- col.list[pipe]
-  pita <- col.list[pita]
-  poly <- col.list[poly]
-  qida <- col.list[qida]
-  rifa <- col.list[rifa]
-  roxi <- col.list[roxi]
-  siso <- col.list[siso]
-  teic <- col.list[teic]
-  tetr <- col.list[tetr]
-  tica <- col.list[tica]
-  tige <- col.list[tige]
-  tobr <- col.list[tobr]
-  trim <- col.list[trim]
-  trsu <- col.list[trsu]
-  vanc <- col.list[vanc]
+
+  AMC <- cols_ab["AMC"]
+  AMK <- cols_ab["AMK"]
+  AMP <- cols_ab["AMP"]
+  AMX <- cols_ab["AMX"]
+  ATM <- cols_ab["ATM"]
+  AZL <- cols_ab["AZL"]
+  AZM <- cols_ab["AZM"]
+  CAZ <- cols_ab["CAZ"]
+  CED <- cols_ab["CED"]
+  CHL <- cols_ab["CHL"]
+  CIP <- cols_ab["CIP"]
+  CLI <- cols_ab["CLI"]
+  CLR <- cols_ab["CLR"]
+  COL <- cols_ab["COL"]
+  CRO <- cols_ab["CRO"]
+  CTX <- cols_ab["CTX"]
+  CXM <- cols_ab["CXM"]
+  CZO <- cols_ab["CZO"]
+  DAP <- cols_ab["DAP"]
+  DOX <- cols_ab["DOX"]
+  ERY <- cols_ab["ERY"]
+  ETP <- cols_ab["ETP"]
+  FEP <- cols_ab["FEP"]
+  FLC <- cols_ab["FLC"]
+  FOS <- cols_ab["FOS"]
+  FOX <- cols_ab["FOX"]
+  FUS <- cols_ab["FUS"]
+  GEN <- cols_ab["GEN"]
+  IPM <- cols_ab["IPM"]
+  KAN <- cols_ab["KAN"]
+  LIN <- cols_ab["LIN"]
+  LNZ <- cols_ab["LNZ"]
+  LVX <- cols_ab["LVX"]
+  MEM <- cols_ab["MEM"]
+  MEZ <- cols_ab["MEZ"]
+  MTR <- cols_ab["MTR"]
+  MFX <- cols_ab["MFX"]
+  MNO <- cols_ab["MNO"]
+  NAL <- cols_ab["NAL"]
+  NEO <- cols_ab["NEO"]
+  NET <- cols_ab["NET"]
+  NIT <- cols_ab["NIT"]
+  NOR <- cols_ab["NOR"]
+  NOV <- cols_ab["NOV"]
+  OFX <- cols_ab["OFX"]
+  PEN <- cols_ab["PEN"]
+  PIP <- cols_ab["PIP"]
+  PLB <- cols_ab["PLB"]
+  PRI <- cols_ab["PRI"]
+  QDA <- cols_ab["QDA"]
+  RID <- cols_ab["RID"]
+  RIF <- cols_ab["RIF"]
+  RXT <- cols_ab["RXT"]
+  SIS <- cols_ab["SIS"]
+  SXT <- cols_ab["SXT"]
+  TCY <- cols_ab["TCY"]
+  TEC <- cols_ab["TEC"]
+  TGC <- cols_ab["TGC"]
+  TIC <- cols_ab["TIC"]
+  TMP <- cols_ab["TMP"]
+  TOB <- cols_ab["TOB"]
+  TZP <- cols_ab["TZP"]
+  VAN <- cols_ab["VAN"]
+  # additional for TB
+  CAP <- cols_ab["CAP"]
+  ETH <- cols_ab["ETH"]
+  GAT <- cols_ab["GAT"]
+  INH <- cols_ab["INH"]
+  PZA <- cols_ab["PZA"]
+  RIF <- cols_ab["RIF"]
+  RIB <- cols_ab["RIB"]
+  RFP <- cols_ab["RFP"]
+  abx_tb <- c(CAP, ETH, GAT, INH, PZA, RIF, RIB, RFP)
+  abx_tb <- abx_tb[!is.na(abx_tb)]
+  if (guideline$code == "tb" & length(abx_tb) == 0) {
+    stop("No antimycobacterials found in data set.", call. = FALSE)
+  }
+
+  ab_missing <- function(ab) {
+    isTRUE(ab %in% c(NULL, NA)) | length(ab) == 0
+  }
 
   # antibiotic classes
-  aminoglycosides <- c(tobr, gent) # can also be kana but that one is often intrinsic R
-  cephalosporins <- c(cfep, cfot, cfox, cfra, cfta, cftr, cfur, czol)
-  cephalosporins_3rd <- c(cfot, cftr, cfta)
-  carbapenems <- c(erta, imip, mero)
-  fluoroquinolones <- c(oflo, cipr, levo, moxi)
+  aminoglycosides <- c(TOB, GEN)
+  cephalosporins <- c(FEP, CTX, FOX, CED, CAZ, CRO, CXM, CZO)
+  cephalosporins_3rd <- c(CTX, CRO, CAZ)
+  carbapenems <- c(ETP, IPM, MEM)
+  fluoroquinolones <- c(OFX, CIP, LVX, MFX)
 
   # helper function for editing the table
   trans_tbl <- function(to, rows, cols, any_all) {
+    cols <- cols[!ab_missing(cols)]
     cols <- cols[!is.na(cols)]
     if (length(rows) > 0 & length(cols) > 0) {
       if (any_all == "any") {
-        col_filter <- which(tbl[, cols] == 'R')
+        row_filter <- which(x[, cols] == "R")
       } else if (any_all == "all") {
-        col_filter <- tbl %>%
+        row_filter <- x %>%
           mutate(index = 1:nrow(.)) %>%
           filter_at(vars(cols), all_vars(. == "R")) %>%
           pull((index))
       }
-      rows <- rows[rows %in% col_filter]
-      tbl[rows, 'MDRO'] <<- to
+      rows <- rows[rows %in% row_filter]
+      x[rows, "MDRO"] <<- to
     }
   }
 
-  tbl <- tbl %>%
+  x <- x %>%
     mutate_at(vars(col_mo), as.mo) %>%
     # join to microorganisms data set
     left_join_microorganisms(by = col_mo) %>%
     # add unconfirmed to where genus is available
     mutate(MDRO = ifelse(!is.na(genus), 1, NA_integer_))
 
-  if (guideline$country$code == 'eucast') {
+  if (guideline$code == "eucast") {
     # EUCAST ------------------------------------------------------------------
     # Table 5
     trans_tbl(3,
-              which(tbl$family == 'Enterobacteriaceae'
-                    | tbl$fullname %like% '^Pseudomonas aeruginosa'
-                    | tbl$genus == 'Acinetobacter'),
-              coli,
+              which(x$family == "Enterobacteriaceae"
+                    | x$fullname %like% "^Pseudomonas aeruginosa"
+                    | x$genus == "Acinetobacter"),
+              COL,
               "all")
     trans_tbl(3,
-              which(tbl$fullname %like% '^Salmonella Typhi'),
+              which(x$fullname %like% "^Salmonella Typhi"),
               c(carbapenems, fluoroquinolones),
               "any")
     trans_tbl(3,
-              which(tbl$fullname %like% '^Haemophilus influenzae'),
+              which(x$fullname %like% "^Haemophilus influenzae"),
               c(cephalosporins_3rd, carbapenems, fluoroquinolones),
               "any")
     trans_tbl(3,
-              which(tbl$fullname %like% '^Moraxella catarrhalis'),
+              which(x$fullname %like% "^Moraxella catarrhalis"),
               c(cephalosporins_3rd, fluoroquinolones),
               "any")
     trans_tbl(3,
-              which(tbl$fullname %like% '^Neisseria meningitidis'),
+              which(x$fullname %like% "^Neisseria meningitidis"),
               c(cephalosporins_3rd, fluoroquinolones),
               "any")
     trans_tbl(3,
-              which(tbl$fullname %like% '^Neisseria gonorrhoeae'),
-              azit,
+              which(x$fullname %like% "^Neisseria gonorrhoeae"),
+              AZM,
               "any")
     # Table 6
     trans_tbl(3,
-              which(tbl$fullname %like% '^Staphylococcus (aureus|epidermidis|coagulase negatief|hominis|haemolyticus|intermedius|pseudointermedius)'),
-              c(vanc, teic, dapt, line, qida, tige),
+              which(x$fullname %like% "^Staphylococcus (aureus|epidermidis|coagulase negatief|hominis|haemolyticus|intermedius|pseudointermedius)"),
+              c(VAN, TEC, DAP, LNZ, QDA, TGC),
               "any")
     trans_tbl(3,
-              which(tbl$genus == 'Corynebacterium'),
-              c(vanc, teic, dapt, line, qida, tige),
+              which(x$genus == "Corynebacterium"),
+              c(VAN, TEC, DAP, LNZ, QDA, TGC),
               "any")
     trans_tbl(3,
-              which(tbl$fullname %like% '^Streptococcus pneumoniae'),
-              c(carbapenems, vanc, teic, dapt, line, qida, tige, rifa),
+              which(x$fullname %like% "^Streptococcus pneumoniae"),
+              c(carbapenems, VAN, TEC, DAP, LNZ, QDA, TGC, RIF),
               "any")
     trans_tbl(3, # Sr. groups A/B/C/G
-              which(tbl$fullname %like% '^Streptococcus (pyogenes|agalactiae|equisimilis|equi|zooepidemicus|dysgalactiae|anginosus)'),
-              c(peni, cephalosporins, vanc, teic, dapt, line, qida, tige),
+              which(x$fullname %like% "^Streptococcus (pyogenes|agalactiae|equisimilis|equi|zooepidemicus|dysgalactiae|anginosus)"),
+              c(PEN, cephalosporins, VAN, TEC, DAP, LNZ, QDA, TGC),
               "any")
     trans_tbl(3,
-              which(tbl$genus == 'Enterococcus'),
-              c(dapt, line, tige, teic),
+              which(x$genus == "Enterococcus"),
+              c(DAP, LNZ, TGC, TEC),
               "any")
     trans_tbl(3,
-              which(tbl$fullname %like% '^Enterococcus faecalis'),
-              c(ampi, amox),
+              which(x$fullname %like% "^Enterococcus faecalis"),
+              c(AMP, AMX),
               "any")
     # Table 7
     trans_tbl(3,
-              which(tbl$genus == 'Bacteroides'),
-              metr,
+              which(x$genus == "Bacteroides"),
+               MTR,
               "any")
     trans_tbl(3,
-              which(tbl$fullname %like% '^Clostridium difficile'),
-              c(metr, vanc),
+              which(x$fullname %like% "^Clostridium difficile"),
+              c(MTR, VAN),
               "any")
   }
 
-  if (guideline$country$code == 'de') {
+  if (guideline$code == "de") {
     # Germany -----------------------------------------------------------------
     stop("We are still working on German guidelines in this beta version.", call. = FALSE)
   }
 
-  if (guideline$country$code == 'nl') {
+  if (guideline$code == "nl") {
     # Netherlands -------------------------------------------------------------
     aminoglycosides <- aminoglycosides[!is.na(aminoglycosides)]
     fluoroquinolones <- fluoroquinolones[!is.na(fluoroquinolones)]
     carbapenems <- carbapenems[!is.na(carbapenems)]
+    amino <- AMX %or% AMP
+    third <- CAZ %or% CTX
+    ESBLs <- c(amino, third)
+    ESBLs <- ESBLs[!is.na(ESBLs)]
+    if (length(ESBLs) != 2) {
+      ESBLs <- character(0)
+    }
 
     # Table 1
     trans_tbl(3,
-              which(tbl$family == 'Enterobacteriaceae'),
+              which(x$family == "Enterobacteriaceae"),
               c(aminoglycosides, fluoroquinolones),
               "all")
 
     trans_tbl(2,
-              which(tbl$family == 'Enterobacteriaceae'),
-              c(carbapenems),
+              which(x$family == "Enterobacteriaceae"),
+              carbapenems,
               "any")
+
+    trans_tbl(2,
+              which(x$family == "Enterobacteriaceae"),
+              ESBLs,
+              "all")
 
     # Table 2
     trans_tbl(2,
-              which(tbl$genus == 'Acinetobacter'),
+              which(x$genus == "Acinetobacter"),
               c(carbapenems),
               "any")
     trans_tbl(3,
-              which(tbl$genus == 'Acinetobacter'),
+              which(x$genus == "Acinetobacter"),
               c(aminoglycosides, fluoroquinolones),
               "all")
 
     trans_tbl(3,
-              which(tbl$fullname %like% '^Stenotrophomonas maltophilia'),
-              trsu,
+              which(x$fullname %like% "^Stenotrophomonas maltophilia"),
+              SXT,
               "all")
 
-    if (!is.na(mero) & !is.na(imip)
-        & !is.na(gent) & !is.na(tobr)
-        & !is.na(cipr)
-        & !is.na(cfta)
-        & !is.na(pita) ) {
-      tbl <- tbl %>% mutate(
-        psae = 0,
-        psae = ifelse(mero == "R" | imip == "R", psae + 1, psae),
-        psae = ifelse(gent == "R" & tobr == "R", psae + 1, psae),
-        psae = ifelse(cipr == "R", psae + 1, psae),
-        psae = ifelse(cfta == "R", psae + 1, psae),
-        psae = ifelse(pita == "R", psae + 1, psae),
-        psae = ifelse(is.na(psae), 0, psae)
-      )
+    if (!ab_missing(MEM) & !ab_missing(IPM)
+        & !ab_missing(GEN) & !ab_missing(TOB)
+        & !ab_missing(CIP)
+        & !ab_missing(CAZ)
+        & !ab_missing(TZP) ) {
+      x$psae <- 0
+      x[which(x[, MEM] == "R" | x[, IPM] == "R"), "psae"] <- 1 + x[which(x[, MEM] == "R" | x[, IPM] == "R"), "psae"]
+      x[which(x[, GEN] == "R" & x[, TOB] == "R"), "psae"] <- 1 + x[which(x[, GEN] == "R" & x[, TOB] == "R"), "psae"]
+      x[which(x[, CIP] == "R"), "psae"] <- 1 + x[which(x[, CIP] == "R"), "psae"]
+      x[which(x[, CAZ] == "R"), "psae"] <- 1 + x[which(x[, CAZ] == "R"), "psae"]
+      x[which(x[, TZP] == "R"), "psae"] <- 1 + x[which(x[, TZP] == "R"), "psae"]
     } else {
-      tbl$psae <- 0
+      x$psae <- 0
     }
-    tbl[which(
-      tbl$fullname %like% 'Pseudomonas aeruginosa'
-      & tbl$psae >= 3
-    ), 'MDRO'] <- 3
+    x[which(
+      x$fullname %like% "Pseudomonas aeruginosa"
+      & x$psae >= 3
+    ), "MDRO"] <- 3
 
     # Table 3
     trans_tbl(3,
-              which(tbl$fullname %like% 'Streptococcus pneumoniae'),
-              peni,
+              which(x$fullname %like% "Streptococcus pneumoniae"),
+              PEN,
               "all")
     trans_tbl(3,
-              which(tbl$fullname %like% 'Streptococcus pneumoniae'),
-              vanc,
+              which(x$fullname %like% "Streptococcus pneumoniae"),
+              VAN,
               "all")
     trans_tbl(3,
-              which(tbl$fullname %like% 'Enterococcus faecium'),
-              c(peni, vanc),
+              which(x$fullname %like% "Enterococcus faecium"),
+              c(PEN, VAN),
               "all")
   }
 
-  factor(x =  tbl$MDRO,
-         levels = 1:3,
-         labels = c('Negative', 'Positive, unconfirmed', 'Positive'),
-         ordered = TRUE)
+  prepare_drug <- function(ab) {
+    # returns vector values of drug
+    # if `ab` is a column name, looks up the values in `x`
+    if (length(ab) == 1 & is.character(ab)) {
+      if (ab %in% colnames(x)) {
+        ab <- as.data.frame(x)[, ab]
+      }
+    }
+    ab <- as.character(as.rsi(ab))
+    ab[is.na(ab)] <- ""
+    ab
+  }
+  drug_is_R <- function(ab) {
+    # returns logical vector
+    ab <- prepare_drug(ab)
+    if (length(ab) == 1) {
+      rep(ab, NROW(x)) == "R"
+    } else {
+      ab == "R"
+    }
+  }
+  drug_is_not_R <- function(ab) {
+    # returns logical vector
+    ab <- prepare_drug(ab)
+    if (length(ab) == 1) {
+      rep(ab, NROW(x)) != "R"
+    } else {
+      ab != "R"
+    }
+  }
+
+  if (guideline$code == "tb") {
+    # Tuberculosis ------------------------------------------------------------
+    x <- x %>%
+      mutate(mono_count = 0,
+             mono_count = ifelse(drug_is_R(INH), mono_count + 1, mono_count),
+             mono_count = ifelse(drug_is_R(RIF), mono_count + 1, mono_count),
+             mono_count = ifelse(drug_is_R(ETH), mono_count + 1, mono_count),
+             mono_count = ifelse(drug_is_R(PZA), mono_count + 1, mono_count),
+             mono_count = ifelse(drug_is_R(RIB), mono_count + 1, mono_count),
+             mono_count = ifelse(drug_is_R(RFP), mono_count + 1, mono_count),
+             # from here on logicals
+             mono = mono_count > 0,
+             poly = ifelse(mono_count > 1 & drug_is_not_R(RIF) & drug_is_not_R(INH),
+                           TRUE, FALSE),
+             mdr = ifelse(drug_is_R(RIF) & drug_is_R(INH),
+                          TRUE, FALSE),
+             xdr = ifelse(drug_is_R(LVX) | drug_is_R(MFX) | drug_is_R(GAT),
+                          TRUE, FALSE),
+             second = ifelse(drug_is_R(CAP) | drug_is_R(KAN) | drug_is_R(AMK),
+                             TRUE, FALSE),
+             xdr = ifelse(mdr & xdr & second, TRUE, FALSE)) %>%
+      mutate(mdr_tb = case_when(xdr ~ 5,
+                                mdr ~ 4,
+                                poly ~ 3,
+                                mono ~ 2,
+                                TRUE ~ 1),
+             # keep all real TB, make other species NA
+             mdr_tb = ifelse(x$fullname == "Mycobacterium tuberculosis", mdr_tb, NA_real_))
+  }
+
+  # return results
+  if (guideline$code == "tb") {
+    factor(x =  x$mdr_tb,
+           levels = 1:5,
+           labels = c("Negative", "Mono-resistance", "Poly-resistance", "Multidrug resistance", "Extensive drug resistance"),
+           ordered = TRUE)
+  } else {
+    factor(x =  x$MDRO,
+           levels = 1:3,
+           labels = c("Negative", "Positive, unconfirmed", "Positive"),
+           ordered = TRUE)
+  }
 }
 
 #' @rdname mdro
@@ -485,12 +502,18 @@ brmo <- function(..., country = "nl") {
 
 #' @rdname mdro
 #' @export
-mrgn <- function(tbl, country = "de", ...) {
-  mdro(tbl = tbl, country = "de", ...)
+mrgn <- function(x, country = "de", ...) {
+  mdro(x = x, country = "de", ...)
 }
 
 #' @rdname mdro
 #' @export
-eucast_exceptional_phenotypes <- function(tbl, country = "EUCAST", ...) {
-  mdro(tbl = tbl, country = "EUCAST", ...)
+mdr_tb <- function(x, guideline = "TB", ...) {
+  mdro(x = x, guideline = "TB", ...)
+}
+
+#' @rdname mdro
+#' @export
+eucast_exceptional_phenotypes <- function(x, guideline = "EUCAST", ...) {
+  mdro(x = x, guideline = "EUCAST", ...)
 }

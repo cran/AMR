@@ -30,8 +30,9 @@ portion_SI(..., minimum = 30, as_percent = FALSE,
 portion_S(..., minimum = 30, as_percent = FALSE,
   also_single_tested = FALSE)
 
-portion_df(data, translate_ab = getOption("get_antibiotic_names",
-  "official"), minimum = 30, as_percent = FALSE, combine_IR = FALSE)
+portion_df(data, translate_ab = "name", language = get_locale(),
+  minimum = 30, as_percent = FALSE, combine_SI = TRUE,
+  combine_IR = FALSE)
 }
 \arguments{
 \item{...}{one or more vectors (or columns) with antibiotic interpretations. They will be transformed internally with \code{\link{as.rsi}} if needed. Use multiple columns to calculate (the lack of) co-resistance: the probability where one of two drugs have a resistant or susceptible result. See Examples.}
@@ -44,9 +45,13 @@ portion_df(data, translate_ab = getOption("get_antibiotic_names",
 
 \item{data}{a \code{data.frame} containing columns with class \code{rsi} (see \code{\link{as.rsi}})}
 
-\item{translate_ab}{a column name of the \code{\link{antibiotics}} data set to translate the antibiotic abbreviations to, using \code{\link{abname}}. This can be set with \code{\link{getOption}("get_antibiotic_names")}.}
+\item{translate_ab}{a column name of the \code{\link{antibiotics}} data set to translate the antibiotic abbreviations to, using \code{\link{ab_property}}}
 
-\item{combine_IR}{a logical to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. IR (susceptible vs. non-susceptible)}
+\item{language}{language of the returned text, defaults to system language (see \code{\link{get_locale}}) and can also be set with \code{\link{getOption}("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+
+\item{combine_SI}{a logical to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant). This used to be the parameter \code{combine_IR}, but this now follows the redefinition by EUCAST about the interpretion of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. Default is \code{TRUE}.}
+
+\item{combine_IR}{a logical to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. I+R (susceptible vs. non-susceptible). This is outdated, see parameter \code{combine_SI}.}
 }
 \value{
 Double or, when \code{as_percent = TRUE}, a character.
@@ -62,8 +67,6 @@ These functions can be used to calculate the (co-)resistance of microbial isolat
 These functions are not meant to count isolates, but to calculate the portion of resistance/susceptibility. Use the \code{\link[AMR]{count}} functions to count isolates. \emph{Low counts can infuence the outcome - these \code{portion} functions may camouflage this, since they only return the portion albeit being dependent on the \code{minimum} parameter.}
 
 \code{portion_df} takes any variable from \code{data} that has an \code{"rsi"} class (created with \code{\link{as.rsi}}) and calculates the portions R, I and S. The resulting \emph{tidy data} (see Source) \code{data.frame} will have three rows (S/I/R) and a column for each variable with class \code{"rsi"}.
-
-The old \code{\link{rsi}} function is still available for backwards compatibility but is deprecated.
 \if{html}{
   \cr\cr
   To calculate the probability (\emph{p}) of susceptibility of one antibiotic, we use this formula:
@@ -79,9 +82,26 @@ The old \code{\link{rsi}} function is still available for backwards compatibilit
   And so on.
 }
 }
+\section{Interpretation of S, I and R}{
+
+In 2019, EUCAST has decided to change the definitions of susceptibility testing categories S, I and R as shown below. Results of several consultations on the new definitions are available on the EUCAST website under "Consultations".
+
+\itemize{
+  \item{\strong{S} - }{Susceptible, standard dosing regimen: A microorganism is categorised as "Susceptible, standard dosing regimen", when there is a high likelihood of therapeutic success using a standard dosing regimen of the agent.}
+  \item{\strong{I} - }{Susceptible, increased exposure: A microorganism is categorised as "Susceptible, Increased exposure" when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.}
+  \item{\strong{R} - }{Resistant: A microorganism is categorised as "Resistant" when there is a high likelihood of therapeutic failure even when there is increased exposure.}
+}
+
+Exposure is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
+
+Source: \url{http://www.eucast.org/newsiandr/}.
+
+\strong{This AMR package honours this new insight.}
+}
+
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -89,63 +109,63 @@ On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://
 ?septic_patients
 
 # Calculate resistance
-portion_R(septic_patients$amox)
-portion_IR(septic_patients$amox)
+portion_R(septic_patients$AMX)
+portion_IR(septic_patients$AMX)
 
 # Or susceptibility
-portion_S(septic_patients$amox)
-portion_SI(septic_patients$amox)
+portion_S(septic_patients$AMX)
+portion_SI(septic_patients$AMX)
 
 # Do the above with pipes:
 library(dplyr)
-septic_patients \%>\% portion_R(amox)
-septic_patients \%>\% portion_IR(amox)
-septic_patients \%>\% portion_S(amox)
-septic_patients \%>\% portion_SI(amox)
+septic_patients \%>\% portion_R(AMX)
+septic_patients \%>\% portion_IR(AMX)
+septic_patients \%>\% portion_S(AMX)
+septic_patients \%>\% portion_SI(AMX)
 
 septic_patients \%>\%
   group_by(hospital_id) \%>\%
-  summarise(p = portion_S(cipr),
-            n = n_rsi(cipr)) # n_rsi works like n_distinct in dplyr
+  summarise(p = portion_S(CIP),
+            n = n_rsi(CIP)) # n_rsi works like n_distinct in dplyr
 
 septic_patients \%>\%
   group_by(hospital_id) \%>\%
-  summarise(R = portion_R(cipr, as_percent = TRUE),
-            I = portion_I(cipr, as_percent = TRUE),
-            S = portion_S(cipr, as_percent = TRUE),
-            n1 = count_all(cipr), # the actual total; sum of all three
-            n2 = n_rsi(cipr),     # same - analogous to n_distinct
+  summarise(R = portion_R(CIP, as_percent = TRUE),
+            I = portion_I(CIP, as_percent = TRUE),
+            S = portion_S(CIP, as_percent = TRUE),
+            n1 = count_all(CIP),  # the actual total; sum of all three
+            n2 = n_rsi(CIP),      # same - analogous to n_distinct
             total = n())          # NOT the number of tested isolates!
 
 # Calculate co-resistance between amoxicillin/clav acid and gentamicin,
 # so we can see that combination therapy does a lot more than mono therapy:
-septic_patients \%>\% portion_S(amcl)       # S = 67.1\%
-septic_patients \%>\% count_all(amcl)       # n = 1576
+septic_patients \%>\% portion_S(AMC)       # S = 71.4\%
+septic_patients \%>\% count_all(AMC)       # n = 1879
 
-septic_patients \%>\% portion_S(gent)       # S = 74.0\%
-septic_patients \%>\% count_all(gent)       # n = 1855
+septic_patients \%>\% portion_S(GEN)       # S = 74.0\%
+septic_patients \%>\% count_all(GEN)       # n = 1855
 
-septic_patients \%>\% portion_S(amcl, gent) # S = 92.0\%
-septic_patients \%>\% count_all(amcl, gent) # n = 1517
+septic_patients \%>\% portion_S(AMC, GEN)  # S = 92.3\%
+septic_patients \%>\% count_all(AMC, GEN)  # n = 1798
 
 
 septic_patients \%>\%
   group_by(hospital_id) \%>\%
-  summarise(cipro_p = portion_S(cipr, as_percent = TRUE),
-            cipro_n = count_all(cipr),
-            genta_p = portion_S(gent, as_percent = TRUE),
-            genta_n = count_all(gent),
-            combination_p = portion_S(cipr, gent, as_percent = TRUE),
-            combination_n = count_all(cipr, gent))
+  summarise(cipro_p = portion_S(CIP, as_percent = TRUE),
+            cipro_n = count_all(CIP),
+            genta_p = portion_S(GEN, as_percent = TRUE),
+            genta_n = count_all(GEN),
+            combination_p = portion_S(CIP, GEN, as_percent = TRUE),
+            combination_n = count_all(CIP, GEN))
 
 # Get portions S/I/R immediately of all rsi columns
 septic_patients \%>\%
-  select(amox, cipr) \%>\%
+  select(AMX, CIP) \%>\%
   portion_df(translate = FALSE)
 
 # It also supports grouping variables
 septic_patients \%>\%
-  select(hospital_id, amox, cipr) \%>\%
+  select(hospital_id, AMX, CIP) \%>\%
   group_by(hospital_id) \%>\%
   portion_df(translate = FALSE)
 
@@ -156,8 +176,8 @@ septic_patients \%>\%
 my_table \%>\%
   filter(first_isolate == TRUE,
          genus == "Helicobacter") \%>\%
-  summarise(p = portion_S(amox, metr),  # amoxicillin with metronidazole
-            n = count_all(amox, metr))
+  summarise(p = portion_S(AMX, MTR),  # amoxicillin with metronidazole
+            n = count_all(AMX, MTR))
 }
 }
 \seealso{

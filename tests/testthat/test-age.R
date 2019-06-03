@@ -16,7 +16,7 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 context("age.R")
@@ -25,6 +25,12 @@ test_that("age works", {
   expect_equal(age(x = c("1980-01-01", "1985-01-01", "1990-01-01"),
                    reference = "2019-01-01"),
                c(39, 34, 29))
+
+  expect_equal(age(x = c("2019-01-01", "2019-04-01", "2019-07-01"),
+                   reference = "2019-09-01",
+                   exact = TRUE),
+               c(0.6656393, 0.4191781, 0.1698630),
+               tolerance = 0.001)
 
   expect_error(age(x = c("1980-01-01", "1985-01-01", "1990-01-01"),
                    reference = c("2019-01-01", "2019-01-01")))

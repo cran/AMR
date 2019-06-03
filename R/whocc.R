@@ -16,7 +16,7 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' WHOCC: WHO Collaborating Centre for Drug Statistics Methodology
@@ -24,7 +24,7 @@
 #' All antimicrobial drugs and their official names, ATC codes, ATC groups and defined daily dose (DDD) are included in this package, using the WHO Collaborating Centre for Drug Statistics Methodology.
 #' @section WHOCC:
 #' \if{html}{\figure{logo_who.png}{options: height=60px style=margin-bottom:5px} \cr}
-#' This package contains \strong{all ~500 antimicrobial drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}).
+#' This package contains \strong{all ~450 antimicrobial drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}).
 #'
 #' These have become the gold standard for international drug utilisation monitoring and research.
 #'
@@ -33,8 +33,8 @@
 #' @name WHOCC
 #' @rdname WHOCC
 #' @examples
-#' as.atc("meropenem")
-#' atc_name("J01DH02")
+#' as.ab("meropenem")
+#' ab_name("J01DH02")
 #'
-#' atc_tradenames("flucloxacillin")
+#' ab_tradenames("flucloxacillin")
 NULL

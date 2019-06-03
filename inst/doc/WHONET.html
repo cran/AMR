@@ -12,7 +12,7 @@
 
 <meta name="author" content="Matthijs S. Berends" />
 
-<meta name="date" content="2019-03-28" />
+<meta name="date" content="2019-06-03" />
 
 <title>How to work with WHONET data</title>
 
@@ -303,7 +303,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">How to work with WHONET data</h1>
 <h4 class="author">Matthijs S. Berends</h4>
-<h4 class="date">28 March 2019</h4>
+<h4 class="date">03 June 2019</h4>
 
 
 <div id="TOC">
@@ -320,7 +320,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <p>An example syntax could look like this:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">library</span>(readxl)</a>
 <a class="sourceLine" id="cb1-2" title="2">data &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="dt">path =</span> <span class="st">&quot;path/to/your/file.xlsx&quot;</span>)</a></code></pre></div>
-<p>This package comes with an <a href="./reference/WHONET.html">example data set <code>WHONET</code></a>. We will use it for this analysis.</p>
+<p>This package comes with an <a href="https://msberends.gitlab.io/AMR/reference/WHONET.html">example data set <code>WHONET</code></a>. We will use it for this analysis.</p>
 </div>
 <div id="preparation" class="section level1">
 <h1>Preparation</h1>
@@ -330,7 +330,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb2-3" title="3"><span class="kw">library</span>(AMR)     <span class="co"># this package</span></a></code></pre></div>
 <p>We will have to transform some variables to simplify and automate the analysis:</p>
 <ul>
-<li>Microorganisms should be transformed to our own microorganism IDs (called an <code>mo</code>) using <a href="./reference/ITIS.html">the ITIS reference data set</a>, which contains all ~20,000 microorganisms from the taxonomic kingdoms Bacteria, Fungi and Protozoa. We do the tranformation with <code>as.mo()</code>. This function also recognises almost all WHONET abbreviations of microorganisms.</li>
+<li>Microorganisms should be transformed to our own microorganism IDs (called an <code>mo</code>) using <a href="https://msberends.gitlab.io/AMR/reference/ITIS.html">the ITIS reference data set</a>, which contains all ~20,000 microorganisms from the taxonomic kingdoms Bacteria, Fungi and Protozoa. We do the tranformation with <code>as.mo()</code>. This function also recognises almost all WHONET abbreviations of microorganisms.</li>
 <li>Antimicrobial results or interpretations have to be clean and valid. In other words, they should only contain values <code>&quot;S&quot;</code>, <code>&quot;I&quot;</code> or <code>&quot;R&quot;</code>. That is exactly where the <code>as.rsi()</code> function is for.</li>
 </ul>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="co"># transform variables</span></a>
@@ -343,7 +343,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="co"># our newly created `mo` variable</span></a>
 <a class="sourceLine" id="cb4-2" title="2">data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">freq</span>(mo, <span class="dt">nmax =</span> <span class="dv">10</span>)</a></code></pre></div>
 <p><strong>Frequency table of <code>mo</code> from a <code>data.frame</code> (500 x 54)</strong></p>
-<p>Class: <code>mo</code> (<code>character</code>)<br />
+<p>Class: mo (character)<br />
 Length: 500 (of which NA: 0 = 0.00%)<br />
 Unique: 39</p>
 <p>Families: 10<br />
@@ -449,12 +449,13 @@ Species: 38</p>
 <a class="sourceLine" id="cb5-3" title="3"><span class="co"># amoxicillin/clavulanic acid (J01CR02) as an example</span></a>
 <a class="sourceLine" id="cb5-4" title="4">data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">freq</span>(AMC_ND2)</a></code></pre></div>
 <p><strong>Frequency table of <code>AMC_ND2</code> from a <code>data.frame</code> (500 x 54)</strong></p>
-<pre><code># Warning: These values could not be coerced to a valid atc: &quot;AMCND&quot;.</code></pre>
-<p>Class: <code>factor</code> &gt; <code>ordered</code> &gt; <code>rsi</code> (<code>numeric</code>)<br />
+<p>Class: factor &gt; ordered &gt; rsi (numeric)<br />
 Length: 500 (of which NA: 19 = 3.80%)<br />
-Levels: 3: <code>S</code> &lt; <code>I</code> &lt; <code>R</code><br />
+Levels: 3: S &lt; I &lt; R<br />
 Unique: 3</p>
-<p>%IR: 25.99%</p>
+<p>Drug: Amoxicillin/clavulanic acid (AMC, J01CR02)<br />
+Group: Beta-lactams/penicillins<br />
+%SI: 78.59%</p>
 <table>
 <thead>
 <tr class="header">

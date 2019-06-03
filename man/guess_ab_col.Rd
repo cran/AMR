@@ -4,21 +4,27 @@
 \alias{guess_ab_col}
 \title{Guess antibiotic column}
 \usage{
-guess_ab_col(tbl = NULL, col = NULL, verbose = FALSE)
+guess_ab_col(x = NULL, search_string = NULL, verbose = FALSE)
 }
 \arguments{
-\item{tbl}{a \code{data.frame}}
+\item{x}{a \code{data.frame}}
 
-\item{col}{a character to look for}
+\item{search_string}{a text to search \code{x} for}
 
 \item{verbose}{a logical to indicate whether additional info should be printed}
 }
+\value{
+A column name of \code{x}, or \code{NULL} when no result is found.
+}
 \description{
-This tries to find a column name in a data set based on information from the \code{\link{antibiotics}} data set. Also supports WHONET abbreviations. You can look for an antibiotic (trade) name or abbreviation and it will search the \code{data.frame} for any column containing a name or ATC code of that antibiotic.
+This tries to find a column name in a data set based on information from the \code{\link{antibiotics}} data set. Also supports WHONET abbreviations.
+}
+\details{
+You can look for an antibiotic (trade) name or abbreviation and it will search \code{x} and the \code{\link{antibiotics}} data set for any column containing a name or ATC code of that antibiotic. \strong{Longer columns names take precendence over shorter column names.}
 }
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -27,11 +33,11 @@ df <- data.frame(amox = "S",
 
 guess_ab_col(df, "amoxicillin")
 # [1] "amox"
-guess_ab_col(df, "J01AA07") # ATC code of Tetracycline
+guess_ab_col(df, "J01AA07") # ATC code of tetracycline
 # [1] "tetr"
 
 guess_ab_col(df, "J01AA07", verbose = TRUE)
-# using column `tetr` for col "J01AA07"
+# Note: Using column `tetr` as input for "J01AA07".
 # [1] "tetr"
 
 # WHONET codes
@@ -41,6 +47,12 @@ guess_ab_col(df, "ampicillin")
 # [1] "AMP_ND10"
 guess_ab_col(df, "J01CR02")
 # [1] "AMC_ED20"
-guess_ab_col(df, as.atc("augmentin"))
+guess_ab_col(df, as.ab("augmentin"))
 # [1] "AMC_ED20"
+
+# Longer names take precendence:
+df <- data.frame(AMP_ED2 = "S",
+                 AMP_ED20 = "S")
+guess_ab_col(df, "ampicillin")
+# [1] "AMP_ED20"
 }

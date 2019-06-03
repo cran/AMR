@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antidiskrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
 # https://gitlab.com/msberends/AMR                                     #
@@ -16,28 +16,20 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
-context("abname.R")
+context("disk.R")
 
-test_that("abname works", {
-  expect_equal(abname("AMOX"), "Amoxicillin")
-  expect_equal(abname(c("AMOX", "GENT")), c("Amoxicillin", "Gentamicin"))
-  expect_equal(abname(c("AMOX+GENT")), "Amoxicillin + gentamicin")
-  expect_equal(abname("AMOX", from = 'umcg'), "Amoxicillin")
-  expect_equal(abname("amox", from = 'certe', tolower = TRUE), "amoxicillin")
-  expect_equal(abname("J01CA04", from = 'atc'), "Amoxicillin")
-  expect_equal(abname(c("amox", "J01CA04", "Trimox", "dispermox", "Amoxil")),
-                      rep("Amoxicillin", 5))
-  expect_equal(abname("AMOX", to = 'atc'), "J01CA04")
+test_that("disk works", {
+  expect_true(as.disk(8) == as.disk("8"))
+  expect_true(is.disk(as.disk(8)))
 
-  expect_error(abname("AMOX", to = c(1:3)))
-  expect_error(abname("AMOX", to = "test"))
-  expect_warning(abname("NOTEXISTING
-       "))
-  expect_warning(abname("AMOX or GENT"))
+  expect_equal(suppressWarnings(as.logical(as.disk("INVALID VALUE"))), NA)
 
-  # this one is being found with as.atc internally
-  expect_equal(abname("flu_clox123"), "Flucloxacillin")
+  # all levels should be valid disks
+  expect_silent(as.disk(levels(as.disk(15))))
+
+  expect_warning(as.disk("INVALID VALUE"))
+
 })

@@ -16,14 +16,24 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 context("eucast_rules.R")
 
 test_that("EUCAST rules work", {
 
+  # thoroughly check input table
+  expect_equal(colnames(eucast_rules_file),
+               c("if_mo_property", "like_is_one_of", "this_value",
+                 "and_these_antibiotics", "have_these_values",
+                 "then_change_these_antibiotics", "to_value",
+                 "reference.rule", "reference.rule_group"))
+
   expect_error(suppressWarnings(eucast_rules(septic_patients, col_mo = "Non-existing")))
+  expect_error(eucast_rules(x = "text"))
+  expect_error(eucast_rules(data.frame(a = "test")))
+  expect_error(eucast_rules(data.frame(mo = "test"), rules = "invalid rules set"))
 
   expect_identical(colnames(septic_patients),
                    colnames(suppressWarnings(eucast_rules(septic_patients))))
@@ -40,15 +50,14 @@ test_that("EUCAST rules work", {
                   stringsAsFactors = FALSE)
   expect_identical(suppressWarnings(eucast_rules(a, "mo", info = FALSE)), b)
   expect_identical(suppressWarnings(eucast_rules(a, "mo", info = TRUE)), b)
-  expect_identical(suppressWarnings(interpretive_reading(a, "mo", info = TRUE)), b)
 
   a <- data.frame(mo = c("Staphylococcus aureus",
                          "Streptococcus group A"),
-                  coli = "-",       # Colistin
+                  COL = "-",       # Colistin
                   stringsAsFactors = FALSE)
   b <- data.frame(mo = c("Staphylococcus aureus",
                          "Streptococcus group A"),
-                  coli = "R",       # Colistin
+                  COL = "R",       # Colistin
                   stringsAsFactors = FALSE)
   expect_equal(suppressWarnings(eucast_rules(a, "mo", info = FALSE)), b)
 
@@ -56,30 +65,30 @@ test_that("EUCAST rules work", {
   library(dplyr)
   expect_equal(suppressWarnings(
     septic_patients %>%
-      mutate(tica = as.rsi("R"),
-             pipe = as.rsi("S")) %>%
+      mutate(TIC = as.rsi("R"),
+             PIP = as.rsi("S")) %>%
       eucast_rules(col_mo = "mo") %>%
       left_join_microorganisms() %>%
       filter(family == "Enterobacteriaceae") %>%
-      pull(pipe) %>%
+      pull(PIP) %>%
       unique() %>%
       as.character()),
     "R")
 
-  # azit and clar must be equal to eryt
+  # Azithromicin and Clarythromycin must be equal to Erythromycin
   a <- suppressWarnings(
     septic_patients %>%
       transmute(mo,
-                eryt,
-                azit = as.rsi("R"),
-                clar = as.rsi("R")) %>%
+                ERY,
+                AZM = as.rsi("R"),
+                CLR = as.rsi("R")) %>%
       eucast_rules(col_mo = "mo") %>%
-      pull(clar))
+      pull(CLR))
   b <-   suppressWarnings(
     septic_patients %>%
-      select(mo, eryt) %>%
+      select(mo, ERY) %>%
       eucast_rules(col_mo = "mo") %>%
-      pull(eryt))
+      pull(ERY))
 
   expect_identical(a[!is.na(b)],
                    b[!is.na(b)])
@@ -89,15 +98,15 @@ test_that("EUCAST rules work", {
     suppressWarnings(
       as.list(eucast_rules(
         data.frame(mo = as.mo("Kingella kingae"),
-                   peni = "S",
-                   amox = "-",
+                   PEN = "S",
+                   AMX = "-",
                    stringsAsFactors = FALSE)
-        , info = FALSE))$amox
+        , info = FALSE))$AMX
     ),
     "S")
 
   # also test norf
-  expect_output(suppressWarnings(eucast_rules(septic_patients %>% mutate(norf = "S", nali = "S"))))
+  expect_output(suppressWarnings(eucast_rules(septic_patients %>% mutate(NOR = "S", NAL = "S"))))
 
   # check verbose output
   expect_output(suppressWarnings(eucast_rules(septic_patients, verbose = TRUE)))

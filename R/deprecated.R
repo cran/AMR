@@ -16,7 +16,7 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Deprecated functions
@@ -49,85 +49,49 @@ ratio <- function(x, ratio) {
 
 #' @rdname AMR-deprecated
 #' @export
-guess_mo <- function(...) {
-  .Deprecated(new = "as.mo", package = "AMR")
-  as.mo(...)
+abname <- function(...) {
+  .Deprecated("ab_name", package = "AMR")
+  ab_name(...)
 }
 
 #' @rdname AMR-deprecated
 #' @export
-guess_atc <- function(...) {
-  .Deprecated(new = "as.atc", package = "AMR")
-  as.atc(...)
+atc_property <- function(...) {
+  .Deprecated("ab_property", package = "AMR")
+  ab_property(...)
 }
 
 #' @rdname AMR-deprecated
 #' @export
-ab_property <- function(...) {
-  .Deprecated(new = "atc_property", package = "AMR")
-  atc_property(...)
-}
-
-#' @rdname AMR-deprecated
-#' @export
-ab_atc <- function(...) {
-  .Deprecated(new = "as.atc", package = "AMR")
-  as.atc(...)
+atc_official <- function(...) {
+  .Deprecated("ab_name", package = "AMR")
+  ab_name(...)
 }
 
 #' @rdname AMR-deprecated
 #' @export
 ab_official <- function(...) {
-  .Deprecated(new = "atc_official", package = "AMR")
-  atc_official(...)
+  .Deprecated("ab_name", package = "AMR")
+  ab_name(...)
 }
 
 #' @rdname AMR-deprecated
 #' @export
-ab_name <- function(...) {
-  .Deprecated(new = "atc_name", package = "AMR")
-  atc_name(...)
+atc_name <- function(...) {
+  .Deprecated("ab_name", package = "AMR")
+  ab_name(...)
 }
 
 #' @rdname AMR-deprecated
 #' @export
-ab_trivial_nl <- function(...) {
-  .Deprecated(new = "atc_trivial_nl", package = "AMR")
-  atc_trivial_nl(...)
+atc_trivial_nl <- function(...) {
+  .Deprecated("ab_name", package = "AMR")
+  ab_name(..., language = "nl")
 }
 
 #' @rdname AMR-deprecated
 #' @export
-ab_certe <- function(...) {
-  .Deprecated(new = "atc_certe", package = "AMR")
-  atc_certe(...)
+atc_tradenames <- function(...) {
+  .Deprecated("ab_tradenames", package = "AMR")
+  ab_tradenames(...)
 }
-
-#' @rdname AMR-deprecated
-#' @export
-ab_umcg <- function(...) {
-  .Deprecated(new = "atc_umcg", package = "AMR")
-  atc_umcg(...)
-}
-
-#' @rdname AMR-deprecated
-#' @export
-ab_tradenames <- function(...) {
-  .Deprecated(new = "atc_tradenames", package = "AMR")
-  atc_tradenames(...)
-}
-
-#' @rdname AMR-deprecated
-#' @export
-atc_ddd <- function(...) {
-  .Deprecated(new = "atc_online_ddd", package = "AMR")
-  atc_online_ddd(...)
-}
-
-#' @rdname AMR-deprecated
-#' @export
-atc_groups <- function(...) {
-  .Deprecated(new = "atc_online_groups", package = "AMR")
-  atc_online_groups(...)
-}
-

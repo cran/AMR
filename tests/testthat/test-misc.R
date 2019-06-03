@@ -16,7 +16,7 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 context("misc.R")
@@ -41,4 +41,13 @@ test_that("functions missing in older R versions work", {
   expect_equal(trimws(" test "), "test")
   expect_equal(trimws(" test ", "l"), "test ")
   expect_equal(trimws(" test ", "r"), " test")
+})
+
+test_that("looking up ab columns works", {
+  expect_warning(generate_warning_abs_missing(c("AMP", "AMX")))
+  expect_warning(generate_warning_abs_missing(c("AMP", "AMX"), any = TRUE))
+  expect_warning(get_column_abx(septic_patients, hard_dependencies = "FUS"))
+  expect_message(get_column_abx(septic_patients, soft_dependencies = "FUS"))
+  expect_error(get_column_abx(dplyr::rename(septic_patients, thisone = AMX), amox = "thisone", tmp = "thisone", verbose = TRUE))
+  expect_error(get_column_abx(dplyr::rename(septic_patients, thisone = AMX), amox = "thisone", tmp = "thisone", verbose = FALSE))
 })

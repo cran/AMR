@@ -1,3 +1,65 @@
+# AMR 0.7.0
+
+#### New
+* Support for translation of disk diffusion and MIC values to RSI values (i.e. antimicrobial interpretations). Supported guidelines are EUCAST (2011 to 2019) and CLSI (2011 to 2019). Use `as.rsi()` on an MIC value (created with `as.mic()`), a disk diffusion value (created with the new `as.disk()`) or on a complete date set containing columns with MIC or disk diffusion values.
+* Function `mo_name()` as alias of `mo_fullname()`
+* Added guidelines of the WHO to determine multi-drug resistance (MDR) for TB (`mdr_tb()`) and added a new vignette about MDR. Read this tutorial [here on our website](https://msberends.gitlab.io/AMR/articles/MDR.html).
+
+#### Changed
+* Fixed a critical bug in `first_isolate()` where missing species would lead to incorrect FALSEs. This bug was not present in AMR v0.5.0, but was in v0.6.0 and v0.6.1.
+* Fixedd a bug in `eucast_rules()` where antibiotics from WHONET software would not be recognised
+* Completely reworked the `antibiotics` data set:
+  * All entries now have 3 different identifiers:
+    * Column `ab` contains a human readable EARS-Net code, used by ECDC and WHO/WHONET - this is the primary identifier used in this package
+    * Column `atc` contains the ATC code, used by WHO/WHOCC
+    * Column `cid` contains the CID code (Compound ID), used by PubChem
+  * Based on the Compound ID, almost 5,000 official brand names have been added from many different countries
+  * All references to antibiotics in our package now use EARS-Net codes, like `AMX` for amoxicillin
+  * Functions `atc_certe`, `ab_umcg` and `atc_trivial_nl` have been removed
+  * All `atc_*` functions are superceded by `ab_*` functions
+  * All output will be translated by using an included translation file which [can be viewed here](https://gitlab.com/msberends/AMR/blob/master/data-raw/translations.tsv).
+    
+    Please [create an issue in one of our repositories](https://gitlab.com/msberends/AMR/issues/new?issue[title]=Translation%20suggestion) if you want additions in this file.
+* Improvements to plotting AMR results with `ggplot_rsi()`:
+  * New parameter `colours` to set the bar colours
+  * New parameters `title`, `subtitle`, `caption`, `x.title` and `y.title` to set titles and axis descriptions
+* Improved intelligence of looking up antibiotic columns in a data set using `guess_ab_col()`
+* Added ~5,000 more old taxonomic names to the `microorganisms.old` data set, which leads to better results finding when using the `as.mo()` function
+* This package now honours the new EUCAST insight (2019) that S and I are but classified as susceptible, where I is defined as 'increased exposure' and not 'intermediate' anymore. For functions like `portion_df()` and `count_df()` this means that their new parameter `combine_SI` is TRUE at default. Our plotting function `ggplot_rsi()` also reflects this change since it uses `count_df()` internally.
+* The `age()` function gained a new parameter `exact` to determine ages with decimals
+* Removed deprecated functions `guess_mo()`, `guess_atc()`, `EUCAST_rules()`, `interpretive_reading()`, `rsi()`
+* Frequency tables (`freq()`):
+  * speed improvement for microbial IDs
+  * fixed factor level names for R Markdown
+  * when all values are unique it now shows a message instead of a warning
+  * support for boxplots:
+    ```r
+    septic_patients %>% 
+      freq(age) %>% 
+      boxplot()
+    # grouped boxplots:
+    septic_patients %>% 
+      group_by(hospital_id) %>% 
+      freq(age) %>%
+      boxplot()
+    ```
+* Removed all hardcoded EUCAST rules and replaced them with a new reference file which [can be viewed here](https://gitlab.com/msberends/AMR/blob/master/data-raw/eucast_rules.tsv).
+  
+  Please [create an issue in one of our repositories](https://gitlab.com/msberends/AMR/issues/new?issue[title]=EUCAST%20edit) if you want changes in this file.
+* Added ceftazidim intrinsic resistance to *Streptococci*
+* Changed default settings for `age_groups()`, to let groups of fives and tens end with 100+ instead of 120+
+* Fix for `freq()` for when all values are `NA`
+* Fix for `first_isolate()` for when dates are missing
+* Improved speed of `guess_ab_col()`
+* Function `as.mo()` now gently interprets any number of whitespace characters (like tabs) as one space
+* Function `as.mo()` now returns `UNKNOWN` for `"con"` (WHONET ID of 'contamination') and returns `NA` for `"xxx"`(WHONET ID of 'no growth')
+* Small algorithm fix for `as.mo()`
+* Removed viruses from data set `microorganisms.codes` and cleaned it up
+* Fix for `mo_shortname()` where species would not be determined correctly
+
+#### Other
+* Support for R 3.6.0 and later by providing support for [staged install](https://developer.r-project.org/Blog/public/2019/02/14/staged-install/index.html)
+
 # AMR 0.6.1
 
 #### Changed

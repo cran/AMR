@@ -16,7 +16,7 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' The Catalogue of Life
@@ -24,7 +24,7 @@
 #' This package contains the complete taxonomic tree of almost all microorganisms from the authoritative and comprehensive Catalogue of Life.
 #' @section Catalogue of Life:
 #' \if{html}{\figure{logo_col.png}{options: height=40px style=margin-bottom:5px} \cr}
-#' This package contains the complete taxonomic tree of almost all microorganisms (~60,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
+#' This package contains the complete taxonomic tree of almost all microorganisms (~65,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
 #'
 #' \link[=catalogue_of_life]{Click here} for more information about the included taxa. The Catalogue of Life releases updates annually; check which version was included in this package with \code{\link{catalogue_of_life_version}()}.
 #' @section Included taxa:
@@ -33,14 +33,14 @@
 #'   \item{All ~55,000 (sub)species from the kingdoms of Archaea, Bacteria and Protozoa}
 #'   \item{All ~3,500 (sub)species from these orders of the kingdom of Fungi: Eurotiales, Onygenales, Pneumocystales, Saccharomycetales, Schizosaccharomycetales and Tremellales. The kingdom of Fungi is a very large taxon with almost 300,000 different (sub)species, of which most are not microbial (but rather macroscopic, like mushrooms). Because of this, not all fungi fit the scope of this package and including everything would tremendously slow down our algorithms too. By only including the aforementioned taxonomic orders, the most relevant fungi are covered (like all species of \emph{Aspergillus}, \emph{Candida}, \emph{Cryptococcus}, \emph{Histplasma}, \emph{Pneumocystis}, \emph{Saccharomyces} and \emph{Trichophyton}).}
 #'   \item{All ~2,000 (sub)species from ~100 other relevant genera, from the kingdoms of Animalia and Plantae (like \emph{Strongyloides} and \emph{Taenia})}
-#'   \item{All ~15,000 previously accepted names of included (sub)species that have been taxonomically renamed}
+#'   \item{All ~21,000 previously accepted names of included (sub)species that have been taxonomically renamed}
 #'   \item{The complete taxonomic tree of all included (sub)species: from kingdom to subspecies}
 #'   \item{The responsible author(s) and year of scientific publication}
 #' }
 #'
 #' The Catalogue of Life (\url{http://www.catalogueoflife.org}) is the most comprehensive and authoritative global index of species currently available. It holds essential information on the names, relationships and distributions of over 1.6 million species. The Catalogue of Life is used to support the major biodiversity and conservation information services such as the Global Biodiversity Information Facility (GBIF), Encyclopedia of Life (EoL) and the International Union for Conservation of Nature Red List. It is recognised by the Convention on Biological Diversity as a significant component of the Global Taxonomy Initiative and a contribution to Target 1 of the Global Strategy for Plant Conservation.
 #'
-#' The syntax used to transform the original data to a cleansed R format, can be found here: \url{https://gitlab.com/msberends/AMR/blob/master/reproduction_of_microorganisms.R}.
+#' The syntax used to transform the original data to a cleansed R format, can be found here: \url{https://gitlab.com/msberends/AMR/blob/master/data-raw/reproduction_of_microorganisms.R}.
 #' @inheritSection AMR Read more on our website!
 #' @name catalogue_of_life
 #' @rdname catalogue_of_life

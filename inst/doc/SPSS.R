@@ -1,7 +1,7 @@
 ## ----setup, include = FALSE, results = 'markup'--------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#"
 )
 # set to original language (English)
 Sys.setlocale(locale = "C")
@@ -22,10 +22,10 @@ klebsiella_test <- data.frame(mo = "klebsiella",
 klebsiella_test
 eucast_rules(klebsiella_test, info = FALSE)
 
-# hundreds of trade names can be translated to an ATC or name:
-atc_name("floxapen")
-as.atc("floxapen")
-atc_tradenames("floxapen")
+# hundreds of trade names can be translated to a name, trade name or an ATC code:
+ab_name("floxapen")
+ab_tradenames("floxapen")
+ab_atc("floxapen")
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  SPSS_data

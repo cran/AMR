@@ -14,7 +14,7 @@ is.atc(x)
 \item{x}{character vector to determine \code{ATC} code}
 }
 \value{
-Character (vector) with class \code{"act"}. Unknown values will return \code{NA}.
+Character (vector) with class \code{"atc"}. Unknown values will return \code{NA}.
 }
 \description{
 Use this function to determine the ATC code of one or more antibiotics. The data set \code{\link{antibiotics}} will be searched for abbreviations, official names and trade names.
@@ -28,7 +28,7 @@ In the ATC classification system, the active substances are classified in a hier
 \section{WHOCC}{
 
 \if{html}{\figure{logo_who.png}{options: height=60px style=margin-bottom:5px} \cr}
-This package contains \strong{all ~500 antimicrobial drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}).
+This package contains \strong{all ~450 antimicrobial drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}).
 
 These have become the gold standard for international drug utilisation monitoring and research.
 
@@ -37,7 +37,7 @@ The WHOCC is located in Oslo at the Norwegian Institute of Public Health and fun
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -48,14 +48,6 @@ as.atc("eryt")
 as.atc("   eryt 123")
 as.atc("ERYT")
 as.atc("ERY")
-as.atc("Erythrocin") # Trade name
-as.atc("Eryzole")    # Trade name
-as.atc("Pediamycin") # Trade name
-
-# Use ab_* functions to get a specific property based on an ATC code
-Cipro <- as.atc("cipro") # returns `J01MA02`
-atc_official(Cipro)      # returns "Ciprofloxacin"
-atc_umcg(Cipro)          # returns "CIPR", the code used in the UMCG
 }
 \seealso{
 \code{\link{antibiotics}} for the dataframe that is being used to determine ATCs.

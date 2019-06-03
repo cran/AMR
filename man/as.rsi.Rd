@@ -2,18 +2,38 @@
 % Please edit documentation in R/rsi.R
 \name{as.rsi}
 \alias{as.rsi}
+\alias{as.rsi.mic}
+\alias{as.rsi.disk}
+\alias{as.rsi.data.frame}
 \alias{is.rsi}
 \alias{is.rsi.eligible}
 \title{Class 'rsi'}
 \usage{
-as.rsi(x)
+as.rsi(x, ...)
+
+\method{as.rsi}{mic}(x, mo, ab, guideline = "EUCAST", ...)
+
+\method{as.rsi}{disk}(x, mo, ab, guideline = "EUCAST", ...)
+
+\method{as.rsi}{data.frame}(x, col_mo = NULL, guideline = "EUCAST",
+  ...)
 
 is.rsi(x)
 
 is.rsi.eligible(x, threshold = 0.05)
 }
 \arguments{
-\item{x}{vector}
+\item{x}{vector of values (for class \code{mic}: an MIC value in mg/L, for class \code{disk}: a disk diffusion radius in millimeters)}
+
+\item{...}{parameters passed on to methods}
+
+\item{mo}{a microorganism code, generated with \code{\link{as.mo}}}
+
+\item{ab}{an antibiotic code, generated with \code{\link{as.ab}}}
+
+\item{guideline}{defaults to the latest included EUCAST guideline, run \code{unique(AMR::rsi_translation$guideline)} for all options}
+
+\item{col_mo}{column name of the unique IDs of the microorganisms (see \code{\link{mo}}), defaults to the first column of class \code{mo}. Values will be coerced using \code{\link{as.mo}}.}
 
 \item{threshold}{maximum fraction of \code{x} that is allowed to fail transformation, see Examples}
 }
@@ -21,14 +41,35 @@ is.rsi.eligible(x, threshold = 0.05)
 Ordered factor with new class \code{rsi}
 }
 \description{
-This transforms a vector to a new class \code{rsi}, which is an ordered factor with levels \code{S < I < R}. Invalid antimicrobial interpretations will be translated as \code{NA} with a warning.
+Interpret MIC values according to EUCAST or CLSI, or clean up existing RSI values. This transforms the input to a new class \code{rsi}, which is an ordered factor with levels \code{S < I < R}. Invalid antimicrobial interpretations will be translated as \code{NA} with a warning.
 }
 \details{
-The function \code{is.rsi.eligible} returns \code{TRUE} when a columns contains only valid antimicrobial interpretations (S and/or I and/or R), and \code{FALSE} otherwise.
+Run \code{unique(AMR::rsi_translation$guideline)} for a list of all supported guidelines.
+
+After using \code{as.rsi}, you can use \code{\link{eucast_rules}} to (1) apply inferred susceptibility and resistance based on results of other antibiotics and (2) apply intrinsic resistance based on taxonomic properties of a microorganism.
+
+The function \code{is.rsi.eligible} returns \code{TRUE} when a columns contains at most 5\% invalid antimicrobial interpretations (not S and/or I and/or R), and \code{FALSE} otherwise. The threshold of 5\% can be set with the \code{threshold} parameter.
 }
+\section{Interpretation of S, I and R}{
+
+In 2019, EUCAST has decided to change the definitions of susceptibility testing categories S, I and R as shown below. Results of several consultations on the new definitions are available on the EUCAST website under "Consultations".
+
+\itemize{
+  \item{\strong{S} - }{Susceptible, standard dosing regimen: A microorganism is categorised as "Susceptible, standard dosing regimen", when there is a high likelihood of therapeutic success using a standard dosing regimen of the agent.}
+  \item{\strong{I} - }{Susceptible, increased exposure: A microorganism is categorised as "Susceptible, Increased exposure" when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.}
+  \item{\strong{R} - }{Resistant: A microorganism is categorised as "Resistant" when there is a high likelihood of therapeutic failure even when there is increased exposure.}
+}
+
+Exposure is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
+
+Source: \url{http://www.eucast.org/newsiandr/}.
+
+\strong{This AMR package honours this new insight.}
+}
+
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -39,6 +80,16 @@ is.rsi(rsi_data)
 # this can also coerce combined MIC/RSI values:
 as.rsi("<= 0.002; S") # will return S
 
+# interpret MIC values
+as.rsi(x = as.mic(2),
+       mo = as.mo("S. pneumoniae"),
+       ab = "AMX",
+       guideline = "EUCAST")
+as.rsi(x = as.mic(4),
+       mo = as.mo("S. pneumoniae"),
+       ab = "AMX",
+       guideline = "EUCAST")
+
 plot(rsi_data)    # for percentages
 barplot(rsi_data) # for frequencies
 freq(rsi_data)    # frequency table with informative header
@@ -46,7 +97,7 @@ freq(rsi_data)    # frequency table with informative header
 # using dplyr's mutate
 library(dplyr)
 septic_patients \%>\%
-  mutate_at(vars(peni:rifa), as.rsi)
+  mutate_at(vars(PEN:RIF), as.rsi)
 
 
 # fastest way to transform all columns with already valid AB results to class `rsi`:
@@ -56,7 +107,7 @@ septic_patients \%>\%
 
 # default threshold of `is.rsi.eligible` is 5\%.
 is.rsi.eligible(WHONET$`First name`) # fails, >80\% is invalid
-is.rsi.eligible(WHONET$`First name`, threshold = 0.9) # succeeds
+is.rsi.eligible(WHONET$`First name`, threshold = 0.99) # succeeds
 }
 \seealso{
 \code{\link{as.mic}}

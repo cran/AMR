@@ -12,24 +12,31 @@
 \usage{
 ggplot_rsi(data, position = NULL, x = "Antibiotic",
   fill = "Interpretation", facet = NULL, breaks = seq(0, 1, 0.1),
-  limits = NULL, translate_ab = "official", fun = count_df,
-  nrow = NULL, datalabels = TRUE, datalabels.size = 3,
-  datalabels.colour = "grey15", ...)
+  limits = NULL, translate_ab = "name", combine_SI = TRUE,
+  combine_IR = FALSE, language = get_locale(), fun = count_df,
+  nrow = NULL, colours = c(S = "#61a8ff", SI = "#61a8ff", I =
+  "#61f7ff", IR = "#ff6961", R = "#ff6961"), datalabels = TRUE,
+  datalabels.size = 2.5, datalabels.colour = "gray15", title = NULL,
+  subtitle = NULL, caption = NULL, x.title = NULL, y.title = NULL,
+  ...)
 
 geom_rsi(position = NULL, x = c("Antibiotic", "Interpretation"),
-  fill = "Interpretation", translate_ab = "official", fun = count_df,
-  ...)
+  fill = "Interpretation", translate_ab = "name",
+  language = get_locale(), combine_SI = TRUE, combine_IR = FALSE,
+  fun = count_df, ...)
 
 facet_rsi(facet = c("Interpretation", "Antibiotic"), nrow = NULL)
 
 scale_y_percent(breaks = seq(0, 1, 0.1), limits = NULL)
 
-scale_rsi_colours()
+scale_rsi_colours(colours = c(S = "#61a8ff", SI = "#61a8ff", I =
+  "#61f7ff", IR = "#ff6961", R = "#ff6961"))
 
 theme_rsi()
 
 labels_rsi_count(position = NULL, x = "Antibiotic",
-  datalabels.size = 3, datalabels.colour = "grey15")
+  translate_ab = "name", combine_SI = TRUE, combine_IR = FALSE,
+  datalabels.size = 3, datalabels.colour = "gray15")
 }
 \arguments{
 \item{data}{a \code{data.frame} with column(s) of class \code{"rsi"} (see \code{\link{as.rsi}})}
@@ -46,25 +53,43 @@ labels_rsi_count(position = NULL, x = "Antibiotic",
 
 \item{limits}{numeric vector of length two providing limits of the scale, use \code{NA} to refer to the existing minimum or maximum}
 
-\item{translate_ab}{a column name of the \code{\link{antibiotics}} data set to translate the antibiotic abbreviations into, using \code{\link{abname}}. Default behaviour is to translate to official names according to the WHO. Use \code{translate_ab = FALSE} to disable translation.}
+\item{translate_ab}{a column name of the \code{\link{antibiotics}} data set to translate the antibiotic abbreviations to, using \code{\link{ab_property}}}
+
+\item{combine_SI}{a logical to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant). This used to be the parameter \code{combine_IR}, but this now follows the redefinition by EUCAST about the interpretion of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. Default is \code{TRUE}.}
+
+\item{combine_IR}{a logical to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. I+R (susceptible vs. non-susceptible). This is outdated, see parameter \code{combine_SI}.}
+
+\item{language}{language of the returned text, defaults to system language (see \code{\link{get_locale}}) and can also be set with \code{\link{getOption}("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
 \item{fun}{function to transform \code{data}, either \code{\link{count_df}} (default) or \code{\link{portion_df}}}
 
 \item{nrow}{(when using \code{facet}) number of rows}
 
-\item{datalabels}{show datalabels using \code{labels_rsi_count}, will at default only be shown when \code{fun = count_df}}
+\item{colours}{a named vector with colours for the bars. The names must be one or more of: S, SI, I, IR, R or be \code{FALSE} to use default \code{ggplot2} colours.}
+
+\item{datalabels}{show datalabels using \code{labels_rsi_count}, will only be shown when \code{fun = count_df}}
 
 \item{datalabels.size}{size of the datalabels}
 
 \item{datalabels.colour}{colour of the datalabels}
 
+\item{title}{text to show as title of the plot}
+
+\item{subtitle}{text to show as subtitle of the plot}
+
+\item{caption}{text to show as caption of the plot}
+
+\item{x.title}{text to show as x axis description}
+
+\item{y.title}{text to show as y axis description}
+
 \item{...}{other parameters passed on to \code{geom_rsi}}
 }
 \description{
-Use these functions to create bar plots for antimicrobial resistance analysis. All functions rely on internal \code{\link[ggplot2]{ggplot}} functions.
+Use these functions to create bar plots for antimicrobial resistance analysis. All functions rely on internal \code{\link[ggplot2]{ggplot}2} functions.
 }
 \details{
-At default, the names of antibiotics will be shown on the plots using \code{\link{abname}}. This can be set with the option \code{get_antibiotic_names} (a logical value), so change it e.g. to \code{FALSE} with \code{options(get_antibiotic_names = FALSE)}.
+At default, the names of antibiotics will be shown on the plots using \code{\link{ab_name}}. This can be set with the \code{translate_ab} parameter. See \code{\link{count_df}}.
 
 \strong{The functions}\cr
 \code{geom_rsi} will take any variable from the data that has an \code{rsi} class (created with \code{\link{as.rsi}}) using \code{fun} (\code{\link{count_df}} at default, can also be \code{\link{portion_df}}) and will plot bars with the percentage R, I and S. The default behaviour is to have the bars stacked and to have the different antibiotics on the x axis.
@@ -73,7 +98,7 @@ At default, the names of antibiotics will be shown on the plots using \code{\lin
 
 \code{scale_y_percent} transforms the y axis to a 0 to 100\% range using \code{\link[ggplot2]{scale_continuous}}.
 
-\code{scale_rsi_colours} sets colours to the bars: green for S, yellow for I and red for R, using \code{\link[ggplot2]{scale_brewer}}.
+\code{scale_rsi_colours} sets colours to the bars: pastel blue for S, pastel turquoise for I and pastel red for R, using \code{\link[ggplot2]{scale_brewer}}.
 
 \code{theme_rsi} is a \code{ggplot \link[ggplot2]{theme}} with minimal distraction.
 
@@ -83,7 +108,7 @@ At default, the names of antibiotics will be shown on the plots using \code{\lin
 }
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -91,11 +116,11 @@ library(dplyr)
 library(ggplot2)
 
 # get antimicrobial results for drugs against a UTI:
-ggplot(septic_patients \%>\% select(amox, nitr, fosf, trim, cipr)) +
+ggplot(septic_patients \%>\% select(AMX, NIT, FOS, TMP, CIP)) +
   geom_rsi()
 
 # prettify the plot using some additional functions:
-df <- septic_patients[, c("amox", "nitr", "fosf", "trim", "cipr")]
+df <- septic_patients \%>\% select(AMX, NIT, FOS, TMP, CIP)
 ggplot(df) +
   geom_rsi() +
   scale_y_percent() +
@@ -105,22 +130,26 @@ ggplot(df) +
 
 # or better yet, simplify this using the wrapper function - a single command:
 septic_patients \%>\%
-  select(amox, nitr, fosf, trim, cipr) \%>\%
+  select(AMX, NIT, FOS, TMP, CIP) \%>\%
   ggplot_rsi()
 
 # get only portions and no counts:
 septic_patients \%>\%
-  select(amox, nitr, fosf, trim, cipr) \%>\%
+  select(AMX, NIT, FOS, TMP, CIP) \%>\%
   ggplot_rsi(fun = portion_df)
 
 # add other ggplot2 parameters as you like:
 septic_patients \%>\%
-  select(amox, nitr, fosf, trim, cipr) \%>\%
+  select(AMX, NIT, FOS, TMP, CIP) \%>\%
   ggplot_rsi(width = 0.5,
              colour = "black",
              size = 1,
              linetype = 2,
              alpha = 0.25)
+
+septic_patients \%>\%
+  select(AMX) \%>\%
+  ggplot_rsi(colours = c(SI = "yellow"))
 
 # resistance of ciprofloxacine per age group
 septic_patients \%>\%
@@ -130,52 +159,53 @@ septic_patients \%>\%
   # `age_group` is also a function of this package:
   group_by(age_group = age_groups(age)) \%>\%
   select(age_group,
-         cipr) \%>\%
+         CIP) \%>\%
   ggplot_rsi(x = "age_group")
 \donttest{
 
 # for colourblind mode, use divergent colours from the viridis package:
 septic_patients \%>\%
-  select(amox, nitr, fosf, trim, cipr) \%>\%
+  select(AMX, NIT, FOS, TMP, CIP) \%>\%
   ggplot_rsi() + scale_fill_viridis_d()
+# a shorter version which also adjusts data label colours:
+septic_patients \%>\%
+  select(AMX, NIT, FOS, TMP, CIP) \%>\%
+  ggplot_rsi(colours = FALSE)
 
 
 # it also supports groups (don't forget to use the group var on `x` or `facet`):
 septic_patients \%>\%
-  select(hospital_id, amox, nitr, fosf, trim, cipr) \%>\%
+  select(hospital_id, AMX, NIT, FOS, TMP, CIP) \%>\%
   group_by(hospital_id) \%>\%
-  ggplot_rsi(x = hospital_id,
-             facet = Antibiotic,
-             nrow = 1) +
-  labs(title = "AMR of Anti-UTI Drugs Per Hospital",
-       x = "Hospital")
+  ggplot_rsi(x = "hospital_id",
+             facet = "Antibiotic",
+             nrow = 1,
+             title = "AMR of Anti-UTI Drugs Per Hospital",
+             x.title = "Hospital",
+             datalabels = FALSE)
 
-# genuine analysis: check 2 most prevalent microorganisms
+# genuine analysis: check 3 most prevalent microorganisms
 septic_patients \%>\%
   # create new bacterial ID's, with all CoNS under the same group (Becker et al.)
   mutate(mo = as.mo(mo, Becker = TRUE)) \%>\%
   # filter on top three bacterial ID's
   filter(mo \%in\% top_freq(freq(.$mo), 3)) \%>\%
-  # determine first isolates
-  mutate(first_isolate = first_isolate(.,
-                                       col_date = "date",
-                                       col_patient_id = "patient_id",
-                                       col_mo = "mo")) \%>\%
   # filter on first isolates
-  filter(first_isolate == TRUE) \%>\%
+  filter_first_isolate() \%>\%
   # get short MO names (like "E. coli")
-  mutate(mo = mo_shortname(mo, Becker = TRUE)) \%>\%
+  mutate(bug = mo_shortname(mo, Becker = TRUE)) \%>\%
   # select this short name and some antiseptic drugs
-  select(mo, cfur, gent, cipr) \%>\%
+  select(bug, CXM, GEN, CIP) \%>\%
   # group by MO
-  group_by(mo) \%>\%
+  group_by(bug) \%>\%
   # plot the thing, putting MOs on the facet
-  ggplot_rsi(x = Antibiotic,
-             facet = mo,
+  ggplot_rsi(x = "Antibiotic",
+             facet = "bug",
              translate_ab = FALSE,
-             nrow = 1) +
-  labs(title = "AMR of Top Three Microorganisms In Blood Culture Isolates",
-       subtitle = "Only First Isolates, CoNS grouped according to Becker et al. (2014)",
-       x = "Microorganisms")
+             nrow = 1,
+             title = "AMR of Top Three Microorganisms In Blood Culture Isolates",
+             subtitle = expression(paste("Only First Isolates, CoNS grouped according to Becker ",
+                                         italic("et al."), " (2014)")),
+             x.title = "Antibiotic (EARS-Net code)")
 }
 }

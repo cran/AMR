@@ -20,14 +20,14 @@ For DSMZ, see \code{?microorganisms}.
 \section{Catalogue of Life}{
 
 \if{html}{\figure{logo_col.png}{options: height=40px style=margin-bottom:5px} \cr}
-This package contains the complete taxonomic tree of almost all microorganisms (~60,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
+This package contains the complete taxonomic tree of almost all microorganisms (~65,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
 
 \link[=catalogue_of_life]{Click here} for more information about the included taxa. The Catalogue of Life releases updates annually; check which version was included in this package with \code{\link{catalogue_of_life_version}()}.
 }
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{

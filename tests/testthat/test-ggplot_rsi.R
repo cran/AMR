@@ -16,7 +16,7 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 context("ggplot_rsi.R")
@@ -30,37 +30,34 @@ test_that("ggplot_rsi works", {
 
   # data should be equal
   expect_equal(
-    (septic_patients %>% select(amcl, cipr) %>% ggplot_rsi())$data %>%
+    (septic_patients %>% select(AMC, CIP) %>% ggplot_rsi())$data %>%
       summarise_all(portion_IR) %>% as.double(),
-    septic_patients %>% select(amcl, cipr) %>%
+    septic_patients %>% select(AMC, CIP) %>%
       summarise_all(portion_IR) %>% as.double()
   )
 
   expect_equal(
-    (septic_patients %>% select(amcl, cipr) %>% ggplot_rsi(x = "Interpretation", facet = "Antibiotic"))$data %>%
+    (septic_patients %>% select(AMC, CIP) %>% ggplot_rsi(x = "Interpretation", facet = "Antibiotic"))$data %>%
       summarise_all(portion_IR) %>% as.double(),
-    septic_patients %>% select(amcl, cipr) %>%
+    septic_patients %>% select(AMC, CIP) %>%
       summarise_all(portion_IR) %>% as.double()
   )
 
   expect_equal(
-    (septic_patients %>% select(amcl, cipr) %>% ggplot_rsi(x = "Antibiotic", facet = "Interpretation"))$data %>%
+    (septic_patients %>% select(AMC, CIP) %>% ggplot_rsi(x = "Antibiotic", facet = "Interpretation"))$data %>%
       summarise_all(portion_IR) %>% as.double(),
-    septic_patients %>% select(amcl, cipr) %>%
+    septic_patients %>% select(AMC, CIP) %>%
       summarise_all(portion_IR) %>% as.double()
   )
 
   expect_equal(
-    (septic_patients %>% select(amcl, cipr) %>% ggplot_rsi(x = "Antibiotic",
+    (septic_patients %>% select(AMC, CIP) %>% ggplot_rsi(x = "Antibiotic",
                                                            facet = "Interpretation",
                                                            fun = count_df))$data %>%
       summarise_all(count_IR) %>% as.double(),
-    septic_patients %>% select(amcl, cipr) %>%
+    septic_patients %>% select(AMC, CIP) %>%
       summarise_all(count_IR) %>% as.double()
   )
-
-  expect_equal(colnames(getlbls(septic_patients %>% select(amcl, cipr))),
-               c("Interpretation", "Antibiotic", "Value", "lbl"))
 
   expect_error(ggplot_rsi(septic_patients, fun = "invalid"))
   expect_error(geom_rsi(septic_patients, fun = "invalid"))

@@ -12,7 +12,7 @@
 
 <meta name="author" content="Matthijs S. Berends" />
 
-<meta name="date" content="2019-03-28" />
+<meta name="date" content="2019-06-03" />
 
 <title>How to import data from SPSS / SAS / Stata</title>
 
@@ -303,7 +303,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">How to import data from SPSS / SAS / Stata</h1>
 <h4 class="author">Matthijs S. Berends</h4>
-<h4 class="date">28 March 2019</h4>
+<h4 class="date">03 June 2019</h4>
 
 
 <div id="TOC">
@@ -331,50 +331,53 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <li><p><strong>R is extremely flexible.</strong></p>
 <p>Because you write the syntax yourself, you can do anything you want. The flexibility in transforming, gathering, grouping, summarising and drawing plots is endless - with SPSS, SAS or Stata you are bound to their algorithms and styles. They may be a bit flexible, but you can probably never create that very specific publication-ready plot without using other (paid) software.</p></li>
 <li><p><strong>R can be easily automated.</strong></p>
-<p>Over the last years, <a href="https://rmarkdown.rstudio.com/">R Markdown</a> has really made an interesting development. With R Markdown, you can very easily reproduce your reports, whether it’s to Word, Powerpoint, a website, a PDF document or just the raw data to Excel. I use this a lot to generate monthly reports automatically. Just write the code once and enjoy the automatically updated reports at any interval you like.</p>
+<p>Over the last years, <a href="https://rmarkdown.rstudio.com/">R Markdown</a> has really made an interesting development. With R Markdown, you can very easily produce reports, whether format has to be Word, PowerPoint, a website, a PDF document or just the raw data to Excel. It even allows the use of a reference file containing the layout style (e.g. fonts and colours) of your organisation. I use this a lot to generate weekly and monthly reports automatically. Just write the code once and enjoy the automatically updated reports at any interval you like.</p>
 <p>For an even more professional environment, you could create <a href="https://shiny.rstudio.com/">Shiny apps</a>: live manipulation of data using a custom made website. The webdesign knowledge needed (JavaScript, CSS, HTML) is almost <em>zero</em>.</p></li>
 <li><p><strong>R has a huge community.</strong></p>
 <p>Many R users just ask questions on websites like <a href="https://stackoverflow.com">StackOverflow.com</a>, the largest online community for programmers. At the time of writing, almost <a href="https://stackoverflow.com/questions/tagged/r?sort=votes">300,000 R-related questions</a> have already been asked on this platform (which covers questions and answers for any programming language). In my own experience, most questions are answered within a couple of minutes.</p></li>
 <li><p><strong>R understands any data type, including SPSS/SAS/Stata.</strong></p>
-<p>And that’s not vice versa I’m afraid. You can import data from any source into R. From SPSS, SAS and Stata (<a href="https://haven.tidyverse.org/">link</a>), from Minitab, Epi Info and EpiData (<a href="https://cran.r-project.org/package=foreign">link</a>), from Excel (<a href="https://readxl.tidyverse.org/">link</a>), from flat files like CSV, TXT or TSV (<a href="https://readr.tidyverse.org/">link</a>), or directly from databases and datawarehouses from anywhere on the world (<a href="https://dbplyr.tidyverse.org/">link</a>). You can even scrape websites to download tables that are live on the internet (<a href="https://github.com/hadley/rvest">link</a>).</p>
-<p>And the best part - you can export from R to most data formats as well. So you can import an SPSS file, do your analysis neatly in R and export the resulting tables to Excel files.</p></li>
+<p>And that’s not vice versa I’m afraid. You can import data from any source into R. From SPSS, SAS and Stata (<a href="https://haven.tidyverse.org/">link</a>), from Minitab, Epi Info and EpiData (<a href="https://cran.r-project.org/package=foreign">link</a>), from Excel (<a href="https://readxl.tidyverse.org/">link</a>), from flat files like CSV, TXT or TSV (<a href="https://readr.tidyverse.org/">link</a>), or directly from databases and datawarehouses from anywhere on the world (<a href="https://dbplyr.tidyverse.org/">link</a>). You can even scrape websites to download tables that are live on the internet (<a href="https://github.com/hadley/rvest">link</a>) or get the results of an API call (<a href="https://github.com/Rdatatable/data.table/wiki/Convenience-features-of-fread">link</a>).</p>
+<p>And the best part - you can export from R to most data formats as well. So you can import an SPSS file, do your analysis neatly in R and export the resulting tables to Excel files for sharing.</p></li>
 <li><p><strong>R is completely free and open-source.</strong></p>
 <p>No strings attached. It was created and is being maintained by volunteers who believe that (data) science should be open and publicly available to everybody. SPSS, SAS and Stata are quite expensive. IBM SPSS Staticstics only comes with subscriptions nowadays, varying <a href="https://www.ibm.com/products/spss-statistics/pricing">between USD 1,300 and USD 8,500</a> per computer <em>per year</em>. SAS Analytics Pro costs <a href="https://www.sas.com/store/products-solutions/sas-analytics-pro/prodPERSANL.html">around USD 10,000</a> per computer. Stata also has a business model with subscription fees, varying <a href="https://www.stata.com/order/new/bus/single-user-licenses/dl/">between USD 600 and USD 1,200</a> per computer per year, but lower prices come with a limitation of the number of variables you can work with.</p>
 <p>If you are working at a midsized or small company, you can save it tens of thousands of dollars by using R instead of e.g. SPSS - gaining even more functions and flexibility. And all R enthousiasts can do as much PR as they want (like I do here), because nobody is officially associated with or affiliated by R. It is really free.</p></li>
 </ul>
-<p>If you sometimes write syntaxes in SPSS to run a complete analysis or to ‘automate’ some of your work, you should perhaps do this in R. You will notice that writing syntaxes in R is a lot more nifty and clever than in SPSS.</p>
+<p>If you sometimes write syntaxes in SPSS to run a complete analysis or to ‘automate’ some of your work, you should perhaps do this in R. You will notice that writing syntaxes in R is a lot more nifty and clever than in SPSS. Still, as working with any statistical package, you will have to have knowledge about what you are doing (statistically) and what you are willing to accomplish.</p>
 <p>To demonstrate the first point:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="co"># not all values are valid MIC values:</span></a>
 <a class="sourceLine" id="cb1-2" title="2"><span class="kw">as.mic</span>(<span class="fl">0.125</span>)</a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="co">#&gt; Class &#39;mic&#39;</span></a>
-<a class="sourceLine" id="cb1-4" title="4"><span class="co">#&gt; [1] 0.125</span></a>
+<a class="sourceLine" id="cb1-3" title="3"><span class="co"># Class &#39;mic&#39;</span></a>
+<a class="sourceLine" id="cb1-4" title="4"><span class="co"># [1] 0.125</span></a>
 <a class="sourceLine" id="cb1-5" title="5"><span class="kw">as.mic</span>(<span class="st">&quot;testvalue&quot;</span>)</a>
-<a class="sourceLine" id="cb1-6" title="6"><span class="co">#&gt; Class &#39;mic&#39;</span></a>
-<a class="sourceLine" id="cb1-7" title="7"><span class="co">#&gt; [1] &lt;NA&gt;</span></a>
+<a class="sourceLine" id="cb1-6" title="6"><span class="co"># Class &#39;mic&#39;</span></a>
+<a class="sourceLine" id="cb1-7" title="7"><span class="co"># [1] &lt;NA&gt;</span></a>
 <a class="sourceLine" id="cb1-8" title="8"></a>
 <a class="sourceLine" id="cb1-9" title="9"><span class="co"># the Gram stain is avaiable for all bacteria:</span></a>
 <a class="sourceLine" id="cb1-10" title="10"><span class="kw">mo_gramstain</span>(<span class="st">&quot;E. coli&quot;</span>)</a>
-<a class="sourceLine" id="cb1-11" title="11"><span class="co">#&gt; [1] &quot;Gram negative&quot;</span></a>
+<a class="sourceLine" id="cb1-11" title="11"><span class="co"># [1] &quot;Gram negative&quot;</span></a>
 <a class="sourceLine" id="cb1-12" title="12"></a>
 <a class="sourceLine" id="cb1-13" title="13"><span class="co"># Klebsiella is intrinsic resistant to amoxicllin, according to EUCAST:</span></a>
 <a class="sourceLine" id="cb1-14" title="14">klebsiella_test &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">mo =</span> <span class="st">&quot;klebsiella&quot;</span>, </a>
 <a class="sourceLine" id="cb1-15" title="15">                              <span class="dt">amox =</span> <span class="st">&quot;S&quot;</span>,</a>
 <a class="sourceLine" id="cb1-16" title="16">                              <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</a>
 <a class="sourceLine" id="cb1-17" title="17">klebsiella_test</a>
-<a class="sourceLine" id="cb1-18" title="18"><span class="co">#&gt;           mo amox</span></a>
-<a class="sourceLine" id="cb1-19" title="19"><span class="co">#&gt; 1 klebsiella    S</span></a>
+<a class="sourceLine" id="cb1-18" title="18"><span class="co">#           mo amox</span></a>
+<a class="sourceLine" id="cb1-19" title="19"><span class="co"># 1 klebsiella    S</span></a>
 <a class="sourceLine" id="cb1-20" title="20"><span class="kw">eucast_rules</span>(klebsiella_test, <span class="dt">info =</span> <span class="ot">FALSE</span>)</a>
-<a class="sourceLine" id="cb1-21" title="21"><span class="co">#&gt;           mo amox</span></a>
-<a class="sourceLine" id="cb1-22" title="22"><span class="co">#&gt; 1 klebsiella    R</span></a>
+<a class="sourceLine" id="cb1-21" title="21"><span class="co">#           mo amox</span></a>
+<a class="sourceLine" id="cb1-22" title="22"><span class="co"># 1 klebsiella    R</span></a>
 <a class="sourceLine" id="cb1-23" title="23"></a>
-<a class="sourceLine" id="cb1-24" title="24"><span class="co"># hundreds of trade names can be translated to an ATC or name:</span></a>
-<a class="sourceLine" id="cb1-25" title="25"><span class="kw">atc_name</span>(<span class="st">&quot;floxapen&quot;</span>)</a>
-<a class="sourceLine" id="cb1-26" title="26"><span class="co">#&gt; [1] &quot;Flucloxacillin&quot;</span></a>
-<a class="sourceLine" id="cb1-27" title="27"><span class="kw">as.atc</span>(<span class="st">&quot;floxapen&quot;</span>)</a>
-<a class="sourceLine" id="cb1-28" title="28"><span class="co">#&gt; Class &#39;atc&#39;</span></a>
-<a class="sourceLine" id="cb1-29" title="29"><span class="co">#&gt; [1] J01CF05</span></a>
-<a class="sourceLine" id="cb1-30" title="30"><span class="kw">atc_tradenames</span>(<span class="st">&quot;floxapen&quot;</span>)</a>
-<a class="sourceLine" id="cb1-31" title="31"><span class="co">#&gt; [1] &quot;Flopen&quot;    &quot;Floxapen&quot;  &quot;Fluclox&quot;   &quot;Sesamol&quot;   &quot;Softapen&quot;  &quot;Staphylex&quot;</span></a></code></pre></div>
+<a class="sourceLine" id="cb1-24" title="24"><span class="co"># hundreds of trade names can be translated to a name, trade name or an ATC code:</span></a>
+<a class="sourceLine" id="cb1-25" title="25"><span class="kw">ab_name</span>(<span class="st">&quot;floxapen&quot;</span>)</a>
+<a class="sourceLine" id="cb1-26" title="26"><span class="co"># [1] &quot;Flucloxacillin&quot;</span></a>
+<a class="sourceLine" id="cb1-27" title="27"><span class="kw">ab_tradenames</span>(<span class="st">&quot;floxapen&quot;</span>)</a>
+<a class="sourceLine" id="cb1-28" title="28"><span class="co">#  [1] &quot;Floxacillin&quot;          &quot;FLOXACILLIN&quot;          &quot;Floxapen&quot;            </span></a>
+<a class="sourceLine" id="cb1-29" title="29"><span class="co">#  [4] &quot;Floxapen sodium salt&quot; &quot;Fluclox&quot;              &quot;Flucloxacilina&quot;      </span></a>
+<a class="sourceLine" id="cb1-30" title="30"><span class="co">#  [7] &quot;Flucloxacillin&quot;       &quot;Flucloxacilline&quot;      &quot;Flucloxacillinum&quot;    </span></a>
+<a class="sourceLine" id="cb1-31" title="31"><span class="co"># [10] &quot;Fluorochloroxacillin&quot;</span></a>
+<a class="sourceLine" id="cb1-32" title="32"><span class="kw">ab_atc</span>(<span class="st">&quot;floxapen&quot;</span>)</a>
+<a class="sourceLine" id="cb1-33" title="33"><span class="co"># Class &#39;atc&#39;</span></a>
+<a class="sourceLine" id="cb1-34" title="34"><span class="co"># [1] J01CF05</span></a></code></pre></div>
 </div>
 <div id="import-data-from-spsssasstata" class="section level2">
 <h2>Import data from SPSS/SAS/Stata</h2>

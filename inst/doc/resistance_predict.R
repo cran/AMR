@@ -1,7 +1,7 @@
 ## ----setup, include = FALSE, results = 'markup'--------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
+  comment = "#",
   fig.width = 7.5,
   fig.height = 4.75
 )
@@ -15,47 +15,47 @@ library(AMR)
 # install.packages(c("tidyverse", "AMR"))
 
 ## ---- eval = FALSE-------------------------------------------------------
-#  # resistance prediction of piperacillin/tazobactam (pita):
-#  resistance_predict(tbl = septic_patients, col_date = "date", col_ab = "pita")
+#  # resistance prediction of piperacillin/tazobactam (TZP):
+#  resistance_predict(tbl = septic_patients, col_date = "date", col_ab = "TZP")
 #  
 #  # or:
 #  septic_patients %>%
-#    resistance_predict(col_ab = "pita")
+#    resistance_predict(col_ab = "TZP")
 #  
-#  # to bind it to object 'predict_pita' for example:
-#  predict_pita <- septic_patients %>%
-#    resistance_predict(col_ab = "pita")
+#  # to bind it to object 'predict_TZP' for example:
+#  predict_TZP <- septic_patients %>%
+#    resistance_predict(col_ab = "TZP")
 
 ## ---- echo = FALSE-------------------------------------------------------
-predict_pita <- septic_patients %>% 
-  resistance_predict(col_ab = "pita")
+predict_TZP <- septic_patients %>% 
+  resistance_predict(col_ab = "TZP")
 
 ## ------------------------------------------------------------------------
-predict_pita
+predict_TZP
 
 ## ---- fig.height = 5.5---------------------------------------------------
-plot(predict_pita)
+plot(predict_TZP)
 
 ## ------------------------------------------------------------------------
-ggplot_rsi_predict(predict_pita)
+ggplot_rsi_predict(predict_TZP)
 
 # choose for error bars instead of a ribbon
-ggplot_rsi_predict(predict_pita, ribbon = FALSE)
+ggplot_rsi_predict(predict_TZP, ribbon = FALSE)
 
 ## ------------------------------------------------------------------------
 septic_patients %>%
   filter(mo_gramstain(mo) == "Gram positive") %>%
-  resistance_predict(col_ab = "vanc", year_min = 2010, info = FALSE) %>% 
+  resistance_predict(col_ab = "VAN", year_min = 2010, info = FALSE) %>% 
   ggplot_rsi_predict()
 
 ## ------------------------------------------------------------------------
 septic_patients %>%
   filter(mo_gramstain(mo) == "Gram positive") %>%
-  resistance_predict(col_ab = "vanc", year_min = 2010, info = FALSE, model = "linear") %>% 
+  resistance_predict(col_ab = "VAN", year_min = 2010, info = FALSE, model = "linear") %>% 
   ggplot_rsi_predict()
 
 ## ------------------------------------------------------------------------
-model <- attributes(predict_pita)$model
+model <- attributes(predict_TZP)$model
 
 summary(model)$family
 

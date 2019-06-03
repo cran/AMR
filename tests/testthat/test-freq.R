@@ -16,7 +16,7 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 context("freq.R")
@@ -47,11 +47,14 @@ test_that("frequency table works", {
   expect_output(print(freq(septic_patients$age, markdown = TRUE, title = "TITLE")))
 
   # character
-  expect_output(suppressWarnings(print(freq(microorganisms$fullname))))
+  expect_output(print(freq(microorganisms$genus)))
+  expect_output(print(structure(freq(microorganisms$genus),
+                                # check printing of old class:
+                                class = c("frequency_tbl", "data.frame"))))
   # mo
   expect_output(print(freq(septic_patients$mo)))
   # rsi
-  expect_output(print(freq(septic_patients$amox)))
+  expect_output(print(freq(septic_patients$AMX)))
   # integer
   expect_output(print(freq(septic_patients$age)))
   # date
@@ -61,9 +64,9 @@ test_that("frequency table works", {
   # table
   expect_output(print(freq(table(septic_patients$gender, septic_patients$age))))
   # rsi
-  expect_output(print(freq(septic_patients$amcl)))
+  expect_output(print(freq(septic_patients$AMC)))
   # hms
-  expect_output(suppressWarnings(print(freq(hms::as.hms(sample(c(0:86399), 50))))))
+  expect_output(print(freq(hms::as.hms(sample(c(0:86399), 50)))))
   # matrix
   expect_output(print(freq(as.matrix(septic_patients$age))))
   expect_output(print(freq(as.matrix(septic_patients[, c("age", "gender")]))))
@@ -71,10 +74,12 @@ test_that("frequency table works", {
   expect_output(print(freq(list(age = septic_patients$age))))
   expect_output(print(freq(list(age = septic_patients$age, gender = septic_patients$gender))))
   # difftime
-  expect_output(suppressWarnings(print(
+  expect_output(print(
     freq(difftime(Sys.time(),
                   Sys.time() - runif(5, min = 0, max = 60 * 60 * 24),
-                  units = "hours")))))
+                  units = "hours"))))
+
+  expect_output(print(freq(septic_patients$age)[,1:3]))
 
   library(dplyr)
   expect_output(septic_patients %>% select(1:2) %>% freq() %>% print())
@@ -89,8 +94,8 @@ test_that("frequency table works", {
 
   # grouping variable
   expect_output(print(septic_patients %>% group_by(gender) %>% freq(hospital_id)))
-  expect_output(print(septic_patients %>% group_by(gender) %>% freq(amox, quote = TRUE)))
-  expect_output(print(septic_patients %>% group_by(gender) %>% freq(amox, markdown = TRUE)))
+  expect_output(print(septic_patients %>% group_by(gender) %>% freq(AMX, quote = TRUE)))
+  expect_output(print(septic_patients %>% group_by(gender) %>% freq(AMX, markdown = TRUE)))
 
   # quasiquotation
   expect_output(print(septic_patients %>% freq(mo_genus(mo))))
@@ -121,9 +126,11 @@ test_that("frequency table works", {
   # input must be freq tbl
   expect_error(septic_patients %>% top_freq(1))
 
-  # charts from plot and hist, should not raise errors
+  # charts from plot, hist and boxplot, should not raise errors
   plot(freq(septic_patients, age))
   hist(freq(septic_patients, age))
+  boxplot(freq(septic_patients, age))
+  boxplot(freq(dplyr::group_by(septic_patients, gender), age))
 
   # check vector
   expect_identical(septic_patients %>%
@@ -152,7 +159,7 @@ test_that("frequency table works", {
 
   expect_error(septic_patients %>% freq(nonexisting))
   expect_error(septic_patients %>% select(1:10) %>% freq())
-  expect_error(septic_patients %>% freq(peni, oxac, clox, amox, amcl,
+  expect_error(septic_patients %>% freq(peni, oxac, clox, AMX, AMC,
                                         ampi, pita, czol, cfep, cfur))
 
   # (un)select columns
@@ -163,15 +170,15 @@ test_that("frequency table works", {
 
   # run diff
   expect_output(print(
-    diff(freq(septic_patients$amcl),
-         freq(septic_patients$amox))
+    diff(freq(septic_patients$AMC),
+         freq(septic_patients$AMX))
   ))
   expect_output(print(
     diff(freq(septic_patients$age),
          freq(septic_patients$age)) # "No differences found."
   ))
   expect_error(print(
-    diff(freq(septic_patients$amcl),
+    diff(freq(septic_patients$AMX),
          "Just a string") # not a freq tbl
   ))
 

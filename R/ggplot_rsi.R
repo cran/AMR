@@ -16,12 +16,12 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' AMR plots with \code{ggplot2}
 #'
-#' Use these functions to create bar plots for antimicrobial resistance analysis. All functions rely on internal \code{\link[ggplot2]{ggplot}} functions.
+#' Use these functions to create bar plots for antimicrobial resistance analysis. All functions rely on internal \code{\link[ggplot2]{ggplot}2} functions.
 #' @param data a \code{data.frame} with column(s) of class \code{"rsi"} (see \code{\link{as.rsi}})
 #' @param position position adjustment of bars, either \code{"fill"} (default when \code{fun} is \code{\link{count_df}}), \code{"stack"} (default when \code{fun} is \code{\link{portion_df}}) or \code{"dodge"}
 #' @param x variable to show on x axis, either \code{"Antibiotic"} (default) or \code{"Interpretation"} or a grouping variable
@@ -29,14 +29,20 @@
 #' @param breaks numeric vector of positions
 #' @param limits numeric vector of length two providing limits of the scale, use \code{NA} to refer to the existing minimum or maximum
 #' @param facet variable to split plots by, either \code{"Interpretation"} (default) or \code{"Antibiotic"} or a grouping variable
-#' @param translate_ab a column name of the \code{\link{antibiotics}} data set to translate the antibiotic abbreviations into, using \code{\link{abname}}. Default behaviour is to translate to official names according to the WHO. Use \code{translate_ab = FALSE} to disable translation.
 #' @param fun function to transform \code{data}, either \code{\link{count_df}} (default) or \code{\link{portion_df}}
+#' @inheritParams portion
 #' @param nrow (when using \code{facet}) number of rows
-#' @param datalabels show datalabels using \code{labels_rsi_count}, will at default only be shown when \code{fun = count_df}
+#' @param colours a named vector with colours for the bars. The names must be one or more of: S, SI, I, IR, R or be \code{FALSE} to use default \code{ggplot2} colours.
+#' @param datalabels show datalabels using \code{labels_rsi_count}, will only be shown when \code{fun = count_df}
 #' @param datalabels.size size of the datalabels
 #' @param datalabels.colour colour of the datalabels
+#' @param title text to show as title of the plot
+#' @param subtitle text to show as subtitle of the plot
+#' @param caption text to show as caption of the plot
+#' @param x.title text to show as x axis description
+#' @param y.title text to show as y axis description
 #' @param ... other parameters passed on to \code{geom_rsi}
-#' @details At default, the names of antibiotics will be shown on the plots using \code{\link{abname}}. This can be set with the option \code{get_antibiotic_names} (a logical value), so change it e.g. to \code{FALSE} with \code{options(get_antibiotic_names = FALSE)}.
+#' @details At default, the names of antibiotics will be shown on the plots using \code{\link{ab_name}}. This can be set with the \code{translate_ab} parameter. See \code{\link{count_df}}.
 #'
 #' \strong{The functions}\cr
 #' \code{geom_rsi} will take any variable from the data that has an \code{rsi} class (created with \code{\link{as.rsi}}) using \code{fun} (\code{\link{count_df}} at default, can also be \code{\link{portion_df}}) and will plot bars with the percentage R, I and S. The default behaviour is to have the bars stacked and to have the different antibiotics on the x axis.
@@ -45,7 +51,7 @@
 #'
 #' \code{scale_y_percent} transforms the y axis to a 0 to 100\% range using \code{\link[ggplot2]{scale_continuous}}.
 #'
-#' \code{scale_rsi_colours} sets colours to the bars: green for S, yellow for I and red for R, using \code{\link[ggplot2]{scale_brewer}}.
+#' \code{scale_rsi_colours} sets colours to the bars: pastel blue for S, pastel turquoise for I and pastel red for R, using \code{\link[ggplot2]{scale_brewer}}.
 #'
 #' \code{theme_rsi} is a \code{ggplot \link[ggplot2]{theme}} with minimal distraction.
 #'
@@ -61,11 +67,11 @@
 #' library(ggplot2)
 #'
 #' # get antimicrobial results for drugs against a UTI:
-#' ggplot(septic_patients %>% select(amox, nitr, fosf, trim, cipr)) +
+#' ggplot(septic_patients %>% select(AMX, NIT, FOS, TMP, CIP)) +
 #'   geom_rsi()
 #'
 #' # prettify the plot using some additional functions:
-#' df <- septic_patients[, c("amox", "nitr", "fosf", "trim", "cipr")]
+#' df <- septic_patients %>% select(AMX, NIT, FOS, TMP, CIP)
 #' ggplot(df) +
 #'   geom_rsi() +
 #'   scale_y_percent() +
@@ -75,22 +81,26 @@
 #'
 #' # or better yet, simplify this using the wrapper function - a single command:
 #' septic_patients %>%
-#'   select(amox, nitr, fosf, trim, cipr) %>%
+#'   select(AMX, NIT, FOS, TMP, CIP) %>%
 #'   ggplot_rsi()
 #'
 #' # get only portions and no counts:
 #' septic_patients %>%
-#'   select(amox, nitr, fosf, trim, cipr) %>%
+#'   select(AMX, NIT, FOS, TMP, CIP) %>%
 #'   ggplot_rsi(fun = portion_df)
 #'
 #' # add other ggplot2 parameters as you like:
 #' septic_patients %>%
-#'   select(amox, nitr, fosf, trim, cipr) %>%
+#'   select(AMX, NIT, FOS, TMP, CIP) %>%
 #'   ggplot_rsi(width = 0.5,
 #'              colour = "black",
 #'              size = 1,
 #'              linetype = 2,
 #'              alpha = 0.25)
+#'
+#' septic_patients %>%
+#'   select(AMX) %>%
+#'   ggplot_rsi(colours = c(SI = "yellow"))
 #'
 #' # resistance of ciprofloxacine per age group
 #' septic_patients %>%
@@ -100,53 +110,54 @@
 #'   # `age_group` is also a function of this package:
 #'   group_by(age_group = age_groups(age)) %>%
 #'   select(age_group,
-#'          cipr) %>%
+#'          CIP) %>%
 #'   ggplot_rsi(x = "age_group")
 #' \donttest{
 #'
 #' # for colourblind mode, use divergent colours from the viridis package:
 #' septic_patients %>%
-#'   select(amox, nitr, fosf, trim, cipr) %>%
+#'   select(AMX, NIT, FOS, TMP, CIP) %>%
 #'   ggplot_rsi() + scale_fill_viridis_d()
+#' # a shorter version which also adjusts data label colours:
+#' septic_patients %>%
+#'   select(AMX, NIT, FOS, TMP, CIP) %>%
+#'   ggplot_rsi(colours = FALSE)
 #'
 #'
 #' # it also supports groups (don't forget to use the group var on `x` or `facet`):
 #' septic_patients %>%
-#'   select(hospital_id, amox, nitr, fosf, trim, cipr) %>%
+#'   select(hospital_id, AMX, NIT, FOS, TMP, CIP) %>%
 #'   group_by(hospital_id) %>%
-#'   ggplot_rsi(x = hospital_id,
-#'              facet = Antibiotic,
-#'              nrow = 1) +
-#'   labs(title = "AMR of Anti-UTI Drugs Per Hospital",
-#'        x = "Hospital")
+#'   ggplot_rsi(x = "hospital_id",
+#'              facet = "Antibiotic",
+#'              nrow = 1,
+#'              title = "AMR of Anti-UTI Drugs Per Hospital",
+#'              x.title = "Hospital",
+#'              datalabels = FALSE)
 #'
-#' # genuine analysis: check 2 most prevalent microorganisms
+#' # genuine analysis: check 3 most prevalent microorganisms
 #' septic_patients %>%
 #'   # create new bacterial ID's, with all CoNS under the same group (Becker et al.)
 #'   mutate(mo = as.mo(mo, Becker = TRUE)) %>%
 #'   # filter on top three bacterial ID's
 #'   filter(mo %in% top_freq(freq(.$mo), 3)) %>%
-#'   # determine first isolates
-#'   mutate(first_isolate = first_isolate(.,
-#'                                        col_date = "date",
-#'                                        col_patient_id = "patient_id",
-#'                                        col_mo = "mo")) %>%
 #'   # filter on first isolates
-#'   filter(first_isolate == TRUE) %>%
+#'   filter_first_isolate() %>%
 #'   # get short MO names (like "E. coli")
-#'   mutate(mo = mo_shortname(mo, Becker = TRUE)) %>%
+#'   mutate(bug = mo_shortname(mo, Becker = TRUE)) %>%
 #'   # select this short name and some antiseptic drugs
-#'   select(mo, cfur, gent, cipr) %>%
+#'   select(bug, CXM, GEN, CIP) %>%
 #'   # group by MO
-#'   group_by(mo) %>%
+#'   group_by(bug) %>%
 #'   # plot the thing, putting MOs on the facet
-#'   ggplot_rsi(x = Antibiotic,
-#'              facet = mo,
+#'   ggplot_rsi(x = "Antibiotic",
+#'              facet = "bug",
 #'              translate_ab = FALSE,
-#'              nrow = 1) +
-#'   labs(title = "AMR of Top Three Microorganisms In Blood Culture Isolates",
-#'        subtitle = "Only First Isolates, CoNS grouped according to Becker et al. (2014)",
-#'        x = "Microorganisms")
+#'              nrow = 1,
+#'              title = "AMR of Top Three Microorganisms In Blood Culture Isolates",
+#'              subtitle = expression(paste("Only First Isolates, CoNS grouped according to Becker ",
+#'                                          italic("et al."), " (2014)")),
+#'              x.title = "Antibiotic (EARS-Net code)")
 #' }
 ggplot_rsi <- function(data,
                        position = NULL,
@@ -156,12 +167,25 @@ ggplot_rsi <- function(data,
                        facet = NULL,
                        breaks = seq(0, 1, 0.1),
                        limits = NULL,
-                       translate_ab = "official",
+                       translate_ab = "name",
+                       combine_SI = TRUE,
+                       combine_IR = FALSE,
+                       language = get_locale(),
                        fun = count_df,
                        nrow = NULL,
+                       colours = c(S = "#61a8ff",
+                                   SI = "#61a8ff",
+                                   I = "#61f7ff",
+                                   IR = "#ff6961",
+                                   R = "#ff6961"),
                        datalabels = TRUE,
-                       datalabels.size = 3,
-                       datalabels.colour = "grey15",
+                       datalabels.size = 2.5,
+                       datalabels.colour = "gray15",
+                       title = NULL,
+                       subtitle = NULL,
+                       caption = NULL,
+                       x.title = NULL,
+                       y.title = NULL,
                        ...) {
 
   stopifnot_installed_package("ggplot2")
@@ -193,19 +217,26 @@ ggplot_rsi <- function(data,
     facet <- NULL
   }
 
+  if (is.null(position)) {
+    position <- "fill"
+  }
+
   p <- ggplot2::ggplot(data = data) +
-    geom_rsi(position = position, x = x, fill = fill, translate_ab = translate_ab, fun = fun, ...) +
+    geom_rsi(position = position, x = x, fill = fill, translate_ab = translate_ab,
+             fun = fun, combine_SI = combine_SI, combine_IR = combine_IR, ...) +
     theme_rsi()
 
   if (fill == "Interpretation") {
     # set RSI colours
-    p <- p + scale_rsi_colours()
+    if (isFALSE(colours) & missing(datalabels.colour)) {
+      # set datalabel colour to middle gray
+      datalabels.colour <- "gray50"
+    }
+    p <- p + scale_rsi_colours(colours = colours)
   }
-  if (is.null(position)) {
-    position <- "fill"
-  }
+
   if (fun_name == "portion_df"
-      | (fun_name == "count_df" & position == "fill")) {
+      | (fun_name == "count_df" & identical(position, "fill"))) {
     # portions, so use y scale with percentage
     p <- p + scale_y_percent(breaks = breaks, limits = limits)
   }
@@ -213,6 +244,9 @@ ggplot_rsi <- function(data,
   if (fun_name == "count_df" & datalabels == TRUE) {
     p <- p + labels_rsi_count(position = position,
                               x = x,
+                              translate_ab = translate_ab,
+                              combine_SI = combine_SI,
+                              combine_IR = combine_IR,
                               datalabels.size = datalabels.size,
                               datalabels.colour = datalabels.colour)
   }
@@ -220,6 +254,12 @@ ggplot_rsi <- function(data,
   if (!is.null(facet)) {
     p <- p + facet_rsi(facet = facet, nrow = nrow)
   }
+
+  p <- p + ggplot2::labs(title = title,
+                         subtitle = subtitle,
+                         caption = caption,
+                         x = x.title,
+                         y = y.title)
 
   p
 }
@@ -229,11 +269,18 @@ ggplot_rsi <- function(data,
 geom_rsi <- function(position = NULL,
                      x = c("Antibiotic", "Interpretation"),
                      fill = "Interpretation",
-                     translate_ab = "official",
+                     translate_ab = "name",
+                     language = get_locale(),
+                     combine_SI = TRUE,
+                     combine_IR = FALSE,
                      fun = count_df,
                      ...)  {
 
   stopifnot_installed_package("ggplot2")
+
+  if (is.data.frame(position)) {
+    stop("`position` is invalid. Did you accidentally use '%>%' instead of '+'?", call. = FALSE)
+  }
 
   fun_name <- deparse(substitute(fun))
   if (!fun_name %in% c("portion_df", "count_df", "fun")) {
@@ -248,6 +295,10 @@ geom_rsi <- function(position = NULL,
     if (missing(position) | is.null(position)) {
       position <- "stack"
     }
+  }
+
+  if (identical(position, "fill")) {
+    position <- ggplot2::position_fill(vjust = 0.5, reverse = TRUE)
   }
 
   x <- x[1]
@@ -267,11 +318,15 @@ geom_rsi <- function(position = NULL,
     x <- "Interpretation"
   }
 
-  options(get_antibiotic_names = translate_ab)
-
   ggplot2::layer(geom = "bar", stat = "identity", position = position,
                  mapping = ggplot2::aes_string(x = x, y = y, fill = fill),
-                 data = fun, params = list(...))
+                 params = list(...), data = function(x) {
+                   fun(data = x,
+                       translate_ab = translate_ab,
+                       language = language,
+                       combine_SI = combine_SI,
+                       combine_IR = combine_IR)
+                 })
 
 }
 
@@ -281,7 +336,7 @@ facet_rsi <- function(facet = c("Interpretation", "Antibiotic"), nrow = NULL) {
 
   stopifnot_installed_package("ggplot2")
 
-   facet <- facet[1]
+  facet <- facet[1]
 
   # we work with aes_string later on
   facet_deparse <- deparse(substitute(facet))
@@ -316,52 +371,74 @@ scale_y_percent <- function(breaks = seq(0, 1, 0.1), limits = NULL) {
 
 #' @rdname ggplot_rsi
 #' @export
-scale_rsi_colours <- function() {
+scale_rsi_colours <- function(colours = c(S = "#61a8ff",
+                                          SI = "#61a8ff",
+                                          I = "#61f7ff",
+                                          IR = "#ff6961",
+                                          R = "#ff6961")) {
   stopifnot_installed_package("ggplot2")
   #ggplot2::scale_fill_brewer(palette = "RdYlGn")
-  ggplot2::scale_fill_manual(values = c("#b22222", "#ae9c20", "#7cfc00"))
+  #ggplot2::scale_fill_manual(values = c("#b22222", "#ae9c20", "#7cfc00"))
+
+  if (!identical(colours, FALSE)) {
+    original_cols <- c(S = "#61a8ff",
+                       SI = "#61a8ff",
+                       I = "#61f7ff",
+                       IR = "#ff6961",
+                       R = "#ff6961")
+    colours <- replace(original_cols, names(colours), colours)
+    ggplot2::scale_fill_manual(values = colours)
+  }
 }
 
 #' @rdname ggplot_rsi
 #' @export
 theme_rsi <- function() {
   stopifnot_installed_package("ggplot2")
-  ggplot2::theme_minimal() +
+  ggplot2::theme_minimal(base_size = 10) +
     ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(),
                    panel.grid.minor = ggplot2::element_blank(),
-                   panel.grid.major.y = ggplot2::element_line(colour = "grey75"))
+                   panel.grid.major.y = ggplot2::element_line(colour = "grey75"),
+                   # center title and subtitle
+                   plot.title = ggplot2::element_text(hjust = 0.5),
+                   plot.subtitle = ggplot2::element_text(hjust = 0.5))
 }
 
 #' @rdname ggplot_rsi
+#' @importFrom dplyr mutate %>% group_by_at
 #' @export
 labels_rsi_count <- function(position = NULL,
                              x = "Antibiotic",
+                             translate_ab = "name",
+                             combine_SI = TRUE,
+                             combine_IR = FALSE,
                              datalabels.size = 3,
-                             datalabels.colour = "grey15") {
+                             datalabels.colour = "gray15") {
   stopifnot_installed_package("ggplot2")
   if (is.null(position)) {
     position <- "fill"
   }
-  if (position == "fill") {
-    position <- ggplot2::position_fill(vjust = 0.5)
+  if (identical(position, "fill")) {
+    position <- ggplot2::position_fill(vjust = 0.5, reverse = TRUE)
   }
+  x_name <- x
   ggplot2::geom_text(mapping = ggplot2::aes_string(label = "lbl",
                                                    x = x,
                                                    y = "Value"),
                      position = position,
-                     data = getlbls,
                      inherit.aes = FALSE,
                      size = datalabels.size,
-                     colour = datalabels.colour)
+                     colour = datalabels.colour,
+                     lineheight = 0.75,
+                     data = function(x) {
+                       # labels are only shown when function is count_df,
+                       # so no need parameterise it here
+                       count_df(data = x,
+                                translate_ab = translate_ab,
+                                combine_SI = combine_SI,
+                                combine_IR = combine_IR) %>%
+                         group_by_at(x_name) %>%
+                         mutate(lbl = paste0(percent(Value / sum(Value, na.rm = TRUE), force_zero = TRUE),
+                                             "\n(n=", Value, ")"))
+                     })
 }
-
-#' @importFrom dplyr %>% group_by mutate
-getlbls <- function(data) {
-  data %>%
-    count_df() %>%
-    group_by(Antibiotic) %>%
-    mutate(lbl = paste0(percent(Value / sum(Value, na.rm = TRUE), force_zero = TRUE),
-                        " (n=", Value, ")")) %>%
-    mutate(lbl = ifelse(lbl == "0.0% (n=0)", "", lbl))
-}
-

@@ -5,26 +5,25 @@
 \alias{key_antibiotics_equal}
 \title{Key antibiotics for first \emph{weighted} isolates}
 \usage{
-key_antibiotics(tbl, col_mo = NULL, universal_1 = guess_ab_col(tbl,
-  "amox"), universal_2 = guess_ab_col(tbl, "amcl"),
-  universal_3 = guess_ab_col(tbl, "cfur"),
-  universal_4 = guess_ab_col(tbl, "pita"),
-  universal_5 = guess_ab_col(tbl, "cipr"),
-  universal_6 = guess_ab_col(tbl, "trsu"),
-  GramPos_1 = guess_ab_col(tbl, "vanc"), GramPos_2 = guess_ab_col(tbl,
-  "teic"), GramPos_3 = guess_ab_col(tbl, "tetr"),
-  GramPos_4 = guess_ab_col(tbl, "eryt"), GramPos_5 = guess_ab_col(tbl,
-  "oxac"), GramPos_6 = guess_ab_col(tbl, "rifa"),
-  GramNeg_1 = guess_ab_col(tbl, "gent"), GramNeg_2 = guess_ab_col(tbl,
-  "tobr"), GramNeg_3 = guess_ab_col(tbl, "coli"),
-  GramNeg_4 = guess_ab_col(tbl, "cfot"), GramNeg_5 = guess_ab_col(tbl,
-  "cfta"), GramNeg_6 = guess_ab_col(tbl, "mero"), warnings = TRUE, ...)
+key_antibiotics(x, col_mo = NULL, universal_1 = guess_ab_col(x, "AMX"),
+  universal_2 = guess_ab_col(x, "AMC"), universal_3 = guess_ab_col(x,
+  "CXM"), universal_4 = guess_ab_col(x, "TZP"),
+  universal_5 = guess_ab_col(x, "CIP"), universal_6 = guess_ab_col(x,
+  "SXT"), GramPos_1 = guess_ab_col(x, "VAN"),
+  GramPos_2 = guess_ab_col(x, "TEC"), GramPos_3 = guess_ab_col(x,
+  "TCY"), GramPos_4 = guess_ab_col(x, "ERY"),
+  GramPos_5 = guess_ab_col(x, "OXA"), GramPos_6 = guess_ab_col(x,
+  "RIF"), GramNeg_1 = guess_ab_col(x, "GEN"),
+  GramNeg_2 = guess_ab_col(x, "TOB"), GramNeg_3 = guess_ab_col(x,
+  "COL"), GramNeg_4 = guess_ab_col(x, "CTX"),
+  GramNeg_5 = guess_ab_col(x, "CAZ"), GramNeg_6 = guess_ab_col(x,
+  "MEM"), warnings = TRUE, ...)
 
-key_antibiotics_equal(x, y, type = c("keyantibiotics", "points"),
+key_antibiotics_equal(y, z, type = c("keyantibiotics", "points"),
   ignore_I = TRUE, points_threshold = 2, info = FALSE)
 }
 \arguments{
-\item{tbl}{table with antibiotics coloms, like \code{amox} and \code{amcl}.}
+\item{x}{table with antibiotics coloms, like \code{AMX} or \code{amox}}
 
 \item{col_mo}{column name of the unique IDs of the microorganisms (see \code{\link{mo}}), defaults to the first column of class \code{mo}. Values will be coerced using \code{\link{as.mo}}.}
 
@@ -38,7 +37,7 @@ key_antibiotics_equal(x, y, type = c("keyantibiotics", "points"),
 
 \item{...}{other parameters passed on to function}
 
-\item{x, y}{characters to compare}
+\item{y, z}{characters to compare}
 
 \item{type}{type to determine weighed isolates; can be \code{"keyantibiotics"} or \code{"points"}, see Details}
 
@@ -68,15 +67,15 @@ The function \code{key_antibiotics} returns a character vector with 12 antibioti
     There are two ways to determine whether isolates can be included as first \emph{weighted} isolates which will give generally the same results: \cr
 
     \strong{1. Using} \code{type = "keyantibiotics"} \strong{and parameter} \code{ignore_I} \cr
-    Any difference from S to R (or vice versa) will (re)select an isolate as a first weighted isolate. With \code{ignore_I = FALSE}, also differences from I to S|R (or vice versa) will lead to this. This is a reliable method and 30-35 times faster than method 2. \cr
+    Any difference from S to R (or vice versa) will (re)select an isolate as a first weighted isolate. With \code{ignore_I = FALSE}, also differences from I to S|R (or vice versa) will lead to this. This is a reliable method and 30-35 times faster than method 2. Read more about this in the \code{\link{key_antibiotics}} function. \cr
 
     \strong{2. Using} \code{type = "points"} \strong{and parameter} \code{points_threshold} \cr
-    A difference from I to S|R (or vice versa) means 0.5 points, a difference from S to R (or vice versa) means 1 point. When the sum of points exceeds \code{points_threshold}, an isolate will be (re)selected as a first weighted isolate.
+    A difference from I to S|R (or vice versa) means 0.5 points, a difference from S to R (or vice versa) means 1 point. When the sum of points exceeds \code{points_threshold}, which default to \code{2}, an isolate will be (re)selected as a first weighted isolate.
 }
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{

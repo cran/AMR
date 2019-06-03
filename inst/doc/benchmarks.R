@@ -1,7 +1,7 @@
 ## ----setup, include = FALSE, results = 'markup'--------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
+  comment = "#",
   fig.width = 7.5,
   fig.height = 4.5
 )
@@ -44,23 +44,27 @@ boxplot(microbenchmark(as.mo("Thermus islandicus"),
                        as.mo("E. coli"),
                        times = 10),
         horizontal = TRUE, las = 1, unit = "s", log = FALSE,
-        xlab = "", ylab = "Time in seconds", ylim = c(0, 0.5),
+        xlab = "", ylab = "Time in seconds",
         main = "Benchmarks per prevalence")
 
-## ---- echo = FALSE-------------------------------------------------------
-clean_mo_history()
-par(mar = c(5, 16, 4, 2))
-boxplot(microbenchmark(
-  'as.mo("Thermus islandicus")' = as.mo("Thermus islandicus", force_mo_history = TRUE),
-  'as.mo("Prevotella brevis")' = as.mo("Prevotella brevis", force_mo_history = TRUE),
-  'as.mo("Escherichia coli")' = as.mo("Escherichia coli", force_mo_history = TRUE),
-  'as.mo("T. islandicus")' = as.mo("T. islandicus", force_mo_history = TRUE),
-  'as.mo("P. brevis")' = as.mo("P. brevis", force_mo_history = TRUE),
-  'as.mo("E. coli")' = as.mo("E. coli", force_mo_history = TRUE),
-  times = 10),
-        horizontal = TRUE, las = 1, unit = "s", log = FALSE,
-        xlab = "", ylab = "Time in seconds", ylim = c(0, 0.5),
-        main = "Benchmarks per prevalence")
+## ---- echo = FALSE, eval = FALSE-----------------------------------------
+#  # In reality, the `as.mo()` functions **learns from its own output to speed up determinations for next times**. In above figure, this effect was disabled to show the difference with the boxplot below - when you would use `as.mo()` yourself:
+#  
+#  clean_mo_history()
+#  par(mar = c(5, 16, 4, 2))
+#  boxplot(microbenchmark(
+#    'as.mo("Thermus islandicus")' = as.mo("Thermus islandicus", force_mo_history = TRUE),
+#    'as.mo("Prevotella brevis")' = as.mo("Prevotella brevis", force_mo_history = TRUE),
+#    'as.mo("Escherichia coli")' = as.mo("Escherichia coli", force_mo_history = TRUE),
+#    'as.mo("T. islandicus")' = as.mo("T. islandicus", force_mo_history = TRUE),
+#    'as.mo("P. brevis")' = as.mo("P. brevis", force_mo_history = TRUE),
+#    'as.mo("E. coli")' = as.mo("E. coli", force_mo_history = TRUE),
+#    times = 10),
+#          horizontal = TRUE, las = 1, unit = "s", log = FALSE,
+#          xlab = "", ylab = "Time in seconds", ylim = c(0, 0.5),
+#          main = "Benchmarks per prevalence")
+#  
+#  # The highest outliers are the first times. All next determinations were done in only thousands of seconds. For now, learning only works per session. If R is closed or terminated, the algorithms reset. This will probably be resolved in a next version.
 
 ## ---- message = FALSE----------------------------------------------------
 library(dplyr)

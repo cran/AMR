@@ -16,16 +16,19 @@
 # This R package was created for academic research and was publicly    #
 # released in the hope that it will be useful, but it comes WITHOUT    #
 # ANY WARRANTY OR LIABILITY.                                           #
-# Visit our website for more info: https://msberends.gitab.io/AMR.     #
+# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Guess antibiotic column
 #'
-#' This tries to find a column name in a data set based on information from the \code{\link{antibiotics}} data set. Also supports WHONET abbreviations. You can look for an antibiotic (trade) name or abbreviation and it will search the \code{data.frame} for any column containing a name or ATC code of that antibiotic.
-#' @param tbl a \code{data.frame}
-#' @param col a character to look for
+#' This tries to find a column name in a data set based on information from the \code{\link{antibiotics}} data set. Also supports WHONET abbreviations.
+#' @param x a \code{data.frame}
+#' @param search_string a text to search \code{x} for
 #' @param verbose a logical to indicate whether additional info should be printed
+#' @details You can look for an antibiotic (trade) name or abbreviation and it will search \code{x} and the \code{\link{antibiotics}} data set for any column containing a name or ATC code of that antibiotic. \strong{Longer columns names take precendence over shorter column names.}
 #' @importFrom dplyr %>% select filter_all any_vars
+#' @importFrom crayon blue
+#' @return A column name of \code{x}, or \code{NULL} when no result is found.
 #' @export
 #' @inheritSection AMR Read more on our website!
 #' @examples
@@ -34,11 +37,11 @@
 #'
 #' guess_ab_col(df, "amoxicillin")
 #' # [1] "amox"
-#' guess_ab_col(df, "J01AA07") # ATC code of Tetracycline
+#' guess_ab_col(df, "J01AA07") # ATC code of tetracycline
 #' # [1] "tetr"
 #'
 #' guess_ab_col(df, "J01AA07", verbose = TRUE)
-#' # using column `tetr` for col "J01AA07"
+#' # Note: Using column `tetr` as input for "J01AA07".
 #' # [1] "tetr"
 #'
 #' # WHONET codes
@@ -48,89 +51,56 @@
 #' # [1] "AMP_ND10"
 #' guess_ab_col(df, "J01CR02")
 #' # [1] "AMC_ED20"
-#' guess_ab_col(df, as.atc("augmentin"))
+#' guess_ab_col(df, as.ab("augmentin"))
 #' # [1] "AMC_ED20"
-guess_ab_col <- function(tbl = NULL, col = NULL, verbose = FALSE) {
-  if (is.null(tbl) & is.null(col)) {
+#'
+#' # Longer names take precendence:
+#' df <- data.frame(AMP_ED2 = "S",
+#'                  AMP_ED20 = "S")
+#' guess_ab_col(df, "ampicillin")
+#' # [1] "AMP_ED20"
+guess_ab_col <- function(x = NULL, search_string = NULL, verbose = FALSE) {
+  if (is.null(x) & is.null(search_string)) {
     return(as.name("guess_ab_col"))
   }
-
-  if (length(col) > 1) {
-    warning("argument 'col' has length > 1 and only the first element will be used")
-    col <- col[1]
-  }
-  if (!is.data.frame(tbl)) {
-    stop("`tbl` must be a data.frame")
+  if (!is.data.frame(x)) {
+    stop("`x` must be a data.frame")
   }
 
-  tbl_names <- colnames(tbl)
-  tbl_names_stripped <- colnames(tbl) %>%
-    strsplit("_") %>%
-    lapply(function(x) {x[1]}) %>%
-    unlist()
-
-  if (col %in% tbl_names) {
-    return(col)
+  if (length(search_string) > 1) {
+    warning("argument 'search_string' has length > 1 and only the first element will be used")
+    search_string <- search_string[1]
   }
-  ab_result <- antibiotics %>%
-    select(atc:trade_name) %>%
-    filter_all(any_vars(tolower(.) == tolower(col))) %>%
-    filter_all(any_vars(. %in% tbl_names))
+  search_string <- as.character(search_string)
 
-  if (nrow(ab_result) == 0 & nchar(col) > 4) {
-    # use like when col >= 5 characters
-    ab_result <- antibiotics %>%
-      select(atc:trade_name) %>%
-      filter_all(any_vars(tolower(.) %like% tolower(col))) %>%
-      filter_all(any_vars(. %in% tbl_names))
-  }
-
-  # WHONET
-  if (nrow(ab_result) == 0) {
-    # use like when col >= 5 characters
-    ab_result <- antibiotics %>%
-      select(atc:trade_name) %>%
-      filter_all(any_vars(tolower(.) == tolower(col))) %>%
-      filter_all(any_vars(. %in% tbl_names_stripped))
-  }
-
-  if (nrow(ab_result) > 1) {
-    # looking more and more for reliable hit
-    ab_result_1 <- ab_result %>% filter(tolower(atc) == tolower(col))
-    if (nrow(ab_result_1) == 0) {
-      ab_result_1 <- ab_result %>% filter(tolower(certe) == tolower(col))
+  if (search_string %in% colnames(x)) {
+    ab_result <- search_string
+  } else {
+    search_string.ab <- suppressWarnings(as.ab(search_string))
+    if (search_string.ab %in% colnames(x)) {
+      ab_result <- colnames(x)[colnames(x) == search_string.ab][1L]
+    } else {
+      # sort colnames on length - longest first
+      cols <- colnames(x[, x %>% colnames() %>% nchar() %>% order() %>% rev()])
+      df_trans <- data.frame(cols = cols,
+                             abs = suppressWarnings(as.ab(cols)),
+                             stringsAsFactors = FALSE)
+      ab_result <- df_trans[which(df_trans$abs == search_string.ab), "cols"]
+      ab_result <- ab_result[!is.na(ab_result)][1L]
     }
-    if (nrow(ab_result_1) == 0) {
-      ab_result_1 <- ab_result %>% filter(tolower(umcg) == tolower(col))
-    }
-    if (nrow(ab_result_1) == 0) {
-      ab_result_1 <- ab_result %>% filter(tolower(official) == tolower(col))
-    }
-    if (nrow(ab_result_1) == 0) {
-      ab_result_1 <- ab_result[1, ]
-    }
-    ab_result <- ab_result_1
   }
 
   if (length(ab_result) == 0) {
     if (verbose == TRUE) {
-      message('no column found for input "', col, '"')
+      message(paste0("No column found as input for `", search_string,
+                     "` (", ab_name(search_string, language = "en", tolower = TRUE), ")."))
     }
     return(NULL)
   } else {
-    result <- tbl_names[tbl_names %in% ab_result]
-    if (length(result) == 0) {
-      result <- tbl_names[tbl_names_stripped %in% ab_result]
-    }
-    if (length(result) == 0) {
-      if (verbose == TRUE) {
-        message('no column found for input "', col, '"')
-      }
-      return(NULL)
-    }
     if (verbose == TRUE) {
-      message('using column `', result, '` for col "', col, '"')
+      message(blue(paste0("NOTE: Using column `", bold(ab_result), "` as input for `", search_string,
+                          "` (", ab_name(search_string, language = "en", tolower = TRUE), ").")))
     }
-    return(result)
+    return(ab_result)
   }
 }
