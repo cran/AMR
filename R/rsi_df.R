@@ -19,40 +19,40 @@
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
-context("data.R")
+#' @rdname portion
+#' @rdname count
+#' @importFrom dplyr %>% select_if bind_rows summarise_if mutate group_vars select everything
+#' @export
+rsi_df <- function(data,
+                   translate_ab = "name",
+                   language = get_locale(),
+                   minimum = 30,
+                   as_percent = FALSE,
+                   combine_SI = TRUE,
+                   combine_IR = FALSE) {
 
-test_that("data sets are valid", {
-  # IDs should always be unique
-  expect_identical(nrow(antibiotics), length(unique(antibiotics$ab)))
-  expect_identical(class(antibiotics$ab), "ab")
-  expect_identical(nrow(microorganisms), length(unique(microorganisms$mo)))
-  expect_identical(class(microorganisms$mo), "mo")
+  portions <- rsi_calc_df(type = "portion",
+                          data = data,
+                          translate_ab = translate_ab,
+                          language = language,
+                          minimum = minimum,
+                          as_percent = as_percent,
+                          combine_SI = combine_SI,
+                          combine_IR = combine_IR,
+                          combine_SI_missing = missing(combine_SI))
 
-  # check cross table reference
-  expect_true(all(microorganisms.codes$mo %in% microorganisms$mo))
+  counts <- rsi_calc_df(type = "count",
+                        data = data,
+                        translate_ab = FALSE,
+                        language = "en",
+                        minimum = minimum,
+                        as_percent = as_percent,
+                        combine_SI = combine_SI,
+                        combine_IR = combine_IR,
+                        combine_SI_missing = missing(combine_SI))
 
-  # antibiotic names must always be coercible to their original AB code
-  expect_identical(antibiotics$ab, as.ab(antibiotics$name))
+  data.frame(portions,
+             isolates = counts$value,
+             stringsAsFactors = FALSE)
 
-  # there should be no diacritics (i.e. non ASCII) characters in the datasets (CRAN policy)
-  datasets <- data(package = "AMR", envir = asNamespace("AMR"))$results[, "Item"]
-  for (i in 1:length(datasets)) {
-    dataset <- get(datasets[i], envir = asNamespace("AMR"))
-    expect_identical(dataset_UTF8_to_ASCII(dataset), dataset)
-  }
-})
-
-test_that("creation of data sets is valid", {
-  DT <- make_DT()
-  expect_lt(nrow(DT[prevalence == 1]), nrow(DT[prevalence == 2]))
-  expect_lt(nrow(DT[prevalence == 2]), nrow(DT[prevalence == 3]))
-  old <- make_trans_tbl()
-  expect_gt(length(old), 0)
-})
-
-test_that("CoL version info works", {
- expect_identical(class(catalogue_of_life_version()),
-                  c("catalogue_of_life_version", "list"))
-
-  expect_output(print(catalogue_of_life_version()))
-})
+}

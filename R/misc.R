@@ -172,16 +172,19 @@ get_column_abx <- function(x,
   # get_column_abx(septic_patients %>% rename(thisone = AMX), amox = "thisone")
   dots <- list(...)
   if (length(dots) > 0) {
-    dots <- unlist(dots)
     newnames <- suppressWarnings(as.ab(names(dots)))
     if (any(is.na(newnames))) {
       warning("Invalid antibiotic reference(s): ", toString(names(dots)[is.na(newnames)]),
               call. = FALSE, immediate. = TRUE)
     }
+    # turn all NULLs to NAs
+    dots <- unlist(lapply(dots, function(x) if (is.null(x)) NA else x))
     names(dots) <- newnames
     dots <- dots[!is.na(names(dots))]
     # merge, but overwrite automatically determined ones by 'dots'
     x <- c(x[!x %in% dots & !names(x) %in% names(dots)], dots)
+    # delete NAs, this will make eucast_rules(... TMP = NULL) work to prevent TMP from being used
+    x <- x[!is.na(x)]
   }
 
   # sort on name
@@ -250,7 +253,7 @@ stopifnot_installed_package <- function(package) {
 
 # translate strings based on inst/translations.tsv
 #' @importFrom dplyr %>% filter
-t <- function(from, language = get_locale()) {
+translate_AMR <- function(from, language = get_locale(), only_unknown = FALSE) {
   # if (getOption("AMR_locale", "en") != language) {
   #   language <- getOption("AMR_locale", "en")
   # }
@@ -271,6 +274,9 @@ t <- function(from, language = get_locale()) {
   }
 
   df_trans <- df_trans %>% filter(lang == language)
+  if (only_unknown == TRUE) {
+    df_trans <- df_trans %>% filter(pattern %like% "unknown")
+  }
 
   # default case sensitive if value if 'ignore.case' is missing:
   df_trans$ignore.case[is.na(df_trans$ignore.case)] <- FALSE
@@ -301,5 +307,14 @@ t <- function(from, language = get_locale()) {
 }
 
 "%or%" <- function(x, y) {
-  ifelse(!is.na(x), x, ifelse(!is.na(y), y, NA))
+  if (is.null(x) | is.null(y)) {
+    if (is.null(x)) {
+      return(y)
+    } else {
+      return(x)
+    }
+  }
+  ifelse(!is.na(x),
+         x,
+         ifelse(!is.na(y), y, NA))
 }

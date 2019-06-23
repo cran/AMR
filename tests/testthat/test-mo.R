@@ -33,6 +33,7 @@ test_that("as.mo works", {
 
   expect_equal(as.character(as.mo("Escherichia coli")), "B_ESCHR_COL")
   expect_equal(as.character(as.mo("Escherichia  coli")), "B_ESCHR_COL")
+  expect_equal(as.character(as.mo(22242416)), "B_ESCHR_COL")
   expect_equal(as.character(as.mo("Escherichia  species")), "B_ESCHR")
   expect_equal(as.character(as.mo("Escherichia")), "B_ESCHR")
   expect_equal(as.character(as.mo("Esch spp.")), "B_ESCHR")
@@ -74,7 +75,7 @@ test_that("as.mo works", {
 
   # prevalent MO
   expect_identical(
-    as.character(
+    suppressWarnings(as.character(
       as.mo(c("stau",
               "STAU",
               "staaur",
@@ -83,12 +84,12 @@ test_that("as.mo works", {
               "Sthafilokkockus aureeuzz",
               "Staphylococcus aureus",
               "MRSA",
-              "VISA"))),
+              "VISA")))),
     rep("B_STPHY_AUR", 9))
   expect_identical(
     as.character(
-      as.mo(c('EHEC', 'EPEC', 'EIEC', 'STEC', 'ATEC'))),
-    rep("B_ESCHR_COL", 5))
+      as.mo(c('EHEC', 'EPEC', 'EIEC', 'STEC', 'ATEC', 'UPEC'))),
+    rep("B_ESCHR_COL", 6))
   # unprevalent MO
   expect_identical(
     as.character(
@@ -259,9 +260,9 @@ test_that("as.mo works", {
   expect_null(mo_failures())
   expect_true(septic_patients %>% pull(mo) %>% is.mo())
 
-  expect_equal(get_mo_code("test", "mo"), "test")
-  expect_equal(length(get_mo_code("Escherichia", "genus")),
-               nrow(AMR::microorganisms[base::which(AMR::microorganisms[, "genus"] %in% "Escherichia"),]))
+  # expect_equal(get_mo_code("test", "mo"), "test")
+  # expect_equal(length(get_mo_code("Escherichia", "genus")),
+  #              nrow(AMR::microorganisms[base::which(AMR::microorganisms[, "genus"] %in% "Escherichia"),]))
 
   expect_error(translate_allow_uncertain(5))
 

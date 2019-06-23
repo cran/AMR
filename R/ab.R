@@ -70,15 +70,15 @@ as.ab <- function(x) {
 
   x_bak <- x
   # remove suffices
-  x_bak_clean <- gsub("_(mic|rsi|disk|disc)$", "", x, ignore.case = TRUE)
+  x_bak_clean <- gsub("_(mic|rsi|dis[ck])$", "", x, ignore.case = TRUE)
   # remove disk concentrations, like LVX_NM -> LVX
   x_bak_clean <- gsub("_[A-Z]{2}[0-9_]{0,3}$", "", x_bak_clean, ignore.case = TRUE)
-  # clean rest of it
-  x_bak_clean <- gsub("[^A-Z0-9/-]", "", x_bak_clean, ignore.case = TRUE)
-  # keep only a-z when it's not an ATC code or only numbers
-  x_bak_clean[!x_bak_clean %like% "^([A-Z][0-9]{2}[A-Z]{2}[0-9]{2}|[0-9]+)$"] <- gsub("[^a-zA-Z]+",
-                                                                                      "",
-                                                                                      x_bak_clean[!x_bak_clean %like% "^([A-Z][0-9]{2}[A-Z]{2}[0-9]{2}|[0-9]+)$"])
+  # remove part between brackets if that's followed by another string
+  x_bak_clean <- gsub("(.*)+ [(].*[)]", "\\1", x_bak_clean)
+  # keep only a-Z, 0-9, space, slash and dash
+  x_bak_clean <- gsub("[^A-Z0-9 /-]", "", x_bak_clean, ignore.case = TRUE)
+  # keep only max 1 space
+  x_bak_clean <- trimws(gsub(" +", " ", x_bak_clean, ignore.case = TRUE))
   x <- unique(x_bak_clean)
   x_new <- rep(NA_character_, length(x))
   x_unknown <- character(0)
@@ -88,6 +88,11 @@ as.ab <- function(x) {
       next
     }
     if (identical(x[i], "")) {
+      x_unknown <- c(x_unknown, x_bak[x[i] == x_bak_clean][1])
+      next
+    }
+    # prevent "bacteria" from coercing to TMP, since Bacterial is a brand name of it
+    if (identical(tolower(x[i]), "bacteria")) {
       x_unknown <- c(x_unknown, x_bak[x[i] == x_bak_clean][1])
       next
     }
@@ -162,23 +167,20 @@ as.ab <- function(x) {
     }
     x_spelling <- tolower(x[i])
     x_spelling <- gsub("[iy]+", "[iy]+", x_spelling)
-    x_spelling <- gsub("[sz]+", "[sz]+", x_spelling)
-    x_spelling <- gsub("(c|k|q|qu)+", "(c|k|q|qu)+", x_spelling)
+    x_spelling <- gsub("(c|k|q|qu|s|z|x|ks)+", "(c|k|q|qu|s|z|x|ks)+", x_spelling)
     x_spelling <- gsub("(ph|f|v)+", "(ph|f|v)+", x_spelling)
     x_spelling <- gsub("(th|t)+", "(th|t)+", x_spelling)
-    x_spelling <- gsub("(x|ks)+", "(x|ks)+", x_spelling)
     x_spelling <- gsub("a+", "a+", x_spelling)
     x_spelling <- gsub("e+", "e+", x_spelling)
     x_spelling <- gsub("o+", "o+", x_spelling)
-    # allow start with C/S/Z
-    x_spelling <- gsub("^(\\(c\\|k\\|q\\|qu\\)|\\[sz\\])", "(c|k|q|qu|s|z)", x_spelling)
-    x_spelling <- gsub("(c|k|q|qu)+[sz]", "(c|k|q|qu|s|x|z)", x_spelling, fixed = TRUE)
     # allow any ending of -in/-ine and -im/-ime
     x_spelling <- gsub("(\\[iy\\]\\+(n|m)|\\[iy\\]\\+(n|m)e\\+)$", "[iy]+(n|m)e*", x_spelling)
     # allow any ending of -ol/-ole
     x_spelling <- gsub("(o\\+l|o\\+le\\+)$", "o+le*", x_spelling)
     # allow any ending of -on/-one
     x_spelling <- gsub("(o\\+n|o\\+ne\\+)$", "o+ne*", x_spelling)
+    # replace multiple same characters to single one with '+', like "ll" -> "l+"
+    x_spelling <- gsub("(.)\\1+", "\\1+", x_spelling)
     # try if name starts with it
     found <- AMR::antibiotics[which(AMR::antibiotics$name %like% paste0("^", x_spelling)),]$ab
     if (length(found) > 0) {
@@ -198,8 +200,36 @@ as.ab <- function(x) {
       next
     }
 
+    # try by removing all spaces
+    if (x[i] %like% " ") {
+      found <- suppressWarnings(as.ab(gsub(" +", "", x[i])))
+      if (length(found) > 0 & !is.na(found)) {
+        x_new[i] <- found[1L]
+        next
+      }
+    }
+
+    # try by removing all spaces and numbers
+    if (x[i] %like% " " | x[i] %like% "[0-9]") {
+      found <- suppressWarnings(as.ab(gsub("[ 0-9]", "", x[i])))
+      if (length(found) > 0 & !is.na(found)) {
+        x_new[i] <- found[1L]
+        next
+      }
+    }
+
     # not found
     x_unknown <- c(x_unknown, x_bak[x[i] == x_bak_clean][1])
+  }
+
+  # take failed ATC codes apart from rest
+  x_unknown_ATCs <- x_unknown[x_unknown %like% "[A-Z][0-9][0-9][A-Z][A-Z][0-9][0-9]"]
+  x_unknown <- x_unknown[!x_unknown %in% x_unknown_ATCs]
+  if (length(x_unknown_ATCs) > 0) {
+    warning("These ATC codes are not (yet) in the antibiotics data set: ",
+            paste('"', sort(unique(x_unknown_ATCs)), '"', sep = "", collapse = ', '),
+            ".",
+            call. = FALSE)
   }
 
   if (length(x_unknown) > 0) {

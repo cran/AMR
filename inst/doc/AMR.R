@@ -116,6 +116,7 @@ weighted_df <- data %>%
   mutate(isolate = row_number()) %>% 
   select(isolate, everything())
 
+## ---- echo = FALSE, message = FALSE, warning = FALSE, results = 'asis'----
 weighted_df %>% 
   knitr::kable(align = "c")
 
@@ -211,10 +212,10 @@ data_1st %>%
   summarise("1. Amoxi/clav" = portion_SI(AMC),
             "2. Gentamicin" = portion_SI(GEN),
             "3. Amoxi/clav + genta" = portion_SI(AMC, GEN)) %>% 
-  tidyr::gather("Antibiotic", "S", -genus) %>%
+  tidyr::gather("antibiotic", "S", -genus) %>%
   ggplot(aes(x = genus,
              y = S,
-             fill = Antibiotic)) +
+             fill = antibiotic)) +
   geom_col(position = "dodge2")
 
 ## ----plot 2, eval = FALSE------------------------------------------------
@@ -243,7 +244,7 @@ ggplot(data_1st %>% group_by(genus)) +
   # of which we have 4 (earlier created with `as.rsi`)
   geom_rsi(x = "genus") + 
   # split plots on antibiotic
-  facet_rsi(facet = "Antibiotic") +
+  facet_rsi(facet = "antibiotic") +
   # make R red, I yellow and S green
   scale_rsi_colours() +
   # show percentages on y axis
@@ -261,31 +262,24 @@ ggplot(data_1st %>% group_by(genus)) +
 data_1st %>% 
   group_by(genus) %>%
   ggplot_rsi(x = "genus",
-             facet = "Antibiotic",
+             facet = "antibiotic",
              breaks = 0:4 * 25,
              datalabels = FALSE) +
   coord_flip()
 
-## ---- echo = FALSE, results = 'asis'-------------------------------------
-septic_patients %>%
-  filter(hospital_id %in% c("A", "D")) %>%
-  select(hospital_id, FOS) %>%
-  group_by(hospital_id) %>%
-  count_df(combine_IR = TRUE) %>%
-  tidyr::spread(hospital_id, Value) %>%
-  select(A, D) %>%
-  bind_cols(tibble(" " = c("IR", "S")), .) %>% 
-  as.matrix() %>%
-  knitr::kable()
-
-## ------------------------------------------------------------------------
-septic_patients %>%
+## ---- results = 'markup'-------------------------------------------------
+check_FOS <- septic_patients %>%
   filter(hospital_id %in% c("A", "D")) %>% # filter on only hospitals A and D
   select(hospital_id, FOS) %>%             # select the hospitals and fosfomycin
   group_by(hospital_id) %>%                # group on the hospitals
-  count_df(combine_IR = TRUE) %>%          # count all isolates per group (hospital_id)
-  tidyr::spread(hospital_id, Value) %>%    # transform output so A and D are columns
+  count_df(combine_SI = TRUE) %>%          # count all isolates per group (hospital_id)
+  tidyr::spread(hospital_id, value) %>%    # transform output so A and D are columns
   select(A, D) %>%                         # and select these only
-  as.matrix() %>%                          # transform to good old matrix for fisher.test()
-  fisher.test()                            # do Fisher's Exact Test
+  as.matrix()                              # transform to good old matrix for fisher.test()
+
+check_FOS
+
+## ------------------------------------------------------------------------
+# do Fisher's Exact Test
+fisher.test(check_FOS)                            
 

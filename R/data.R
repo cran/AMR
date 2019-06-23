@@ -22,7 +22,7 @@
 #' Data set with ~450 antibiotics
 #'
 #' A data set containing all antibiotics. Use \code{\link{as.ab}} or one of the \code{\link{ab_property}} functions to retrieve values from this data set. Three identifiers are included in this data set: an antibiotic ID (\code{ab}, primarily used in this package) as defined by WHONET/EARS-Net, an ATC code (\code{atc}) as defined by the WHO, and a Compound ID (\code{cid}) as found in PubChem. Other properties in this data set are derived from one or more of these codes.
-#' @format A \code{\link{data.frame}} with 454 observations and 13 variables:
+#' @format A \code{\link{data.frame}} with 453 observations and 13 variables:
 #' \describe{
 #'   \item{\code{ab}}{Antibiotic ID as used in this package (like \code{AMC}), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available}
 #'   \item{\code{atc}}{ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC, like \code{J01CR02}}
@@ -55,7 +55,7 @@
 #'
 #' A data set containing the microbial taxonomy of six kingdoms from the Catalogue of Life. MO codes can be looked up using \code{\link{as.mo}}.
 #' @inheritSection catalogue_of_life Catalogue of Life
-#' @format A \code{\link{data.frame}} with 67,903 observations and 16 variables:
+#' @format A \code{\link{data.frame}} with 67,906 observations and 16 variables:
 #' \describe{
 #'   \item{\code{mo}}{ID of microorganism as used by this package}
 #'   \item{\code{col_id}}{Catalogue of Life ID}
@@ -69,9 +69,10 @@
 #' }
 #' @details Manually added were:
 #' \itemize{
-#'   \item{9 species of \emph{Streptococcus} (beta haemolytic groups A, B, C, D, F, G, H, K and unspecified)}
-#'   \item{2 species of \emph{Staphylococcus} (coagulase-negative [CoNS] and coagulase-positive [CoPS])}
-#'   \item{3 other undefined (unknown, unknown Gram negatives and unknown Gram positives)}
+#'   \item{9 entries of \emph{Streptococcus} (beta haemolytic groups A, B, C, D, F, G, H, K and unspecified)}
+#'   \item{2 entries of \emph{Staphylococcus} (coagulase-negative [CoNS] and coagulase-positive [CoPS])}
+#'   \item{3 entries of Trichomonas (Trichomonas vaginalis, and its family and genus)}
+#'   \item{3 other 'undefined' entries (unknown, unknown Gram negatives and unknown Gram positives)}
 #'   \item{8,830 species from the DSMZ (Deutsche Sammlung von Mikroorganismen und Zellkulturen) that are not in the Catalogue of Life}
 #' }
 #' @section About the records from DSMZ (see source):

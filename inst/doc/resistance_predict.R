@@ -44,13 +44,13 @@ ggplot_rsi_predict(predict_TZP, ribbon = FALSE)
 
 ## ------------------------------------------------------------------------
 septic_patients %>%
-  filter(mo_gramstain(mo) == "Gram positive") %>%
+  filter(mo_gramstain(mo, language = NULL) == "Gram-positive") %>%
   resistance_predict(col_ab = "VAN", year_min = 2010, info = FALSE) %>% 
   ggplot_rsi_predict()
 
 ## ------------------------------------------------------------------------
 septic_patients %>%
-  filter(mo_gramstain(mo) == "Gram positive") %>%
+  filter(mo_gramstain(mo, language = NULL) == "Gram-positive") %>%
   resistance_predict(col_ab = "VAN", year_min = 2010, info = FALSE, model = "linear") %>% 
   ggplot_rsi_predict()
 

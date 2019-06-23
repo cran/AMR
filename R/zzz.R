@@ -51,6 +51,33 @@
 
 }
 
+
+.onAttach <- function(...) {
+  if (interactive() & !isFALSE(getOption("AMR_survey"))) {
+    options(AMR_survey = FALSE)
+    console_width <- options()$width - 1
+    url <- "https://www.surveymonkey.com/r/AMR_for_R"
+    txt <- paste0("Thanks for using the AMR package! ",
+                 "As researchers, we are interested in how and why you use this package and if there are things you're missing from it. ",
+                 "Please fill in our 2-minute survey at: ", url, ". ",
+                 "This message can be turned off with: options(AMR_survey = FALSE)")
+
+    # make it honour new lines bases on console width:
+    txt <- unlist(strsplit(txt, " "))
+    txt_new <- ""
+    total_chars <- 0
+    for (i in 1:length(txt)) {
+      total_chars <- total_chars + nchar(txt[i]) + 1
+      if (total_chars > console_width) {
+        txt_new <- paste0(txt_new, "\n")
+        total_chars <- 0
+      }
+      txt_new <- paste0(txt_new, txt[i], " ")
+    }
+    # packageStartupMessage(txt_new)
+  }
+}
+
 #' @importFrom data.table as.data.table setkey
 make_DT <- function() {
   microorganismsDT <- as.data.table(AMR::microorganisms)
@@ -253,9 +280,10 @@ make_trans_tbl <- function() {
     B_GRDNR = "B_GRLLA", B_SGMNS = "B_SNGMNS", B_TCLLS = "B_THBCL",
     F_CCCCS = "F_CRYPT",
     # renamings of old genus + species
-    F_CANDD_GLB = "F_CANDD_GLA", F_CANDD_KRU = "F_ISSTC_ORI",
-    F_CANDD_GUI = "F_MYRZY_GUI",
-    F_CANDD_LUS = "F_CLVSP_LUS", B_STRPT_TUS = "B_STRPT",
+    # putting full names here will throw notes with new taxonomic names
+    F_CANDD_GLB = "F_CANDD_GLA", F_CANDD_KRU = "Candida krusei",
+    F_CANDD_GUI = "Candida guilliermondii", F_HNSNL_ANO = "Hansenula anomala",
+    F_CANDD_LUS = "Candida lusitaniae", B_STRPT_TUS = "B_STRPT",
     B_PRVTL_OLA = "B_PRVTL_OULO", B_FSBCT_RUM = "B_FSBCT",
     B_CRYNB_EYI = "B_CRYNB_FRE", B_OLGLL_LIS = "B_OLGLL_URE")
 }

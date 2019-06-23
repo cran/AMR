@@ -148,9 +148,10 @@
 #' as.mo("Staphylococcus aureus")
 #' as.mo("Staphylococcus aureus (MRSA)")
 #' as.mo("Sthafilokkockus aaureuz") # handles incorrect spelling
-#' as.mo("MRSA") # Methicillin Resistant S. aureus
-#' as.mo("VISA") # Vancomycin Intermediate S. aureus
-#' as.mo("VRSA") # Vancomycin Resistant S. aureus
+#' as.mo("MRSA")   # Methicillin Resistant S. aureus
+#' as.mo("VISA")   # Vancomycin Intermediate S. aureus
+#' as.mo("VRSA")   # Vancomycin Resistant S. aureus
+#' as.mo(22242419) # Catalogue of Life ID
 #'
 #' # Dyslexia is no problem - these all work:
 #' as.mo("Ureaplasma urealyticum")
@@ -232,11 +233,11 @@ as.mo <- function(x, Becker = FALSE, Lancefield = FALSE, allow_uncertain = TRUE,
              & isFALSE(Lancefield)) {
     y <- x
 
-  # } else if (!any(is.na(mo_hist))
-  #            & isFALSE(Becker)
-  #            & isFALSE(Lancefield)) {
-  #   # check previously found results
-  #   y <- mo_hist
+    # } else if (!any(is.na(mo_hist))
+    #            & isFALSE(Becker)
+    #            & isFALSE(Lancefield)) {
+    #   # check previously found results
+    #   y <- mo_hist
 
   } else if (all(tolower(x) %in% microorganismsDT$fullname_lower)
              & isFALSE(Becker)
@@ -485,18 +486,21 @@ exec_as.mo <- function(x,
     # remove genus as first word
     x <- gsub("^Genus ", "", x)
     # allow characters that resemble others
-    x <- gsub("[iy]+", "[iy]+", x, ignore.case = TRUE)
-    x <- gsub("[sz]+", "[sz]+", x, ignore.case = TRUE)
-    x <- gsub("(c|k|q|qu)+", "(c|k|q|qu)+", x, ignore.case = TRUE)
-    x <- gsub("(ph|f|v)+", "(ph|f|v)+", x, ignore.case = TRUE)
-    x <- gsub("(th|t)+", "(th|t)+", x, ignore.case = TRUE)
-    x <- gsub("a+", "a+", x, ignore.case = TRUE)
-    # allow any ending of -um, -us, -ium, -ius and -a (needs perl for the negative backward lookup):
-    x <- gsub("(um|u\\[sz\\]\\+|\\[iy\\]\\+um|\\[iy\\]\\+u\\[sz\\]\\+|a\\+)(?![a-z[])",
-              "(um|us|ium|ius|a)", x, ignore.case = TRUE, perl = TRUE)
-    x <- gsub("e+", "e+", x, ignore.case = TRUE)
-    x <- gsub("o+", "o+", x, ignore.case = TRUE)
-
+    if (initial_search == FALSE) {
+      x <- tolower(x)
+      x <- gsub("[iy]+", "[iy]+", x)
+      x <- gsub("(c|k|q|qu|s|z|x|ks)+", "(c|k|q|qu|s|z|x|ks)+", x)
+      x <- gsub("(ph|f|v)+", "(ph|f|v)+", x)
+      x <- gsub("(th|t)+", "(th|t)+", x)
+      x <- gsub("a+", "a+", x)
+      x <- gsub("u+", "u+", x)
+      # allow any ending of -um, -us, -ium, -ius and -a (needs perl for the negative backward lookup):
+      x <- gsub("(um|u\\[sz\\]\\+|\\[iy\\]\\+um|\\[iy\\]\\+u\\[sz\\]\\+|a\\+)(?![a-z[])",
+                "(um|us|ium|ius|a)", x, ignore.case = TRUE, perl = TRUE)
+      x <- gsub("e+", "e+", x, ignore.case = TRUE)
+      x <- gsub("o+", "o+", x, ignore.case = TRUE)
+      x <- gsub("(.)\\1+", "\\1+", x)
+    }
     x <- strip_whitespace(x)
 
     x_trimmed <- x
@@ -560,6 +564,17 @@ exec_as.mo <- function(x,
         }
         next
       }
+
+      found <- microorganismsDT[col_id == x_backup[i], ..property][[1]]
+      # is a valid Catalogue of Life ID
+      if (NROW(found) > 0) {
+        x[i] <- found[1L]
+        if (initial_search == TRUE) {
+          set_mo_history(x_backup[i], get_mo_code(x[i], property), 0, force = force_mo_history)
+        }
+        next
+      }
+
 
       # WHONET: xxx = no growth
       if (tolower(as.character(paste0(x_backup_without_spp[i], ""))) %in% c("", "xxx", "na", "nan")) {
@@ -639,7 +654,19 @@ exec_as.mo <- function(x,
           }
           next
         }
-        if (toupper(x_backup_without_spp[i]) %in% c("EHEC", "EPEC", "EIEC", "STEC", "ATEC")
+        # support for:
+        # - AIEC (Adherent-Invasive E. coli)
+        # - ATEC (Atypical Entero-pathogenic E. coli)
+        # - DAEC (Diffusely Adhering E. coli)
+        # - EAEC (Entero-Aggresive E. coli)
+        # - EHEC (Entero-Haemorrhagic E. coli)
+        # - EIEC (Entero-Invasive E. coli)
+        # - EPEC (Entero-Pathogenic E. coli)
+        # - ETEC (Entero-Toxigenic E. coli)
+        # - NMEC (Neonatal Meningitis‐causing E. coli)
+        # - STEC (Shiga-toxin producing E. coli)
+        # - UPEC (Uropathogenic E. coli)
+        if (toupper(x_backup_without_spp[i]) %in% c("AIEC", "ATEC", "DAEC", "EAEC", "EHEC", "EIEC", "EPEC", "ETEC", "NMEC", "STEC", "UPEC")
             | x_backup_without_spp[i] %like% "O?(26|103|104|104|111|121|145|157)") {
           x[i] <- microorganismsDT[mo == 'B_ESCHR_COL', ..property][[1]][1L]
           if (initial_search == TRUE) {
@@ -745,7 +772,7 @@ exec_as.mo <- function(x,
               set_mo_history(x_backup[i], get_mo_code(x[i], property), 0, force = force_mo_history)
             }
             options(mo_renamed = c(getOption("mo_renamed"),
-                                   magenta(paste0("Note: ",
+                                   magenta(paste0("NOTE: ",
                                                   italic("Salmonella"), " ", trimws(gsub("Salmonella", "", x_backup_without_spp[i])),
                                                   " was considered ",
                                                   italic("Salmonella species"),
@@ -757,7 +784,7 @@ exec_as.mo <- function(x,
               set_mo_history(x_backup[i], get_mo_code(x[i], property), 0, force = force_mo_history)
             }
             options(mo_renamed = c(getOption("mo_renamed"),
-                                   magenta(paste0("Note: ",
+                                   magenta(paste0("NOTE: ",
                                                   italic("Salmonella"), " ", trimws(gsub("Salmonella", "", x_backup_without_spp[i])),
                                                   " was considered a subspecies of ",
                                                   italic("Salmonella enterica"),
@@ -767,7 +794,7 @@ exec_as.mo <- function(x,
         }
       }
 
-      # FIRST TRY FULLNAMES AND CODES
+      # FIRST TRY FULLNAMES AND CODES ----
       # if only genus is available, return only genus
       if (all(!c(x[i], x_trimmed[i]) %like% " ")) {
         found <- microorganismsDT[fullname_lower %in% tolower(c(x_species[i], x_trimmed_species[i])), ..property][[1]]
@@ -1230,7 +1257,7 @@ exec_as.mo <- function(x,
     post_Becker <- c("argensis", "caeli", "cornubiensis", "edaphicus")
     if (any(x %in% MOs_staph[species %in% post_Becker, ..property][[1]])) {
 
-      warning("Becker ", italic("et al."), " (2014) does not contain species named after their publication: ",
+      warning("Becker ", italic("et al."), " (2014, 2019) does not contain species named after their publication: ",
               italic(paste("S.",
                            sort(mo_species(unique(x[x %in% MOs_staph[species %in% post_Becker, ..property][[1]]]))),
                            collapse = ", ")),
@@ -1303,7 +1330,7 @@ exec_as.mo <- function(x,
     }
     notes <- sort(notes)
     for (i in 1:length(notes)) {
-      base::message(blue(paste("Note:", notes[i])))
+      base::message(blue(paste("NOTE:", notes[i])))
     }
   }
 
@@ -1333,7 +1360,7 @@ was_renamed <- function(name_old, name_new, ref_old = "", ref_new = "", mo = "")
   }
   msg <- paste0(italic(name_old), ref_old, " was renamed ", italic(name_new), ref_new, mo)
   msg <- gsub("et al.", italic("et al."), msg)
-  options(mo_renamed = sort(msg))
+  options(mo_renamed = c(getOption("mo_renamed"), sort(msg)))
 }
 
 #' @exportMethod print.mo
@@ -1462,6 +1489,9 @@ unregex <- function(x) {
 }
 
 get_mo_code <- function(x, property) {
+  # don't use right now
+  return(NULL)
+
   if (property == "mo") {
     unique(x)
   } else {

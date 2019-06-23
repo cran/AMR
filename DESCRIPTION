@@ -1,6 +1,6 @@
 Package: AMR
-Version: 0.7.0
-Date: 2019-06-03
+Version: 0.7.1
+Date: 2019-06-23
 Title: Antimicrobial Resistance Analysis
 Authors@R: c(
     person(
@@ -55,7 +55,7 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
 NeedsCompilation: no
-Packaged: 2019-06-03 14:37:14 UTC; uscloud
+Packaged: 2019-06-23 06:31:11 UTC; uscloud
 Author: Matthijs S. Berends [aut, cre]
     (<https://orcid.org/0000-0001-7620-1800>),
   Christian F. Luz [aut] (<https://orcid.org/0000-0001-5809-5995>),
@@ -65,4 +65,4 @@ Author: Matthijs S. Berends [aut, cre]
   Bhanu N. M. Sinha [aut, ths] (<https://orcid.org/0000-0003-1634-0010>)
 Maintainer: Matthijs S. Berends <m.s.berends@umcg.nl>
 Repository: CRAN
-Date/Publication: 2019-06-03 15:30:11 UTC
+Date/Publication: 2019-06-23 09:20:02 UTC
