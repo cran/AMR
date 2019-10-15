@@ -9,80 +9,83 @@
 \alias{filter_2nd_cephalosporins}
 \alias{filter_3rd_cephalosporins}
 \alias{filter_4th_cephalosporins}
+\alias{filter_5th_cephalosporins}
 \alias{filter_fluoroquinolones}
 \alias{filter_glycopeptides}
 \alias{filter_macrolides}
 \alias{filter_tetracyclines}
 \title{Filter isolates on result in antibiotic class}
 \usage{
-filter_ab_class(tbl, ab_class, result = NULL, scope = "any", ...)
+filter_ab_class(x, ab_class, result = NULL, scope = "any", ...)
 
-filter_aminoglycosides(tbl, result = NULL, scope = "any", ...)
+filter_aminoglycosides(x, result = NULL, scope = "any", ...)
 
-filter_carbapenems(tbl, result = NULL, scope = "any", ...)
+filter_carbapenems(x, result = NULL, scope = "any", ...)
 
-filter_cephalosporins(tbl, result = NULL, scope = "any", ...)
+filter_cephalosporins(x, result = NULL, scope = "any", ...)
 
-filter_1st_cephalosporins(tbl, result = NULL, scope = "any", ...)
+filter_1st_cephalosporins(x, result = NULL, scope = "any", ...)
 
-filter_2nd_cephalosporins(tbl, result = NULL, scope = "any", ...)
+filter_2nd_cephalosporins(x, result = NULL, scope = "any", ...)
 
-filter_3rd_cephalosporins(tbl, result = NULL, scope = "any", ...)
+filter_3rd_cephalosporins(x, result = NULL, scope = "any", ...)
 
-filter_4th_cephalosporins(tbl, result = NULL, scope = "any", ...)
+filter_4th_cephalosporins(x, result = NULL, scope = "any", ...)
 
-filter_fluoroquinolones(tbl, result = NULL, scope = "any", ...)
+filter_5th_cephalosporins(x, result = NULL, scope = "any", ...)
 
-filter_glycopeptides(tbl, result = NULL, scope = "any", ...)
+filter_fluoroquinolones(x, result = NULL, scope = "any", ...)
 
-filter_macrolides(tbl, result = NULL, scope = "any", ...)
+filter_glycopeptides(x, result = NULL, scope = "any", ...)
 
-filter_tetracyclines(tbl, result = NULL, scope = "any", ...)
+filter_macrolides(x, result = NULL, scope = "any", ...)
+
+filter_tetracyclines(x, result = NULL, scope = "any", ...)
 }
 \arguments{
-\item{tbl}{a data set}
+\item{x}{a data set}
 
-\item{ab_class}{an antimicrobial class, like \code{"carbapenems"}. More specifically, this should be a text that can be found in a 4th level ATC group (chemical subgroup) or a 5th level ATC group (chemical substance), please see \href{https://www.whocc.no/atc/structure_and_principles/}{this explanation on the WHOCC website}.}
+\item{ab_class}{an antimicrobial class, like \code{"carbapenems"}, as can be found in \code{AMR::antibiotics$group}}
 
 \item{result}{an antibiotic result: S, I or R (or a combination of more of them)}
 
 \item{scope}{the scope to check which variables to check, can be \code{"any"} (default) or \code{"all"}}
 
-\item{...}{parameters passed on to \code{\link[dplyr]{filter_at}}}
+\item{...}{parameters passed on to \code{filter_at} from the \code{dplyr} package}
 }
 \description{
 Filter isolates on results in specific antibiotic variables based on their class (ATC groups). This makes it easy to get a list of isolates that were tested for e.g. any aminoglycoside.
 }
 \details{
-The \code{\link{antibiotics}} data set will be searched for \code{ab_class} in the columns \code{atc_group1} and \code{atc_group2} (case-insensitive). Next, \code{tbl} will be checked for column names with a value in any abbreviations, codes or official names found in the \code{antibiotics} data set.
+The \code{group} column in \code{\link{antibiotics}} data set will be searched for \code{ab_class} (case-insensitive). If no results are found, the \code{atc_group1} and \code{atc_group2} columns will be searched. Next, \code{x} will be checked for column names with a value in any abbreviations, codes or official names found in the \code{antibiotics} data set.
 }
 \examples{
 library(dplyr)
 
 # filter on isolates that have any result for any aminoglycoside
-septic_patients \%>\% filter_aminoglycosides()
+example_isolates \%>\% filter_aminoglycosides()
 
 # this is essentially the same as (but without determination of column names):
-septic_patients \%>\%
+example_isolates \%>\%
   filter_at(.vars = vars(c("GEN", "TOB", "AMK", "KAN")),
             .vars_predicate = any_vars(. \%in\% c("S", "I", "R")))
 
 
 # filter on isolates that show resistance to ANY aminoglycoside
-septic_patients \%>\% filter_aminoglycosides("R")
+example_isolates \%>\% filter_aminoglycosides("R")
 
 # filter on isolates that show resistance to ALL aminoglycosides
-septic_patients \%>\% filter_aminoglycosides("R", "all")
+example_isolates \%>\% filter_aminoglycosides("R", "all")
 
 # filter on isolates that show resistance to
 # any aminoglycoside and any fluoroquinolone
-septic_patients \%>\%
+example_isolates \%>\%
   filter_aminoglycosides("R") \%>\%
   filter_fluoroquinolones("R")
 
 # filter on isolates that show resistance to
 # all aminoglycosides and all fluoroquinolones
-septic_patients \%>\%
+example_isolates \%>\%
   filter_aminoglycosides("R", "all") \%>\%
   filter_fluoroquinolones("R", "all")
 }

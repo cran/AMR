@@ -5,12 +5,14 @@
 \alias{is.ab}
 \title{Transform to antibiotic ID}
 \usage{
-as.ab(x)
+as.ab(x, ...)
 
 is.ab(x)
 }
 \arguments{
 \item{x}{character vector to determine to antibiotic ID}
+
+\item{...}{arguments passed on to internal functions}
 }
 \value{
 Character (vector) with class \code{"ab"}. Unknown values will return \code{NA}.
@@ -35,11 +37,13 @@ European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{htt
 \section{WHOCC}{
 
 \if{html}{\figure{logo_who.png}{options: height=60px style=margin-bottom:5px} \cr}
-This package contains \strong{all ~450 antimicrobial drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}).
+This package contains \strong{all ~450 antimicrobial drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}). 
 
 These have become the gold standard for international drug utilisation monitoring and research.
 
 The WHOCC is located in Oslo at the Norwegian Institute of Public Health and funded by the Norwegian government. The European Commission is the executive of the European Union and promotes its general interest.
+
+\strong{NOTE: The WHOCC copyright does not allow use for commercial purposes, unlike any other info from this package. See \url{https://www.whocc.no/copyright_disclaimer/}.}
 }
 
 \section{Read more on our website!}{

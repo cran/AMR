@@ -2,31 +2,13 @@
 % Please edit documentation in R/deprecated.R
 \name{AMR-deprecated}
 \alias{AMR-deprecated}
-\alias{ratio}
-\alias{abname}
-\alias{atc_property}
-\alias{atc_official}
-\alias{ab_official}
-\alias{atc_name}
-\alias{atc_trivial_nl}
-\alias{atc_tradenames}
+\alias{as.atc}
+\alias{p.symbol}
 \title{Deprecated functions}
 \usage{
-ratio(x, ratio)
+as.atc(x)
 
-abname(...)
-
-atc_property(...)
-
-atc_official(...)
-
-ab_official(...)
-
-atc_name(...)
-
-atc_trivial_nl(...)
-
-atc_tradenames(...)
+p.symbol(...)
 }
 \description{
 These functions are so-called '\link{Deprecated}'. They will be removed in a future release. Using the functions will give a warning with the name of the function it has been replaced by (if there is one).

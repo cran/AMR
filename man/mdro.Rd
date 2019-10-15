@@ -7,13 +7,20 @@
 \alias{mdr_tb}
 \alias{eucast_exceptional_phenotypes}
 \title{Determine multidrug-resistant organisms (MDRO)}
+\source{
+EUCAST Expert Rules Version 3.1 "Intrinsic Resistance and Exceptional Phenotypes Tables" (\href{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf}{link})
+
+World Health Organization "Companion handbook to the WHO guidelines for the programmatic management of drug-resistant tuberculosis" (\href{https://www.who.int/tb/publications/pmdt_companionhandbook/en/}{link})
+
+Rijksinstituut voor Volksgezondheid en Milieu "WIP-richtlijn BRMO (Bijzonder Resistente Micro-Organismen) [ZKH]" (\href{https://www.rivm.nl/Documenten_en_publicaties/Professioneel_Praktisch/Richtlijnen/Infectieziekten/WIP_Richtlijnen/WIP_Richtlijnen/Ziekenhuizen/WIP_richtlijn_BRMO_Bijzonder_Resistente_Micro_Organismen_ZKH}{link})
+}
 \usage{
-mdro(x, country = NULL, guideline = NULL, col_mo = NULL,
-  info = TRUE, verbose = FALSE, ...)
+mdro(x, guideline = NULL, col_mo = NULL, info = TRUE,
+  verbose = FALSE, ...)
 
-brmo(..., country = "nl")
+brmo(x, guideline = "BRMO", ...)
 
-mrgn(x, country = "de", ...)
+mrgn(x, guideline = "MRGN", ...)
 
 mdr_tb(x, guideline = "TB", ...)
 
@@ -22,11 +29,9 @@ eucast_exceptional_phenotypes(x, guideline = "EUCAST", ...)
 \arguments{
 \item{x}{table with antibiotic columns, like e.g. \code{AMX} and \code{AMC}}
 
-\item{country}{country code to determine guidelines. Should be or a code from the \href{https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements}{list of ISO 3166-1 alpha-2 country codes}. Case-insensitive.}
+\item{guideline}{a specific guideline to mention, see Details. EUCAST guidelines will be used when left empty, see Details.}
 
-\item{guideline}{a specific guideline to mention. For some countries this will be determined automatically, see Details. EUCAST guidelines will be used when left empty, see Details.}
-
-\item{col_mo}{column name of the unique IDs of the microorganisms (see \code{\link{mo}}), defaults to the first column of class \code{mo}. Values will be coerced using \code{\link{as.mo}}.}
+\item{col_mo}{column name of the IDs of the microorganisms (see \code{\link{as.mo}}), defaults to the first column of class \code{mo}. Values will be coerced using \code{\link{as.mo}}.}
 
 \item{info}{print progress}
 
@@ -35,31 +40,31 @@ eucast_exceptional_phenotypes(x, guideline = "EUCAST", ...)
 \item{...}{column name of an antibiotic, see section Antibiotics}
 }
 \value{
-Ordered factor with levels \code{Negative < Positive, unconfirmed < Positive}.
+\itemize{
+  \item{TB guideline - function \code{mdr_tb()} or \code{mdro(..., guideline = "TB")}:\cr Ordered factor with levels \code{Negative < Mono-resistant < Poly-resistant < Multi-drug-resistant < Extensive drug-resistant}}
+  \item{German guideline - function \code{mrgn()} or \code{mdro(..., guideline = "MRGN")}:\cr Ordered factor with levels \code{Negative < 3MRGN < 4MRGN}}
+  \item{Everything else:\cr Ordered factor with levels \code{Negative < Positive, unconfirmed < Positive}. The value \code{"Positive, unconfirmed"} means that, according to the guideline, it is not entirely sure if the isolate is multi-drug resistant and this should be confirmed with additional (e.g. molecular) tests}
+}
 }
 \description{
-Determine which isolates are multidrug-resistant organisms (MDRO) according to country-specific guidelines.
+Determine which isolates are multidrug-resistant organisms (MDRO) according to (country-specific) guidelines.
 }
 \details{
-When \code{country} is set, the parameter guideline will be ignored as these guidelines will be used:
-
+Currently supported guidelines are (case-insensitive):
 \itemize{
-  \item{\code{country = "nl"}: Rijksinstituut voor Volksgezondheid en Milieu "WIP-richtlijn BRMO (Bijzonder Resistente Micro-Organismen) [ZKH]" (\href{https://www.rivm.nl/Documenten_en_publicaties/Professioneel_Praktisch/Richtlijnen/Infectieziekten/WIP_Richtlijnen/WIP_Richtlijnen/Ziekenhuizen/WIP_richtlijn_BRMO_Bijzonder_Resistente_Micro_Organismen_ZKH}{link})}
+  \item{\code{guideline = "EUCAST"}: The European international guideline - EUCAST Expert Rules Version 3.1 "Intrinsic Resistance and Exceptional Phenotypes Tables" (\href{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf}{link})}
+  \item{\code{guideline = "TB"}: The international guideline for multi-drug resistant tuberculosis - World Health Organization "Companion handbook to the WHO guidelines for the programmatic management of drug-resistant tuberculosis" (\href{https://www.who.int/tb/publications/pmdt_companionhandbook/en/}{link})}
+  \item{\code{guideline = "MRGN"}: The German national guideline - Mueller et al. (2015) Antimicrobial Resistance and Infection Control 4:7. DOI: 10.1186/s13756-015-0047-6}
+  \item{\code{guideline = "BRMO"}: The Dutch national guideline - Rijksinstituut voor Volksgezondheid en Milieu "WIP-richtlijn BRMO (Bijzonder Resistente Micro-Organismen) [ZKH]" (\href{https://www.rivm.nl/Documenten_en_publicaties/Professioneel_Praktisch/Richtlijnen/Infectieziekten/WIP_Richtlijnen/WIP_Richtlijnen/Ziekenhuizen/WIP_richtlijn_BRMO_Bijzonder_Resistente_Micro_Organismen_ZKH}{link})}
 }
 
-Please suggest your own country's specific guidelines by letting us know: \url{https://gitlab.com/msberends/AMR/issues/new}.
-
-Other currently supported guidelines are:
-\itemize{
-  \item{\code{guideline = "eucast"}: EUCAST Expert Rules Version 3.1 "Intrinsic Resistance and Exceptional Phenotypes Tables" (\href{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf}{link})}
-  \item{\code{guideline = "tb"}: World Health Organization "Companion handbook to the WHO guidelines for the programmatic management of drug-resistant tuberculosis" (\href{https://www.who.int/tb/publications/pmdt_companionhandbook/en/}{link})}
-}
+Please suggest your own (country-specific) guidelines by letting us know: \url{https://gitlab.com/msberends/AMR/issues/new}.
 }
 \section{Antibiotics}{
 
 To define antibiotics column names, leave as it is to determine it automatically with \code{\link{guess_ab_col}} or input a text (case-insensitive), or use \code{NULL} to skip a column (e.g. \code{TIC = NULL} to skip ticarcillin). Manually defined but non-existing columns will be skipped with a warning.
 
-The following antibiotics are used for the functions \code{\link{eucast_rules}} and \code{\link{mdro}}. These are shown in the format '\strong{antimicrobial ID}: name (\emph{ATC code})', sorted by name:
+The following antibiotics are used for the functions \code{\link{eucast_rules}} and \code{\link{mdro}}. These are shown below in the format '\strong{antimicrobial ID}: name (\href{https://www.whocc.no/atc/structure_and_principles/}{ATC code})', sorted by name:
 
  \strong{AMK}: amikacin (\href{https://www.whocc.no/atc_ddd_index/?code=J01GB06}{J01GB06}),
  \strong{AMX}: amoxicillin (\href{https://www.whocc.no/atc_ddd_index/?code=J01CA04}{J01CA04}),
@@ -143,7 +148,13 @@ On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://
 \examples{
 library(dplyr)
 
-septic_patients \%>\%
+example_isolates \%>\%
   mutate(EUCAST = mdro(.),
-         BRMO = brmo(.))
+         BRMO = brmo(.),
+         MRGN = mrgn(.))
+         
+example_isolates \%>\% 
+  rename(PIP = TZP) \%>\% # no piperacillin, so take piperacillin/tazobactam
+  mrgn() \%>\%            # check German guideline
+  freq()                # check frequencies
 }

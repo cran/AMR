@@ -21,33 +21,37 @@
 
 #' Check availability of columns
 #'
-#' Easy check for availability of columns in a data set. This makes it easy to get an idea of which antibiotic combination can be used for calculation with e.g. \code{\link{portion_IR}}.
+#' Easy check for availability of columns in a data set. This makes it easy to get an idea of which antimicrobial combination can be used for calculation with e.g. \code{\link{portion_R}}.
 #' @param tbl a \code{data.frame} or \code{list}
 #' @param width number of characters to present the visual availability, defaults to filling the width of the console
+#' @details The function returns a \code{data.frame} with columns \code{"resistant"} and \code{"visual_resistance"}. The values in that columns are calculated with \code{\link{portion_R}}.
 #' @return \code{data.frame} with column names of \code{tbl} as row names
 #' @inheritSection AMR Read more on our website!
+# @importFrom clean percentage
 #' @export
 #' @examples
-#' availability(septic_patients)
+#' availability(example_isolates)
 #'
 #' library(dplyr)
-#' septic_patients %>% availability()
+#' example_isolates %>% availability()
 #'
-#' septic_patients %>%
+#' example_isolates %>%
 #'   select_if(is.rsi) %>%
 #'   availability()
 #'
-#' septic_patients %>%
+#' example_isolates %>%
 #'   filter(mo == as.mo("E. coli")) %>%
 #'   select_if(is.rsi) %>%
 #'   availability()
 availability <- function(tbl, width = NULL) {
-  x <- base::sapply(tbl, function(x) { 1 - base::sum(base::is.na(x)) / base::length(x) })
+  x <- base::sapply(tbl, function(x) {
+    1 - base::sum(base::is.na(x)) / base::length(x) 
+  })
   n <- base::sapply(tbl, function(x) base::length(x[!base::is.na(x)]))
-  IR <- base::sapply(tbl, function(x) base::ifelse(is.rsi(x), portion_IR(x, minimum = 0), NA))
-  IR_print <- character(length(IR))
-  IR_print[!is.na(IR)] <- percent(IR[!is.na(IR)], round = 1, force_zero = TRUE)
-  IR_print[is.na(IR)] <- ""
+  R <- base::sapply(tbl, function(x) base::ifelse(is.rsi(x), portion_R(x, minimum = 0), NA))
+  R_print <- character(length(R))
+  R_print[!is.na(R)] <- percentage(R[!is.na(R)])
+  R_print[is.na(R)] <- ""
 
   if (is.null(width)) {
     width <- options()$width -
@@ -63,25 +67,25 @@ availability <- function(tbl, width = NULL) {
     width <- width / 2
   }
 
-  if (length(IR[is.na(IR)]) == ncol(tbl)) {
+  if (length(R[is.na(R)]) == ncol(tbl)) {
     width <- width * 2 + 10
   }
 
-  x_chars_IR <- strrep("#", round(width * IR, digits = 2))
-  x_chars_S <- strrep("-", width - nchar(x_chars_IR))
-  vis_resistance <- paste0("|", x_chars_IR, x_chars_S, "|")
-  vis_resistance[is.na(IR)] <- ""
+  x_chars_R <- strrep("#", round(width * R, digits = 2))
+  x_chars_SI <- strrep("-", width - nchar(x_chars_R))
+  vis_resistance <- paste0("|", x_chars_R, x_chars_SI, "|")
+  vis_resistance[is.na(R)] <- ""
 
   x_chars <- strrep("#", round(x, digits = 2) / (1 / width))
   x_chars_empty <- strrep("-", width - nchar(x_chars))
 
   df <- data.frame(count = n,
-                   available = percent(x, round = 1, force_zero = TRUE),
+                   available = percentage(x),
                    visual_availabilty = paste0("|", x_chars, x_chars_empty, "|"),
-                   resistant = IR_print,
+                   resistant = R_print,
                    visual_resistance = vis_resistance)
-  if (length(IR[is.na(IR)]) == ncol(tbl)) {
-    df[,1:3]
+  if (length(R[is.na(R)]) == ncol(tbl)) {
+    df[, 1:3]
   } else {
     df
   }

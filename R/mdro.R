@@ -21,41 +21,51 @@
 
 #' Determine multidrug-resistant organisms (MDRO)
 #'
-#' Determine which isolates are multidrug-resistant organisms (MDRO) according to country-specific guidelines.
+#' Determine which isolates are multidrug-resistant organisms (MDRO) according to (country-specific) guidelines.
 #' @param x table with antibiotic columns, like e.g. \code{AMX} and \code{AMC}
-#' @param country country code to determine guidelines. Should be or a code from the \href{https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements}{list of ISO 3166-1 alpha-2 country codes}. Case-insensitive.
-#' @param guideline a specific guideline to mention. For some countries this will be determined automatically, see Details. EUCAST guidelines will be used when left empty, see Details.
+#' @param guideline a specific guideline to mention, see Details. EUCAST guidelines will be used when left empty, see Details.
 #' @param info print progress
 #' @inheritParams eucast_rules
 #' @param verbose print additional info: missing antibiotic columns per parameter
 #' @inheritSection eucast_rules Antibiotics
-#' @details When \code{country} is set, the parameter guideline will be ignored as these guidelines will be used:
-#'
+#' @details Currently supported guidelines are (case-insensitive):
 #' \itemize{
-#'   \item{\code{country = "nl"}: Rijksinstituut voor Volksgezondheid en Milieu "WIP-richtlijn BRMO (Bijzonder Resistente Micro-Organismen) [ZKH]" (\href{https://www.rivm.nl/Documenten_en_publicaties/Professioneel_Praktisch/Richtlijnen/Infectieziekten/WIP_Richtlijnen/WIP_Richtlijnen/Ziekenhuizen/WIP_richtlijn_BRMO_Bijzonder_Resistente_Micro_Organismen_ZKH}{link})}
+#'   \item{\code{guideline = "EUCAST"}: The European international guideline - EUCAST Expert Rules Version 3.1 "Intrinsic Resistance and Exceptional Phenotypes Tables" (\href{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf}{link})}
+#'   \item{\code{guideline = "TB"}: The international guideline for multi-drug resistant tuberculosis - World Health Organization "Companion handbook to the WHO guidelines for the programmatic management of drug-resistant tuberculosis" (\href{https://www.who.int/tb/publications/pmdt_companionhandbook/en/}{link})}
+#'   \item{\code{guideline = "MRGN"}: The German national guideline - Mueller et al. (2015) Antimicrobial Resistance and Infection Control 4:7. DOI: 10.1186/s13756-015-0047-6}
+#'   \item{\code{guideline = "BRMO"}: The Dutch national guideline - Rijksinstituut voor Volksgezondheid en Milieu "WIP-richtlijn BRMO (Bijzonder Resistente Micro-Organismen) [ZKH]" (\href{https://www.rivm.nl/Documenten_en_publicaties/Professioneel_Praktisch/Richtlijnen/Infectieziekten/WIP_Richtlijnen/WIP_Richtlijnen/Ziekenhuizen/WIP_richtlijn_BRMO_Bijzonder_Resistente_Micro_Organismen_ZKH}{link})}
 #' }
 #'
-#' Please suggest your own country's specific guidelines by letting us know: \url{https://gitlab.com/msberends/AMR/issues/new}.
-#'
-#' Other currently supported guidelines are:
-#' \itemize{
-#'   \item{\code{guideline = "eucast"}: EUCAST Expert Rules Version 3.1 "Intrinsic Resistance and Exceptional Phenotypes Tables" (\href{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf}{link})}
-#'   \item{\code{guideline = "tb"}: World Health Organization "Companion handbook to the WHO guidelines for the programmatic management of drug-resistant tuberculosis" (\href{https://www.who.int/tb/publications/pmdt_companionhandbook/en/}{link})}
+#' Please suggest your own (country-specific) guidelines by letting us know: \url{https://gitlab.com/msberends/AMR/issues/new}.
+#' @return \itemize{
+#'   \item{TB guideline - function \code{mdr_tb()} or \code{mdro(..., guideline = "TB")}:\cr Ordered factor with levels \code{Negative < Mono-resistant < Poly-resistant < Multi-drug-resistant < Extensive drug-resistant}}
+#'   \item{German guideline - function \code{mrgn()} or \code{mdro(..., guideline = "MRGN")}:\cr Ordered factor with levels \code{Negative < 3MRGN < 4MRGN}}
+#'   \item{Everything else:\cr Ordered factor with levels \code{Negative < Positive, unconfirmed < Positive}. The value \code{"Positive, unconfirmed"} means that, according to the guideline, it is not entirely sure if the isolate is multi-drug resistant and this should be confirmed with additional (e.g. molecular) tests}
 #' }
-#' @return Ordered factor with levels \code{Negative < Positive, unconfirmed < Positive}.
 #' @rdname mdro
 #' @importFrom dplyr %>%
 #' @importFrom crayon red blue bold
 #' @export
 #' @inheritSection AMR Read more on our website!
+#' @source
+#' EUCAST Expert Rules Version 3.1 "Intrinsic Resistance and Exceptional Phenotypes Tables" (\href{http://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/Expert_rules_intrinsic_exceptional_V3.1.pdf}{link})
+#'
+#' World Health Organization "Companion handbook to the WHO guidelines for the programmatic management of drug-resistant tuberculosis" (\href{https://www.who.int/tb/publications/pmdt_companionhandbook/en/}{link})
+#'
+#' Rijksinstituut voor Volksgezondheid en Milieu "WIP-richtlijn BRMO (Bijzonder Resistente Micro-Organismen) [ZKH]" (\href{https://www.rivm.nl/Documenten_en_publicaties/Professioneel_Praktisch/Richtlijnen/Infectieziekten/WIP_Richtlijnen/WIP_Richtlijnen/Ziekenhuizen/WIP_richtlijn_BRMO_Bijzonder_Resistente_Micro_Organismen_ZKH}{link})
 #' @examples
 #' library(dplyr)
 #'
-#' septic_patients %>%
+#' example_isolates %>%
 #'   mutate(EUCAST = mdro(.),
-#'          BRMO = brmo(.))
+#'          BRMO = brmo(.),
+#'          MRGN = mrgn(.))
+#'          
+#' example_isolates %>% 
+#'   rename(PIP = TZP) %>% # no piperacillin, so take piperacillin/tazobactam
+#'   mrgn() %>%            # check German guideline
+#'   freq()                # check frequencies
 mdro <- function(x,
-                 country = NULL,
                  guideline = NULL,
                  col_mo = NULL,
                  info = TRUE,
@@ -66,19 +76,25 @@ mdro <- function(x,
     stop("`x` must be a data frame.", call. = FALSE)
   }
 
+
+  if (!is.null(list(...)$country)) {
+    warning("Using `country` is deprecated, use `guideline` instead. Please see ?mdro.", call. = FALSE)
+    guideline <- list(...)$country
+  }
   if (length(guideline) > 1) {
     stop("`guideline` must be a length one character string.", call. = FALSE)
   }
-  if (length(country) > 1) {
-    stop("`country` must be a length one character string.", call. = FALSE)
-  }
-  if (!is.null(country)) {
-    guideline <- country
-  }
+
   if (is.null(guideline)) {
     guideline <- "eucast"
   }
-  if (!tolower(guideline) %in% c("nl", "de", "eucast", "tb")) {
+  if (tolower(guideline) == "nl") {
+    guideline <- "BRMO"
+  }
+  if (tolower(guideline) == "de") {
+    guideline <- "MRGN"
+  }
+  if (!tolower(guideline) %in% c("brmo", "mrgn", "eucast", "tb")) {
     stop("invalid guideline: ", guideline, call. = FALSE)
   }
   guideline <- list(code = tolower(guideline))
@@ -90,17 +106,12 @@ mdro <- function(x,
   }
   if (is.null(col_mo) & guideline$code == "tb") {
     message(blue("NOTE: No column found as input for `col_mo`,",
-                 bold("assuming all records contain",
-                      italic("Mycobacterium tuberculosis.\n"))))
+                 bold("assuming all records contain", italic("Mycobacterium tuberculosis.\n"))))
     x$mo <- AMR::as.mo("Mycobacterium tuberculosis")
     col_mo <- "mo"
   }
   if (is.null(col_mo)) {
     stop("`col_mo` must be set.", call. = FALSE)
-  }
-
-  if (length(country) > 1) {
-    stop("`country` must be a length one character string.", call. = FALSE)
   }
 
   if (guideline$code == "eucast") {
@@ -116,19 +127,16 @@ mdro <- function(x,
     guideline$source <- "https://www.who.int/tb/publications/pmdt_companionhandbook/en/"
 
     # support per country:
-  } else if (guideline$code == "de") {
-    guideline$name <- "Germany"
-    guideline$name <- ""
-    guideline$version <- ""
-    guideline$source <- ""
-  } else if (guideline$code == "nl") {
+  } else if (guideline$code == "mrgn") {
+    guideline$name <- "Cross-border comparison of the Dutch and German guidelines on multidrug-resistant Gram-negative microorganisms"
+    guideline$author <- "J. M\u00fcller, A. Voss, R. K\u00f6ck, ..., W.V. Kern, C. Wendt, A.W. Friedrich"
+    guideline$version <- "N/A"
+    guideline$source <- "M\u00fcller et al. (2015) Antimicrobial Resistance and Infection Control 4:7. DOI: 10.1186/s13756-015-0047-6"
+  } else if (guideline$code == "brmo") {
     guideline$name <- "WIP-Richtlijn Bijzonder Resistente Micro-organismen (BRMO)"
     guideline$author <- "RIVM (Rijksinstituut voor de Volksgezondheid)"
     guideline$version <- "Revision as of December 2017"
     guideline$source <- "https://www.rivm.nl/Documenten_en_publicaties/Professioneel_Praktisch/Richtlijnen/Infectieziekten/WIP_Richtlijnen/WIP_Richtlijnen/Ziekenhuizen/WIP_richtlijn_BRMO_Bijzonder_Resistente_Micro_Organismen_ZKH"
-  # add here more countries like this:
-  # } else if (country$code == "xx") {
-  #   country$name <- "country name"
   } else {
     stop("This guideline is currently unsupported: ", guideline$code, call. = FALSE)
   }
@@ -152,6 +160,15 @@ mdro <- function(x,
                                                     "RIF",
                                                     "RIB",
                                                     "RFP"),
+                              verbose = verbose, ...)
+  } else if (guideline$code == "mrgn") {
+    cols_ab <- get_column_abx(x = x,
+                              soft_dependencies = c("PIP",
+                                                    "CTX",
+                                                    "CAZ",
+                                                    "IPM",
+                                                    "MEM",
+                                                    "CIP"),
                               verbose = verbose, ...)
   } else {
     cols_ab <- get_column_abx(x = x, verbose = verbose, ...)
@@ -255,7 +272,7 @@ mdro <- function(x,
         row_filter <- which(x[, cols] == "R")
       } else if (any_all == "all") {
         row_filter <- x %>%
-          mutate(index = 1:nrow(.)) %>%
+          mutate(index = seq_len(nrow(.))) %>%
           filter_at(vars(cols), all_vars(. == "R")) %>%
           pull((index))
       }
@@ -269,7 +286,9 @@ mdro <- function(x,
     # join to microorganisms data set
     left_join_microorganisms(by = col_mo) %>%
     # add unconfirmed to where genus is available
-    mutate(MDRO = ifelse(!is.na(genus), 1, NA_integer_))
+    mutate(MDRO = ifelse(!is.na(genus), 1, NA_integer_)) %>% 
+    # transform to data.frame so subsetting is possible with x[y, z] (might not be the case with tibble/data.table/...)
+    as.data.frame(stringsAsFactors = FALSE)
 
   if (guideline$code == "eucast") {
     # EUCAST ------------------------------------------------------------------
@@ -302,7 +321,7 @@ mdro <- function(x,
               "any")
     # Table 6
     trans_tbl(3,
-              which(x$fullname %like% "^Staphylococcus (aureus|epidermidis|coagulase negatief|hominis|haemolyticus|intermedius|pseudointermedius)"),
+              which(x$fullname %like% "^(Coagulase-negative|Staphylococcus (aureus|epidermidis|hominis|haemolyticus|intermedius|pseudointermedius))"),
               c(VAN, TEC, DAP, LNZ, QDA, TGC),
               "any")
     trans_tbl(3,
@@ -314,7 +333,7 @@ mdro <- function(x,
               c(carbapenems, VAN, TEC, DAP, LNZ, QDA, TGC, RIF),
               "any")
     trans_tbl(3, # Sr. groups A/B/C/G
-              which(x$fullname %like% "^Streptococcus (pyogenes|agalactiae|equisimilis|equi|zooepidemicus|dysgalactiae|anginosus)"),
+              which(x$fullname %like% "^Streptococcus (group (A|B|C|G)|pyogenes|agalactiae|equisimilis|equi|zooepidemicus|dysgalactiae|anginosus)"),
               c(PEN, cephalosporins, VAN, TEC, DAP, LNZ, QDA, TGC),
               "any")
     trans_tbl(3,
@@ -336,12 +355,56 @@ mdro <- function(x,
               "any")
   }
 
-  if (guideline$code == "de") {
+  if (guideline$code == "mrgn") {
     # Germany -----------------------------------------------------------------
-    stop("We are still working on German guidelines in this beta version.", call. = FALSE)
+    CTX_or_CAZ <- CTX %or% CAZ
+    IPM_or_MEM <- IPM %or% MEM
+    x$missing <- NA_character_
+    if (is.na(PIP)) PIP <- "missing"
+    if (is.na(CTX_or_CAZ)) CTX_or_CAZ <- "missing"
+    if (is.na(IPM_or_MEM)) IPM_or_MEM <- "missing"
+    if (is.na(IPM)) IPM <- "missing"
+    if (is.na(MEM)) MEM <- "missing"
+    if (is.na(CIP)) CIP <- "missing"
+    
+    # Table 1
+    x[which((x$family == "Enterobacteriaceae" | 
+              x$fullname %like% "^Acinetobacter baumannii") &
+              x[, PIP] == "R" &
+              x[, CTX_or_CAZ] == "R" &
+              x[, IPM_or_MEM] == "S" &
+              x[, CIP] == "R"),
+      "MDRO"] <- 2 # 2 = 3MRGN
+    
+    x[which((x$family == "Enterobacteriaceae" | 
+               x$fullname %like% "^Acinetobacter baumannii") &
+              x[, PIP] == "R" &
+              x[, CTX_or_CAZ] == "R" &
+              x[, IPM_or_MEM] == "R" &
+              x[, CIP] == "R"),
+      "MDRO"] <- 3 # 3 = 4MRGN, overwrites 3MRGN if applicable
+    
+    x[which((x$family == "Enterobacteriaceae" | 
+               x$fullname %like% "^Acinetobacter baumannii") &
+              x[, IPM] == "R" | x[, MEM] == "R"),
+      "MDRO"] <- 3 # 3 = 4MRGN, always when imipenem or meropenem is R
+    
+    x[which(x$fullname %like% "^Pseudomonas aeruginosa" &
+              (x[, PIP] == "S") +
+              (x[, CTX_or_CAZ] == "S") +
+              (x[, IPM_or_MEM] == "S") +
+              (x[, CIP] == "S") == 1),
+      "MDRO"] <- 2 # 2 = 3MRGN, if only 1 group is S
+    
+    x[which((x$fullname %like% "^Pseudomonas aeruginosa") &
+              x[, PIP] == "R" &
+              x[, CTX_or_CAZ] == "R" &
+              x[, IPM_or_MEM] == "R" &
+              x[, CIP] == "R"),
+      "MDRO"] <- 3 # 3 = 4MRGN
   }
 
-  if (guideline$code == "nl") {
+  if (guideline$code == "brmo") {
     # Netherlands -------------------------------------------------------------
     aminoglycosides <- aminoglycosides[!is.na(aminoglycosides)]
     fluoroquinolones <- fluoroquinolones[!is.na(fluoroquinolones)]
@@ -389,7 +452,7 @@ mdro <- function(x,
         & !ab_missing(GEN) & !ab_missing(TOB)
         & !ab_missing(CIP)
         & !ab_missing(CAZ)
-        & !ab_missing(TZP) ) {
+        & !ab_missing(TZP)) {
       x$psae <- 0
       x[which(x[, MEM] == "R" | x[, IPM] == "R"), "psae"] <- 1 + x[which(x[, MEM] == "R" | x[, IPM] == "R"), "psae"]
       x[which(x[, GEN] == "R" & x[, TOB] == "R"), "psae"] <- 1 + x[which(x[, GEN] == "R" & x[, TOB] == "R"), "psae"]
@@ -484,7 +547,12 @@ mdro <- function(x,
   if (guideline$code == "tb") {
     factor(x =  x$mdr_tb,
            levels = 1:5,
-           labels = c("Negative", "Mono-resistance", "Poly-resistance", "Multidrug resistance", "Extensive drug resistance"),
+           labels = c("Negative", "Mono-resistant", "Poly-resistant", "Multi-drug-resistant", "Extensive drug-resistant"),
+           ordered = TRUE)
+  } else if (guideline$code == "mrgn") {
+    factor(x =  x$MDRO,
+           levels = 1:3,
+           labels = c("Negative", "3MRGN", "4MRGN"),
            ordered = TRUE)
   } else {
     factor(x =  x$MDRO,
@@ -496,14 +564,14 @@ mdro <- function(x,
 
 #' @rdname mdro
 #' @export
-brmo <- function(..., country = "nl") {
-  mdro(..., country = "nl")
+brmo <- function(x, guideline = "BRMO", ...) {
+  mdro(x, guideline = "BRMO", ...)
 }
 
 #' @rdname mdro
 #' @export
-mrgn <- function(x, country = "de", ...) {
-  mdro(x = x, country = "de", ...)
+mrgn <- function(x, guideline = "MRGN", ...) {
+  mdro(x = x, guideline = "MRGN", ...)
 }
 
 #' @rdname mdro

@@ -29,13 +29,13 @@ is.rsi.eligible(x, threshold = 0.05)
 
 \item{mo}{a microorganism code, generated with \code{\link{as.mo}}}
 
-\item{ab}{an antibiotic code, generated with \code{\link{as.ab}}}
+\item{ab}{an antimicrobial code, generated with \code{\link{as.ab}}}
 
 \item{guideline}{defaults to the latest included EUCAST guideline, run \code{unique(AMR::rsi_translation$guideline)} for all options}
 
-\item{col_mo}{column name of the unique IDs of the microorganisms (see \code{\link{mo}}), defaults to the first column of class \code{mo}. Values will be coerced using \code{\link{as.mo}}.}
+\item{col_mo}{column name of the IDs of the microorganisms (see \code{\link{as.mo}}), defaults to the first column of class \code{mo}. Values will be coerced using \code{\link{as.mo}}.}
 
-\item{threshold}{maximum fraction of \code{x} that is allowed to fail transformation, see Examples}
+\item{threshold}{maximum fraction of invalid antimicrobial interpretations of \code{x}, see Examples}
 }
 \value{
 Ordered factor with new class \code{rsi}
@@ -46,13 +46,13 @@ Interpret MIC values according to EUCAST or CLSI, or clean up existing RSI value
 \details{
 Run \code{unique(AMR::rsi_translation$guideline)} for a list of all supported guidelines.
 
-After using \code{as.rsi}, you can use \code{\link{eucast_rules}} to (1) apply inferred susceptibility and resistance based on results of other antibiotics and (2) apply intrinsic resistance based on taxonomic properties of a microorganism.
+After using \code{as.rsi}, you can use \code{\link{eucast_rules}} to (1) apply inferred susceptibility and resistance based on results of other antimicrobials and (2) apply intrinsic resistance based on taxonomic properties of a microorganism.
 
 The function \code{is.rsi.eligible} returns \code{TRUE} when a columns contains at most 5\% invalid antimicrobial interpretations (not S and/or I and/or R), and \code{FALSE} otherwise. The threshold of 5\% can be set with the \code{threshold} parameter.
 }
 \section{Interpretation of S, I and R}{
 
-In 2019, EUCAST has decided to change the definitions of susceptibility testing categories S, I and R as shown below. Results of several consultations on the new definitions are available on the EUCAST website under "Consultations".
+In 2019, EUCAST has decided to change the definitions of susceptibility testing categories S, I and R as shown below (\url{http://www.eucast.org/newsiandr/}). Results of several consultations on the new definitions are available on the EUCAST website under "Consultations".
 
 \itemize{
   \item{\strong{S} - }{Susceptible, standard dosing regimen: A microorganism is categorised as "Susceptible, standard dosing regimen", when there is a high likelihood of therapeutic success using a standard dosing regimen of the agent.}
@@ -62,9 +62,7 @@ In 2019, EUCAST has decided to change the definitions of susceptibility testing 
 
 Exposure is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
 
-Source: \url{http://www.eucast.org/newsiandr/}.
-
-\strong{This AMR package honours this new insight.}
+This AMR package honours this new insight. Use \code{\link{portion_SI}} to determine antimicrobial susceptibility and \code{\link{count_SI}} to count susceptible isolates.
 }
 
 \section{Read more on our website!}{
@@ -92,16 +90,18 @@ as.rsi(x = as.mic(4),
 
 plot(rsi_data)    # for percentages
 barplot(rsi_data) # for frequencies
+
+library(clean)
 freq(rsi_data)    # frequency table with informative header
 
 # using dplyr's mutate
 library(dplyr)
-septic_patients \%>\%
+example_isolates \%>\%
   mutate_at(vars(PEN:RIF), as.rsi)
 
 
 # fastest way to transform all columns with already valid AB results to class `rsi`:
-septic_patients \%>\%
+example_isolates \%>\%
   mutate_if(is.rsi.eligible,
             as.rsi)
 

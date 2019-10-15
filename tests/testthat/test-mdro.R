@@ -22,31 +22,31 @@
 context("mdro.R")
 
 test_that("mdro works", {
+  
+  skip_on_cran()
+  
   library(dplyr)
 
-  expect_error(mdro(septic_patients, country = "invalid", col_mo = "mo", info = TRUE))
-  expect_error(mdro(septic_patients, country = "fr", info = TRUE))
-  expect_error(mdro(septic_patients, country = c("de", "nl"), info = TRUE))
-  expect_error(mdro(septic_patients, col_mo = "invalid", info = TRUE))
+  expect_error(suppressWarnings(mdro(example_isolates, country = "invalid", col_mo = "mo", info = TRUE)))
+  expect_error(suppressWarnings(mdro(example_isolates, country = "fr", info = TRUE)))
+  expect_error(mdro(example_isolates, guideline = c("BRMO", "MRGN"), info = TRUE))
+  expect_error(mdro(example_isolates, col_mo = "invalid", info = TRUE))
 
-  outcome <- mdro(septic_patients)
-  outcome <- eucast_exceptional_phenotypes(septic_patients, info = TRUE)
+  outcome <- mdro(example_isolates)
+  outcome <- eucast_exceptional_phenotypes(example_isolates, info = TRUE)
   # check class
-  expect_equal(outcome %>% class(), c('ordered', 'factor'))
+  expect_equal(outcome %>% class(), c("ordered", "factor"))
 
-  outcome <- mdro(septic_patients, "nl", info = TRUE)
+  outcome <- mdro(example_isolates, "nl", info = TRUE)
   # check class
-  expect_equal(outcome %>% class(), c('ordered', 'factor'))
+  expect_equal(outcome %>% class(), c("ordered", "factor"))
 
-  # septic_patients should have these finding using Dutch guidelines
+  # example_isolates should have these finding using Dutch guidelines
   expect_equal(outcome %>% freq() %>% pull(count),
-               c(1969, 25, 6)) # 1969 neg, 25 unconfirmed, 6 pos
+               c(1972, 22, 6)) # 1969 neg, 25 unconfirmed, 6 pos
 
-  expect_equal(brmo(septic_patients, info = FALSE),
-               mdro(septic_patients, country = "nl", info = FALSE))
-
-  # still working on German guidelines
-  expect_error(suppressWarnings(mrgn(septic_patients, info = TRUE)))
+  expect_equal(brmo(example_isolates, info = FALSE),
+               mdro(example_isolates, guideline = "BRMO", info = FALSE))
 
   # test Dutch P. aeruginosa MDRO
   expect_equal(
@@ -58,7 +58,7 @@ test_that("mdro works", {
                                  gent = "S",
                                  tobr = "S",
                                  pita = "S"),
-                      country = "nl",
+                      guideline = "BRMO",
                       col_mo = "mo",
                       info = FALSE)),
     "Negative")
@@ -71,17 +71,37 @@ test_that("mdro works", {
                                  gent = "R",
                                  tobr = "R",
                                  pita = "R"),
-                      country = "nl",
+                      guideline = "BRMO",
                       col_mo = "mo",
                       info = FALSE)),
     "Positive")
-
+  
+  # German 3MRGN and 4MRGN
+  expect_equal(as.character(mrgn(
+    data.frame(mo = c("E. coli", "E. coli", "K. pneumoniae", "E. coli",
+                      "A. baumannii", "A. baumannii", "A. baumannii",
+                      "P. aeruginosa", "P. aeruginosa", "P. aeruginosa"), 
+               PIP = c("S", "R", "R", "S",
+                       "S", "R", "R",
+                       "S", "R", "R"),
+               CTX = c("S", "R", "R", "S",
+                       "R", "R", "R",
+                       "R", "R", "R"),
+               IPM = c("S", "R", "S", "R",
+                       "R", "R", "S",
+                       "S", "R", "R"),
+               CIP = c("S", "R", "R", "S",
+                       "R", "R", "R",
+                       "R", "S", "R"),
+               stringsAsFactors = FALSE))),
+    c("Negative", "4MRGN", "3MRGN", "4MRGN",  "4MRGN",  "4MRGN", "3MRGN", "Negative", "3MRGN", "4MRGN"))
+  
   # MDR TB
   expect_equal(
     # select only rifampicine, mo will be determined automatically (as M. tuberculosis),
     # number of mono-resistant strains should be equal to number of rifampicine-resistant strains
-    septic_patients %>% select(RIF) %>% mdr_tb() %>% freq() %>% pull(count) %>% .[2],
-    count_R(septic_patients$RIF))
+    example_isolates %>% select(RIF) %>% mdr_tb() %>% freq() %>% pull(count) %>% .[2],
+    count_R(example_isolates$RIF))
 
   sample_rsi <- function() {
     sample(c("S", "I", "R"),

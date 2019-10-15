@@ -23,20 +23,25 @@ context("data.R")
 
 test_that("data sets are valid", {
   # IDs should always be unique
-  expect_identical(nrow(antibiotics), length(unique(antibiotics$ab)))
-  expect_identical(class(antibiotics$ab), "ab")
   expect_identical(nrow(microorganisms), length(unique(microorganisms$mo)))
   expect_identical(class(microorganisms$mo), "mo")
-
+  expect_identical(nrow(antibiotics), length(unique(antibiotics$ab)))
+  expect_identical(class(antibiotics$ab), "ab")
+  
   # check cross table reference
   expect_true(all(microorganisms.codes$mo %in% microorganisms$mo))
+  expect_true(all(example_isolates$mo %in% microorganisms$mo))
+  expect_true(all(microorganisms.translation$mo_new %in% microorganisms$mo))
+  expect_true(all(rsi_translation$mo %in% microorganisms$mo))
+  expect_false(any(is.na(microorganisms.codes$code)))
+  expect_false(any(is.na(microorganisms.codes$mo)))
 
   # antibiotic names must always be coercible to their original AB code
   expect_identical(antibiotics$ab, as.ab(antibiotics$name))
 
   # there should be no diacritics (i.e. non ASCII) characters in the datasets (CRAN policy)
   datasets <- data(package = "AMR", envir = asNamespace("AMR"))$results[, "Item"]
-  for (i in 1:length(datasets)) {
+  for (i in seq_len(length(datasets))) {
     dataset <- get(datasets[i], envir = asNamespace("AMR"))
     expect_identical(dataset_UTF8_to_ASCII(dataset), dataset)
   }

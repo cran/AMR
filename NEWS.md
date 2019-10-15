@@ -1,3 +1,133 @@
+# AMR 0.8.0
+
+
+### Breaking
+* Determination of first isolates now **excludes** all 'unknown' microorganisms at default, i.e. microbial code `"UNKNOWN"`. They can be included with the new parameter `include_unknown`:
+  ```r
+  first_isolate(..., include_unknown = TRUE)
+  ```
+  For WHONET users, this means that all records/isolates with organism code `"con"` (*contamination*) will be excluded at default, since `as.mo("con") = "UNKNOWN"`. The function always shows a note with the number of 'unknown' microorganisms that were included or excluded.
+* For code consistency, classes `ab` and `mo` will now be preserved in any subsetting or assignment. For the sake of data integrity, this means that invalid assignments will now result in `NA`:
+  ```r
+  # how it works in base R:
+  x <- factor("A")
+  x[1] <- "B"
+  #> Warning message:
+  #> invalid factor level, NA generated
+  
+  # how it now works similarly for classes 'mo' and 'ab':
+  x <- as.mo("E. coli")
+  x[1] <- "testvalue"
+  #> Warning message:
+  #> invalid microorganism code, NA generated
+  ```
+  This is important, because a value like `"testvalue"` could never be understood by e.g. `mo_name()`, although the class would suggest a valid microbial code.
+* Function `freq()` has moved to a new package, [`clean`](https://github.com/msberends/clean) ([CRAN link](https://cran.r-project.org/package=clean)), since creating frequency tables actually does not fit the scope of this package. The `freq()` function still works, since it is re-exported from the `clean` package (which will be installed automatically upon updating this `AMR` package).
+* Renamed data set `septic_patients` to `example_isolates`
+
+### New
+* Function `bug_drug_combinations()` to quickly get a `data.frame` with the results of all bug-drug combinations in a data set. The column containing microorganism codes is guessed automatically and its input is transformed with `mo_shortname()` at default:
+  ```r
+  x <- bug_drug_combinations(example_isolates)
+  #> NOTE: Using column `mo` as input for `col_mo`.
+  x[1:4, ]
+  #>             mo  ab S I R total
+  #> 1 A. baumannii AMC 0 0 3     3
+  #> 2 A. baumannii AMK 0 0 0     0
+  #> 3 A. baumannii AMP 0 0 3     3
+  #> 4 A. baumannii AMX 0 0 3     3
+  #> NOTE: Use 'format()' on this result to get a publicable/printable format.
+
+  # change the transformation with the FUN argument to anything you like:
+  x <- bug_drug_combinations(example_isolates, FUN = mo_gramstain)
+  #> NOTE: Using column `mo` as input for `col_mo`.
+  x[1:4, ]
+  #>              mo  ab   S  I   R total
+  #> 1 Gram-negative AMC 469 89 174   732
+  #> 2 Gram-negative AMK 251  0   2   253
+  #> 3 Gram-negative AMP 227  0 405   632
+  #> 4 Gram-negative AMX 227  0 405   632
+  #> NOTE: Use 'format()' on this result to get a publicable/printable format.
+  ```
+  You can format this to a printable format, ready for reporting or exporting to e.g. Excel with the base R `format()` function:
+  ```r
+  format(x, combine_IR = FALSE)
+  ```
+* Additional way to calculate co-resistance, i.e. when using multiple antimicrobials as input for `portion_*` functions or `count_*` functions. This can be used to determine the empiric susceptibility of a combination therapy. A new parameter `only_all_tested` (**which defaults to `FALSE`**) replaces the old `also_single_tested` and can be used to select one of the two methods to count isolates and calculate portions. The difference can be seen in this example table (which is also on the `portion` and `count` help pages), where the %SI is being determined:
+
+  ```r
+  # --------------------------------------------------------------------
+  #                     only_all_tested = FALSE  only_all_tested = TRUE
+  #                     -----------------------  -----------------------
+  #  Drug A    Drug B   include as  include as   include as  include as
+  #                     numerator   denominator  numerator   denominator
+  # --------  --------  ----------  -----------  ----------  -----------
+  #  S or I    S or I       X            X            X            X
+  #    R       S or I       X            X            X            X
+  #   <NA>     S or I       X            X            -            -
+  #  S or I      R          X            X            X            X
+  #    R         R          -            X            -            X
+  #   <NA>       R          -            -            -            -
+  #  S or I     <NA>        X            X            -            -
+  #    R        <NA>        -            -            -            -
+  #   <NA>      <NA>        -            -            -            -
+  # --------------------------------------------------------------------
+  ```
+  
+  Since this is a major change, usage of the old `also_single_tested` will throw an informative error that it has been replaced by `only_all_tested`.
+* `tibble` printing support for classes `rsi`, `mic`, `disk`, `ab` `mo`. When using `tibble`s containing antimicrobial columns, values `S` will print in green, values `I` will print in yellow and values `R` will print in red. Microbial IDs (class `mo`) will emphasise on the genus and species, not on the kingdom.
+  ```r
+  # (run this on your own console, as this page does not support colour printing)
+  library(dplyr)
+  example_isolates %>%
+    select(mo:AMC) %>% 
+    as_tibble()
+  ```
+
+### Changed
+* Many algorithm improvements for `as.mo()` (of which some led to additions to the `microorganisms` data set). Many thanks to all contributors that helped improving the algorithms.
+  * Self-learning algorithm - the function now gains experience from previously determined microorganism IDs and learns from it (yielding 80-95% speed improvement for any guess after the first try)
+  * Big improvement for misspelled input
+  * These new trivial names known to the field are now understood: meningococcus, gonococcus, pneumococcus
+  * Updated to the latest taxonomic data (updated to August 2019, from the International Journal of Systematic and Evolutionary Microbiology
+  * Added support for Viridans Group Streptococci (VGS) and Milleri Group Streptococci (MGS)
+  * Added support for *Blastocystis*
+  * Added support for 5,000 new fungi
+  * Added support for unknown yeasts and fungi
+  * Changed most microorganism IDs to improve readability. For example, the old code `B_ENTRC_FAE` could have been both *E. faecalis* and *E. faecium*. Its new code is `B_ENTRC_FCLS` and *E. faecium* has become `B_ENTRC_FACM`. Also, the Latin character æ (ae) is now preserved at the start of each genus and species abbreviation. For example, the old code for *Aerococcus urinae* was `B_ARCCC_NAE`. This is now `B_AERCC_URIN`.
+    **IMPORTANT:** Old microorganism IDs are still supported, but support will be dropped in a future version. Use `as.mo()` on your old codes to transform them to the new format. Using functions from the `mo_*` family (like `mo_name()` and `mo_gramstain()`) on old codes, will throw a warning.
+* More intelligent guessing for `as.ab()`, including bidirectional language support
+* Added support for the German national guideline (3MRGN/4MRGN) in the `mdro()` function, to determine multi-drug resistant organisms
+* Function `eucast_rules()`:
+  * Fixed a bug for *Yersinia pseudotuberculosis*
+  * Added more informative errors and warnings
+  * Printed info now distinguishes between added and changes values
+  * Using Verbose mode (i.e. `eucast_rules(..., verbose = TRUE)`) returns more informative and readable output
+  * Using factors as input now adds missing factors levels when the function changes antibiotic results
+* Improved the internal auto-guessing function for determining antimicrobials in your data set (`AMR:::get_column_abx()`)
+* Removed class `atc` - using `as.atc()` is now deprecated in favour of `ab_atc()` and this will return a character, not the `atc` class anymore
+* Removed deprecated functions `abname()`, `ab_official()`, `atc_name()`, `atc_official()`, `atc_property()`, `atc_tradenames()`, `atc_trivial_nl()`
+* Fix and speed improvement for `mo_shortname()`
+* Fix for using `mo_*` functions where the coercion uncertainties and failures would not be available through `mo_uncertainties()` and `mo_failures()` anymore
+* Deprecated the `country` parameter of `mdro()` in favour of the already existing `guideline` parameter to support multiple guidelines within one country
+* The `name` of `RIF` is now Rifampicin instead of Rifampin
+* The `antibiotics` data set is now sorted by name and all cephalosporins now have their generation between brackets
+* Speed improvement for `guess_ab_col()` which is now 30 times faster for antibiotic abbreviations
+* Improved `filter_ab_class()` to be more reliable and to support 5th generation cephalosporins
+* Function `availability()` now uses `portion_R()` instead of `portion_IR()`, to comply with EUCAST insights
+* Functions `age()` and `age_groups()` now have a `na.rm` parameter to remove empty values
+* Renamed function `p.symbol()` to `p_symbol()` (the former is now deprecated and will be removed in a future version)
+* Using negative values for `x` in `age_groups()` will now introduce `NA`s and not return an error anymore
+* Fix for determining the system's language
+* Fix for `key_antibiotics()` on foreign systems
+* Added 80 new LIS codes for microorganisms
+* Relabeled the factor levels of `mdr_tb()`
+* Added more MIC factor levels (`as.mic()`)
+
+#### Other
+* Added Prof. Dr. Casper Albers as doctoral advisor and added Dr. Judith Fonville, Eric Hazenberg, Dr. Bart Meijer, Dr. Dennis Souverein and Annick Lenglet as contributors
+* Cleaned the coding style of every single syntax line in this package with the help of the `lintr` package
+
 # AMR 0.7.1
 
 #### New
@@ -68,7 +198,7 @@
 
 #### Changed
 * Fixed a critical bug in `first_isolate()` where missing species would lead to incorrect FALSEs. This bug was not present in AMR v0.5.0, but was in v0.6.0 and v0.6.1.
-* Fixedd a bug in `eucast_rules()` where antibiotics from WHONET software would not be recognised
+* Fixed a bug in `eucast_rules()` where antibiotics from WHONET software would not be recognised
 * Completely reworked the `antibiotics` data set:
   * All entries now have 3 different identifiers:
     * Column `ab` contains a human readable EARS-Net code, used by ECDC and WHO/WHONET - this is the primary identifier used in this package

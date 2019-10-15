@@ -19,21 +19,24 @@
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
-context("ab.R")
+#' Symbol of a p value
+#'
+#' Return the symbol related to the p value: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1. Values above \code{p = 1} will return \code{NA}.
+#' @param p p value
+#' @param emptychar text to show when \code{p > 0.1}
+#' @return Text
+#' @inheritSection AMR Read more on our website!
+#' @export
+p_symbol <- function(p, emptychar = " ") {
 
-test_that("as.atc works", {
-  expect_identical(class(as.atc("amox")), "atc")
-  expect_true(is.atc(as.atc("amox")))
-  expect_output(print(as.atc("amox")))
-  expect_output(print(data.frame(a = as.atc("amox"))))
+  p <- as.double(p)
+  s <- rep(NA_character_, length(p))
 
-  expect_identical(class(pull(antibiotics, atc)), "atc")
-
-  expect_warning(as.atc("Z00ZZ00")) # not yet availatcle in data set
-  expect_warning(as.atc("UNKNOWN"))
-
-  expect_output(print(as.atc("amox")))
-
-
-
-})
+  s[p <= 1] <- emptychar
+  s[p <= 0.100] <- "."
+  s[p <= 0.050] <- "*"
+  s[p <= 0.010] <- "**"
+  s[p <= 0.001] <- "***"
+  
+  s
+}

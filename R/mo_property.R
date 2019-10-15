@@ -21,7 +21,7 @@
 
 #' Property of a microorganism
 #'
-#' Use these functions to return a specific property of a microorganism from the \code{\link{microorganisms}} data set. All input values will be evaluated internally with \code{\link{as.mo}}.
+#' Use these functions to return a specific property of a microorganism. All input values will be evaluated internally with \code{\link{as.mo}}, which makes it possible for input of these functions to use microbial abbreviations, codes and names. See Examples.
 #' @param x any (vector of) text that can be coerced to a valid microorganism code with \code{\link{as.mo}}
 #' @param property one of the column names of the \code{\link{microorganisms}} data set or \code{"shortname"}
 #' @param language language of the returned text, defaults to system language (see \code{\link{get_locale}}) and can also be set with \code{\link{getOption}("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.
@@ -53,7 +53,7 @@
 #' @seealso \code{\link{microorganisms}}
 #' @inheritSection AMR Read more on our website!
 #' @examples
-#' ## taxonomic tree
+#' # taxonomic tree -----------------------------------------------------------
 #' mo_kingdom("E. coli")         # "Bacteria"
 #' mo_phylum("E. coli")          # "Proteobacteria"
 #' mo_class("E. coli")           # "Gammaproteobacteria"
@@ -63,35 +63,33 @@
 #' mo_species("E. coli")         # "coli"
 #' mo_subspecies("E. coli")      # ""
 #'
-#' ## colloquial properties
+#' # colloquial properties ----------------------------------------------------
 #' mo_name("E. coli")            # "Escherichia coli"
 #' mo_fullname("E. coli")        # "Escherichia coli", same as mo_name()
 #' mo_shortname("E. coli")       # "E. coli"
 #'
-#' ## other properties
+#' # other properties ---------------------------------------------------------
 #' mo_gramstain("E. coli")       # "Gram-negative"
 #' mo_type("E. coli")            # "Bacteria" (equal to kingdom, but may be translated)
 #' mo_rank("E. coli")            # "species"
 #' mo_url("E. coli")             # get the direct url to the online database entry
 #' mo_synonyms("E. coli")        # get previously accepted taxonomic names
 #'
-#' ## scientific reference
+#' # scientific reference -----------------------------------------------------
 #' mo_ref("E. coli")             # "Castellani et al., 1919"
 #' mo_authors("E. coli")         # "Castellani et al."
 #' mo_year("E. coli")            # 1919
 #'
-#'
-#' # Abbreviations known in the field
+#' # abbreviations known in the field -----------------------------------------
 #' mo_genus("MRSA")              # "Staphylococcus"
 #' mo_species("MRSA")            # "aureus"
-#' mo_shortname("MRSA")          # "S. aureus"
-#' mo_gramstain("MRSA")          # "Gram-positive"
+#' mo_shortname("VISA")          # "S. aureus"
+#' mo_gramstain("VISA")          # "Gram-positive"
 #'
-#' mo_genus("VISA")              # "Staphylococcus"
-#' mo_species("VISA")            # "aureus"
+#' mo_genus("EHEC")              # "Escherichia"
+#' mo_species("EHEC")            # "coli"
 #'
-#'
-#' # Known subspecies
+#' # known subspecies ---------------------------------------------------------
 #' mo_name("doylei")             # "Campylobacter jejuni doylei"
 #' mo_genus("doylei")            # "Campylobacter"
 #' mo_species("doylei")          # "jejuni"
@@ -100,18 +98,18 @@
 #' mo_fullname("K. pneu rh")     # "Klebsiella pneumoniae rhinoscleromatis"
 #' mo_shortname("K. pneu rh")    # "K. pneumoniae"
 #'
-#'
-#' # Becker classification, see ?as.mo
+#' \donttest{
+#' # Becker classification, see ?as.mo ----------------------------------------
 #' mo_fullname("S. epi")                     # "Staphylococcus epidermidis"
 #' mo_fullname("S. epi", Becker = TRUE)      # "Coagulase-negative Staphylococcus (CoNS)"
 #' mo_shortname("S. epi")                    # "S. epidermidis"
 #' mo_shortname("S. epi", Becker = TRUE)     # "CoNS"
 #'
-#' # Lancefield classification, see ?as.mo
+#' # Lancefield classification, see ?as.mo ------------------------------------
 #' mo_fullname("S. pyo")                     # "Streptococcus pyogenes"
 #' mo_fullname("S. pyo", Lancefield = TRUE)  # "Streptococcus group A"
 #' mo_shortname("S. pyo")                    # "S. pyogenes"
-#' mo_shortname("S. pyo", Lancefield = TRUE) # "GAS" ('Group A streptococci')
+#' mo_shortname("S. pyo", Lancefield = TRUE) # "GAS" (='Group A Streptococci')
 #'
 #'
 #' # language support for German, Dutch, Spanish, Portuguese, Italian and French
@@ -136,6 +134,7 @@
 #' mo_taxonomy("E. coli")
 #' # get a list with the taxonomy, the authors and the URL to the online database
 #' mo_info("E. coli")
+#' }
 mo_name <- function(x, language = get_locale(), ...) {
   translate_AMR(mo_validate(x = x, property = "fullname", ...), language = language, only_unknown = FALSE)
 }
@@ -145,47 +144,27 @@ mo_name <- function(x, language = get_locale(), ...) {
 mo_fullname <- mo_name
 
 #' @rdname mo_property
-#' @importFrom dplyr %>% mutate pull
 #' @export
 mo_shortname <- function(x, language = get_locale(), ...) {
-  dots <- list(...)
-  Becker <- dots$Becker
-  if (is.null(Becker)) {
-    Becker <- FALSE
-  }
-  Lancefield <- dots$Lancefield
-  if (is.null(Lancefield)) {
-    Lancefield <- FALSE
-  }
+  x.mo <- AMR::as.mo(x, ...)
+  metadata <- get_mo_failures_uncertainties_renamed()
 
-  # get result without transformations
-  res1 <- AMR::as.mo(x, Becker = FALSE, Lancefield = FALSE, reference_df = dots$reference_df)
-  # and result with transformations
-  res2 <- suppressWarnings(AMR::as.mo(res1, ...))
-  res2_fullname <- mo_fullname(res2, language = language)
-  res2_fullname[res2_fullname %like% " \\(CoNS\\)"] <- "CoNS"
-  res2_fullname[res2_fullname %like% " \\(CoPS\\)"] <- "CoPS"
-  res2_fullname[res2_fullname %like% " \\(KNS\\)"] <- "KNS"
-  res2_fullname[res2_fullname %like% " \\(KPS\\)"] <- "KPS"
-  res2_fullname[res2_fullname %like% " \\(CNS\\)"] <- "CNS"
-  res2_fullname[res2_fullname %like% " \\(CPS\\)"] <- "CPS"
-  res2_fullname[res2_fullname %like% " \\(SCN\\)"] <- "SCN"
-  res2_fullname <- gsub("Streptococcus (group|Gruppe|gruppe|groep|grupo|gruppo|groupe) (.)",
-                        "G\\2S",
-                        res2_fullname) # turn "Streptococcus group A" and "Streptococcus grupo A" to "GAS"
-  res2_fullname_vector <- res2_fullname[res2_fullname == mo_fullname(res1)]
-  res2_fullname[res2_fullname == mo_fullname(res1)] <- paste0(substr(mo_genus(res2_fullname_vector), 1, 1),
-                                                              ". ",
-                                                              suppressWarnings(mo_species(res2_fullname_vector)))
-  if (sum(res1 == res2, na.rm = TRUE) > 0) {
-    res1[res1 == res2] <- paste0(substr(mo_genus(res1[res1 == res2]), 1, 1),
-                                 ". ",
-                                 suppressWarnings(mo_species(res1[res1 == res2])))
+  replace_empty <- function(x) {
+    x[x == ""] <- "spp."
+    x
   }
-  res1[res1 != res2] <- res2_fullname
-  result <- as.character(res1)
+  
+  # get first char of genus and complete species in English
+  shortnames <- paste0(substr(mo_genus(x.mo, language = NULL), 1, 1), ". ", replace_empty(mo_species(x.mo, language = NULL)))
+  
+  # exceptions for Staphylococci
+  shortnames[shortnames == "S. coagulase-negative"] <- "CoNS"
+  shortnames[shortnames == "S. coagulase-positive"] <- "CoPS"
+  # exceptions for Streptococci: Streptococcus Group A -> GAS
+  shortnames[shortnames %like% "S. group [ABCDFGHK]"] <- paste0("G", gsub("S. group ([ABCDFGHK])", "\\1", shortnames[shortnames %like% "S. group [ABCDFGHK]"]), "S")
 
-  translate_AMR(result, language = language, only_unknown = FALSE)
+  load_mo_failures_uncertainties_renamed(metadata)
+  translate_AMR(shortnames, language = language, only_unknown = FALSE)
 }
 
 #' @rdname mo_property
@@ -245,8 +224,10 @@ mo_type <- function(x, language = get_locale(), ...) {
 #' @rdname mo_property
 #' @export
 mo_gramstain <- function(x, language = get_locale(), ...) {
-  x.mo <- as.mo(x, ...)
-  x.phylum <- mo_phylum(x.mo, language = "en")
+  x.mo <- AMR::as.mo(x, ...)
+  metadata <- get_mo_failures_uncertainties_renamed()
+
+  x.phylum <- mo_phylum(x.mo)
   # DETERMINE GRAM STAIN FOR BACTERIA
   # Source: https://itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=956097
   # It says this:
@@ -259,13 +240,15 @@ mo_gramstain <- function(x, language = get_locale(), ...) {
   #       Phylum  Tenericutes (Murray, 1984)
   x <- NA_character_
   # make all bacteria Gram negative
-  x[mo_kingdom(x.mo, language = "en") == "Bacteria"] <- "Gram-negative"
+  x[mo_kingdom(x.mo) == "Bacteria"] <- "Gram-negative"
   # overwrite these phyla with Gram positive
   x[x.phylum %in% c("Actinobacteria",
                     "Chloroflexi",
                     "Firmicutes",
                     "Tenericutes")
     | x.mo == "B_GRAMP"] <- "Gram-positive"
+
+  load_mo_failures_uncertainties_renamed(metadata)
   translate_AMR(x, language = language, only_unknown = FALSE)
 }
 
@@ -303,7 +286,9 @@ mo_rank <- function(x, ...) {
 #' @export
 mo_taxonomy <- function(x, language = get_locale(),  ...) {
   x <- AMR::as.mo(x, ...)
-  base::list(kingdom = AMR::mo_kingdom(x, language = language),
+  metadata <- get_mo_failures_uncertainties_renamed()
+
+  result <- base::list(kingdom = AMR::mo_kingdom(x, language = language),
              phylum = AMR::mo_phylum(x, language = language),
              class = AMR::mo_class(x, language = language),
              order = AMR::mo_order(x, language = language),
@@ -311,12 +296,17 @@ mo_taxonomy <- function(x, language = get_locale(),  ...) {
              genus = AMR::mo_genus(x, language = language),
              species = AMR::mo_species(x, language = language),
              subspecies = AMR::mo_subspecies(x, language = language))
+
+  load_mo_failures_uncertainties_renamed(metadata)
+  result
 }
 
 #' @rdname mo_property
 #' @export
 mo_synonyms <- function(x, ...) {
-  x <- as.mo(x, ...)
+  x <- AMR::as.mo(x, ...)
+  metadata <- get_mo_failures_uncertainties_renamed()
+
   IDs <- AMR::mo_property(x = x, property = "col_id", language = NULL)
   syns <- lapply(IDs, function(col_id) {
     res <- sort(AMR::microorganisms.old[which(AMR::microorganisms.old$col_id_new == col_id), "fullname"])
@@ -327,28 +317,36 @@ mo_synonyms <- function(x, ...) {
     }
   })
   if (length(syns) > 1) {
-    names(syns) <- mo_fullname(x)
-    syns
+    names(syns) <- mo_name(x)
+    result <- syns
   } else {
-    unlist(syns)
+    result <- unlist(syns)
   }
+
+  load_mo_failures_uncertainties_renamed(metadata)
+  result
 }
 
 #' @rdname mo_property
 #' @export
 mo_info <- function(x, language = get_locale(),  ...) {
   x <- AMR::as.mo(x, ...)
+  metadata <- get_mo_failures_uncertainties_renamed()
+
   info <- lapply(x, function(y)
     c(mo_taxonomy(y, language = language),
       list(synonyms = mo_synonyms(y),
            url = unname(mo_url(y, open = FALSE)),
            ref = mo_ref(y))))
   if (length(info) > 1) {
-    names(info) <- mo_fullname(x)
-    info
+    names(info) <- mo_name(x)
+    result <- info
   } else {
-    info[[1L]]
+    result <- info[[1L]]
   }
+
+  load_mo_failures_uncertainties_renamed(metadata)
+  result
 }
 
 #' @rdname mo_property
@@ -357,23 +355,28 @@ mo_info <- function(x, language = get_locale(),  ...) {
 #' @export
 mo_url <- function(x, open = FALSE, ...) {
   mo <- AMR::as.mo(x = x, ... = ...)
+  mo_names <- AMR::mo_name(mo)
+  metadata <- get_mo_failures_uncertainties_renamed()
+
   df <- data.frame(mo, stringsAsFactors = FALSE) %>%
     left_join(select(AMR::microorganisms, mo, source, species_id), by = "mo") %>%
     mutate(url = case_when(source == "CoL" ~
                              paste0(gsub("{year}", catalogue_of_life$year, catalogue_of_life$url_CoL, fixed = TRUE), "details/species/id/", species_id),
                            source == "DSMZ" ~
-                             paste0(catalogue_of_life$url_DSMZ, "?bnu_no=", species_id, "#", species_id),
+                             paste0(catalogue_of_life$url_DSMZ, "/", unlist(lapply(strsplit(mo_names, ""), function(x) x[1]))),
                            TRUE ~
                              NA_character_))
 
   u <- df$url
-  names(u) <- AMR::mo_fullname(mo)
+  names(u) <- mo_names
   if (open == TRUE) {
     if (length(u) > 1) {
       warning("only the first URL will be opened, as `browseURL()` only suports one string.")
     }
     browseURL(u[1L])
   }
+
+  load_mo_failures_uncertainties_renamed(metadata)
   u
 }
 
@@ -381,7 +384,7 @@ mo_url <- function(x, open = FALSE, ...) {
 #' @rdname mo_property
 #' @importFrom data.table data.table as.data.table setkey
 #' @export
-mo_property <- function(x, property = 'fullname', language = get_locale(), ...) {
+mo_property <- function(x, property = "fullname", language = get_locale(), ...) {
   if (length(property) != 1L) {
     stop("'property' must be of length 1.")
   }
@@ -406,26 +409,31 @@ mo_validate <- function(x, property, ...) {
 
   if (!"AMR" %in% base::.packages()) {
     require("AMR")
-    # check onLoad() in R/zzz.R: data tables are created there.
+    # check .onLoad() in R/zzz.R: data tables are created there.
   }
 
   # try to catch an error when inputting an invalid parameter
   # so the 'call.' can be set to FALSE
   tryCatch(x[1L] %in% AMR::microorganisms[1, property],
            error = function(e) stop(e$message, call. = FALSE))
-
-  if (!all(x %in% pull(AMR::microorganisms, property))
-      | Becker %in% c(TRUE, "all")
-      | Lancefield %in% c(TRUE, "all")) {
+  
+  if (is.mo(x) 
+      & !Becker %in% c(TRUE, "all") 
+      & !Lancefield %in% c(TRUE, "all")) {
+    # this will not reset mo_uncertainties and mo_failures
+    # because it's already a valid MO
+    x <- exec_as.mo(x, property = property, initial_search = FALSE, ...)
+  } else if (!all(x %in% pull(AMR::microorganisms, property))
+             | Becker %in% c(TRUE, "all")
+             | Lancefield %in% c(TRUE, "all")) {
     x <- exec_as.mo(x, property = property, ...)
   }
-
+  
   if (property == "mo") {
-    return(structure(x, class = "mo"))
+    return(to_class_mo(x))
   } else if (property == "col_id") {
     return(as.integer(x))
   } else {
     return(x)
   }
-
 }

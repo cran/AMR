@@ -14,7 +14,7 @@ first_isolate(x, col_date = NULL, col_patient_id = NULL,
   col_icu = NULL, col_keyantibiotics = NULL, episode_days = 365,
   testcodes_exclude = NULL, icu_exclude = FALSE,
   specimen_group = NULL, type = "keyantibiotics", ignore_I = TRUE,
-  points_threshold = 2, info = TRUE, ...)
+  points_threshold = 2, info = TRUE, include_unknown = FALSE, ...)
 
 filter_first_isolate(x, col_date = NULL, col_patient_id = NULL,
   col_mo = NULL, ...)
@@ -30,7 +30,7 @@ filter_first_weighted_isolate(x, col_date = NULL,
 
 \item{col_patient_id}{column name of the unique IDs of the patients, defaults to the first column that starts with 'patient' or 'patid' (case insensitive)}
 
-\item{col_mo}{column name of the unique IDs of the microorganisms (see \code{\link{mo}}), defaults to the first column of class \code{mo}. Values will be coerced using \code{\link{as.mo}}.}
+\item{col_mo}{column name of the IDs of the microorganisms (see \code{\link{as.mo}}), defaults to the first column of class \code{mo}. Values will be coerced using \code{\link{as.mo}}.}
 
 \item{col_testcode}{column name of the test codes. Use \code{col_testcode = NULL} to \strong{not} exclude certain test codes (like test codes for screening). In that case \code{testcodes_exclude} will be ignored.}
 
@@ -40,7 +40,7 @@ filter_first_weighted_isolate(x, col_date = NULL,
 
 \item{col_keyantibiotics}{column name of the key antibiotics to determine first \emph{weighted} isolates, see \code{\link{key_antibiotics}}. Defaults to the first column that starts with 'key' followed by 'ab' or 'antibiotics' (case insensitive). Use \code{col_keyantibiotics = FALSE} to prevent this.}
 
-\item{episode_days}{episode in days after which a genus/species combination will be determined as 'first isolate' again}
+\item{episode_days}{episode in days after which a genus/species combination will be determined as 'first isolate' again. The default of 365 days is based on the guideline by CLSI, see Source.}
 
 \item{testcodes_exclude}{character vector with test codes that should be excluded (case-insensitive)}
 
@@ -56,6 +56,8 @@ filter_first_weighted_isolate(x, col_date = NULL,
 
 \item{info}{print progress}
 
+\item{include_unknown}{logical to determine whether 'unknown' microorganisms should be included too, i.e. microbial code \code{"UNKNOWN"}, which defaults to \code{FALSE}. For WHONET users, this means that all records with organism code \code{"con"} (\emph{contamination}) will be excluded at default. Isolates with a microbial ID of \code{NA} will always be excluded as first isolate.}
+
 \item{...}{parameters passed on to the \code{first_isolate} function}
 }
 \value{
@@ -67,6 +69,8 @@ Determine first (weighted) isolates of all microorganisms of every patient per e
 \details{
 \strong{WHY THIS IS SO IMPORTANT} \cr
 To conduct an analysis of antimicrobial resistance, you should only include the first isolate of every patient per episode \href{https://www.ncbi.nlm.nih.gov/pubmed/17304462}{[1]}. If you would not do this, you could easily get an overestimate or underestimate of the resistance of an antibiotic. Imagine that a patient was admitted with an MRSA and that it was found in 5 different blood cultures the following week. The resistance percentage of oxacillin of all \emph{S. aureus} isolates would be overestimated, because you included this MRSA more than once. It would be \href{https://en.wikipedia.org/wiki/Selection_bias}{selection bias}.
+
+All isolates with a microbial ID of \code{NA} will be excluded as first isolate.
 
 The functions \code{filter_first_isolate} and \code{filter_first_weighted_isolate} are helper functions to quickly filter on first isolates. The function \code{filter_first_isolate} is essentially equal to:
 \preformatted{
@@ -102,12 +106,12 @@ On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://
 }
 
 \examples{
-# septic_patients is a dataset available in the AMR package. It is true, genuine data.
-?septic_patients
+# `example_isolates` is a dataset available in the AMR package.
+# See ?example_isolates.
 
 library(dplyr)
 # Filter on first isolates:
-septic_patients \%>\%
+example_isolates \%>\%
   mutate(first_isolate = first_isolate(.,
                                        col_date = "date",
                                        col_patient_id = "patient_id",
@@ -115,19 +119,19 @@ septic_patients \%>\%
   filter(first_isolate == TRUE)
 
 # Which can be shortened to:
-septic_patients \%>\%
+example_isolates \%>\%
   filter_first_isolate()
 # or for first weighted isolates:
-septic_patients \%>\%
+example_isolates \%>\%
   filter_first_weighted_isolate()
 
 # Now let's see if first isolates matter:
-A <- septic_patients \%>\%
+A <- example_isolates \%>\%
   group_by(hospital_id) \%>\%
   summarise(count = n_rsi(GEN),            # gentamicin availability
             resistance = portion_IR(GEN))  # gentamicin resistance
 
-B <- septic_patients \%>\%
+B <- example_isolates \%>\%
   filter_first_weighted_isolate() \%>\%      # the 1st isolate filter
   group_by(hospital_id) \%>\%
   summarise(count = n_rsi(GEN),            # gentamicin availability
@@ -146,39 +150,11 @@ B <- septic_patients \%>\%
 # set key antibiotics to a new variable
 x$keyab <- key_antibiotics(x)
 
-x$first_isolate <-
-  first_isolate(x)
+x$first_isolate <- first_isolate(x)
 
-x$first_isolate_weighed <-
-  first_isolate(x,
-                col_keyantibiotics = 'keyab')
+x$first_isolate_weighed <- first_isolate(x, col_keyantibiotics = 'keyab')
 
-x$first_blood_isolate <-
-  first_isolate(x,
-                specimen_group = 'Blood')
-
-x$first_blood_isolate_weighed <-
-  first_isolate(x,
-                specimen_group = 'Blood',
-                col_keyantibiotics = 'keyab')
-
-x$first_urine_isolate <-
-  first_isolate(x,
-                specimen_group = 'Urine')
-
-x$first_urine_isolate_weighed <-
-  first_isolate(x,
-                specimen_group = 'Urine',
-                col_keyantibiotics = 'keyab')
-
-x$first_resp_isolate <-
-  first_isolate(x,
-                specimen_group = 'Respiratory')
-
-x$first_resp_isolate_weighed <-
-  first_isolate(x,
-                specimen_group = 'Respiratory',
-                col_keyantibiotics = 'keyab')
+x$first_blood_isolate <- first_isolate(x, specimen_group = "Blood")
 }
 }
 \seealso{

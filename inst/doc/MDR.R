@@ -7,7 +7,7 @@ library(AMR)
 
 ## ------------------------------------------------------------------------
 # a helper function to get a random vector with values S, I and R
-# with the probabilities 50%-10%-40%
+# with the probabilities 50% - 10% - 40%
 sample_rsi <- function() {
   sample(c("S", "I", "R"),
          size = 5000,
@@ -37,6 +37,9 @@ head(my_TB_data)
 
 ## ------------------------------------------------------------------------
 my_TB_data$mdr <- mdr_tb(my_TB_data)
+
+## ----lib clean, message = FALSE------------------------------------------
+library(clean)
 
 ## ---- results = 'asis'---------------------------------------------------
 freq(my_TB_data$mdr)

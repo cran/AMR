@@ -48,12 +48,12 @@
 #' @seealso \code{\link{first_isolate}}
 #' @inheritSection AMR Read more on our website!
 #' @examples
-#' # septic_patients is a dataset available in the AMR package
-#' ?septic_patients
+#' # `example_isolates` is a dataset available in the AMR package.
+#' # See ?example_isolates.
 #'
 #' library(dplyr)
 #' # set key antibiotics to a new variable
-#' my_patients <- septic_patients %>%
+#' my_patients <- example_isolates %>%
 #'   mutate(keyab = key_antibiotics(.)) %>%
 #'   mutate(
 #'     # now calculate first isolates
@@ -118,7 +118,7 @@ key_antibiotics <- function(x,
     names(col.list) <- col.list
     col.list.bak <- col.list
     # are they available as upper case or lower case then?
-    for (i in 1:length(col.list)) {
+    for (i in seq_len(length(col.list))) {
       if (is.null(col.list[i]) | isTRUE(is.na(col.list[i]))) {
         col.list[i] <- NA
       } else if (toupper(col.list[i]) %in% colnames(x)) {
@@ -131,9 +131,9 @@ key_antibiotics <- function(x,
     }
     if (!all(col.list %in% colnames(x))) {
       if (info == TRUE) {
-        warning('Some columns do not exist and will be ignored: ',
+        warning("Some columns do not exist and will be ignored: ",
                 col.list.bak[!(col.list %in% colnames(x))] %>% toString(),
-                '.\nTHIS MAY STRONGLY INFLUENCE THE OUTCOME.',
+                ".\nTHIS MAY STRONGLY INFLUENCE THE OUTCOME.",
                 immediate. = TRUE,
                 call. = FALSE)
       }
@@ -164,7 +164,7 @@ key_antibiotics <- function(x,
   universal <- c(universal_1, universal_2, universal_3,
                  universal_4, universal_5, universal_6)
 
-  gram_positive = c(universal,
+  gram_positive <- c(universal,
                     GramPos_1, GramPos_2, GramPos_3,
                     GramPos_4, GramPos_5, GramPos_6)
   gram_positive <- gram_positive[!is.null(gram_positive)]
@@ -173,7 +173,7 @@ key_antibiotics <- function(x,
     warning("only using ", length(gram_positive), " different antibiotics as key antibiotics for Gram-positives. See ?key_antibiotics.", call. = FALSE)
   }
 
-  gram_negative = c(universal,
+  gram_negative <- c(universal,
                     GramNeg_1, GramNeg_2, GramNeg_3,
                     GramNeg_4, GramNeg_5, GramNeg_6)
   gram_negative <- gram_negative[!is.null(gram_negative)]
@@ -184,33 +184,40 @@ key_antibiotics <- function(x,
 
   # join to microorganisms data set
   x <- x %>%
+    as.data.frame(stringsAsFactors = FALSE) %>% 
     mutate_at(vars(col_mo), as.mo) %>%
     left_join_microorganisms(by = col_mo) %>%
     mutate(key_ab = NA_character_,
-           gramstain = mo_gramstain(pull(., col_mo)))
-
+           gramstain = mo_gramstain(pull(., col_mo), language = NULL))
+  
   # Gram +
   x <- x %>% mutate(key_ab =
                       if_else(gramstain == "Gram-positive",
-                              apply(X = x[, gram_positive],
-                                    MARGIN = 1,
-                                    FUN = function(x) paste(x, collapse = "")),
+                              tryCatch(apply(X = x[, gram_positive],
+                                             MARGIN = 1,
+                                             FUN = function(x) paste(x, collapse = "")),
+                                       error = function(e) paste0(rep(".", 12), collapse = "")),
                               key_ab))
-
+  
   # Gram -
   x <- x %>% mutate(key_ab =
                       if_else(gramstain == "Gram-negative",
-                              apply(X = x[, gram_negative],
-                                    MARGIN = 1,
-                                    FUN = function(x) paste(x, collapse = "")),
+                              tryCatch(apply(X = x[, gram_negative],
+                                             MARGIN = 1,
+                                             FUN = function(x) paste(x, collapse = "")),
+                                       error = function(e) paste0(rep(".", 12), collapse = "")),
                               key_ab))
 
   # format
   key_abs <- x %>%
     pull(key_ab) %>%
-    gsub('(NA|NULL)', '.', .) %>%
-    gsub('[^SIR]', '.', ., ignore.case = TRUE) %>%
+    gsub("(NA|NULL)", ".", .) %>%
+    gsub("[^SIR]", ".", ., ignore.case = TRUE) %>%
     toupper()
+  
+  if (n_distinct(key_abs) == 1) {
+    warning("No distinct key antibiotics determined.", call. = FALSE)
+  }
 
   key_abs
 
@@ -232,7 +239,7 @@ key_antibiotics_equal <- function(y,
   type <- type[1]
 
   if (length(x) != length(y)) {
-    stop('Length of `x` and `y` must be equal.')
+    stop("Length of `x` and `y` must be equal.")
   }
 
   # only show progress bar on points or when at least 5000 isolates
@@ -244,17 +251,17 @@ key_antibiotics_equal <- function(y,
     p <- dplyr::progress_estimated(length(x))
   }
 
-  for (i in 1:length(x)) {
+  for (i in seq_len(length(x))) {
 
     if (info_needed == TRUE) {
       p$tick()$print()
     }
 
     if (is.na(x[i])) {
-      x[i] <- ''
+      x[i] <- ""
     }
     if (is.na(y[i])) {
-      y[i] <- ''
+      y[i] <- ""
     }
 
     if (x[i] == y[i]) {
@@ -270,7 +277,7 @@ key_antibiotics_equal <- function(y,
       x_split <- strsplit(x[i], "")[[1]]
       y_split <- strsplit(y[i], "")[[1]]
 
-      if (type == 'keyantibiotics') {
+      if (type == "keyantibiotics") {
 
         if (ignore_I == TRUE) {
           x_split[x_split == "I"] <- "."
@@ -282,7 +289,7 @@ key_antibiotics_equal <- function(y,
 
         result[i] <- all(x_split == y_split)
 
-      } else if (type == 'points') {
+      } else if (type == "points") {
         # count points for every single character:
         # - no change is 0 points
         # - I <-> S|R is 0.5 point
@@ -296,12 +303,12 @@ key_antibiotics_equal <- function(y,
         result[i] <- points >= points_threshold
 
       } else {
-        stop('`', type, '` is not a valid value for type, must be "points" or "keyantibiotics". See ?key_antibiotics')
+        stop("`", type, '` is not a valid value for type, must be "points" or "keyantibiotics". See ?key_antibiotics')
       }
     }
   }
   if (info_needed == TRUE) {
-    cat('\n')
+    cat("\n")
   }
   result
 }

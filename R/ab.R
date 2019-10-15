@@ -23,6 +23,7 @@
 #'
 #' Use this function to determine the antibiotic code of one or more antibiotics. The data set \code{\link{antibiotics}} will be searched for abbreviations, official names and synonyms (brand names).
 #' @param x character vector to determine to antibiotic ID
+#' @param ... arguments passed on to internal functions
 #' @rdname as.ab
 #' @keywords atc
 #' @inheritSection WHOCC WHOCC
@@ -57,7 +58,7 @@
 #' # they use as.ab() internally:
 #' ab_name("J01FA01")    # "Erythromycin"
 #' ab_name("eryt")       # "Erythromycin"
-as.ab <- function(x) {
+as.ab <- function(x, ...) {
   if (is.ab(x)) {
     return(x)
   }
@@ -69,21 +70,28 @@ as.ab <- function(x) {
   }
 
   x_bak <- x
+  # remove diacritics
+  x <- iconv(x, from = "UTF-8", to = "ASCII//TRANSLIT")
+  x <- gsub('"', "", x, fixed = TRUE)
   # remove suffices
   x_bak_clean <- gsub("_(mic|rsi|dis[ck])$", "", x, ignore.case = TRUE)
   # remove disk concentrations, like LVX_NM -> LVX
   x_bak_clean <- gsub("_[A-Z]{2}[0-9_]{0,3}$", "", x_bak_clean, ignore.case = TRUE)
   # remove part between brackets if that's followed by another string
   x_bak_clean <- gsub("(.*)+ [(].*[)]", "\\1", x_bak_clean)
-  # keep only a-Z, 0-9, space, slash and dash
-  x_bak_clean <- gsub("[^A-Z0-9 /-]", "", x_bak_clean, ignore.case = TRUE)
   # keep only max 1 space
   x_bak_clean <- trimws(gsub(" +", " ", x_bak_clean, ignore.case = TRUE))
+  # non-character, space or number should be a slash
+  x_bak_clean <- gsub("[^A-Za-z0-9 -]", "/", x_bak_clean)
+  # spaces around non-characters must be removed: amox + clav -> amox/clav
+  x_bak_clean <- gsub("(.*[a-zA-Z0-9]) ([^a-zA-Z0-9].*)", "\\1\\2", x_bak_clean)
+  x_bak_clean <- gsub("(.*[^a-zA-Z0-9]) ([a-zA-Z0-9].*)", "\\1\\2", x_bak_clean)
+
   x <- unique(x_bak_clean)
   x_new <- rep(NA_character_, length(x))
   x_unknown <- character(0)
 
-  for (i in 1:length(x)) {
+  for (i in seq_len(length(x))) {
     if (is.na(x[i]) | is.null(x[i])) {
       next
     }
@@ -98,28 +106,28 @@ as.ab <- function(x) {
     }
 
     # exact AB code
-    found <- AMR::antibiotics[which(AMR::antibiotics$ab == toupper(x[i])),]$ab
+    found <- AMR::antibiotics[which(AMR::antibiotics$ab == toupper(x[i])), ]$ab
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
     }
 
     # exact ATC code
-    found <- AMR::antibiotics[which(AMR::antibiotics$atc == toupper(x[i])),]$ab
+    found <- AMR::antibiotics[which(AMR::antibiotics$atc == toupper(x[i])), ]$ab
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
     }
 
     # exact CID code
-    found <- AMR::antibiotics[which(AMR::antibiotics$cid == x[i]),]$ab
+    found <- AMR::antibiotics[which(AMR::antibiotics$cid == x[i]), ]$ab
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
     }
 
     # exact name
-    found <- AMR::antibiotics[which(toupper(AMR::antibiotics$name) == toupper(x[i])),]$ab
+    found <- AMR::antibiotics[which(toupper(AMR::antibiotics$name) == toupper(x[i])), ]$ab
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
@@ -153,7 +161,7 @@ as.ab <- function(x) {
 
     # first >=4 characters of name
     if (nchar(x[i]) >= 4) {
-      found <- AMR::antibiotics[which(toupper(AMR::antibiotics$name) %like% paste0("^", x[i])),]$ab
+      found <- AMR::antibiotics[which(toupper(AMR::antibiotics$name) %like% paste0("^", x[i])), ]$ab
       if (length(found) > 0) {
         x_new[i] <- found[1L]
         next
@@ -181,8 +189,9 @@ as.ab <- function(x) {
     x_spelling <- gsub("(o\\+n|o\\+ne\\+)$", "o+ne*", x_spelling)
     # replace multiple same characters to single one with '+', like "ll" -> "l+"
     x_spelling <- gsub("(.)\\1+", "\\1+", x_spelling)
+  
     # try if name starts with it
-    found <- AMR::antibiotics[which(AMR::antibiotics$name %like% paste0("^", x_spelling)),]$ab
+    found <- AMR::antibiotics[which(AMR::antibiotics$name %like% paste0("^", x_spelling)), ]$ab
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
@@ -217,7 +226,47 @@ as.ab <- function(x) {
         next
       }
     }
-
+    
+    if (!isFALSE(list(...)$initial_search)) {
+      # transform back from other languages and try again
+      x_translated <- paste(lapply(strsplit(x[i], "[^a-zA-Z0-9 ]"),
+                                   function(y) {
+                                     for (i in seq_len(length(y))) {
+                                       y[i] <- ifelse(tolower(y[i]) %in% tolower(translations_file$replacement),
+                                                      translations_file[which(tolower(translations_file$replacement) == tolower(y[i]) &
+                                                                                !isFALSE(translations_file$fixed)), "pattern"],
+                                                      y[i])
+                                     }
+                                     y
+                                   })[[1]],
+                            collapse = "/")
+      x_translated_guess <- suppressWarnings(as.ab(x_translated, initial_search = FALSE))
+      if (!is.na(x_translated_guess)) {
+        x_new[i] <- x_translated_guess
+        next
+      }
+      
+      if (!isFALSE(list(...)$initial_search2)) {
+        # now also try to coerce brandname combinations like "Amoxy/clavulanic acid"
+        x_translated <- paste(lapply(strsplit(x_translated, "[^a-zA-Z0-9 ]"),
+                                     function(y) {
+                                       for (i in seq_len(length(y))) {
+                                         y_name <- suppressWarnings(ab_name(y[i], language = NULL, initial_search = FALSE, initial_search2 = FALSE))
+                                         y[i] <- ifelse(!is.na(y_name),
+                                                        y_name,
+                                                        y[i])
+                                       }
+                                       y
+                                     })[[1]],
+                              collapse = "/")
+        x_translated_guess <- suppressWarnings(as.ab(x_translated, initial_search = FALSE))
+        if (!is.na(x_translated_guess)) {
+          x_new[i] <- x_translated_guess
+          next
+        }
+      }
+    }
+    
     # not found
     x_unknown <- c(x_unknown, x_bak[x[i] == x_bak_clean][1])
   }
@@ -227,14 +276,14 @@ as.ab <- function(x) {
   x_unknown <- x_unknown[!x_unknown %in% x_unknown_ATCs]
   if (length(x_unknown_ATCs) > 0) {
     warning("These ATC codes are not (yet) in the antibiotics data set: ",
-            paste('"', sort(unique(x_unknown_ATCs)), '"', sep = "", collapse = ', '),
+            paste('"', sort(unique(x_unknown_ATCs)), '"', sep = "", collapse = ", "),
             ".",
             call. = FALSE)
   }
 
   if (length(x_unknown) > 0) {
-    warning("These values could not be coerced to a valid antibiotic ID: ",
-            paste('"', sort(unique(x_unknown)), '"', sep = "", collapse = ', '),
+    warning("These values could not be coerced to a valid antimicrobial ID: ",
+            paste('"', sort(unique(x_unknown)), '"', sep = "", collapse = ", "),
             ".",
             call. = FALSE)
   }
@@ -262,13 +311,13 @@ is.ab <- function(x) {
 #' @noRd
 print.ab <- function(x, ...) {
   cat("Class 'ab'\n")
-  print.default(as.character(x), quote = FALSE)
+  print(as.character(x), quote = FALSE)
 }
 
 #' @exportMethod as.data.frame.ab
 #' @export
 #' @noRd
-as.data.frame.ab <- function (x, ...) {
+as.data.frame.ab <- function(x, ...) {
   # same as as.data.frame.character but with removed stringsAsFactors
   nm <- paste(deparse(substitute(x), width.cutoff = 500L),
               collapse = " ")
@@ -279,10 +328,57 @@ as.data.frame.ab <- function (x, ...) {
   }
 }
 
-#' @exportMethod pull.ab
+#' @exportMethod [.ab
 #' @export
-#' @importFrom dplyr pull
 #' @noRd
-pull.ab <- function(.data, ...) {
-  pull(as.data.frame(.data), ...)
+"[.ab" <- function(x, ...) {
+  y <- NextMethod()
+  attributes(y) <- attributes(x)
+  y
+}
+#' @exportMethod [[.ab
+#' @export
+#' @noRd
+"[[.ab" <- function(x, ...) {
+  y <- NextMethod()
+  attributes(y) <- attributes(x)
+  y
+}
+#' @exportMethod [<-.ab
+#' @export
+#' @noRd
+"[<-.ab" <- function(i, j, ..., value) {
+  y <- NextMethod()
+  attributes(y) <- attributes(i)
+  class_integrity_check(y, "antimicrobial code", AMR::antibiotics$ab)
+}
+#' @exportMethod [[<-.ab
+#' @export
+#' @noRd
+"[[<-.ab" <- function(i, j, ..., value) {
+  y <- NextMethod()
+  attributes(y) <- attributes(i)
+  class_integrity_check(y, "antimicrobial code", AMR::antibiotics$ab)
+}
+#' @exportMethod c.ab
+#' @export
+#' @noRd
+c.ab <- function(x, ...) {
+  y <- NextMethod()
+  attributes(y) <- attributes(x)
+  class_integrity_check(y, "antimicrobial code", AMR::antibiotics$ab)
+}
+
+#' @importFrom pillar type_sum
+#' @export
+type_sum.ab <- function(x) {
+  "ab"
+}
+
+#' @importFrom pillar pillar_shaft
+#' @export
+pillar_shaft.ab <- function(x, ...) {
+  out <- format(x)
+  out[is.na(x)] <- pillar::style_na("NA")
+  pillar::new_pillar_shaft_simple(out, align = "left", min_width = 4)
 }

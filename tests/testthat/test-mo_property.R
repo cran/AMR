@@ -22,6 +22,9 @@
 context("mo_property.R")
 
 test_that("mo_property works", {
+  
+  skip_on_cran()
+  
   expect_equal(mo_kingdom("Escherichia coli"), "Bacteria")
   expect_equal(mo_phylum("Escherichia coli"), "Proteobacteria")
   expect_equal(mo_class("Escherichia coli"), "Gammaproteobacteria")
@@ -50,6 +53,7 @@ test_that("mo_property works", {
   expect_equal(mo_year("Escherichia coli"), 1919)
 
   expect_equal(mo_shortname("Escherichia coli"), "E. coli")
+  expect_equal(mo_shortname("Escherichia"), "E. spp.")
   expect_equal(mo_shortname("Staphylococcus aureus"), "S. aureus")
   expect_equal(mo_shortname("Staphylococcus aureus", Becker = TRUE), "S. aureus")
   expect_equal(mo_shortname("Staphylococcus aureus", Becker = "all", language = "en"), "CoPS")
@@ -89,7 +93,9 @@ test_that("mo_property works", {
   expect_identical(suppressWarnings(mo_ref("Chlamydia psittaci")), "Page, 1968")
   expect_identical(mo_ref("Chlamydophila psittaci"), "Everett et al., 1999")
 
-
+  # old codes must throw a warning in mo_* family
+  expect_warning(mo_name(c("B_ESCHR_COL", "B_STPHY_AUR")))
+  
   # outcome of mo_fullname must always return the fullname from the data set
   library(dplyr)
   x <- microorganisms %>%

@@ -16,19 +16,21 @@ library(AMR)
 
 ## ---- eval = FALSE-------------------------------------------------------
 #  # resistance prediction of piperacillin/tazobactam (TZP):
-#  resistance_predict(tbl = septic_patients, col_date = "date", col_ab = "TZP")
+#  resistance_predict(tbl = example_isolates, col_date = "date", col_ab = "TZP", model = "binomial")
 #  
 #  # or:
-#  septic_patients %>%
-#    resistance_predict(col_ab = "TZP")
+#  example_isolates %>%
+#    resistance_predict(col_ab = "TZP",
+#                       model  "binomial")
 #  
 #  # to bind it to object 'predict_TZP' for example:
-#  predict_TZP <- septic_patients %>%
-#    resistance_predict(col_ab = "TZP")
+#  predict_TZP <- example_isolates %>%
+#    resistance_predict(col_ab = "TZP",
+#                       model = "binomial")
 
 ## ---- echo = FALSE-------------------------------------------------------
-predict_TZP <- septic_patients %>% 
-  resistance_predict(col_ab = "TZP")
+predict_TZP <- example_isolates %>% 
+  resistance_predict(col_ab = "TZP", model = "binomial")
 
 ## ------------------------------------------------------------------------
 predict_TZP
@@ -43,13 +45,13 @@ ggplot_rsi_predict(predict_TZP)
 ggplot_rsi_predict(predict_TZP, ribbon = FALSE)
 
 ## ------------------------------------------------------------------------
-septic_patients %>%
+example_isolates %>%
   filter(mo_gramstain(mo, language = NULL) == "Gram-positive") %>%
-  resistance_predict(col_ab = "VAN", year_min = 2010, info = FALSE) %>% 
+  resistance_predict(col_ab = "VAN", year_min = 2010, info = FALSE, model = "binomial") %>% 
   ggplot_rsi_predict()
 
 ## ------------------------------------------------------------------------
-septic_patients %>%
+example_isolates %>%
   filter(mo_gramstain(mo, language = NULL) == "Gram-positive") %>%
   resistance_predict(col_ab = "VAN", year_min = 2010, info = FALSE, model = "linear") %>% 
   ggplot_rsi_predict()

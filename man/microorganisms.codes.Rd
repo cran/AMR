@@ -3,10 +3,10 @@
 \docType{data}
 \name{microorganisms.codes}
 \alias{microorganisms.codes}
-\title{Translation table for microorganism codes}
-\format{A \code{\link{data.frame}} with 4,969 observations and 2 variables:
+\title{Translation table for common microorganism codes}
+\format{A \code{\link{data.frame}} with 5,006 observations and 2 variables:
 \describe{
-  \item{\code{certe}}{Commonly used code of a microorganism}
+  \item{\code{code}}{Commonly used code of a microorganism}
   \item{\code{mo}}{ID of the microorganism in the \code{\link{microorganisms}} data set}
 }}
 \usage{
@@ -18,9 +18,9 @@ A data set containing commonly used codes for microorganisms, from laboratory sy
 \section{Catalogue of Life}{
 
 \if{html}{\figure{logo_col.png}{options: height=40px style=margin-bottom:5px} \cr}
-This package contains the complete taxonomic tree of almost all microorganisms (~65,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
+This package contains the complete taxonomic tree of almost all microorganisms (~70,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
 
-\link[=catalogue_of_life]{Click here} for more information about the included taxa. The Catalogue of Life releases updates annually; check which version was included in this package with \code{\link{catalogue_of_life_version}()}.
+\link[=catalogue_of_life]{Click here} for more information about the included taxa. Check which version of the Catalogue of Life was included in this package with \code{\link{catalogue_of_life_version}()}.
 }
 
 \section{Read more on our website!}{

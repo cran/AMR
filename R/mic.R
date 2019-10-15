@@ -51,6 +51,8 @@
 #'
 #' plot(mic_data)
 #' barplot(mic_data)
+#' 
+#' library(clean)
 #' freq(mic_data)
 as.mic <- function(x, na.rm = FALSE) {
   if (is.mic(x)) {
@@ -63,24 +65,33 @@ as.mic <- function(x, na.rm = FALSE) {
     x.bak <- x
 
     # comma to period
-    x <- gsub(',', '.', x, fixed = TRUE)
+    x <- gsub(",", ".", x, fixed = TRUE)
     # remove space between operator and number ("<= 0.002" -> "<=0.002")
-    x <- gsub('(<|=|>) +', '\\1', x)
+    x <- gsub("(<|=|>) +", "\\1", x)
+    # transform => to >= and =< to <=
+    x <- gsub("=>", ">=", x, fixed = TRUE)
+    x <- gsub("=<", "<=", x, fixed = TRUE)
     # starting dots must start with 0
-    x <- gsub('^[.]+', '0.', x)
+    x <- gsub("^[.]+", "0.", x)
     # <=0.2560.512 should be 0.512
-    x <- gsub('.*[.].*[.]', '0.', x)
+    x <- gsub(".*[.].*[.]", "0.", x)
     # remove ending .0
-    x <- gsub('[.]+0$', '', x)
+    x <- gsub("[.]+0$", "", x)
     # remove all after last digit
-    x <- gsub('[^0-9]+$', '', x)
+    x <- gsub("[^0-9]+$", "", x)
+    # keep only one zero before dot
+    x <- gsub("0+[.]", "0.", x)
+    # starting 00 is probably 0.0 if there's no dot yet
+    x[!x %like% "[.]"] <- gsub("^00", "0.0", x[!x %like% "[.]"])
     # remove last zeroes
-    x <- gsub('([.].?)0+$', '\\1', x)
-    x <- gsub('(.*[.])0+$', '\\10', x)
+    x <- gsub("([.].?)0+$", "\\1", x)
+    x <- gsub("(.*[.])0+$", "\\10", x)
     # remove ending .0 again
-    x <- gsub('[.]+0$', '', x)
+    x[x %like% "[.]"] <- gsub("0+$", "", x[x %like% "[.]"])
     # force to be character
     x <- as.character(x)
+    # trim it
+    x <- trimws(x)
 
     ## previously unempty values now empty - should return a warning later on
     x[x.bak != "" & x == ""] <- "invalid"
@@ -90,15 +101,25 @@ as.mic <- function(x, na.rm = FALSE) {
               "<0.002", "<=0.002", "0.002", ">=0.002", ">0.002",
               "<0.003", "<=0.003", "0.003", ">=0.003", ">0.003",
               "<0.004", "<=0.004", "0.004", ">=0.004", ">0.004",
+              "<0.005", "<=0.005", "0.005", ">=0.005", ">0.005",
               "<0.006", "<=0.006", "0.006", ">=0.006", ">0.006",
+              "<0.007", "<=0.007", "0.007", ">=0.007", ">0.007",
               "<0.008", "<=0.008", "0.008", ">=0.008", ">0.008",
+              "<0.009", "<=0.009", "0.009", ">=0.009", ">0.009",
+              "<0.01", "<=0.01", "0.01", ">=0.01", ">0.01",
               "<0.012", "<=0.012", "0.012", ">=0.012", ">0.012",
               "<0.0125", "<=0.0125", "0.0125", ">=0.0125", ">0.0125",
               "<0.016", "<=0.016", "0.016", ">=0.016", ">0.016",
+              "<0.019", "<=0.019", "0.019", ">=0.019", ">0.019",
+              "<0.02", "<=0.02", "0.02", ">=0.02", ">0.02",
               "<0.023", "<=0.023", "0.023", ">=0.023", ">0.023",
               "<0.025", "<=0.025", "0.025", ">=0.025", ">0.025",
+              "<0.028", "<=0.028", "0.028", ">=0.028", ">0.028",
               "<0.03", "<=0.03", "0.03", ">=0.03", ">0.03",
+              "<0.031", "<=0.031", "0.031", ">=0.031", ">0.031",
               "<0.032", "<=0.032", "0.032", ">=0.032", ">0.032",
+              "<0.038", "<=0.038", "0.038", ">=0.038", ">0.038",
+              "<0.04", "<=0.04", "0.04", ">=0.04", ">0.04",
               "<0.047", "<=0.047", "0.047", ">=0.047", ">0.047",
               "<0.05", "<=0.05", "0.05", ">=0.05", ">0.05",
               "<0.054", "<=0.054", "0.054", ">=0.054", ">0.054",
@@ -106,25 +127,38 @@ as.mic <- function(x, na.rm = FALSE) {
               "<0.0625", "<=0.0625", "0.0625", ">=0.0625", ">0.0625",
               "<0.063", "<=0.063", "0.063", ">=0.063", ">0.063",
               "<0.064", "<=0.064", "0.064", ">=0.064", ">0.064",
+              "<0.075", "<=0.075", "0.075", ">=0.075", ">0.075",
+              "<0.08", "<=0.08", "0.08", ">=0.08", ">0.08",
               "<0.09", "<=0.09", "0.09", ">=0.09", ">0.09",
               "<0.094", "<=0.094", "0.094", ">=0.094", ">0.094",
+              "<0.095", "<=0.095", "0.095", ">=0.095", ">0.095",
+              "<0.1", "<=0.1", "0.1", ">=0.1", ">0.1",
               "<0.12", "<=0.12", "0.12", ">=0.12", ">0.12",
               "<0.125", "<=0.125", "0.125", ">=0.125", ">0.125",
               "<0.128", "<=0.128", "0.128", ">=0.128", ">0.128",
+              "<0.15", "<=0.15", "0.15", ">=0.15", ">0.15",
               "<0.16", "<=0.16", "0.16", ">=0.16", ">0.16",
+              "<0.17", "<=0.17", "0.17", ">=0.17", ">0.17",
+              "<0.18", "<=0.18", "0.18", ">=0.18", ">0.18",
               "<0.19", "<=0.19", "0.19", ">=0.19", ">0.19",
+              "<0.2", "<=0.2", "0.2", ">=0.2", ">0.2",
               "<0.23", "<=0.23", "0.23", ">=0.23", ">0.23",
               "<0.25", "<=0.25", "0.25", ">=0.25", ">0.25",
               "<0.256", "<=0.256", "0.256", ">=0.256", ">0.256",
               "<0.28", "<=0.28", "0.28", ">=0.28", ">0.28",
               "<0.3", "<=0.3", "0.3", ">=0.3", ">0.3",
               "<0.32", "<=0.32", "0.32", ">=0.32", ">0.32",
+              "<0.35", "<=0.35", "0.35", ">=0.35", ">0.35",
               "<0.36", "<=0.36", "0.36", ">=0.36", ">0.36",
               "<0.38", "<=0.38", "0.38", ">=0.38", ">0.38",
+              "<0.47", "<=0.47", "0.47", ">=0.47", ">0.47",
               "<0.5", "<=0.5", "0.5", ">=0.5", ">0.5",
               "<0.512", "<=0.512", "0.512", ">=0.512", ">0.512",
               "<0.64", "<=0.64", "0.64", ">=0.64", ">0.64",
+              "<0.73", "<=0.73", "0.73", ">=0.73", ">0.73",
               "<0.75", "<=0.75", "0.75", ">=0.75", ">0.75",
+              "<0.8", "<=0.8", "0.8", ">=0.8", ">0.8",
+              "<0.94", "<=0.94", "0.94", ">=0.94", ">0.94",
               "<1", "<=1", "1", ">=1", ">1",
               "<1.5", "<=1.5", "1.5", ">=1.5", ">1.5",
               "<2", "<=2", "2", ">=2", ">2",
@@ -156,24 +190,23 @@ as.mic <- function(x, na.rm = FALSE) {
               "<1024", "<=1024", "1024", ">=1024", ">1024",
               "1025")
 
-    na_before <- x[is.na(x) | x == ''] %>% length()
+    na_before <- x[is.na(x) | x == ""] %>% length()
     x[!x %in% lvls] <- NA
-    na_after <- x[is.na(x) | x == ''] %>% length()
+    na_after <- x[is.na(x) | x == ""] %>% length()
 
     if (na_before != na_after) {
-      list_missing <- x.bak[is.na(x) & !is.na(x.bak) & x.bak != ''] %>%
+      list_missing <- x.bak[is.na(x) & !is.na(x.bak) & x.bak != ""] %>%
         unique() %>%
         sort()
-      list_missing <- paste0('"', list_missing , '"', collapse = ", ")
-      warning(na_after - na_before, ' results truncated (',
+      list_missing <- paste0('"', list_missing, '"', collapse = ", ")
+      warning(na_after - na_before, " results truncated (",
               round(((na_after - na_before) / length(x)) * 100),
-              '%) that were invalid MICs: ',
+              "%) that were invalid MICs: ",
               list_missing, call. = FALSE)
     }
 
-    x <- factor(x, levels = lvls, ordered = TRUE)
-    class(x) <- c('mic', 'ordered', 'factor')
-    x
+    structure(.Data = factor(x, levels = lvls, ordered = TRUE),
+              class =  c("mic", "ordered", "factor"))
   }
 }
 
@@ -181,36 +214,36 @@ as.mic <- function(x, na.rm = FALSE) {
 #' @export
 #' @importFrom dplyr %>%
 is.mic <- function(x) {
-  class(x) %>% identical(c('mic', 'ordered', 'factor'))
+  class(x) %>% identical(c("mic", "ordered", "factor"))
 }
 
 #' @exportMethod as.double.mic
 #' @export
 #' @noRd
 as.double.mic <- function(x, ...) {
-  as.double(gsub('(<|=|>)+', '', as.character(x)))
+  as.double(gsub("(<|=|>)+", "", as.character(x)))
 }
 
 #' @exportMethod as.integer.mic
 #' @export
 #' @noRd
 as.integer.mic <- function(x, ...) {
-  as.integer(gsub('(<|=|>)+', '', as.character(x)))
+  as.integer(gsub("(<|=|>)+", "", as.character(x)))
 }
 
 #' @exportMethod as.numeric.mic
 #' @export
 #' @noRd
 as.numeric.mic <- function(x, ...) {
-  as.numeric(gsub('(<|=|>)+', '', as.character(x)))
+  as.numeric(gsub("(<|=|>)+", "", as.character(x)))
 }
 
 #' @exportMethod droplevels.mic
 #' @export
 #' @noRd
-droplevels.mic <- function(x, exclude = if(anyNA(levels(x))) NULL else NA, ...) {
+droplevels.mic <- function(x, exclude = ifelse(anyNA(levels(x)), NULL, NA), ...) {
   x <- droplevels.factor(x, exclude = exclude, ...)
-  class(x) <- c('mic', 'ordered', 'factor')
+  class(x) <- c("mic", "ordered", "factor")
   x
 }
 
@@ -233,7 +266,7 @@ summary.mic <- function(object, ...) {
   x <- x[!is.na(x)]
   n <- x %>% length()
   c(
-    "Class" = 'mic',
+    "Class" = "mic",
     "<NA>" = n_total - n,
     "Min." = sort(x)[1] %>% as.character(),
     "Max." = sort(x)[n] %>% as.character()
@@ -245,9 +278,9 @@ summary.mic <- function(object, ...) {
 #' @importFrom graphics barplot axis par
 #' @noRd
 plot.mic <- function(x,
-                     main = paste('MIC values of', deparse(substitute(x))),
-                     ylab = 'Frequency',
-                     xlab = 'MIC value',
+                     main = paste("MIC values of", deparse(substitute(x))),
+                     ylab = "Frequency",
+                     xlab = "MIC value",
                      axes = FALSE,
                      ...) {
   barplot(table(droplevels.factor(x)),
@@ -264,9 +297,9 @@ plot.mic <- function(x,
 #' @importFrom graphics barplot axis
 #' @noRd
 barplot.mic <- function(height,
-                        main = paste('MIC values of', deparse(substitute(height))),
-                        ylab = 'Frequency',
-                        xlab = 'MIC value',
+                        main = paste("MIC values of", deparse(substitute(height))),
+                        ylab = "Frequency",
+                        xlab = "MIC value",
                         axes = FALSE,
                         ...) {
   barplot(table(droplevels.factor(height)),
@@ -276,4 +309,18 @@ barplot.mic <- function(height,
           main = main,
           ...)
   axis(2, seq(0, max(table(droplevels.factor(height)))))
+}
+
+#' @importFrom pillar type_sum
+#' @export
+type_sum.mic <- function(x) {
+  "mic"
+}
+
+#' @importFrom pillar pillar_shaft
+#' @export
+pillar_shaft.mic <- function(x, ...) {
+  out <- trimws(format(x))
+  out[is.na(x)] <- pillar::style_na(NA)
+  pillar::new_pillar_shaft_simple(out, align = "right", min_width = 4)
 }

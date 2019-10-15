@@ -23,6 +23,9 @@ data <- WHONET %>%
   # transform everything from "AMP_ND10" to "CIP_EE" to the new `rsi` class
   mutate_at(vars(AMP_ND10:CIP_EE), as.rsi)
 
+## ----lib clean, message = FALSE------------------------------------------
+library(clean)
+
 ## ---- results = 'asis'---------------------------------------------------
 # our newly created `mo` variable
 data %>% freq(mo, nmax = 10)

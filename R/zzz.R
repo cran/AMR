@@ -26,8 +26,9 @@
 
   # register data
   microorganisms.oldDT <- as.data.table(AMR::microorganisms.old)
-  microorganisms.oldDT$fullname_lower <- tolower(microorganisms.oldDT$fullname)
-  setkey(microorganisms.oldDT, col_id, fullname)
+  # for fullname_lower: keep only dots, letters, numbers, slashes, spaces and dashes
+  microorganisms.oldDT$fullname_lower <- gsub("[^.a-z0-9/ \\-]+", "", tolower(microorganisms.oldDT$fullname))
+  setkey(microorganisms.oldDT, prevalence, fullname)
 
   assign(x = "microorganismsDT",
          value = make_DT(),
@@ -41,50 +42,23 @@
          value = make_trans_tbl(),
          envir = asNamespace("AMR"))
 
-#  assign(x = "mo_history",
-#         value = data.frame(x = character(0),
-#                            mo = character(0),
-#                            uncertainty_level = integer(0),
-#                            package_v = character(0),
-#                            stringsAsFactors = FALSE),
-#         envir = asNamespace("AMR"))
-
 }
 
-
-.onAttach <- function(...) {
-  if (interactive() & !isFALSE(getOption("AMR_survey"))) {
-    options(AMR_survey = FALSE)
-    console_width <- options()$width - 1
-    url <- "https://www.surveymonkey.com/r/AMR_for_R"
-    txt <- paste0("Thanks for using the AMR package! ",
-                 "As researchers, we are interested in how and why you use this package and if there are things you're missing from it. ",
-                 "Please fill in our 2-minute survey at: ", url, ". ",
-                 "This message can be turned off with: options(AMR_survey = FALSE)")
-
-    # make it honour new lines bases on console width:
-    txt <- unlist(strsplit(txt, " "))
-    txt_new <- ""
-    total_chars <- 0
-    for (i in 1:length(txt)) {
-      total_chars <- total_chars + nchar(txt[i]) + 1
-      if (total_chars > console_width) {
-        txt_new <- paste0(txt_new, "\n")
-        total_chars <- 0
-      }
-      txt_new <- paste0(txt_new, txt[i], " ")
-    }
-    # packageStartupMessage(txt_new)
-  }
-}
+# maybe add survey later: "https://www.surveymonkey.com/r/AMR_for_R"
 
 #' @importFrom data.table as.data.table setkey
 make_DT <- function() {
-  microorganismsDT <- as.data.table(AMR::microorganisms)
-  microorganismsDT$fullname_lower <- tolower(microorganismsDT$fullname)
+  microorganismsDT <- as.data.table(AMR::microorganisms %>% 
+                                      mutate(kingdom_index = case_when(kingdom == "Bacteria" ~ 1,
+                                                                       kingdom == "Fungi" ~ 2,
+                                                                       kingdom == "Protozoa" ~ 3,
+                                                                       kingdom == "Archaea" ~ 4,
+                                                                       TRUE ~ 6)))
+  # for fullname_lower: keep only dots, letters, numbers, slashes, spaces and dashes
+  microorganismsDT$fullname_lower <- gsub("[^.a-z0-9/ \\-]+", "", tolower(microorganismsDT$fullname))
   setkey(microorganismsDT,
          prevalence,
-         kingdom,
+         kingdom_index,
          fullname)
   microorganismsDT
 }

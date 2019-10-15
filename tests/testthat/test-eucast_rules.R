@@ -22,21 +22,25 @@
 context("eucast_rules.R")
 
 test_that("EUCAST rules work", {
+  
+  skip_on_cran()
 
   # thoroughly check input table
   expect_equal(colnames(eucast_rules_file),
-               c("if_mo_property", "like_is_one_of", "this_value",
+               c("if_mo_property", "like.is.one_of", "this_value",
                  "and_these_antibiotics", "have_these_values",
                  "then_change_these_antibiotics", "to_value",
                  "reference.rule", "reference.rule_group"))
 
-  expect_error(suppressWarnings(eucast_rules(septic_patients, col_mo = "Non-existing")))
+  expect_error(suppressWarnings(eucast_rules(example_isolates, col_mo = "Non-existing")))
   expect_error(eucast_rules(x = "text"))
   expect_error(eucast_rules(data.frame(a = "test")))
   expect_error(eucast_rules(data.frame(mo = "test"), rules = "invalid rules set"))
+  
+  expect_warning(eucast_rules(data.frame(mo = "Escherichia coli", vancomycin = "S")))
 
-  expect_identical(colnames(septic_patients),
-                   colnames(suppressWarnings(eucast_rules(septic_patients))))
+  expect_identical(colnames(example_isolates),
+                   colnames(suppressWarnings(eucast_rules(example_isolates))))
 
   a <- data.frame(mo = c("Klebsiella pneumoniae",
                          "Pseudomonas aeruginosa",
@@ -64,7 +68,7 @@ test_that("EUCAST rules work", {
   # piperacillin must be R in Enterobacteriaceae when tica is R
   library(dplyr)
   expect_equal(suppressWarnings(
-    septic_patients %>%
+    example_isolates %>%
       mutate(TIC = as.rsi("R"),
              PIP = as.rsi("S")) %>%
       eucast_rules(col_mo = "mo") %>%
@@ -77,7 +81,7 @@ test_that("EUCAST rules work", {
 
   # Azithromicin and Clarythromycin must be equal to Erythromycin
   a <- suppressWarnings(
-    septic_patients %>%
+    example_isolates %>%
       transmute(mo,
                 ERY,
                 AZM = as.rsi("R"),
@@ -85,7 +89,7 @@ test_that("EUCAST rules work", {
       eucast_rules(col_mo = "mo") %>%
       pull(CLR))
   b <-   suppressWarnings(
-    septic_patients %>%
+    example_isolates %>%
       select(mo, ERY) %>%
       eucast_rules(col_mo = "mo") %>%
       pull(ERY))
@@ -106,9 +110,9 @@ test_that("EUCAST rules work", {
     "S")
 
   # also test norf
-  expect_output(suppressWarnings(eucast_rules(septic_patients %>% mutate(NOR = "S", NAL = "S"))))
+  expect_output(suppressWarnings(eucast_rules(example_isolates %>% mutate(NOR = "S", NAL = "S"))))
 
   # check verbose output
-  expect_output(suppressWarnings(eucast_rules(septic_patients, verbose = TRUE)))
+  expect_output(suppressWarnings(eucast_rules(example_isolates, verbose = TRUE)))
 
 })

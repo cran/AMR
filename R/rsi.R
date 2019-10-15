@@ -25,18 +25,18 @@
 #' @rdname as.rsi
 #' @param x vector of values (for class \code{mic}: an MIC value in mg/L, for class \code{disk}: a disk diffusion radius in millimeters)
 #' @param mo a microorganism code, generated with \code{\link{as.mo}}
-#' @param ab an antibiotic code, generated with \code{\link{as.ab}}
+#' @param ab an antimicrobial code, generated with \code{\link{as.ab}}
 #' @inheritParams first_isolate
 #' @param guideline defaults to the latest included EUCAST guideline, run \code{unique(AMR::rsi_translation$guideline)} for all options
-#' @param threshold maximum fraction of \code{x} that is allowed to fail transformation, see Examples
+#' @param threshold maximum fraction of invalid antimicrobial interpretations of \code{x}, see Examples
 #' @param ... parameters passed on to methods
 #' @details Run \code{unique(AMR::rsi_translation$guideline)} for a list of all supported guidelines.
 #'
-#' After using \code{as.rsi}, you can use \code{\link{eucast_rules}} to (1) apply inferred susceptibility and resistance based on results of other antibiotics and (2) apply intrinsic resistance based on taxonomic properties of a microorganism.
+#' After using \code{as.rsi}, you can use \code{\link{eucast_rules}} to (1) apply inferred susceptibility and resistance based on results of other antimicrobials and (2) apply intrinsic resistance based on taxonomic properties of a microorganism.
 #'
 #' The function \code{is.rsi.eligible} returns \code{TRUE} when a columns contains at most 5\% invalid antimicrobial interpretations (not S and/or I and/or R), and \code{FALSE} otherwise. The threshold of 5\% can be set with the \code{threshold} parameter.
 #' @section Interpretation of S, I and R:
-#' In 2019, EUCAST has decided to change the definitions of susceptibility testing categories S, I and R as shown below. Results of several consultations on the new definitions are available on the EUCAST website under "Consultations".
+#' In 2019, EUCAST has decided to change the definitions of susceptibility testing categories S, I and R as shown below (\url{http://www.eucast.org/newsiandr/}). Results of several consultations on the new definitions are available on the EUCAST website under "Consultations".
 #'
 #' \itemize{
 #'   \item{\strong{S} - }{Susceptible, standard dosing regimen: A microorganism is categorised as "Susceptible, standard dosing regimen", when there is a high likelihood of therapeutic success using a standard dosing regimen of the agent.}
@@ -46,13 +46,11 @@
 #'
 #' Exposure is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
 #'
-#' Source: \url{http://www.eucast.org/newsiandr/}.
-#'
-#' \strong{This AMR package honours this new insight.}
+#' This AMR package honours this new insight. Use \code{\link{portion_SI}} to determine antimicrobial susceptibility and \code{\link{count_SI}} to count susceptible isolates.
 #' @return Ordered factor with new class \code{rsi}
 #' @keywords rsi
 #' @export
-#' @importFrom dplyr %>%
+#' @importFrom dplyr %>% desc arrange filter 
 #' @seealso \code{\link{as.mic}}
 #' @inheritSection AMR Read more on our website!
 #' @examples
@@ -75,16 +73,18 @@
 #'
 #' plot(rsi_data)    # for percentages
 #' barplot(rsi_data) # for frequencies
+#' 
+#' library(clean)
 #' freq(rsi_data)    # frequency table with informative header
 #'
 #' # using dplyr's mutate
 #' library(dplyr)
-#' septic_patients %>%
+#' example_isolates %>%
 #'   mutate_at(vars(PEN:RIF), as.rsi)
 #'
 #'
 #' # fastest way to transform all columns with already valid AB results to class `rsi`:
-#' septic_patients %>%
+#' example_isolates %>%
 #'   mutate_if(is.rsi.eligible,
 #'             as.rsi)
 #'
@@ -100,20 +100,17 @@ as.rsi.default <- function(x, ...) {
   if (is.rsi(x)) {
     x
   } else if (identical(levels(x), c("S", "I", "R"))) {
-    structure(x, class = c('rsi', 'ordered', 'factor'))
+    structure(x, class = c("rsi", "ordered", "factor"))
   } else {
-    # if (input_resembles_mic(x) > 0.5) {
-    #   warning("`as.rsi` is intended to clean antimicrobial interpretations - not to interpret MIC values.", call. = FALSE)
-    # }
 
     x <- x %>% unlist()
     x.bak <- x
 
-    na_before <- x[is.na(x) | x == ''] %>% length()
+    na_before <- x[is.na(x) | x == ""] %>% length()
     # remove all spaces
-    x <- gsub(' +', '', x)
+    x <- gsub(" +", "", x)
     # remove all MIC-like values: numbers, operators and periods
-    x <- gsub('[0-9.,;:<=>]+', '', x)
+    x <- gsub("[0-9.,;:<=>]+", "", x)
     # remove everything between brackets, and 'high' and 'low'
     x <- gsub("([(].*[)])", "", x)
     x <- gsub("(high|low)", "", x, ignore.case = TRUE)
@@ -122,27 +119,29 @@ as.rsi.default <- function(x, ...) {
     # set to capitals
     x <- toupper(x)
     # remove all invalid characters
-    x <- gsub('[^RSI]+', '', x)
+    x <- gsub("[^RSI]+", "", x)
     # in cases of "S;S" keep S, but in case of "S;I" make it NA
-    x <- gsub('^S+$', 'S', x)
-    x <- gsub('^I+$', 'I', x)
-    x <- gsub('^R+$', 'R', x)
-    x[!x %in% c('S', 'I', 'R')] <- NA
-    na_after <- x[is.na(x) | x == ''] %>% length()
-
-    if (na_before != na_after) {
-      list_missing <- x.bak[is.na(x) & !is.na(x.bak) & x.bak != ''] %>%
-        unique() %>%
-        sort()
-      list_missing <- paste0('"', list_missing , '"', collapse = ", ")
-      warning(na_after - na_before, ' results truncated (',
-              round(((na_after - na_before) / length(x)) * 100),
-              '%) that were invalid antimicrobial interpretations: ',
-              list_missing, call. = FALSE)
+    x <- gsub("^S+$", "S", x)
+    x <- gsub("^I+$", "I", x)
+    x <- gsub("^R+$", "R", x)
+    x[!x %in% c("S", "I", "R")] <- NA
+    na_after <- x[is.na(x) | x == ""] %>% length()
+    
+    if (!isFALSE(list(...)$warn)) { # so as.rsi(..., warn = FALSE) will never throw a warning
+      if (na_before != na_after) {
+        list_missing <- x.bak[is.na(x) & !is.na(x.bak) & x.bak != ""] %>%
+          unique() %>%
+          sort()
+        list_missing <- paste0('"', list_missing, '"', collapse = ", ")
+        warning(na_after - na_before, " results truncated (",
+                round(((na_after - na_before) / length(x)) * 100),
+                "%) that were invalid antimicrobial interpretations: ",
+                list_missing, call. = FALSE)
+      }
     }
-
+    
     structure(.Data = factor(x, levels = c("S", "I", "R"), ordered = TRUE),
-              class =  c('rsi', 'ordered', 'factor'))
+              class =  c("rsi", "ordered", "factor"))
   }
 }
 
@@ -195,7 +194,7 @@ exec_as.rsi <- function(method, x, mo, ab, guideline) {
   mo_order <- as.mo(mo_order(mo))
   mo_becker <- as.mo(mo, Becker = TRUE)
   mo_lancefield <- as.mo(mo, Lancefield = TRUE)
-
+ 
   guideline_param <- toupper(guideline)
   if (guideline_param %in% c("CLSI", "EUCAST")) {
     guideline_param <- AMR::rsi_translation %>%
@@ -224,7 +223,7 @@ exec_as.rsi <- function(method, x, mo, ab, guideline) {
   lookup_becker <- paste(mo_becker, ab)
   lookup_lancefield <- paste(mo_lancefield, ab)
 
-  for (i in 1:length(x)) {
+  for (i in seq_len(length(x))) {
     get_record <- trans %>%
       filter(lookup %in% c(lookup_mo[i],
                            lookup_genus[i],
@@ -234,7 +233,7 @@ exec_as.rsi <- function(method, x, mo, ab, guideline) {
                            lookup_lancefield[i])) %>%
       # be as specific as possible (i.e. prefer species over genus):
       arrange(desc(nchar(mo))) %>%
-      .[1L,]
+      .[1L, ]
 
     if (NROW(get_record) > 0) {
       if (method == "mic") {
@@ -252,7 +251,7 @@ exec_as.rsi <- function(method, x, mo, ab, guideline) {
     }
   }
   structure(.Data = factor(new_rsi, levels = c("S", "I", "R"), ordered = TRUE),
-            class =  c('rsi', 'ordered', 'factor'))
+            class =  c("rsi", "ordered", "factor"))
 }
 
 #' @rdname as.rsi
@@ -263,7 +262,7 @@ as.rsi.data.frame <- function(x, col_mo = NULL, guideline = "EUCAST", ...) {
 
   ab_cols <- colnames(x)[sapply(x, function(y) is.mic(y) | is.disk(y))]
   if (length(ab_cols) == 0) {
-    stop("No columns with MIC values or disk zones found in this data set. Use as.mic or as.disk to transform antibiotic columns.", call. = FALSE)
+    stop("No columns with MIC values or disk zones found in this data set. Use as.mic or as.disk to transform antimicrobial columns.", call. = FALSE)
   }
 
   # try to find columns based on type
@@ -278,7 +277,7 @@ as.rsi.data.frame <- function(x, col_mo = NULL, guideline = "EUCAST", ...) {
   # transform all MICs
   ab_cols <- colnames(x)[sapply(x, is.mic)]
   if (length(ab_cols) > 0) {
-    for (i in 1:length(ab_cols)) {
+    for (i in seq_len(length(ab_cols))) {
       if (is.na(suppressWarnings(as.ab(ab_cols[i])))) {
         message(red(paste0("Unknown drug: `", bold(ab_cols[i]), "`. Rename this column to a drug name or code, and check the output with as.ab().")))
         next
@@ -295,7 +294,7 @@ as.rsi.data.frame <- function(x, col_mo = NULL, guideline = "EUCAST", ...) {
   # transform all disks
   ab_cols <- colnames(x)[sapply(x, is.disk)]
   if (length(ab_cols) > 0) {
-    for (i in 1:length(ab_cols)) {
+    for (i in seq_len(length(ab_cols))) {
       if (is.na(suppressWarnings(as.ab(ab_cols[i])))) {
         message(red(paste0("Unknown drug: `", bold(ab_cols[i]), "`. Rename this column to a drug name or code, and check the output with as.ab().")))
         next
@@ -317,14 +316,14 @@ as.rsi.data.frame <- function(x, col_mo = NULL, guideline = "EUCAST", ...) {
 #' @export
 is.rsi <- function(x) {
   identical(class(x),
-            c('rsi', 'ordered', 'factor'))
+            c("rsi", "ordered", "factor"))
 }
 
 #' @rdname as.rsi
 #' @export
 is.rsi.eligible <- function(x, threshold = 0.05) {
   if (NCOL(x) > 1) {
-    stop('`x` must be a one-dimensional vector.')
+    stop("`x` must be a one-dimensional vector.")
   }
   if (any(c("logical",
             "numeric",
@@ -361,9 +360,9 @@ print.rsi <- function(x, ...) {
 #' @exportMethod droplevels.rsi
 #' @export
 #' @noRd
-droplevels.rsi <- function(x, exclude = if(anyNA(levels(x))) NULL else NA, ...) {
+droplevels.rsi <- function(x, exclude = if (anyNA(levels(x))) NULL else NA, ...) {
   x <- droplevels.factor(x, exclude = exclude, ...)
-  class(x) <- c('rsi', 'ordered', 'factor')
+  class(x) <- c("rsi", "ordered", "factor")
   x
 }
 
@@ -373,7 +372,7 @@ droplevels.rsi <- function(x, exclude = if(anyNA(levels(x))) NULL else NA, ...) 
 summary.rsi <- function(object, ...) {
   x <- object
   c(
-    "Class" = 'rsi',
+    "Class" = "rsi",
     "<NA>" = sum(is.na(x)),
     "Sum S" = sum(x == "S", na.rm = TRUE),
     "Sum IR" = sum(x %in% c("I", "R"), na.rm = TRUE),
@@ -390,9 +389,9 @@ summary.rsi <- function(object, ...) {
 plot.rsi <- function(x,
                      lwd = 2,
                      ylim = NULL,
-                     ylab = 'Percentage',
-                     xlab = 'Antimicrobial Interpretation',
-                     main = paste('Susceptibility Analysis of', deparse(substitute(x))),
+                     ylab = "Percentage",
+                     xlab = "Antimicrobial Interpretation",
+                     main = paste("Susceptibility Analysis of", deparse(substitute(x))),
                      axes = FALSE,
                      ...) {
   suppressWarnings(
@@ -414,7 +413,7 @@ plot.rsi <- function(x,
     data <- rbind(data, data.frame(x = "R", n = 0, s = 0))
   }
 
-  data$x <- factor(data$x, levels = c('S', 'I', 'R'), ordered = TRUE)
+  data$x <- factor(data$x, levels = c("S", "I", "R"), ordered = TRUE)
 
   ymax <- if_else(max(data$s) > 95, 105, 100)
 
@@ -434,7 +433,7 @@ plot.rsi <- function(x,
 
   text(x = data$x,
        y = data$s + 4,
-       labels = paste0(data$s, '% (n = ', data$n, ')'))
+       labels = paste0(data$s, "% (n = ", data$n, ")"))
 }
 
 
@@ -444,10 +443,10 @@ plot.rsi <- function(x,
 #' @importFrom graphics barplot axis par
 #' @noRd
 barplot.rsi <- function(height,
-                        col = c('green3', 'orange2', 'red3'),
-                        xlab = ifelse(beside, 'Antimicrobial Interpretation', ''),
-                        main = paste('Susceptibility Analysis of', deparse(substitute(height))),
-                        ylab = 'Frequency',
+                        col = c("green3", "orange2", "red3"),
+                        xlab = ifelse(beside, "Antimicrobial Interpretation", ""),
+                        main = paste("Susceptibility Analysis of", deparse(substitute(height))),
+                        ylab = "Frequency",
                         beside = TRUE,
                         axes = beside,
                         ...) {
@@ -471,4 +470,22 @@ barplot.rsi <- function(height,
   if (axes == TRUE && beside == TRUE) {
     axis(side = 1, labels = levels(height), at = c(1, 2, 3) + 0.5, lwd = 0)
   }
+}
+
+#' @importFrom pillar type_sum
+#' @export
+type_sum.rsi <- function(x) {
+  "rsi"
+}
+
+#' @importFrom pillar pillar_shaft
+#' @importFrom crayon bgGreen bgYellow bgRed white black
+#' @export 
+pillar_shaft.rsi <- function(x, ...) {
+  out <- trimws(format(x))
+  out[is.na(x)] <- pillar::style_subtle(" NA")
+  out[x == "S"] <- bgGreen(white(" S "))
+  out[x == "I"] <- bgYellow(black(" I "))
+  out[x == "R"] <- bgRed(white(" R "))
+  pillar::new_pillar_shaft_simple(out, align = "left", min_width = 3)
 }

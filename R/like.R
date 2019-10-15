@@ -21,14 +21,14 @@
 
 #' Pattern Matching
 #'
-#' Convenient wrapper around \code{\link[base]{grep}} to match a pattern: \code{a \%like\% b}. It always returns a \code{logical} vector and is always case-insensitive. Also, \code{pattern} (\code{b}) can be as long as \code{x} (\code{a}) to compare items of each index in both vectors.
+#' Convenient wrapper around \code{\link[base]{grep}} to match a pattern: \code{a \%like\% b}. It always returns a \code{logical} vector and is always case-insensitive (use \code{a \%like_case\% b} for case-sensitive matching). Also, \code{pattern} (\code{b}) can be as long as \code{x} (\code{a}) to compare items of each index in both vectors, or can both have the same length to iterate over all cases.
 #' @inheritParams base::grepl
 #' @return A \code{logical} vector
 #' @name like
 #' @rdname like
 #' @export
 #' @details Using RStudio? This function can also be inserted from the Addins menu and can have its own Keyboard Shortcut like Ctrl+Shift+L or Cmd+Shift+L (see Tools > Modify Keyboard Shortcuts...).
-#' @source Idea from the \href{https://github.com/Rdatatable/data.table/blob/master/R/like.R}{\code{like} function from the \code{data.table} package}, but made it case insensitive at default and let it support multiple patterns.
+#' @source Idea from the \href{https://github.com/Rdatatable/data.table/blob/master/R/like.R}{\code{like} function from the \code{data.table} package}, but made it case insensitive at default and let it support multiple patterns. Also, if the regex fails the first time, it tries again with \code{perl = TRUE}.
 #' @seealso \code{\link[base]{grep}}
 #' @inheritSection AMR Read more on our website!
 #' @examples
@@ -48,23 +48,32 @@
 #'
 #' # get frequencies of bacteria whose name start with 'Ent' or 'ent'
 #' library(dplyr)
-#' septic_patients %>%
+#' library(clean)
+#' example_isolates %>%
 #'   left_join_microorganisms() %>%
 #'   filter(genus %like% '^ent') %>%
 #'   freq(genus, species)
-like <- function(x, pattern) {
+like <- function(x, pattern, ignore.case = TRUE) {
   if (length(pattern) > 1) {
     if (length(x) != length(pattern)) {
-      pattern <- pattern[1]
-      warning('only the first element of argument `pattern` used for `%like%`', call. = TRUE)
+      if (length(x) == 1) {
+        x <- rep(x, length(pattern))
+      }
+      # return TRUE for every 'x' that matches any 'pattern', FALSE otherwise
+      res <- sapply(pattern, function(pttrn) base::grepl(pttrn, x, ignore.case = ignore.case))
+      res2 <- as.logical(rowSums(res))
+      # get only first item of every hit in pattern
+      res2[duplicated(res)] <- FALSE
+      res2[rowSums(res) == 0] <- NA
+      return(res2)
     } else {
       # x and pattern are of same length, so items with each other
       res <- vector(length = length(pattern))
-      for (i in 1:length(res)) {
+      for (i in seq_len(length(res))) {
         if (is.factor(x[i])) {
-          res[i] <- as.integer(x[i]) %in% base::grep(pattern[i], levels(x[i]), ignore.case = TRUE)
+          res[i] <- as.integer(x[i]) %in% base::grep(pattern[i], levels(x[i]), ignore.case = ignore.case)
         } else {
-          res[i] <- base::grepl(pattern[i], x[i], ignore.case = TRUE)
+          res[i] <- base::grepl(pattern[i], x[i], ignore.case = ignore.case)
         }
       }
       return(res)
@@ -73,12 +82,24 @@ like <- function(x, pattern) {
 
   # the regular way how grepl works; just one pattern against one or more x
   if (is.factor(x)) {
-    as.integer(x) %in% base::grep(pattern, levels(x), ignore.case = TRUE)
+    as.integer(x) %in% base::grep(pattern, levels(x), ignore.case = ignore.case)
   } else {
-    base::grepl(pattern, x, ignore.case = TRUE)
+    tryCatch(base::grepl(pattern, x, ignore.case = ignore.case),
+             error = function(e) ifelse(test = grepl("Invalid regexp", e$message),
+                                        # try with perl = TRUE:
+                                        yes = return(base::grepl(pattern, x, ignore.case = ignore.case, perl = TRUE)),
+                                        no = stop(e$message)))
   }
 }
 
 #' @rdname like
 #' @export
-"%like%" <- like
+"%like%" <- function(x, pattern) {
+  like(x, pattern, ignore.case = TRUE)
+}
+
+#' @rdname like
+#' @export
+"%like_case%" <- function(x, pattern) {
+  like(x, pattern, ignore.case = FALSE)
+}

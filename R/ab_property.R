@@ -150,7 +150,7 @@ ab_ddd <- function(x, administration = "oral", units = FALSE, ...) {
 ab_info <- function(x, language = get_locale(), ...) {
   x <- AMR::as.ab(x, ...)
   base::list(ab = as.character(x),
-             atc = as.character(ab_atc(x)),
+             atc = ab_atc(x),
              cid = ab_cid(x),
              name = ab_name(x, language = language),
              group = ab_group(x, language = language),
@@ -165,7 +165,7 @@ ab_info <- function(x, language = get_locale(), ...) {
 
 #' @rdname ab_property
 #' @export
-ab_property <- function(x, property = 'name', language = get_locale(), ...) {
+ab_property <- function(x, property = "name", language = get_locale(), ...) {
   if (length(property) != 1L) {
     stop("'property' must be of length 1.")
   }
@@ -181,24 +181,26 @@ ab_validate <- function(x, property, ...) {
     library("AMR")
     # check onLoad() in R/zzz.R: data tables are created there.
   }
-
+  
   # try to catch an error when inputting an invalid parameter
   # so the 'call.' can be set to FALSE
   tryCatch(x[1L] %in% AMR::antibiotics[1, property],
            error = function(e) stop(e$message, call. = FALSE))
-
+  x_bak <- x
   if (!all(x %in% AMR::antibiotics[, property])) {
-    x <- data.frame(ab = AMR::as.ab(x), stringsAsFactors = FALSE) %>%
+    x <- data.frame(ab = AMR::as.ab(x, ...), stringsAsFactors = FALSE) %>%
       left_join(AMR::antibiotics, by = "ab") %>%
       pull(property)
   }
-  if (property %in% c("ab", "atc")) {
+  if (property == "ab") {
     return(structure(x, class = property))
   } else if (property == "cid") {
     return(as.integer(x))
   } else if (property %like% "ddd") {
     return(as.double(x))
   } else {
+    # return "(input)" for NAs
+    x[is.na(x) & !is.na(x_bak)] <- paste0("(", x_bak[is.na(x) & !is.na(x_bak)], ")")
     return(x)
   }
 }

@@ -19,56 +19,73 @@
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
-#' @importFrom dplyr %>% pull all_vars any_vars filter_all funs mutate_all
-rsi_calc <- function(...,
-                     type,
-                     include_I,
-                     minimum,
-                     as_percent,
-                     also_single_tested,
-                     only_count) {
+#' @importFrom rlang enquos as_label
+dots2vars <- function(...) {
+  # this function is to give more informative output about 
+  # variable names in count_* and portion_* functions
+  paste(
+    unlist(
+      lapply(enquos(...),
+             function(x) {
+               l <- as_label(x)
+               if (l != ".") {
+                 l
+               } else {
+                 character(0)
+               }
+             })
+    ),
+    collapse = ", ")
+}
 
-  if (!is.logical(include_I)) {
-    stop('`include_I` must be logical', call. = FALSE)
-  }
+#' @importFrom dplyr %>% pull all_vars any_vars filter_all funs mutate_all
+# @importFrom clean percentage
+rsi_calc <- function(...,
+                     ab_result,
+                     minimum = 0,
+                     as_percent = FALSE,
+                     only_all_tested = FALSE,
+                     only_count = FALSE) {
+
+  data_vars <- dots2vars(...)
+
   if (!is.numeric(minimum)) {
-    stop('`minimum` must be numeric', call. = FALSE)
+    stop("`minimum` must be numeric", call. = FALSE)
   }
   if (!is.logical(as_percent)) {
-    stop('`as_percent` must be logical', call. = FALSE)
+    stop("`as_percent` must be logical", call. = FALSE)
   }
-  if (!is.logical(also_single_tested)) {
-    stop('`also_single_tested` must be logical', call. = FALSE)
+  if (!is.logical(only_all_tested)) {
+    stop("`only_all_tested` must be logical", call. = FALSE)
   }
 
   dots_df <- ...elt(1) # it needs this evaluation
   dots <- base::eval(base::substitute(base::alist(...)))
+  if ("also_single_tested" %in% names(dots)) {
+    stop("`also_single_tested` was replaced by `only_all_tested`. Please read Details in the help page (`?portion`) as this may have a considerable impact on your analysis.", call. = FALSE)
+  }
   ndots <- length(dots)
 
  if ("data.frame" %in% class(dots_df)) {
-   # data.frame passed with other columns, like:
-   #   septic_patients %>% portion_S(amcl, gent)
+   # data.frame passed with other columns, like: example_isolates %>% portion_S(amcl, gent)
    dots <- as.character(dots)
    dots <- dots[dots != "."]
     if (length(dots) == 0 | all(dots == "df")) {
-      # for complete data.frames, like septic_patients %>% select(amcl, gent) %>% portion_S()
+      # for complete data.frames, like example_isolates %>% select(amcl, gent) %>% portion_S()
       # and the old rsi function, that has "df" as name of the first parameter
       x <- dots_df
     } else {
       x <- dots_df[, dots]
     }
   } else if (ndots == 1) {
-    # only 1 variable passed (can also be data.frame), like:
-    #   portion_S(septic_patients$amcl)
-    #   septic_patients$amcl %>% portion_S()
+    # only 1 variable passed (can also be data.frame), like: portion_S(example_isolates$amcl) and example_isolates$amcl %>% portion_S()
     x <- dots_df
   } else {
-    # multiple variables passed without pipe, like:
-    #   portion_S(septic_patients$amcl, septic_patients$gent)
+    # multiple variables passed without pipe, like: portion_S(example_isolates$amcl, example_isolates$gent)
     x <- NULL
     try(x <- as.data.frame(dots), silent = TRUE)
     if (is.null(x)) {
-      # support for: with(septic_patients, portion_S(amcl, gent))
+      # support for: with(example_isolates, portion_S(amcl, gent))
       x <- as.data.frame(rlang::list2(...))
     }
   }
@@ -80,52 +97,48 @@ rsi_calc <- function(...,
 
   print_warning <- FALSE
 
-  type_trans <- as.integer(as.rsi(type))
-  type_others <- base::setdiff(1:3, type_trans)
+  ab_result <- as.rsi(ab_result)
 
   if (is.data.frame(x)) {
     rsi_integrity_check <- character(0)
-    for (i in 1:ncol(x)) {
+    for (i in seq_len(ncol(x))) {
       # check integrity of columns: force rsi class
       if (!is.rsi(x %>% pull(i))) {
         rsi_integrity_check <- c(rsi_integrity_check, x %>% pull(i) %>% as.character())
-        x[, i] <- suppressWarnings(as.rsi(x[, i])) # warning will be given later
+        x[, i] <- suppressWarnings(x %>% pull(i) %>% as.rsi()) # warning will be given later
         print_warning <- TRUE
       }
-      x[, i] <- x %>% pull(i) %>% as.integer()
     }
     if (length(rsi_integrity_check) > 0) {
       # this will give a warning for invalid results, of all input columns (so only 1 warning)
       rsi_integrity_check <- as.rsi(rsi_integrity_check)
     }
 
-    if (include_I == TRUE) {
-      x <- x %>% mutate_all(funs(ifelse(. == 2, type_trans, .)))
-    }
-
-    if (also_single_tested == TRUE) {
-      # THE CHANCE THAT AT LEAST ONE RESULT IS type
-      found <- x %>% filter_all(any_vars(. == type_trans)) %>% nrow()
-      # THE CHANCE THAT AT LEAST ONE RESULT IS type OR ALL ARE TESTED
-      total <- found + x %>% filter_all(all_vars(. %in% type_others)) %>% nrow()
-    } else {
-      x <- apply(X = x,
+    if (only_all_tested == TRUE) {
+      # THE NUMBER OF ISOLATES WHERE *ALL* ABx ARE S/I/R
+      x <- apply(X = x %>% mutate_all(as.integer),
                  MARGIN = 1,
-                 FUN = min)
-      found <- sum(as.integer(x) == type_trans, na.rm = TRUE)
-      total <- length(x) - sum(is.na(x))
+                 FUN = base::min)
+      numerator <- sum(as.integer(x) %in% as.integer(ab_result), na.rm = TRUE)
+      denominator <- length(x) - sum(is.na(x))
+      
+    } else {
+      # THE NUMBER OF ISOLATES WHERE *ANY* ABx IS S/I/R
+      other_values <- base::setdiff(c(NA, levels(ab_result)), ab_result)
+      other_values_filter <- base::apply(x, 1, function(y) {
+        base::all(y %in% other_values) & base::any(is.na(y))
+      })
+      numerator <- x %>% filter_all(any_vars(. %in% ab_result)) %>% nrow()
+      denominator <- x %>% filter(!other_values_filter) %>% nrow()
     }
   } else {
+    # x is not a data.frame
     if (!is.rsi(x)) {
       x <- as.rsi(x)
       print_warning <- TRUE
     }
-    x <- as.integer(x)
-    if (include_I == TRUE) {
-      x[x == 2] <- type_trans
-    }
-    found <- sum(x == type_trans, na.rm = TRUE)
-    total <- length(x) - sum(is.na(x))
+    numerator <- sum(x %in% ab_result, na.rm = TRUE)
+    denominator <- sum(x %in% levels(ab_result), na.rm = TRUE)
   }
 
   if (print_warning == TRUE) {
@@ -134,24 +147,28 @@ rsi_calc <- function(...,
   }
 
   if (only_count == TRUE) {
-    return(found)
+    return(numerator)
   }
 
-  if (total < minimum) {
-    warning("Introducing NA: only ", total, " results available (minimum set to ", minimum, ").", call. = FALSE)
-    result <- NA
+  if (denominator < minimum) {
+    if (data_vars != "") {
+      data_vars <- paste(" for", data_vars)
+    }
+    warning("Introducing NA: only ", denominator, " results available", data_vars, " (`minimum` was set to ", minimum, ").", call. = FALSE)
+    fraction <- NA
   } else {
-    result <- found / total
+    fraction <- numerator / denominator
   }
 
   if (as_percent == TRUE) {
-    percent(result, force_zero = TRUE)
+    percentage(fraction, digits = 1)
   } else {
-    result
+    fraction
   }
 }
 
 #' @importFrom dplyr %>% summarise_if mutate select everything bind_rows
+#' @importFrom tidyr gather
 rsi_calc_df <- function(type, # "portion" or "count"
                         data,
                         translate_ab = "name",
@@ -170,10 +187,10 @@ rsi_calc_df <- function(type, # "portion" or "count"
     combine_SI <- FALSE
   }
   if (isTRUE(combine_SI) & isTRUE(combine_IR)) {
-    stop("either `combine_SI` or `combine_IR` can be TRUE", call. = FALSE)
+    stop("either `combine_SI` or `combine_IR` can be TRUE, not both", call. = FALSE)
   }
 
-  if (data %>% select_if(is.rsi) %>% ncol() == 0) {
+  if (!any(sapply(data, is.rsi), na.rm = TRUE)) {
     stop("No columns with class 'rsi' found. See ?as.rsi.", call. = FALSE)
   }
 
@@ -181,7 +198,7 @@ rsi_calc_df <- function(type, # "portion" or "count"
     translate_ab <- "name"
   }
 
-  get_summaryfunction <- function(int) {
+  get_summaryfunction <- function(int, type) {
     # look for portion_S, count_S, etc:
     int_fn <- get(paste0(type, "_", int), envir = asNamespace("AMR"))
 
@@ -201,11 +218,11 @@ rsi_calc_df <- function(type, # "portion" or "count"
       select(interpretation, everything())
   }
 
-  resS <- get_summaryfunction("S")
-  resI <- get_summaryfunction("I")
-  resR <- get_summaryfunction("R")
-  resSI <- get_summaryfunction("SI")
-  resIR <- get_summaryfunction("IR")
+  resS <- get_summaryfunction("S", type)
+  resI <- get_summaryfunction("I", type)
+  resR <- get_summaryfunction("R", type)
+  resSI <- get_summaryfunction("SI", type)
+  resIR <- get_summaryfunction("IR", type)
   data.groups <- group_vars(data)
 
   if (isFALSE(combine_SI) & isFALSE(combine_IR)) {
@@ -228,11 +245,11 @@ rsi_calc_df <- function(type, # "portion" or "count"
   }
 
   res <- res %>%
-    tidyr::gather(antibiotic, value, -interpretation, -data.groups) %>%
+    gather(antibiotic, value, -interpretation, -data.groups) %>%
     select(antibiotic, everything())
 
   if (!translate_ab == FALSE) {
-    res <- res %>% mutate(antibiotic = ab_property(antibiotic, property = translate_ab, language = language))
+    res <- res %>% mutate(antibiotic = AMR::ab_property(antibiotic, property = translate_ab, language = language))
   }
 
   res

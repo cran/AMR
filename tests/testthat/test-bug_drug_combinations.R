@@ -19,42 +19,15 @@
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
-#' Symbol of a p value
-#'
-#' Return the symbol related to the p value: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1. Values above \code{p = 1} will return \code{NA}.
-#' @param p p value
-#' @param emptychar text to show when \code{p > 0.1}
-#' @return Text
-#' @inheritSection AMR Read more on our website!
-#' @export
-p.symbol <- function(p, emptychar = " ") {
-  setting.bak <- options()$scipen
-  options(scipen = 999)
-  s <- vector(mode = "character", length = length(p))
-  for (i in 1:length(p)) {
-    if (is.na(p[i])) {
-      s[i] <- NA_character_
-      next
-    }
-    if (p[i] > 1) {
-      s[i] <- NA_character_
-      next
-    } else {
-      p_test <- p[i]
-    }
+context("bug_drug_combinations.R")
 
-    if (p_test > 0.1) {
-      s[i] <- emptychar
-    } else if (p_test > 0.05) {
-      s[i] <- '.'
-    } else if (p_test > 0.01) {
-      s[i] <- '*'
-    } else if (p_test > 0.001) {
-      s[i] <- '**'
-    } else if (p_test >= 0) {
-      s[i] <- '***'
-    }
-  }
-  options(scipen = setting.bak)
-  s
-}
+test_that("bug_drug_combinations works", {
+  
+  skip_on_cran()
+  
+  b <- suppressWarnings(bug_drug_combinations(example_isolates))
+  expect_s3_class(b, "bug_drug_combinations")
+  expect_output(print(b))
+  expect_true(is.data.frame(format(b)))
+  expect_true(is.data.frame(format(b, combine_IR = TRUE, add_ab_group = FALSE)))
+})

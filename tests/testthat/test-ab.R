@@ -48,19 +48,21 @@ test_that("as.ab works", {
 
   expect_identical(class(pull(antibiotics, ab)), "ab")
 
-  # first 5 chars of official name
-  expect_equal(as.character(as.atc(c("nitro", "cipro"))),
-               c("J01XE01", "J01MA02"))
-
-  # EARS-Net
-  expect_equal(as.character(as.atc("AMX")),
-               "J01CA04")
-
   expect_equal(as.character(as.ab("Phloxapen")),
                "FLC")
 
   expect_equal(suppressWarnings(as.character(as.ab(c("Bacteria", "Bacterial")))),
                c(NA, "TMP"))
+  
+  expect_equal(as.character(as.ab("Amoxy + clavulaanzuur")),
+               "AMC")
 
-
+  # assigning and subsetting
+  x <- antibiotics$ab
+  expect_s3_class(x[1], "ab")
+  expect_s3_class(x[[1]], "ab")
+  expect_s3_class(c(x[1], x[9]), "ab")
+  expect_warning(x[1] <- "invalid code")
+  expect_warning(x[[1]] <- "invalid code")
+  expect_warning(c(x[1], "test"))
 })

@@ -29,11 +29,10 @@
 #' @param breaks numeric vector of positions
 #' @param limits numeric vector of length two providing limits of the scale, use \code{NA} to refer to the existing minimum or maximum
 #' @param facet variable to split plots by, either \code{"interpretation"} (default) or \code{"antibiotic"} or a grouping variable
-#' @param fun function to transform \code{data}, either \code{\link{count_df}} (default) or \code{\link{portion_df}}
 #' @inheritParams portion
 #' @param nrow (when using \code{facet}) number of rows
 #' @param colours a named vector with colours for the bars. The names must be one or more of: S, SI, I, IR, R or be \code{FALSE} to use default \code{ggplot2} colours.
-#' @param datalabels show datalabels using \code{labels_rsi_count}, will only be shown when \code{fun = count_df}
+#' @param datalabels show datalabels using \code{labels_rsi_count}
 #' @param datalabels.size size of the datalabels
 #' @param datalabels.colour colour of the datalabels
 #' @param title text to show as title of the plot
@@ -45,7 +44,7 @@
 #' @details At default, the names of antibiotics will be shown on the plots using \code{\link{ab_name}}. This can be set with the \code{translate_ab} parameter. See \code{\link{count_df}}.
 #'
 #' \strong{The functions}\cr
-#' \code{geom_rsi} will take any variable from the data that has an \code{rsi} class (created with \code{\link{as.rsi}}) using \code{fun} (\code{\link{count_df}} at default, can also be \code{\link{portion_df}}) and will plot bars with the percentage R, I and S. The default behaviour is to have the bars stacked and to have the different antibiotics on the x axis.
+#' \code{geom_rsi} will take any variable from the data that has an \code{rsi} class (created with \code{\link{as.rsi}}) using \code{\link{rsi_df}} and will plot bars with the percentage R, I and S. The default behaviour is to have the bars stacked and to have the different antibiotics on the x axis.
 #'
 #' \code{facet_rsi} creates 2d plots (at default based on S/I/R) using \code{\link[ggplot2]{facet_wrap}}.
 #'
@@ -59,7 +58,6 @@
 #'
 #' \code{ggplot_rsi} is a wrapper around all above functions that uses data as first input. This makes it possible to use this function after a pipe (\code{\%>\%}). See Examples.
 #' @rdname ggplot_rsi
-#' @importFrom utils installed.packages
 #' @export
 #' @inheritSection AMR Read more on our website!
 #' @examples
@@ -67,11 +65,11 @@
 #' library(ggplot2)
 #'
 #' # get antimicrobial results for drugs against a UTI:
-#' ggplot(septic_patients %>% select(AMX, NIT, FOS, TMP, CIP)) +
+#' ggplot(example_isolates %>% select(AMX, NIT, FOS, TMP, CIP)) +
 #'   geom_rsi()
 #'
 #' # prettify the plot using some additional functions:
-#' df <- septic_patients %>% select(AMX, NIT, FOS, TMP, CIP)
+#' df <- example_isolates %>% select(AMX, NIT, FOS, TMP, CIP)
 #' ggplot(df) +
 #'   geom_rsi() +
 #'   scale_y_percent() +
@@ -80,17 +78,17 @@
 #'   theme_rsi()
 #'
 #' # or better yet, simplify this using the wrapper function - a single command:
-#' septic_patients %>%
+#' example_isolates %>%
 #'   select(AMX, NIT, FOS, TMP, CIP) %>%
 #'   ggplot_rsi()
 #'
 #' # get only portions and no counts:
-#' septic_patients %>%
+#' example_isolates %>%
 #'   select(AMX, NIT, FOS, TMP, CIP) %>%
-#'   ggplot_rsi(fun = portion_df)
+#'   ggplot_rsi(datalabels = FALSE)
 #'
 #' # add other ggplot2 parameters as you like:
-#' septic_patients %>%
+#' example_isolates %>%
 #'   select(AMX, NIT, FOS, TMP, CIP) %>%
 #'   ggplot_rsi(width = 0.5,
 #'              colour = "black",
@@ -98,12 +96,12 @@
 #'              linetype = 2,
 #'              alpha = 0.25)
 #'
-#' septic_patients %>%
+#' example_isolates %>%
 #'   select(AMX) %>%
 #'   ggplot_rsi(colours = c(SI = "yellow"))
 #'
 #' # resistance of ciprofloxacine per age group
-#' septic_patients %>%
+#' example_isolates %>%
 #'   mutate(first_isolate = first_isolate(.)) %>%
 #'   filter(first_isolate == TRUE,
 #'          mo == as.mo("E. coli")) %>%
@@ -115,17 +113,17 @@
 #' \donttest{
 #'
 #' # for colourblind mode, use divergent colours from the viridis package:
-#' septic_patients %>%
+#' example_isolates %>%
 #'   select(AMX, NIT, FOS, TMP, CIP) %>%
 #'   ggplot_rsi() + scale_fill_viridis_d()
 #' # a shorter version which also adjusts data label colours:
-#' septic_patients %>%
+#' example_isolates %>%
 #'   select(AMX, NIT, FOS, TMP, CIP) %>%
 #'   ggplot_rsi(colours = FALSE)
 #'
 #'
 #' # it also supports groups (don't forget to use the group var on `x` or `facet`):
-#' septic_patients %>%
+#' example_isolates %>%
 #'   select(hospital_id, AMX, NIT, FOS, TMP, CIP) %>%
 #'   group_by(hospital_id) %>%
 #'   ggplot_rsi(x = "hospital_id",
@@ -136,7 +134,7 @@
 #'              datalabels = FALSE)
 #'
 #' # genuine analysis: check 3 most prevalent microorganisms
-#' septic_patients %>%
+#' example_isolates %>%
 #'   # create new bacterial ID's, with all CoNS under the same group (Becker et al.)
 #'   mutate(mo = as.mo(mo, Becker = TRUE)) %>%
 #'   # filter on top three bacterial ID's
@@ -171,7 +169,6 @@ ggplot_rsi <- function(data,
                        combine_SI = TRUE,
                        combine_IR = FALSE,
                        language = get_locale(),
-                       fun = count_df,
                        nrow = NULL,
                        colours = c(S = "#61a8ff",
                                    SI = "#61a8ff",
@@ -184,16 +181,11 @@ ggplot_rsi <- function(data,
                        title = NULL,
                        subtitle = NULL,
                        caption = NULL,
-                       x.title = NULL,
-                       y.title = NULL,
+                       x.title = "Antimicrobial",
+                       y.title = "Proportion",
                        ...) {
 
   stopifnot_installed_package("ggplot2")
-
-  fun_name <- deparse(substitute(fun))
-  if (!fun_name %in% c("portion_df", "count_df")) {
-    stop("`fun` must be portion_df or count_df")
-  }
 
   x <- x[1]
   facet <- facet[1]
@@ -223,7 +215,7 @@ ggplot_rsi <- function(data,
 
   p <- ggplot2::ggplot(data = data) +
     geom_rsi(position = position, x = x, fill = fill, translate_ab = translate_ab,
-             fun = fun, combine_SI = combine_SI, combine_IR = combine_IR, ...) +
+             combine_SI = combine_SI, combine_IR = combine_IR, ...) +
     theme_rsi()
 
   if (fill == "interpretation") {
@@ -235,13 +227,12 @@ ggplot_rsi <- function(data,
     p <- p + scale_rsi_colours(colours = colours)
   }
 
-  if (fun_name == "portion_df"
-      | (fun_name == "count_df" & identical(position, "fill"))) {
+  if (identical(position, "fill")) {
     # portions, so use y scale with percentage
     p <- p + scale_y_percent(breaks = breaks, limits = limits)
   }
 
-  if (fun_name == "count_df" & datalabels == TRUE) {
+  if (datalabels == TRUE) {
     p <- p + labels_rsi_count(position = position,
                               x = x,
                               translate_ab = translate_ab,
@@ -273,7 +264,6 @@ geom_rsi <- function(position = NULL,
                      language = get_locale(),
                      combine_SI = TRUE,
                      combine_IR = FALSE,
-                     fun = count_df,
                      ...)  {
 
   stopifnot_installed_package("ggplot2")
@@ -282,19 +272,9 @@ geom_rsi <- function(position = NULL,
     stop("`position` is invalid. Did you accidentally use '%>%' instead of '+'?", call. = FALSE)
   }
 
-  fun_name <- deparse(substitute(fun))
-  if (!fun_name %in% c("portion_df", "count_df", "fun")) {
-    stop("`fun` must be portion_df or count_df")
-  }
   y <- "value"
-  if (identical(fun, count_df)) {
-    if (missing(position) | is.null(position)) {
-      position <- "fill"
-    }
-  } else {
-    if (missing(position) | is.null(position)) {
-      position <- "stack"
-    }
+  if (missing(position) | is.null(position)) {
+    position <- "fill"
   }
 
   if (identical(position, "fill")) {
@@ -312,20 +292,20 @@ geom_rsi <- function(position = NULL,
     x <- substr(x, 2, nchar(x) - 1)
   }
 
-  if (tolower(x) %in% tolower(c('ab', 'abx', 'antibiotics'))) {
+  if (tolower(x) %in% tolower(c("ab", "abx", "antibiotics"))) {
     x <- "antibiotic"
-  } else if (tolower(x) %in% tolower(c('SIR', 'RSI', 'interpretations', 'result'))) {
+  } else if (tolower(x) %in% tolower(c("SIR", "RSI", "interpretations", "result"))) {
     x <- "interpretation"
   }
 
   ggplot2::layer(geom = "bar", stat = "identity", position = position,
                  mapping = ggplot2::aes_string(x = x, y = y, fill = fill),
                  params = list(...), data = function(x) {
-                   fun(data = x,
-                       translate_ab = translate_ab,
-                       language = language,
-                       combine_SI = combine_SI,
-                       combine_IR = combine_IR)
+                   AMR::rsi_df(data = x,
+                               translate_ab = translate_ab,
+                               language = language,
+                               combine_SI = combine_SI,
+                               combine_IR = combine_IR)
                  })
 
 }
@@ -347,9 +327,9 @@ facet_rsi <- function(facet = c("interpretation", "antibiotic"), nrow = NULL) {
     facet <- substr(facet, 2, nchar(facet) - 1)
   }
 
-  if (tolower(facet) %in% tolower(c('SIR', 'RSI', 'interpretations', 'result'))) {
+  if (tolower(facet) %in% tolower(c("SIR", "RSI", "interpretations", "result"))) {
     facet <- "interpretation"
-  } else if (tolower(facet) %in% tolower(c('ab', 'abx', 'antibiotics'))) {
+  } else if (tolower(facet) %in% tolower(c("ab", "abx", "antibiotics"))) {
     facet <- "antibiotic"
   }
 
@@ -357,6 +337,7 @@ facet_rsi <- function(facet = c("interpretation", "antibiotic"), nrow = NULL) {
 }
 
 #' @rdname ggplot_rsi
+# @importFrom clean percentage
 #' @export
 scale_y_percent <- function(breaks = seq(0, 1, 0.1), limits = NULL) {
   stopifnot_installed_package("ggplot2")
@@ -365,7 +346,7 @@ scale_y_percent <- function(breaks = seq(0, 1, 0.1), limits = NULL) {
     breaks <- breaks / 100
   }
   ggplot2::scale_y_continuous(breaks = breaks,
-                              labels = percent(breaks),
+                              labels = percentage(breaks),
                               limits = limits)
 }
 
@@ -377,8 +358,8 @@ scale_rsi_colours <- function(colours = c(S = "#61a8ff",
                                           IR = "#ff6961",
                                           R = "#ff6961")) {
   stopifnot_installed_package("ggplot2")
-  #ggplot2::scale_fill_brewer(palette = "RdYlGn")
-  #ggplot2::scale_fill_manual(values = c("#b22222", "#ae9c20", "#7cfc00"))
+  # previous colour: palette = "RdYlGn"
+  # previous colours: values = c("#b22222", "#ae9c20", "#7cfc00")
 
   if (!identical(colours, FALSE)) {
     original_cols <- c(S = "#61a8ff",
@@ -406,6 +387,7 @@ theme_rsi <- function() {
 
 #' @rdname ggplot_rsi
 #' @importFrom dplyr mutate %>% group_by_at
+# @importFrom clean percentage
 #' @export
 labels_rsi_count <- function(position = NULL,
                              x = "antibiotic",
@@ -431,14 +413,12 @@ labels_rsi_count <- function(position = NULL,
                      colour = datalabels.colour,
                      lineheight = 0.75,
                      data = function(x) {
-                       # labels are only shown when function is count_df,
-                       # so no need parameterise it here
-                       count_df(data = x,
-                                translate_ab = translate_ab,
-                                combine_SI = combine_SI,
-                                combine_IR = combine_IR) %>%
+                       rsi_df(data = x,
+                              translate_ab = translate_ab,
+                              combine_SI = combine_SI,
+                              combine_IR = combine_IR) %>%
                          group_by_at(x_name) %>%
-                         mutate(lbl = paste0(percent(value / sum(value, na.rm = TRUE), force_zero = TRUE),
-                                             "\n(n=", value, ")"))
+                         mutate(lbl = paste0(percentage(value / sum(value, na.rm = TRUE)),
+                                             "\n(n=", isolates, ")"))
                      })
 }

@@ -22,10 +22,13 @@
 context("first_isolate.R")
 
 test_that("first isolates work", {
+  
+  skip_on_cran()
+  
   # first isolates
   expect_equal(
     sum(
-      first_isolate(x = septic_patients,
+      first_isolate(x = example_isolates,
                     col_date = "date",
                     col_patient_id = "patient_id",
                     col_mo = "mo",
@@ -33,16 +36,12 @@ test_that("first isolates work", {
       na.rm = TRUE),
     1317)
 
-  # first *weighted* isolates
+  # first weighted isolates
   expect_equal(
     suppressWarnings(
       sum(
-        first_isolate(x = septic_patients %>% mutate(keyab = key_antibiotics(.)),
-                      # let syntax determine these automatically:
-                      # col_date = "date",
-                      # col_patient_id = "patient_id",
-                      # col_mo = "mo",
-                      # col_keyantibiotics = "keyab",
+        first_isolate(x = example_isolates %>% mutate(keyab = key_antibiotics(.)),
+                      # let syntax determine arguments automatically
                       type = "keyantibiotics",
                       info = TRUE),
         na.rm = TRUE)),
@@ -51,7 +50,7 @@ test_that("first isolates work", {
   expect_equal(
     suppressWarnings(
       sum(
-        first_isolate(x = septic_patients %>% dplyr::as_tibble() %>% mutate(keyab = key_antibiotics(.)),
+        first_isolate(x = example_isolates %>% dplyr::as_tibble() %>% mutate(keyab = key_antibiotics(.)),
                       # let syntax determine these automatically:
                       # col_date = "date",
                       # col_patient_id = "patient_id",
@@ -65,7 +64,7 @@ test_that("first isolates work", {
   expect_equal(
     suppressWarnings(
       sum(
-        first_isolate(x = septic_patients %>% mutate(keyab = key_antibiotics(.)),
+        first_isolate(x = example_isolates %>% mutate(keyab = key_antibiotics(.)),
                       col_date = "date",
                       col_patient_id = "patient_id",
                       col_mo = "mo",
@@ -79,7 +78,7 @@ test_that("first isolates work", {
   expect_equal(
     suppressWarnings(
       sum(
-        first_isolate(x = septic_patients %>% mutate(keyab = key_antibiotics(.)),
+        first_isolate(x = example_isolates %>% mutate(keyab = key_antibiotics(.)),
                       col_date = "date",
                       col_patient_id = "patient_id",
                       col_mo = "mo",
@@ -92,7 +91,7 @@ test_that("first isolates work", {
   # first non-ICU isolates
   expect_equal(
     sum(
-      first_isolate(septic_patients,
+      first_isolate(example_isolates,
                     col_mo = "mo",
                     col_date = "date",
                     col_patient_id = "patient_id",
@@ -106,7 +105,7 @@ test_that("first isolates work", {
   random_rows <- sample(x = 1:2000, size = 1500, replace = FALSE)
   expect_lt(
     sum(
-      first_isolate(x = mutate(septic_patients,
+      first_isolate(x = mutate(example_isolates,
                                  specimen = if_else(row_number() %in% random_rows,
                                                     "Urine",
                                                     "Other")),
@@ -121,7 +120,7 @@ test_that("first isolates work", {
   # same, but now exclude ICU
   expect_lt(
     sum(
-      first_isolate(x = mutate(septic_patients,
+      first_isolate(x = mutate(example_isolates,
                                  specimen = if_else(row_number() %in% random_rows,
                                                     "Urine",
                                                     "Other")),
@@ -137,7 +136,7 @@ test_that("first isolates work", {
     1501)
 
   # "No isolates found"
-  expect_message(septic_patients %>%
+  expect_message(example_isolates %>%
                    mutate(specimen = "test") %>%
                    mutate(first = first_isolate(., "date", "patient_id",
                                                 col_mo = "mo",
@@ -145,7 +144,7 @@ test_that("first isolates work", {
                                                 filter_specimen = "something_unexisting")))
 
   # printing of exclusion message
-  expect_output(septic_patients %>%
+  expect_message(example_isolates %>%
                   first_isolate(col_date = "date",
                                 col_mo = "mo",
                                 col_patient_id = "patient_id",
@@ -154,29 +153,29 @@ test_that("first isolates work", {
 
   # errors
   expect_error(first_isolate("date", "patient_id", col_mo = "mo"))
-  expect_error(first_isolate(septic_patients,
+  expect_error(first_isolate(example_isolates,
                              col_date = "non-existing col",
                              col_mo = "mo"))
 
   # look for columns itself
-  expect_message(first_isolate(septic_patients))
-  expect_message(first_isolate(septic_patients %>%
+  expect_message(first_isolate(example_isolates))
+  expect_message(first_isolate(example_isolates %>%
                                mutate(mo = as.character(mo)) %>%
                                left_join_microorganisms()))
 
   # if mo is not an mo class, result should be the same
-  expect_identical(septic_patients %>%
+  expect_identical(example_isolates %>%
                      mutate(mo = as.character(mo)) %>%
                      first_isolate(col_date = "date",
                                    col_mo = "mo",
                                    col_patient_id = "patient_id"),
-                   septic_patients %>%
+                   example_isolates %>%
                      first_isolate(col_date = "date",
                                    col_mo = "mo",
                                    col_patient_id = "patient_id"))
 
   # missing dates should be no problem
-  df <- septic_patients
+  df <- example_isolates
   df[1:100, "date"] <- NA
   expect_equal(
     sum(
@@ -187,5 +186,25 @@ test_that("first isolates work", {
                     info = TRUE),
       na.rm = TRUE),
     1322)
+  
+  # unknown MOs
+  expect_equal(example_isolates %>% 
+                 mutate(mo = ifelse(mo == "B_ESCHR_COLI", "UNKNOWN", mo)) %>% 
+                 mutate(first = first_isolate(., include_unknown = FALSE)) %>%
+                 .$first %>% 
+                 sum(),
+               1062)
+  expect_equal(example_isolates %>% 
+                 mutate(mo = ifelse(mo == "B_ESCHR_COLI", "UNKNOWN", mo)) %>% 
+                 mutate(first = first_isolate(., include_unknown = TRUE)) %>%
+                 .$first %>% 
+                 sum(),
+               1529)
+  expect_equal(example_isolates %>% 
+                 mutate(mo = ifelse(mo == "B_ESCHR_COLI", NA, mo)) %>% 
+                 mutate(first = first_isolate(.)) %>%
+                 .$first %>% 
+                 sum(),
+               1062)
 
 })

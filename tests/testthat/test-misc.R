@@ -22,17 +22,13 @@
 context("misc.R")
 
 test_that("percentages works", {
-  expect_equal(percent(0.25), "25%")
-  expect_equal(percent(0.5), "50%")
-  expect_equal(percent(0.500, force_zero = TRUE), "50.0%")
-  expect_equal(percent(0.1234), "12.3%")
+  expect_equal(percentage(0.25), "25%")
+  expect_equal(percentage(0.5), "50%")
+  expect_equal(percentage(0.500, digits = 1), "50.0%")
+  expect_equal(percentage(0.1234), "12.3%")
   # round up 0.5
-  expect_equal(percent(0.0054), "0.5%")
-  expect_equal(percent(0.0055), "0.6%")
-})
-
-test_that("size format works", {
-  expect_equal(size_humanreadable(123456), "121 kB")
+  expect_equal(percentage(0.0054), "0.5%")
+  expect_equal(percentage(0.0055), "0.6%")
 })
 
 test_that("functions missing in older R versions work", {
@@ -46,8 +42,8 @@ test_that("functions missing in older R versions work", {
 test_that("looking up ab columns works", {
   expect_warning(generate_warning_abs_missing(c("AMP", "AMX")))
   expect_warning(generate_warning_abs_missing(c("AMP", "AMX"), any = TRUE))
-  expect_warning(get_column_abx(septic_patients, hard_dependencies = "FUS"))
-  expect_message(get_column_abx(septic_patients, soft_dependencies = "FUS"))
-  expect_error(get_column_abx(dplyr::rename(septic_patients, thisone = AMX), amox = "thisone", tmp = "thisone", verbose = TRUE))
-  expect_error(get_column_abx(dplyr::rename(septic_patients, thisone = AMX), amox = "thisone", tmp = "thisone", verbose = FALSE))
+  expect_warning(get_column_abx(example_isolates, hard_dependencies = "FUS"))
+  expect_message(get_column_abx(example_isolates, soft_dependencies = "FUS"))
+  expect_message(get_column_abx(dplyr::rename(example_isolates, thisone = AMX), amox = "thisone", tmp = "thisone", verbose = TRUE))
+  expect_warning(get_column_abx(dplyr::rename(example_isolates, thisone = AMX), amox = "thisone", tmp = "thisone", verbose = FALSE))
 })

@@ -48,7 +48,7 @@ library(AMR)     # this package
 
 We will have to transform some variables to simplify and automate the analysis:
 
-* Microorganisms should be transformed to our own microorganism IDs (called an `mo`) using [the ITIS reference data set](https://msberends.gitlab.io/AMR/reference/ITIS.html), which contains all ~20,000 microorganisms from the taxonomic kingdoms Bacteria, Fungi and Protozoa. We do the tranformation with `as.mo()`. This function also recognises almost all WHONET abbreviations of microorganisms.
+* Microorganisms should be transformed to our own microorganism IDs (called an `mo`) using [our Catalogue of Life reference data set](https://msberends.gitlab.io/AMR/reference/catalogue_of_life), which contains all ~70,000 microorganisms from the taxonomic kingdoms Bacteria, Fungi and Protozoa. We do the tranformation with `as.mo()`. This function also recognises almost all WHONET abbreviations of microorganisms.
 * Antimicrobial results or interpretations have to be clean and valid. In other words, they should only contain values `"S"`, `"I"` or `"R"`. That is exactly where the `as.rsi()` function is for.
 
 ```{r}
@@ -60,7 +60,17 @@ data <- WHONET %>%
   mutate_at(vars(AMP_ND10:CIP_EE), as.rsi)
 ```
 
-No errors or warnings, so all values are transformed succesfully. Let's check it though, with a couple of frequency tables:
+No errors or warnings, so all values are transformed succesfully.
+
+We created a package dedicated to data cleaning and checking, called the `clean` package. It gets automatically installed with the `AMR` package, so we only have to load it:
+
+```{r lib clean, message = FALSE}
+library(clean)
+```
+
+It contains the `freq()` function, to create frequency tables. 
+
+So let's check our data, with a couple of frequency tables:
 
 ```{r, results = 'asis'}
 # our newly created `mo` variable

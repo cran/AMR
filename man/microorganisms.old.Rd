@@ -4,12 +4,13 @@
 \name{microorganisms.old}
 \alias{microorganisms.old}
 \title{Data set with previously accepted taxonomic names}
-\format{A \code{\link{data.frame}} with 21,342 observations and 4 variables:
+\format{A \code{\link{data.frame}} with 24,246 observations and 5 variables:
 \describe{
   \item{\code{col_id}}{Catalogue of Life ID that was originally given}
   \item{\code{col_id_new}}{New Catalogue of Life ID that responds to an entry in the \code{\link{microorganisms}} data set}
   \item{\code{fullname}}{Old full taxonomic name of the microorganism}
   \item{\code{ref}}{Author(s) and year of concerning scientific publication}
+  \item{\code{prevalence}}{Prevalence of the microorganism, see \code{?as.mo}}
 }}
 \source{
 Catalogue of Life: Annual Checklist (public online taxonomic database), \url{http://www.catalogueoflife.org} (check included annual version with \code{\link{catalogue_of_life_version}()}).
@@ -23,9 +24,9 @@ A data set containing old (previously valid or accepted) taxonomic names accordi
 \section{Catalogue of Life}{
 
 \if{html}{\figure{logo_col.png}{options: height=40px style=margin-bottom:5px} \cr}
-This package contains the complete taxonomic tree of almost all microorganisms (~65,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
+This package contains the complete taxonomic tree of almost all microorganisms (~70,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
 
-\link[=catalogue_of_life]{Click here} for more information about the included taxa. The Catalogue of Life releases updates annually; check which version was included in this package with \code{\link{catalogue_of_life_version}()}.
+\link[=catalogue_of_life]{Click here} for more information about the included taxa. Check which version of the Catalogue of Life was included in this package with \code{\link{catalogue_of_life_version}()}.
 }
 
 \section{Read more on our website!}{

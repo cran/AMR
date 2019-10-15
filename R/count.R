@@ -34,6 +34,7 @@
 #' The function \code{count_df} takes any variable from \code{data} that has an \code{"rsi"} class (created with \code{\link{as.rsi}}) and counts the amounts of S, I and R. The resulting \emph{tidy data} (see Source) \code{data.frame} will have three rows (S/I/R) and a column for each variable with class \code{"rsi"}.
 #'
 #' The function \code{rsi_df} works exactly like \code{count_df}, but adds the percentage of S, I and R.
+#' @inheritSection portion Combination therapy
 #' @source Wickham H. \strong{Tidy Data.} The Journal of Statistical Software, vol. 59, 2014. \url{http://vita.had.co.nz/papers/tidy-data.html}
 #' @seealso \code{\link{portion}_*} to calculate microbial resistance and susceptibility.
 #' @keywords resistance susceptibility rsi antibiotics isolate isolates
@@ -43,29 +44,29 @@
 #' @export
 #' @inheritSection AMR Read more on our website!
 #' @examples
-#' # septic_patients is a data set available in the AMR package. It is true, genuine data.
-#' ?septic_patients
+#' # example_isolates is a data set available in the AMR package.
+#' ?example_isolates
 #'
 #' # Count resistant isolates
-#' count_R(septic_patients$AMX)
-#' count_IR(septic_patients$AMX)
+#' count_R(example_isolates$AMX)
+#' count_IR(example_isolates$AMX)
 #'
 #' # Or susceptible isolates
-#' count_S(septic_patients$AMX)
-#' count_SI(septic_patients$AMX)
+#' count_S(example_isolates$AMX)
+#' count_SI(example_isolates$AMX)
 #'
 #' # Count all available isolates
-#' count_all(septic_patients$AMX)
-#' n_rsi(septic_patients$AMX)
+#' count_all(example_isolates$AMX)
+#' n_rsi(example_isolates$AMX)
 #'
 #' # Since n_rsi counts available isolates, you can
 #' # calculate back to count e.g. non-susceptible isolates.
 #' # This results in the same:
-#' count_IR(septic_patients$AMX)
-#' portion_IR(septic_patients$AMX) * n_rsi(septic_patients$AMX)
+#' count_SI(example_isolates$AMX)
+#' portion_SI(example_isolates$AMX) * n_rsi(example_isolates$AMX)
 #'
 #' library(dplyr)
-#' septic_patients %>%
+#' example_isolates %>%
 #'   group_by(hospital_id) %>%
 #'   summarise(R  = count_R(CIP),
 #'             I  = count_I(CIP),
@@ -76,103 +77,86 @@
 #'
 #' # Count co-resistance between amoxicillin/clav acid and gentamicin,
 #' # so we can see that combination therapy does a lot more than mono therapy.
-#' # Please mind that `portion_S` calculates percentages right away instead.
-#' count_S(septic_patients$AMC)   # S = 1342 (71.4%)
-#' count_all(septic_patients$AMC) # n = 1879
+#' # Please mind that `portion_SI` calculates percentages right away instead.
+#' count_SI(example_isolates$AMC)  # 1433
+#' count_all(example_isolates$AMC) # 1879
 #'
-#' count_S(septic_patients$GEN)   # S = 1372 (74.0%)
-#' count_all(septic_patients$GEN) # n = 1855
+#' count_SI(example_isolates$GEN)  # 1399
+#' count_all(example_isolates$GEN) # 1855
 #'
-#' with(septic_patients,
-#'      count_S(AMC, GEN))         # S = 1660 (92.3%)
-#' with(septic_patients,           # n = 1798
-#'      n_rsi(AMC, GEN))
+#' with(example_isolates,
+#'      count_SI(AMC, GEN))        # 1764
+#' with(example_isolates,
+#'      n_rsi(AMC, GEN))           # 1936
 #'
 #' # Get portions S/I/R immediately of all rsi columns
-#' septic_patients %>%
+#' example_isolates %>%
 #'   select(AMX, CIP) %>%
 #'   count_df(translate = FALSE)
 #'
 #' # It also supports grouping variables
-#' septic_patients %>%
+#' example_isolates %>%
 #'   select(hospital_id, AMX, CIP) %>%
 #'   group_by(hospital_id) %>%
 #'   count_df(translate = FALSE)
 #'
-count_R <- function(..., also_single_tested = FALSE) {
+count_R <- function(..., only_all_tested = FALSE) {
   rsi_calc(...,
-           type = "R",
-           include_I = FALSE,
-           minimum = 0,
-           as_percent = FALSE,
-           also_single_tested = FALSE,
+           ab_result = "R",
+           only_all_tested = only_all_tested,
            only_count = TRUE)
 }
 
 #' @rdname count
 #' @export
-count_IR <- function(..., also_single_tested = FALSE) {
+count_IR <- function(..., only_all_tested = FALSE) {
   rsi_calc(...,
-           type = "R",
-           include_I = TRUE,
-           minimum = 0,
-           as_percent = FALSE,
-           also_single_tested = FALSE,
+           ab_result = c("I", "R"),
+           only_all_tested = only_all_tested,
            only_count = TRUE)
 }
 
 #' @rdname count
 #' @export
-count_I <- function(..., also_single_tested = FALSE) {
+count_I <- function(..., only_all_tested = FALSE) {
   rsi_calc(...,
-           type = "I",
-           include_I = FALSE,
-           minimum = 0,
-           as_percent = FALSE,
-           also_single_tested = FALSE,
+           ab_result = "I",
+           only_all_tested = only_all_tested,
            only_count = TRUE)
 }
 
 #' @rdname count
 #' @export
-count_SI <- function(..., also_single_tested = FALSE) {
+count_SI <- function(..., only_all_tested = FALSE) {
   rsi_calc(...,
-           type = "S",
-           include_I = TRUE,
-           minimum = 0,
-           as_percent = FALSE,
-           also_single_tested = FALSE,
+           ab_result = c("S", "I"),
+           only_all_tested = only_all_tested,
            only_count = TRUE)
 }
 
 #' @rdname count
 #' @export
-count_S <- function(..., also_single_tested = FALSE) {
+count_S <- function(..., only_all_tested = FALSE) {
   rsi_calc(...,
-           type = "S",
-           include_I = FALSE,
-           minimum = 0,
-           as_percent = FALSE,
-           also_single_tested = FALSE,
+           ab_result = "S",
+           only_all_tested = only_all_tested,
            only_count = TRUE)
 }
 
 #' @rdname count
 #' @export
-count_all <- function(...) {
-  # only print warnings once, if needed
-  count_S(...) + suppressWarnings(count_IR(...))
+count_all <- function(..., only_all_tested = FALSE) {
+  rsi_calc(...,
+           ab_result = c("S", "I", "R"),
+           only_all_tested = only_all_tested,
+           only_count = TRUE)
 }
 
 #' @rdname count
 #' @export
-n_rsi <- function(...) {
-  # only print warnings once, if needed
-  count_S(...) + suppressWarnings(count_IR(...))
-}
+n_rsi <- count_all
 
 #' @rdname count
-#' @importFrom dplyr %>% select_if bind_rows summarise_if mutate group_vars select everything
 #' @export
 count_df <- function(data,
                      translate_ab = "name",

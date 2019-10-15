@@ -28,8 +28,8 @@
 #' @param year_max highest year to use in the prediction model, defaults to 10 years after today
 #' @param year_every unit of sequence between lowest year found in the data and \code{year_max}
 #' @param minimum minimal amount of available isolates per year to include. Years containing less observations will be estimated by the model.
-#' @param model the statistical model of choice. Defaults to a generalised linear regression model with binomial distribution, assuming that a period of zero resistance was followed by a period of increasing resistance leading slowly to more and more resistance. See Details for valid options.
-#' @param I_as_S a logical to indicate whether values \code{I} should be treated as \code{S}
+#' @param model the statistical model of choice. This could be a generalised linear regression model with binomial distribution (i.e. using \code{\link{glm}(..., family = \link{binomial})}), assuming that a period of zero resistance was followed by a period of increasing resistance leading slowly to more and more resistance. See Details for all valid options.
+#' @param I_as_S a logical to indicate whether values \code{I} should be treated as \code{S} (will otherwise be treated as \code{R})
 #' @param preserve_measurements a logical to indicate whether predictions of years that are actually available in the data should be overwritten by the original data. The standard errors of those years will be \code{NA}.
 #' @param info a logical to indicate whether textual analysis should be printed with the name and \code{\link{summary}} of the statistical model.
 #' @param main title of the plot
@@ -58,19 +58,19 @@
 #' @rdname resistance_predict
 #' @export
 #' @importFrom stats predict glm lm
-#' @importFrom dplyr %>% pull mutate mutate_at n group_by_at summarise filter filter_at all_vars n_distinct arrange case_when n_groups transmute
+#' @importFrom dplyr %>% pull mutate mutate_at n group_by_at summarise filter filter_at all_vars n_distinct arrange case_when n_groups transmute ungroup
 #' @inheritSection AMR Read more on our website!
 #' @examples
-#' x <- resistance_predict(septic_patients, col_ab = "AMX", year_min = 2010)
+#' x <- resistance_predict(example_isolates, col_ab = "AMX", year_min = 2010, model = "binomial")
 #' plot(x)
 #' ggplot_rsi_predict(x)
 #'
 #' # use dplyr so you can actually read it:
 #' library(dplyr)
-#' x <- septic_patients %>%
+#' x <- example_isolates %>%
 #'   filter_first_isolate() %>%
 #'   filter(mo_genus(mo) == "Staphylococcus") %>%
-#'   resistance_predict("PEN")
+#'   resistance_predict("PEN", model = "binomial")
 #' plot(x)
 #'
 #'
@@ -82,10 +82,11 @@
 #' # create nice plots with ggplot2 yourself
 #' if (!require(ggplot2)) {
 #'
-#'   data <- septic_patients %>%
+#'   data <- example_isolates %>%
 #'     filter(mo == as.mo("E. coli")) %>%
 #'     resistance_predict(col_ab = "AMX",
 #'                        col_date = "date",
+#'                        model = "binomial",
 #'                        info = FALSE,
 #'                        minimum = 15)
 #'
@@ -112,28 +113,32 @@ resistance_predict <- function(x,
                                year_max = NULL,
                                year_every = 1,
                                minimum = 30,
-                               model = 'binomial',
+                               model = NULL,
                                I_as_S = TRUE,
                                preserve_measurements = TRUE,
                                info = TRUE,
                                ...) {
 
   if (nrow(x) == 0) {
-    stop('This table does not contain any observations.')
+    stop("This table does not contain any observations.")
+  }
+  
+  if (is.null(model)) {
+    stop('Choose a regression model with the `model` parameter, e.g. resistance_predict(..., model = "binomial").')
   }
 
   if (!col_ab %in% colnames(x)) {
-    stop('Column ', col_ab, ' not found.')
+    stop("Column ", col_ab, " not found.")
   }
 
   dots <- unlist(list(...))
   if (length(dots) != 0) {
     # backwards compatibility with old parameters
     dots.names <- dots %>% names()
-    if ('tbl' %in% dots.names) {
-      x <- dots[which(dots.names == 'tbl')]
+    if ("tbl" %in% dots.names) {
+      x <- dots[which(dots.names == "tbl")]
     }
-    if ('I_as_R' %in% dots.names) {
+    if ("I_as_R" %in% dots.names) {
       warning("`I_as_R is deprecated - use I_as_S instead.", call. = FALSE)
     }
   }
@@ -147,7 +152,7 @@ resistance_predict <- function(x,
   }
 
   if (!col_date %in% colnames(x)) {
-    stop('Column ', col_date, ' not found.')
+    stop("Column ", col_date, " not found.")
   }
 
   if (n_groups(x) > 1) {
@@ -156,27 +161,28 @@ resistance_predict <- function(x,
   }
 
   year <- function(x) {
-    if (all(grepl('^[0-9]{4}$', x))) {
+    if (all(grepl("^[0-9]{4}$", x))) {
       x
     } else {
-      as.integer(format(as.Date(x), '%Y'))
+      as.integer(format(as.Date(x), "%Y"))
     }
   }
-
+  
   df <- x %>%
     mutate_at(col_ab, as.rsi) %>%
-    mutate_at(col_ab, droplevels) %>%
-    mutate_at(col_ab, funs(
-      if (I_as_S == TRUE) {
-        gsub("I", "S", .)
-      } else {
-        # then I as R
-        gsub("I", "R", .)
-      }
-      )) %>%
+    mutate_at(col_ab, droplevels)
+  if (I_as_S == TRUE) {
+    df <- df %>%
+      mutate_at(col_ab, ~gsub("I", "S", .))
+  } else {
+    # then I as R
+    df <- df %>%
+      mutate_at(col_ab, ~gsub("I", "R", .))
+  }
+  df <- df %>% 
     filter_at(col_ab, all_vars(!is.na(.))) %>%
-    mutate(year = pull(., col_date) %>% year()) %>%
-    group_by_at(c('year', col_ab)) %>%
+    mutate(year = year(pull(., col_date))) %>%
+    group_by_at(c("year", col_ab)) %>%
     summarise(n())
 
   if (df %>% pull(col_ab) %>% n_distinct(na.rm = TRUE) < 2) {
@@ -185,7 +191,7 @@ resistance_predict <- function(x,
          call. = FALSE)
   }
 
-  colnames(df) <- c('year', 'antibiotic', 'observations')
+  colnames(df) <- c("year", "antibiotic", "observations")
   df <- df %>%
     filter(!is.na(antibiotic)) %>%
     tidyr::spread(antibiotic, observations, fill = 0) %>%
@@ -196,7 +202,7 @@ resistance_predict <- function(x,
     as.matrix()
 
   if (NROW(df) == 0) {
-    stop('There are no observations.')
+    stop("There are no observations.")
   }
 
   year_lowest <- min(df$year)
@@ -211,12 +217,12 @@ resistance_predict <- function(x,
 
   years <- list(year = seq(from = year_min, to = year_max, by = year_every))
 
-  if (model %in% c('binomial', 'binom', 'logit')) {
+  if (model %in% c("binomial", "binom", "logit")) {
     model <- "binomial"
     model_lm <- with(df, glm(df_matrix ~ year, family = binomial))
     if (info == TRUE) {
-      cat('\nLogistic regression model (logit) with binomial distribution')
-      cat('\n------------------------------------------------------------\n')
+      cat("\nLogistic regression model (logit) with binomial distribution")
+      cat("\n------------------------------------------------------------\n")
       print(summary(model_lm))
     }
 
@@ -224,12 +230,12 @@ resistance_predict <- function(x,
     prediction <- predictmodel$fit
     se <- predictmodel$se.fit
 
-  } else if (model %in% c('loglin', 'poisson')) {
+  } else if (model %in% c("loglin", "poisson")) {
     model <- "poisson"
     model_lm <- with(df, glm(R ~ year, family = poisson))
     if (info == TRUE) {
-      cat('\nLog-linear regression model (loglin) with poisson distribution')
-      cat('\n--------------------------------------------------------------\n')
+      cat("\nLog-linear regression model (loglin) with poisson distribution")
+      cat("\n--------------------------------------------------------------\n")
       print(summary(model_lm))
     }
 
@@ -237,12 +243,12 @@ resistance_predict <- function(x,
     prediction <- predictmodel$fit
     se <- predictmodel$se.fit
 
-  } else if (model %in% c('lin', 'linear')) {
+  } else if (model %in% c("lin", "linear")) {
     model <- "linear"
     model_lm <- with(df, lm((R / (R + S)) ~ year))
     if (info == TRUE) {
-      cat('\nLinear regression model')
-      cat('\n-----------------------\n')
+      cat("\nLinear regression model")
+      cat("\n-----------------------\n")
       print(summary(model_lm))
     }
 
@@ -251,7 +257,7 @@ resistance_predict <- function(x,
     se <- predictmodel$se.fit
 
   } else {
-    stop('No valid model selected.')
+    stop("No valid model selected. See ?resistance_predict.")
   }
 
   # prepare the output dataframe
@@ -262,7 +268,7 @@ resistance_predict <- function(x,
     mutate(se_min = value - se,
            se_max = value + se)
 
-  if (model == 'poisson') {
+  if (model == "poisson") {
     df_prediction <- df_prediction %>%
       mutate(value = value %>%
                format(scientific = FALSE) %>%

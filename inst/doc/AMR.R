@@ -57,8 +57,7 @@ data <- data.frame(date = sample(dates, size = sample_size, replace = TRUE),
                    CIP = sample(ab_interpretations, size = sample_size, replace = TRUE,
                                  prob = c(0.80, 0.00, 0.20)),
                    GEN = sample(ab_interpretations, size = sample_size, replace = TRUE,
-                                 prob = c(0.92, 0.00, 0.08))
-                   )
+                                 prob = c(0.92, 0.00, 0.08)))
 
 ## ----merge data 2, message = FALSE, warning = FALSE----------------------
 data <- data %>% left_join(patients_table)
@@ -68,6 +67,9 @@ data <- data %>% left_join(patients_table)
 
 ## ----preview data set 2, echo = FALSE, results = 'asis'------------------
 knitr::kable(head(data), align = "c")
+
+## ----lib clean, message = FALSE------------------------------------------
+library(clean)
 
 ## ----freq gender 1, eval = FALSE-----------------------------------------
 #  data %>% freq(gender) # this would be the same: freq(data$gender)
@@ -268,7 +270,7 @@ data_1st %>%
   coord_flip()
 
 ## ---- results = 'markup'-------------------------------------------------
-check_FOS <- septic_patients %>%
+check_FOS <- example_isolates %>%
   filter(hospital_id %in% c("A", "D")) %>% # filter on only hospitals A and D
   select(hospital_id, FOS) %>%             # select the hospitals and fosfomycin
   group_by(hospital_id) %>%                # group on the hospitals

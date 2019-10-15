@@ -19,39 +19,11 @@
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
-#' @rdname portion
-#' @rdname count
-#' @export
-rsi_df <- function(data,
-                   translate_ab = "name",
-                   language = get_locale(),
-                   minimum = 30,
-                   as_percent = FALSE,
-                   combine_SI = TRUE,
-                   combine_IR = FALSE) {
+context("extended.R")
 
-  portions <- rsi_calc_df(type = "portion",
-                          data = data,
-                          translate_ab = translate_ab,
-                          language = language,
-                          minimum = minimum,
-                          as_percent = as_percent,
-                          combine_SI = combine_SI,
-                          combine_IR = combine_IR,
-                          combine_SI_missing = missing(combine_SI))
-
-  counts <- rsi_calc_df(type = "count",
-                        data = data,
-                        translate_ab = FALSE,
-                        language = "en",
-                        minimum = minimum,
-                        as_percent = as_percent,
-                        combine_SI = combine_SI,
-                        combine_IR = combine_IR,
-                        combine_SI_missing = missing(combine_SI))
-
-  data.frame(portions,
-             isolates = counts$value,
-             stringsAsFactors = FALSE)
-
-}
+test_that("extensions work", {
+  
+  expect_identical(scale_type.mo(), "discrete")
+  expect_identical(scale_type.ab(), "discrete")
+  
+})
