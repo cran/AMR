@@ -28,7 +28,7 @@ test_that("mo_property works", {
   expect_equal(mo_kingdom("Escherichia coli"), "Bacteria")
   expect_equal(mo_phylum("Escherichia coli"), "Proteobacteria")
   expect_equal(mo_class("Escherichia coli"), "Gammaproteobacteria")
-  expect_equal(mo_order("Escherichia coli"), "Enterobacteriales")
+  expect_equal(mo_order("Escherichia coli"), "Enterobacterales")
   expect_equal(mo_family("Escherichia coli"), "Enterobacteriaceae")
   expect_equal(mo_genus("Escherichia coli"), "Escherichia")
   expect_equal(mo_species("Escherichia coli"), "coli")
@@ -45,7 +45,7 @@ test_that("mo_property works", {
   expect_equal(class(mo_synonyms(c("Candida albicans", "Escherichia coli"))), "list")
   expect_equal(names(mo_info("Escherichia coli")), c("kingdom", "phylum", "class", "order",
                                             "family", "genus", "species", "subspecies",
-                                            "synonyms", "url", "ref"))
+                                            "synonyms", "gramstain", "url", "ref"))
   expect_equal(class(mo_info(c("Escherichia coli", "Staphylococcus aureus"))), "list")
 
   expect_equal(mo_ref("Escherichia coli"), "Castellani et al., 1919")

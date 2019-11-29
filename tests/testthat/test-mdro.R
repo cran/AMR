@@ -32,7 +32,7 @@ test_that("mdro works", {
   expect_error(mdro(example_isolates, guideline = c("BRMO", "MRGN"), info = TRUE))
   expect_error(mdro(example_isolates, col_mo = "invalid", info = TRUE))
 
-  outcome <- mdro(example_isolates)
+  outcome <- suppressWarnings(mdro(example_isolates))
   outcome <- eucast_exceptional_phenotypes(example_isolates, info = TRUE)
   # check class
   expect_equal(outcome %>% class(), c("ordered", "factor"))
@@ -43,7 +43,7 @@ test_that("mdro works", {
 
   # example_isolates should have these finding using Dutch guidelines
   expect_equal(outcome %>% freq() %>% pull(count),
-               c(1972, 22, 6)) # 1969 neg, 25 unconfirmed, 6 pos
+               c(1969, 25, 6)) # 1969 neg, 25 unconfirmed, 6 pos
 
   expect_equal(brmo(example_isolates, info = FALSE),
                mdro(example_isolates, guideline = "BRMO", info = FALSE))
@@ -123,5 +123,56 @@ test_that("mdro works", {
       #)
       ,
     2)
-
+  
+  # check the guideline by Magiorakos  et al. (2012), the default guideline
+  stau <- tribble(
+    ~mo,         ~GEN, ~RIF, ~CPT, ~OXA, ~CIP, ~MFX, ~SXT, ~FUS, ~VAN, ~TEC, ~TLV, ~TGC, ~CLI, ~DAP, ~ERY, ~LNZ, ~CHL, ~FOS, ~QDA, ~TCY, ~DOX, ~MNO,
+    "S. aureus",  "R",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",
+    "S. aureus",  "R",  "R",  "R",  "R",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",
+    "S. aureus",  "S",  "S",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",
+    "S. aureus",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R"
+  )
+  expect_equal(as.integer(mdro(stau)), c(1:4))
+  expect_s3_class(mdro(stau, verbose = TRUE), "data.frame")
+  
+  ente <- tribble(
+    ~mo,            ~GEH, ~STH, ~IPM, ~MEM, ~DOR, ~CIP, ~LVX, ~MFX, ~VAN, ~TEC, ~TGC, ~DAP, ~LNZ, ~AMP, ~QDA, ~DOX, ~MNO,
+    "Enterococcus",  "R",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",
+    "Enterococcus",  "R",  "R",  "R",  "R",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",
+    "Enterococcus",  "S",  "S",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",
+    "Enterococcus",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R"
+  )
+  expect_equal(as.integer(mdro(ente)), c(1:4))
+  expect_s3_class(mdro(ente, verbose = TRUE), "data.frame")
+  
+  entero <- tribble(
+    ~mo,       ~GEN, ~TOB, ~AMK, ~NET, ~CPT, ~TCC, ~TZP, ~ETP, ~IPM, ~MEM, ~DOR, ~CZO, ~CXM, ~CTX, ~CAZ, ~FEP, ~FOX, ~CTT, ~CIP, ~SXT, ~TGC, ~ATM, ~AMP, ~AMC, ~SAM, ~CHL, ~FOS, ~COL, ~TCY, ~DOX, ~MNO,
+    "E. coli",  "R",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",
+    "E. coli",  "R",  "R",  "R",  "R",  "R",  "R",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",
+    "E. coli",  "S",  "S",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",
+    "E. coli",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R"
+  )
+  expect_equal(as.integer(mdro(entero)), c(1:4))
+  expect_s3_class(mdro(entero, verbose = TRUE), "data.frame")
+  
+  pseud <- tribble(
+    ~mo,             ~GEN, ~TOB, ~AMK, ~NET, ~IPM, ~MEM, ~DOR, ~CAZ, ~FEP, ~CIP, ~LVX, ~TCC, ~TZP, ~ATM, ~FOS, ~COL, ~PLB,
+    "P. aeruginosa",  "R",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",
+    "P. aeruginosa",  "R",  "S",  "S",  "S",  "R",  "S",  "S",  "S",  "R",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",
+    "P. aeruginosa",  "S",  "S",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",
+    "P. aeruginosa",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R"
+  )
+  expect_equal(as.integer(mdro(pseud)), c(1:4))
+  expect_s3_class(mdro(pseud, verbose = TRUE), "data.frame")
+  
+  acin <- tribble(
+    ~mo,            ~GEN, ~TOB, ~AMK, ~NET, ~IPM, ~MEM, ~DOR, ~CIP, ~LVX, ~TZP, ~TCC, ~CTX, ~CRO, ~CAZ, ~FEP, ~SXT, ~SAM, ~COL, ~PLB, ~TCY, ~DOX, ~MNO,
+    "A. baumannii",  "R",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",
+    "A. baumannii",  "R",  "R",  "R",  "R",  "S",  "R",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "S",  "R",  "S",  "S",  "S",  "S",  "S",  "S",  "S",
+    "A. baumannii",  "S",  "S",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",
+    "A. baumannii",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R",  "R"
+  )
+  expect_equal(as.integer(mdro(acin)), c(1:4))
+  expect_s3_class(mdro(acin, verbose = TRUE), "data.frame")
+  
 })

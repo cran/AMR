@@ -1,5 +1,70 @@
-# AMR 0.8.0
+# AMR 0.9.0
 
+### Breaking
+* Adopted Adeolu *et al.* (2016), [PMID 27620848](https://www.ncbi.nlm.nih.gov/pubmed/27620848) for the `microorganisms` data set, which means that the new order Enterobacterales now consists of a part of the existing family Enterobacteriaceae, but that this family has been split into other families as well (like *Morganellaceae* and *Yersiniaceae*). Although published in 2016, this information is not yet in the Catalogue of Life version of 2019. All MDRO determinations with `mdro()` will now use the Enterobacterales order for all guidelines before 2016 that were dependent on the Enterobacteriaceae family.
+  * If you were dependent on the old Enterobacteriaceae family e.g. by using in your code:
+    ```r
+    if (mo_family(somebugs) == "Enterobacteriaceae") ...
+    ```
+    then please adjust this to:
+    ```r
+    if (mo_order(somebugs) == "Enterobacterales") ...
+    ```
+
+### New
+* Functions `susceptibility()` and `resistance()` as aliases of `proportion_SI()` and `proportion_R()`, respectively. These functions were added to make it more clear that "I" should be considered susceptible and not resistant.
+  ```r
+  library(dplyr)
+  example_isolates %>%
+    group_by(bug = mo_name(mo)) %>% 
+    summarise(amoxicillin = resistance(AMX),
+              amox_clav   = resistance(AMC)) %>%
+    filter(!is.na(amoxicillin) | !is.na(amox_clav))
+  ```
+* Support for a new MDRO guideline: Magiorakos AP, Srinivasan A *et al.* "Multidrug-resistant, extensively drug-resistant and pandrug-resistant bacteria: an international expert proposal for interim standard definitions for acquired resistance." Clinical Microbiology and Infection (2012).
+  * This is now the new default guideline for the `mdro()` function
+  * The new Verbose mode (`mdro(...., verbose = TRUE)`) returns an informative data set where the reason for MDRO determination is given for every isolate, and an list of the resistant antimicrobial agents
+* Data set `antivirals`, containing all entries from the ATC J05 group with their DDDs for oral and parenteral treatment
+
+### Changes
+* Improvements to algorithm in `as.mo()`:
+  * Now allows "ou" where "au" should have been used and vice versa
+  * More intelligent way of coping with some consonants like "l" and "r"
+  * Added a score (a certainty percentage) to `mo_uncertainties()`, that is calculated using the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance):
+    ```r
+    as.mo(c("Stafylococcus aureus",
+            "staphylokok aureuz"))
+    #> Warning: 
+    #> Results of two values were guessed with uncertainty. Use mo_uncertainties() to review them.
+    #> Class 'mo'
+    #> [1] B_STPHY_AURS B_STPHY_AURS
+    
+    mo_uncertainties()
+    #> "Stafylococcus aureus" -> Staphylococcus aureus (B_STPHY_AURS, score: 95.2%)
+    #> "staphylokok aureuz"   -> Staphylococcus aureus (B_STPHY_AURS, score: 85.7%)
+    ```
+* Removed previously deprecated function `as.atc()` - this function was replaced by `ab_atc()`
+* Renamed all `portion_*` functions to `proportion_*`. All `portion_*` functions are still available as deprecated functions, and will return a warning when used.
+* When running `as.rsi()` over a data set, it will now print the guideline that will be used if it is not specified by the user
+* Improvements for `eucast_rules()`:
+  * Fix where *Stenotrophomonas maltophilia* would always become ceftazidime R (following EUCAST v3.1)
+  * Fix where *Leuconostoc* and *Pediococcus* would not always become glycopeptides R
+  * non-EUCAST rules in `eucast_rules()` are now applied first and not as last anymore. This is to improve the dependency on certain antibiotics for the official EUCAST rules. Please see `?eucast_rules`.
+* Fix for interpreting MIC values with `as.rsi()` where the input is `NA`
+* Added "imi" and "imp" as allowed abbreviation for Imipenem (IPM)
+* Fix for automatically determining columns with antibiotic results in `mdro()` and `eucast_rules()`
+* Added ATC codes for ceftaroline, ceftobiprole and faropenem and fixed two typos in the `antibiotics` data set
+* More robust way of determining valid MIC values
+* Small changed to the `example_isolates` data set to better reflect reality
+* Added more microorganisms codes from laboratory systems (esp. species of *Pseudescherichia* and *Rodentibacter*)
+* Added Gram-stain to `mo_info()`
+
+### Other
+* Rewrote the complete documentation to markdown format, to be able to use the very latest version of the great [Roxygen2](https://roxygen2.r-lib.org/index.html), released in November 2019. This tremously improved the documentation quality, since the rewrite forced us to go over all texts again and make changes where needed.
+* Change dependency on `clean` to `cleaner`, as this package was renamed accordingly upon CRAN request
+* Added Dr. Sofia Ny as contributor
+
+# AMR 0.8.0
 
 ### Breaking
 * Determination of first isolates now **excludes** all 'unknown' microorganisms at default, i.e. microbial code `"UNKNOWN"`. They can be included with the new parameter `include_unknown`:

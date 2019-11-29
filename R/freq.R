@@ -19,14 +19,13 @@
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
-#' @importFrom clean freq
+#' @importFrom cleaner freq
 #' @export
-clean::freq
+cleaner::freq
 
 #' @exportMethod freq.mo
 #' @importFrom dplyr n_distinct
-#' @importFrom clean freq.default
-# @importFrom clean percentage
+#' @importFrom cleaner freq.default percentage
 #' @export
 #' @noRd
 freq.mo <- function(x, ...) {
@@ -47,13 +46,13 @@ freq.mo <- function(x, ...) {
                                                                   decimal.mark = "."),
                                                            " (", percentage(sum(grams == "Gram-positive", na.rm = TRUE) / length(grams), digits = digits),
                                                            ")"),
-                                  `Nr of genera` = n_distinct(mo_genus(x_noNA, language = NULL)),
-                                  `Nr of species` = n_distinct(paste(mo_genus(x_noNA, language = NULL),
+                                  `No of genera` = n_distinct(mo_genus(x_noNA, language = NULL)),
+                                  `No of species` = n_distinct(paste(mo_genus(x_noNA, language = NULL),
                                                              mo_species(x_noNA, language = NULL)))))
 }
 
 #' @exportMethod freq.rsi
-#' @importFrom clean freq.default
+#' @importFrom cleaner freq.default
 #' @export
 #' @noRd
 freq.rsi <- function(x, ...) {
@@ -64,9 +63,9 @@ freq.rsi <- function(x, ...) {
     freq.default(x = x, ...,
                  .add_header = list(Drug = paste0(ab_name(ab), " (", ab, ", ", ab_atc(ab), ")"),
                                     group = ab_group(ab),
-                                    `%SI` = AMR::portion_SI(x, minimum = 0, as_percent = TRUE)))
+                                    `%SI` = AMR::susceptibility(x, minimum = 0, as_percent = TRUE)))
   } else {
     freq.default(x = x, ...,
-                 .add_header = list(`%SI` = AMR::portion_SI(x, minimum = 0, as_percent = TRUE)))
+                 .add_header = list(`%SI` = AMR::susceptibility(x, minimum = 0, as_percent = TRUE)))
   }
 }

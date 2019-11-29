@@ -1,4 +1,4 @@
-## ----setup, include = FALSE, results = 'markup'--------------------------
+## ----setup, include = FALSE, results = 'markup'-------------------------------
 knitr::opts_chunk$set(
   warning = FALSE,
   collapse = TRUE,
@@ -7,7 +7,7 @@ knitr::opts_chunk$set(
   fig.height = 5
 )
 
-## ----example table, echo = FALSE, results = 'asis'-----------------------
+## ----example table, echo = FALSE, results = 'asis'----------------------------
 knitr::kable(dplyr::tibble(date = Sys.Date(),
                            patient_id = c("abcd", "abcd", "efgh"),
                            mo = "Escherichia coli", 
@@ -15,7 +15,7 @@ knitr::kable(dplyr::tibble(date = Sys.Date(),
                            CIP = c("S", "R", "S")), 
              align = "c")
 
-## ----lib packages, message = FALSE---------------------------------------
+## ----lib packages, message = FALSE--------------------------------------------
 library(dplyr)
 library(ggplot2)
 library(AMR)
@@ -23,26 +23,26 @@ library(AMR)
 # (if not yet installed, install with:)
 # install.packages(c("tidyverse", "AMR"))
 
-## ----create patients-----------------------------------------------------
+## ----create patients----------------------------------------------------------
 patients <- unlist(lapply(LETTERS, paste0, 1:10))
 
-## ----create gender-------------------------------------------------------
+## ----create gender------------------------------------------------------------
 patients_table <- data.frame(patient_id = patients,
                              gender = c(rep("M", 135),
                                         rep("F", 125)))
 
-## ----create dates--------------------------------------------------------
+## ----create dates-------------------------------------------------------------
 dates <- seq(as.Date("2010-01-01"), as.Date("2018-01-01"), by = "day")
 
-## ----mo------------------------------------------------------------------
+## ----mo-----------------------------------------------------------------------
 bacteria <- c("Escherichia coli", "Staphylococcus aureus",
               "Streptococcus pneumoniae", "Klebsiella pneumoniae")
 
-## ----create other--------------------------------------------------------
+## ----create other-------------------------------------------------------------
 hospitals <- c("Hospital A", "Hospital B", "Hospital C", "Hospital D")
 ab_interpretations <- c("S", "I", "R")
 
-## ----merge data----------------------------------------------------------
+## ----merge data---------------------------------------------------------------
 sample_size <- 20000
 data <- data.frame(date = sample(dates, size = sample_size, replace = TRUE),
                    patient_id = sample(patients, size = sample_size, replace = TRUE),
@@ -59,58 +59,55 @@ data <- data.frame(date = sample(dates, size = sample_size, replace = TRUE),
                    GEN = sample(ab_interpretations, size = sample_size, replace = TRUE,
                                  prob = c(0.92, 0.00, 0.08)))
 
-## ----merge data 2, message = FALSE, warning = FALSE----------------------
+## ----merge data 2, message = FALSE, warning = FALSE---------------------------
 data <- data %>% left_join(patients_table)
 
-## ----preview data set 1, eval = FALSE------------------------------------
+## ----preview data set 1, eval = FALSE-----------------------------------------
 #  head(data)
 
-## ----preview data set 2, echo = FALSE, results = 'asis'------------------
+## ----preview data set 2, echo = FALSE, results = 'asis'-----------------------
 knitr::kable(head(data), align = "c")
 
-## ----lib clean, message = FALSE------------------------------------------
-library(clean)
-
-## ----freq gender 1, eval = FALSE-----------------------------------------
+## ----freq gender 1, eval = FALSE----------------------------------------------
 #  data %>% freq(gender) # this would be the same: freq(data$gender)
 
-## ----freq gender 2, echo = FALSE, results = 'markup'---------------------
+## ----freq gender 2, echo = FALSE, results = 'markup'--------------------------
 data %>% freq(gender, markdown = FALSE, header = TRUE)
 
-## ----transform mo 1------------------------------------------------------
+## ----transform mo 1-----------------------------------------------------------
 data <- data %>%
   mutate(bacteria = as.mo(bacteria))
 
-## ----transform abx-------------------------------------------------------
+## ----transform abx------------------------------------------------------------
 data <- data %>%
   mutate_at(vars(AMX:GEN), as.rsi)
 
-## ----eucast, warning = FALSE, message = FALSE----------------------------
+## ----eucast, warning = FALSE, message = FALSE---------------------------------
 data <- eucast_rules(data, col_mo = "bacteria")
 
-## ----new taxo------------------------------------------------------------
+## ----new taxo-----------------------------------------------------------------
 data <- data %>% 
   mutate(gramstain = mo_gramstain(bacteria),
          genus = mo_genus(bacteria),
          species = mo_species(bacteria))
 
-## ----1st isolate---------------------------------------------------------
+## ----1st isolate--------------------------------------------------------------
 data <- data %>% 
   mutate(first = first_isolate(.))
 
-## ----1st isolate filter--------------------------------------------------
+## ----1st isolate filter-------------------------------------------------------
 data_1st <- data %>% 
   filter(first == TRUE)
 
-## ----1st isolate filter 2, eval = FALSE----------------------------------
+## ----1st isolate filter 2, eval = FALSE---------------------------------------
 #  data_1st <- data %>%
 #    filter_first_isolate()
 
-## ---- echo = FALSE, message = FALSE, warning = FALSE, results = 'asis'----
+## ---- echo = FALSE, message = FALSE, warning = FALSE, results = 'asis'--------
 weighted_df <- data %>%
   filter(bacteria == as.mo("E. coli")) %>% 
   # only most prevalent patient
-  filter(patient_id == top_freq(freq(., patient_id), 1)[1]) %>% 
+  filter(patient_id == cleaner::top_freq(freq(., patient_id), 1)[1]) %>% 
   arrange(date) %>%
   select(date, patient_id, bacteria, AMX:GEN, first) %>% 
   # maximum of 10 rows
@@ -118,20 +115,20 @@ weighted_df <- data %>%
   mutate(isolate = row_number()) %>% 
   select(isolate, everything())
 
-## ---- echo = FALSE, message = FALSE, warning = FALSE, results = 'asis'----
+## ---- echo = FALSE, message = FALSE, warning = FALSE, results = 'asis'--------
 weighted_df %>% 
   knitr::kable(align = "c")
 
-## ----1st weighted, warning = FALSE---------------------------------------
+## ----1st weighted, warning = FALSE--------------------------------------------
 data <- data %>% 
   mutate(keyab = key_antibiotics(.)) %>% 
   mutate(first_weighted = first_isolate(.))
 
-## ---- echo = FALSE, message = FALSE, warning = FALSE, results = 'asis'----
+## ---- echo = FALSE, message = FALSE, warning = FALSE, results = 'asis'--------
 weighted_df2 <- data %>%
   filter(bacteria == as.mo("E. coli")) %>% 
   # only most prevalent patient
-  filter(patient_id == top_freq(freq(., patient_id), 1)[1]) %>% 
+  filter(patient_id == cleaner::top_freq(freq(., patient_id), 1)[1]) %>% 
   arrange(date) %>%
   select(date, patient_id, bacteria, AMX:GEN, first, first_weighted) %>% 
   # maximum of 10 rows
@@ -146,81 +143,82 @@ weighted_df2 %>%
 data_1st <- data %>% 
   filter_first_weighted_isolate()
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 data_1st <- data_1st %>% 
   select(-c(first, keyab))
 
-## ----preview data set 3, eval = FALSE------------------------------------
+## ----preview data set 3, eval = FALSE-----------------------------------------
 #  head(data_1st)
 
-## ----preview data set 4, echo = FALSE, results = 'asis'------------------
+## ----preview data set 4, echo = FALSE, results = 'asis'-----------------------
 knitr::kable(head(data_1st), align = "c")
 
-## ----freq 1, eval = FALSE------------------------------------------------
+## ----freq 1, eval = FALSE-----------------------------------------------------
 #  freq(paste(data_1st$genus, data_1st$species))
 
-## ----freq 2a, eval = FALSE-----------------------------------------------
+## ----freq 2a, eval = FALSE----------------------------------------------------
 #  data_1st %>% freq(genus, species)
 
-## ----freq 2b, results = 'asis', echo = FALSE-----------------------------
+## ----freq 2b, results = 'asis', echo = FALSE----------------------------------
 data_1st %>% 
   freq(genus, species, header = TRUE)
 
-## ------------------------------------------------------------------------
-data_1st %>% portion_R(AMX)
+## -----------------------------------------------------------------------------
+data_1st %>% resistance(AMX)
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  data_1st %>%
 #    group_by(hospital) %>%
-#    summarise(amoxicillin = portion_R(AMX))
+#    summarise(amoxicillin = resistance(AMX))
 
-## ---- echo = FALSE-------------------------------------------------------
+## ---- echo = FALSE------------------------------------------------------------
 data_1st %>% 
   group_by(hospital) %>% 
-  summarise(amoxicillin = portion_R(AMX)) %>% 
+  summarise(amoxicillin = resistance(AMX)) %>% 
   knitr::kable(align = "c", big.mark = ",")
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  data_1st %>%
 #    group_by(hospital) %>%
-#    summarise(amoxicillin = portion_R(AMX),
+#    summarise(amoxicillin = resistance(AMX),
 #              available = n_rsi(AMX))
 
-## ---- echo = FALSE-------------------------------------------------------
+## ---- echo = FALSE------------------------------------------------------------
 data_1st %>% 
   group_by(hospital) %>% 
-  summarise(amoxicillin = portion_R(AMX),
+  summarise(amoxicillin = resistance(AMX),
             available = n_rsi(AMX)) %>% 
   knitr::kable(align = "c", big.mark = ",")
 
-## ---- eval = FALSE-------------------------------------------------------
+## ---- eval = FALSE------------------------------------------------------------
 #  data_1st %>%
 #    group_by(genus) %>%
-#    summarise(amoxiclav = portion_SI(AMC),
-#              gentamicin = portion_SI(GEN),
-#              amoxiclav_genta = portion_SI(AMC, GEN))
+#    summarise(amoxiclav = susceptibility(AMC),
+#              gentamicin = susceptibility(GEN),
+#              amoxiclav_genta = susceptibility(AMC, GEN))
 
-## ---- echo = FALSE-------------------------------------------------------
+## ---- echo = FALSE------------------------------------------------------------
 data_1st %>% 
   group_by(genus) %>% 
-  summarise(amoxiclav = portion_SI(AMC),
-            gentamicin = portion_SI(GEN),
-            amoxiclav_genta = portion_SI(AMC, GEN)) %>% 
+  summarise(amoxiclav = susceptibility(AMC),
+            gentamicin = susceptibility(GEN),
+            amoxiclav_genta = susceptibility(AMC, GEN)) %>% 
   knitr::kable(align = "c", big.mark = ",")
 
-## ----plot 1--------------------------------------------------------------
+## ----plot 1-------------------------------------------------------------------
 data_1st %>% 
   group_by(genus) %>% 
-  summarise("1. Amoxi/clav" = portion_SI(AMC),
-            "2. Gentamicin" = portion_SI(GEN),
-            "3. Amoxi/clav + genta" = portion_SI(AMC, GEN)) %>% 
-  tidyr::gather("antibiotic", "S", -genus) %>%
+  summarise("1. Amoxi/clav" = susceptibility(AMC),
+            "2. Gentamicin" = susceptibility(GEN),
+            "3. Amoxi/clav + genta" = susceptibility(AMC, GEN)) %>% 
+  # pivot_longer() from the tidyr package "lengthens" data:
+  tidyr::pivot_longer(-genus, names_to = "antibiotic") %>% 
   ggplot(aes(x = genus,
-             y = S,
+             y = value,
              fill = antibiotic)) +
   geom_col(position = "dodge2")
 
-## ----plot 2, eval = FALSE------------------------------------------------
+## ----plot 2, eval = FALSE-----------------------------------------------------
 #  ggplot(data = a_data_set,
 #         mapping = aes(x = year,
 #                       y = value)) +
@@ -234,11 +232,11 @@ data_1st %>%
 #  ggplot(a_data_set) +
 #    geom_bar(aes(year))
 
-## ----plot 3--------------------------------------------------------------
+## ----plot 3-------------------------------------------------------------------
 ggplot(data_1st) +
   geom_rsi(translate_ab = FALSE)
 
-## ----plot 4--------------------------------------------------------------
+## ----plot 4-------------------------------------------------------------------
 # group the data on `genus`
 ggplot(data_1st %>% group_by(genus)) + 
   # create bars with genus on x axis
@@ -247,7 +245,7 @@ ggplot(data_1st %>% group_by(genus)) +
   geom_rsi(x = "genus") + 
   # split plots on antibiotic
   facet_rsi(facet = "antibiotic") +
-  # make R red, I yellow and S green
+  # set colours to the R/SI interpretations
   scale_rsi_colours() +
   # show percentages on y axis
   scale_y_percent(breaks = 0:4 * 25) +
@@ -260,7 +258,7 @@ ggplot(data_1st %>% group_by(genus)) +
   # (is now y axis because we turned the plot)
   theme(axis.text.y = element_text(face = "italic"))
 
-## ----plot 5--------------------------------------------------------------
+## ----plot 5-------------------------------------------------------------------
 data_1st %>% 
   group_by(genus) %>%
   ggplot_rsi(x = "genus",
@@ -269,19 +267,24 @@ data_1st %>%
              datalabels = FALSE) +
   coord_flip()
 
-## ---- results = 'markup'-------------------------------------------------
+## ---- results = 'markup'------------------------------------------------------
+# use package 'tidyr' to pivot data; 
+# it gets installed with this 'AMR' package
+library(tidyr)
+
 check_FOS <- example_isolates %>%
   filter(hospital_id %in% c("A", "D")) %>% # filter on only hospitals A and D
   select(hospital_id, FOS) %>%             # select the hospitals and fosfomycin
   group_by(hospital_id) %>%                # group on the hospitals
   count_df(combine_SI = TRUE) %>%          # count all isolates per group (hospital_id)
-  tidyr::spread(hospital_id, value) %>%    # transform output so A and D are columns
-  select(A, D) %>%                         # and select these only
-  as.matrix()                              # transform to good old matrix for fisher.test()
+  pivot_wider(names_from = hospital_id,    # transform output so A and D are columns
+              values_from = value) %>%     
+  select(A, D) %>%                         # and only select these columns
+  as.matrix()                              # transform to a good old matrix for fisher.test()
 
 check_FOS
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # do Fisher's Exact Test
 fisher.test(check_FOS)                            
 

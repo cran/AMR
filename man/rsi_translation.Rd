@@ -4,23 +4,23 @@
 \name{rsi_translation}
 \alias{rsi_translation}
 \title{Data set for RSI interpretation}
-\format{A \code{\link{data.frame}} with 11,559 observations and 9 variables:
-\describe{
-  \item{\code{guideline}}{Name of the guideline}
-  \item{\code{mo}}{Microbial ID, see \code{\link{as.mo}}}
-  \item{\code{ab}}{Antibiotic ID, see \code{\link{as.ab}}}
-  \item{\code{ref_tbl}}{Info about where the guideline rule can be found}
-  \item{\code{S_mic}}{Lowest MIC value that leads to "S"}
-  \item{\code{R_mic}}{Highest MIC value that leads to "R"}
-  \item{\code{dose_disk}}{Dose of the used disk diffusion method}
-  \item{\code{S_disk}}{Lowest number of millimeters that leads to "S"}
-  \item{\code{R_disk}}{Highest number of millimeters that leads to "R"}
+\format{A \code{\link{data.frame}} with 13,975 observations and 9 variables:
+\itemize{
+\item \code{guideline}\cr Name of the guideline
+\item \code{method}\cr Either "MIC" or "DISK"
+\item \code{site}\cr Body site, e.g. "Oral" or "Respiratory"
+\item \code{mo}\cr Microbial ID, see \code{\link[=as.mo]{as.mo()}}
+\item \code{ab}\cr Antibiotic ID, see \code{\link[=as.ab]{as.ab()}}
+\item \code{ref_tbl}\cr Info about where the guideline rule can be found
+\item \code{disk_dose}\cr Dose of the used disk diffusion method
+\item \code{breakpoint_S}\cr Lowest MIC value or highest number of millimeters that leads to "S"
+\item \code{breakpoint_R}\cr Highest MIC value or lowest number of millimeters that leads to "R"
 }}
 \usage{
 rsi_translation
 }
 \description{
-Data set to interpret MIC and disk diffusion to RSI values. Included guidelines are CLSI (2011-2019) and EUCAST (2011-2019). Use \code{\link{as.rsi}} to transform MICs or disks measurements to RSI values.
+Data set to interpret MIC and disk diffusion to RSI values. Included guidelines are CLSI (2011-2019) and EUCAST (2011-2019). Use \code{\link[=as.rsi]{as.rsi()}} to transform MICs or disks measurements to RSI values.
 }
 \section{Read more on our website!}{
 

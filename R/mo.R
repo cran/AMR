@@ -21,24 +21,25 @@
 
 #' Transform to microorganism ID
 #'
-#' Use this function to determine a valid microorganism ID (\code{mo}). Determination is done using intelligent rules and the complete taxonomic kingdoms Bacteria, Chromista, Protozoa, Archaea and most microbial species from the kingdom Fungi (see Source). The input can be almost anything: a full name (like \code{"Staphylococcus aureus"}), an abbreviated name (like \code{"S. aureus"}), an abbreviation known in the field (like \code{"MRSA"}), or just a genus. Please see Examples.
-#' @param x a character vector or a \code{data.frame} with one or two columns
-#' @param Becker a logical to indicate whether \emph{Staphylococci} should be categorised into coagulase-negative \emph{Staphylococci} ("CoNS") and coagulase-positive \emph{Staphylococci} ("CoPS") instead of their own species, according to Karsten Becker \emph{et al.} [1,2]. Note that this does not include species that were newly named after these publications, like \emph{S. caeli}.
+#' Use this function to determine a valid microorganism ID ([`mo`]). Determination is done using intelligent rules and the complete taxonomic kingdoms Bacteria, Chromista, Protozoa, Archaea and most microbial species from the kingdom Fungi (see Source). The input can be almost anything: a full name (like `"Staphylococcus aureus"`), an abbreviated name (like `"S. aureus"`), an abbreviation known in the field (like `"MRSA"`), or just a genus. Please see *Examples*.
+#' @param x a character vector or a [`data.frame`] with one or two columns
+#' @param Becker a logical to indicate whether *Staphylococci* should be categorised into coagulase-negative *Staphylococci* ("CoNS") and coagulase-positive *Staphylococci* ("CoPS") instead of their own species, according to Karsten Becker *et al.* (1,2). Note that this does not include species that were newly named after these publications, like *S. caeli*.
 #'
-#'   This excludes \emph{Staphylococcus aureus} at default, use \code{Becker = "all"} to also categorise \emph{S. aureus} as "CoPS".
-#' @param Lancefield a logical to indicate whether beta-haemolytic \emph{Streptococci} should be categorised into Lancefield groups instead of their own species, according to Rebecca C. Lancefield [3]. These \emph{Streptococci} will be categorised in their first group, e.g. \emph{Streptococcus dysgalactiae} will be group C, although officially it was also categorised into groups G and L.
+#'   This excludes *Staphylococcus aureus* at default, use `Becker = "all"` to also categorise *S. aureus* as "CoPS".
+#' @param Lancefield a logical to indicate whether beta-haemolytic *Streptococci* should be categorised into Lancefield groups instead of their own species, according to Rebecca C. Lancefield (3). These *Streptococci* will be categorised in their first group, e.g. *Streptococcus dysgalactiae* will be group C, although officially it was also categorised into groups G and L.
 #'
-#'   This excludes \emph{Enterococci} at default (who are in group D), use \code{Lancefield = "all"} to also categorise all \emph{Enterococci} as group D.
-#' @param allow_uncertain a number between 0 (or "none") and 3 (or "all"), or TRUE (= 2) or FALSE (= 0) to indicate whether the input should be checked for less probable results, see Details
-#' @param reference_df a \code{data.frame} to use for extra reference when translating \code{x} to a valid \code{mo}. See \code{\link{set_mo_source}} and \code{\link{get_mo_source}} to automate the usage of your own codes (e.g. used in your analysis or organisation).
+#'   This excludes *Enterococci* at default (who are in group D), use `Lancefield = "all"` to also categorise all *Enterococci* as group D.
+#' @param allow_uncertain a number between `0` (or `"none"`) and `3` (or `"all"`), or `TRUE` (= `2`) or `FALSE` (= `0`) to indicate whether the input should be checked for less probable results, please see *Details*
+#' @param reference_df a [`data.frame`] to use for extra reference when translating `x` to a valid [`mo`]. See [set_mo_source()] and [get_mo_source()] to automate the usage of your own codes (e.g. used in your analysis or organisation).
 #' @param ... other parameters passed on to functions
 #' @rdname as.mo
 #' @aliases mo
 #' @keywords mo Becker becker Lancefield lancefield guess
 #' @details
-#' \strong{General info} \cr
-#' A microorganism ID from this package (class: \code{mo}) typically looks like these examples:\cr
-#' \preformatted{
+#' ## General info
+#' 
+#' A microorganism ID from this package (class: [`mo`]) typically looks like these examples:
+#' ```
 #'   Code               Full name
 #'   ---------------    --------------------------------------
 #'   B_KLBSL            Klebsiella
@@ -51,76 +52,71 @@
 #'   |    ----> genus, a 5-7 letter acronym
 #'    ----> taxonomic kingdom: A (Archaea), AN (Animalia), B (Bacteria),
 #'                             C (Chromista), F (Fungi), P (Protozoa)
-#' }
+#' ```
 #'
-#' Values that cannot be coered will be considered 'unknown' and will get the MO code \code{UNKNOWN}.
+#' Values that cannot be coered will be considered 'unknown' and will get the MO code `UNKNOWN`.
 #'
-#' Use the \code{\link{mo_property}_*} functions to get properties based on the returned code, see Examples.
+#' Use the [`mo_property_*`][mo_property()] functions to get properties based on the returned code, see Examples.
 #'
-#' The algorithm uses data from the Catalogue of Life (see below) and from one other source (see \code{\link{microorganisms}}).
+#' The algorithm uses data from the Catalogue of Life (see below) and from one other source (see [microorganisms]).
 #'
-#' \strong{Self-learning algoritm} \cr
-#' The \code{as.mo()} function gains experience from previously determined microorganism IDs and learns from it. This drastically improves both speed and reliability. Use \code{clear_mo_history()} to reset the algorithms. Only experience from your current \code{AMR} package version is used. This is done because in the future the taxonomic tree (which is included in this package) may change for any organism and it consequently has to rebuild its knowledge.
-#'
-#' Usually, any guess after the first try runs 80-95\% faster than the first try.
-#'
-# \emph{For now, learning only works per session. If R is closed or terminated, the algorithms reset. This might be resolved in a future version.}
-#' This resets with every update of this \code{AMR} package since results are saved to your local package library folder.
+#' The [as.mo()] function uses several coercion rules for fast and logical results. It assesses the input matching criteria in the following order:
 #' 
-#' \strong{Intelligent rules} \cr
-#' The \code{as.mo()} function uses several coercion rules for fast and logical results. It assesses the input matching criteria in the following order:
-
-#' \itemize{
-#'   \item{Human pathogenic prevalence: the function  starts with more prevalent microorganisms, followed by less prevalent ones;}
-#'   \item{Taxonomic kingdom: the function starts with determining Bacteria, then Fungi, then Protozoa, then others;}
-#'   \item{Breakdown of input values to identify possible matches.}
-#' }
+#' 1. Human pathogenic prevalence: the function  starts with more prevalent microorganisms, followed by less prevalent ones;
+#' 2. Taxonomic kingdom: the function starts with determining Bacteria, then Fungi, then Protozoa, then others;
+#' 3. Breakdown of input values to identify possible matches.
 #'
-#' This will lead to the effect that e.g. \code{"E. coli"} (a highly prevalent microorganism found in humans) will return the microbial ID of \emph{Escherichia coli} and not \emph{Entamoeba coli} (a less prevalent microorganism in humans), although the latter would alphabetically come first. In addition, the \code{as.mo()} function can differentiate four levels of uncertainty to guess valid results: 
+#' This will lead to the effect that e.g. `"E. coli"` (a highly prevalent microorganism found in humans) will return the microbial ID of *Escherichia coli* and not *Entamoeba coli* (a less prevalent microorganism in humans), although the latter would alphabetically come first. 
 #' 
-#' \itemize{
-#'   \item{Uncertainty level 0: no additional rules are applied;}
-#'   \item{Uncertainty level 1: allow previously accepted (but now invalid) taxonomic names and minor spelling errors;}
-#'   \item{Uncertainty level 2: allow all of level 1, strip values between brackets, inverse the words of the input, strip off text elements from the end keeping at least two elements;}
-#'   \item{Uncertainty level 3: allow all of level 1 and 2, strip off text elements from the end, allow any part of a taxonomic name.}
-#' }
+#' ## Coping with uncertain results
+#' 
+#' In addition, the [as.mo()] function can differentiate four levels of uncertainty to guess valid results: 
+#' - Uncertainty level 0: no additional rules are applied;
+#' - Uncertainty level 1: allow previously accepted (but now invalid) taxonomic names and minor spelling errors;
+#' - Uncertainty level 2: allow all of level 1, strip values between brackets, inverse the words of the input, strip off text elements from the end keeping at least two elements;
+#' - Uncertainty level 3: allow all of level 1 and 2, strip off text elements from the end, allow any part of a taxonomic name.
 #' 
 #' This leads to e.g.:
-#' 
-#' \itemize{
-#'   \item{\code{"Streptococcus group B (known as S. agalactiae)"}. The text between brackets will be removed and a warning will be thrown that the result \emph{Streptococcus group B} (\code{B_STRPT_GRPB}) needs review.}
-#'   \item{\code{"S. aureus - please mind: MRSA"}. The last word will be stripped, after which the function will try to find a match. If it does not, the second last word will be stripped, etc. Again, a warning will be thrown that the result \emph{Staphylococcus aureus} (\code{B_STPHY_AURS}) needs review.}
-#'   \item{\code{"Fluoroquinolone-resistant Neisseria gonorrhoeae"}. The first word will be stripped, after which the function will try to find a match. A warning will be thrown that the result \emph{Neisseria gonorrhoeae} (\code{B_NESSR_GNRR}) needs review.}
-#' }
+#' - `"Streptococcus group B (known as S. agalactiae)"`. The text between brackets will be removed and a warning will be thrown that the result *Streptococcus group B* (`B_STRPT_GRPB`) needs review.
+#' - `"S. aureus - please mind: MRSA"`. The last word will be stripped, after which the function will try to find a match. If it does not, the second last word will be stripped, etc. Again, a warning will be thrown that the result *Staphylococcus aureus* (`B_STPHY_AURS`) needs review.
+#' - `"Fluoroquinolone-resistant Neisseria gonorrhoeae"`. The first word will be stripped, after which the function will try to find a match. A warning will be thrown that the result *Neisseria gonorrhoeae* (`B_NESSR_GNRR`) needs review.
 #'
-#' The level of uncertainty can be set using the argument \code{allow_uncertain}. The default is \code{allow_uncertain = TRUE}, which is equal to uncertainty level 2. Using \code{allow_uncertain = FALSE} is equal to uncertainty level 0 and will skip all rules. You can also use e.g. \code{as.mo(..., allow_uncertain = 1)} to only allow up to level 1 uncertainty.
+#' The level of uncertainty can be set using the argument `allow_uncertain`. The default is `allow_uncertain = TRUE`, which is equal to uncertainty level 2. Using `allow_uncertain = FALSE` is equal to uncertainty level 0 and will skip all rules. You can also use e.g. `as.mo(..., allow_uncertain = 1)` to only allow up to level 1 uncertainty.
 #' 
-#' Use \code{mo_failures()} to get a vector with all values that could not be coerced to a valid value. \cr
-#' Use \code{mo_uncertainties()} to get a \code{data.frame} with all values that were coerced to a valid value, but with uncertainty. \cr
-#' Use \code{mo_renamed()} to get a \code{data.frame} with all values that could be coerced based on an old, previously accepted taxonomic name.
+#' There are three helper functions that can be run after then [as.mo()] function:
+#' - Use [mo_uncertainties()] to get a [`data.frame`] with all values that were coerced to a valid value, but with uncertainty. The output contains a score, that is calculated as \eqn{(n - 0.5 * L) / n}, where *n* is the number of characters of the returned full name of the microorganism, and *L* is the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) between that full name and the user input.
+#' - Use [mo_failures()] to get a [`vector`] with all values that could not be coerced to a valid value.
+#' - Use [mo_renamed()] to get a [`data.frame`] with all values that could be coerced based on an old, previously accepted taxonomic name.
 #'
-#' \strong{Microbial prevalence of pathogens in humans} \cr
-#' The intelligent rules consider the prevalence of microorganisms in humans grouped into three groups, which is available as the \code{prevalence} columns in the \code{\link{microorganisms}} and \code{\link{microorganisms.old}} data sets. The grouping into prevalence groups is based on experience from several microbiological laboratories in the Netherlands in conjunction with international reports on pathogen prevalence.
+#' ## Microbial prevalence of pathogens in humans
 #' 
-#' Group 1 (most prevalent microorganisms) consists of all microorganisms where the taxonomic class is Gammaproteobacteria or where the taxonomic genus is  \emph{Enterococcus}, \emph{Staphylococcus} or \emph{Streptococcus}. This group consequently contains all common Gram-negative bacteria, such as \emph{Pseudomonas} and \emph{Legionella} and all species within the order Enterobacteriales. 
+#' The intelligent rules consider the prevalence of microorganisms in humans grouped into three groups, which is available as the `prevalence` columns in the [microorganisms] and [microorganisms.old] data sets. The grouping into prevalence groups is based on experience from several microbiological laboratories in the Netherlands in conjunction with international reports on pathogen prevalence.
 #' 
-#' Group 2 consists of all microorganisms where the taxonomic phylum is Proteobacteria, Firmicutes, Actinobacteria or Sarcomastigophora, or where the taxonomic genus is \emph{Aspergillus}, \emph{Bacteroides}, \emph{Candida}, \emph{Capnocytophaga}, \emph{Chryseobacterium}, \emph{Cryptococcus}, \emph{Elisabethkingia}, \emph{Flavobacterium}, \emph{Fusobacterium}, \emph{Giardia}, \emph{Leptotrichia}, \emph{Mycoplasma}, \emph{Prevotella}, \emph{Rhodotorula}, \emph{Treponema}, \emph{Trichophyton} or \emph{Ureaplasma}. 
+#' Group 1 (most prevalent microorganisms) consists of all microorganisms where the taxonomic class is Gammaproteobacteria or where the taxonomic genus is  *Enterococcus*, *Staphylococcus* or *Streptococcus*. This group consequently contains all common Gram-negative bacteria, such as *Pseudomonas* and *Legionella* and all species within the order Enterobacteriales. 
+#' 
+#' Group 2 consists of all microorganisms where the taxonomic phylum is Proteobacteria, Firmicutes, Actinobacteria or Sarcomastigophora, or where the taxonomic genus is *Aspergillus*, *Bacteroides*, *Candida*, *Capnocytophaga*, *Chryseobacterium*, *Cryptococcus*, *Elisabethkingia*, *Flavobacterium*, *Fusobacterium*, *Giardia*, *Leptotrichia*, *Mycoplasma*, *Prevotella*, *Rhodotorula*, *Treponema*, *Trichophyton* or *Ureaplasma*. 
 #' 
 #' Group 3 (least prevalent microorganisms) consists of all other microorganisms.
+#' 
+#' ## Self-learning algorithm
+#' 
+#' The [as.mo()] function gains experience from previously determined microorganism IDs and learns from it. This drastically improves both speed and reliability. Use [clear_mo_history()] to reset the algorithms. Only experience from your current `AMR` package version is used. This is done because in the future the taxonomic tree (which is included in this package) may change for any organism and it consequently has to rebuild its knowledge.
+#'
+#' Usually, any guess after the first try runs 80-95% faster than the first try.
+#' 
+#' This resets with every update of this `AMR` package since results are saved to your local package library folder.
 #' @inheritSection catalogue_of_life Catalogue of Life
 #  (source as a section here, so it can be inherited by other man pages:)
 #' @section Source:
-#' [1] Becker K \emph{et al.} \strong{Coagulase-Negative Staphylococci}. 2014. Clin Microbiol Rev. 27(4): 870–926. \url{https://dx.doi.org/10.1128/CMR.00109-13}
-#'
-#' [2] Becker K \emph{et al.} \strong{Implications of identifying the recently defined members of the \emph{S. aureus} complex, \emph{S. argenteus} and \emph{S. schweitzeri}: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).} 2019. Clin Microbiol Infect. \url{https://doi.org/10.1016/j.cmi.2019.02.028}
-#'
-#' [3] Lancefield RC \strong{A serological differentiation of human and other groups of hemolytic streptococci}. 1933. J Exp Med. 57(4): 571–95. \url{https://dx.doi.org/10.1084/jem.57.4.571}
-#'
-#' [4] Catalogue of Life: Annual Checklist (public online taxonomic database), \url{http://www.catalogueoflife.org} (check included annual version with \code{\link{catalogue_of_life_version}()}).
+#' 1. Becker K *et al.* **Coagulase-Negative Staphylococci**. 2014. Clin Microbiol Rev. 27(4): 870–926. <https://dx.doi.org/10.1128/CMR.00109-13>
+#' 2. Becker K *et al.* **Implications of identifying the recently defined members of the *S. aureus* complex, *S. argenteus* and *S. schweitzeri*: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).** 2019. Clin Microbiol Infect. <https://doi.org/10.1016/j.cmi.2019.02.028>
+#' 3. Lancefield RC **A serological differentiation of human and other groups of hemolytic streptococci**. 1933. J Exp Med. 57(4): 571–95. <https://dx.doi.org/10.1084/jem.57.4.571>
+#' 4. Catalogue of Life: Annual Checklist (public online taxonomic database), <http://www.catalogueoflife.org> (check included annual version with [catalogue_of_life_version()]).
 #' @export
-#' @return Character (vector) with class \code{"mo"}
-#' @seealso \code{\link{microorganisms}} for the \code{data.frame} that is being used to determine ID's. \cr
-#' The \code{\link{mo_property}} functions (like \code{\link{mo_genus}}, \code{\link{mo_gramstain}}) to get properties based on the returned code.
+#' @return A [`character`] vector with class [`mo`]
+#' @seealso [microorganisms] for the [`data.frame`] that is being used to determine ID's.
+#' 
+#' The [mo_property()] functions (like [mo_genus()], [mo_gramstain()]) to get properties based on the returned code.
 #' @inheritSection AMR Read more on our website!
 #' @importFrom dplyr %>% pull left_join
 #' @examples
@@ -134,7 +130,7 @@
 #' as.mo("S aureus")
 #' as.mo("Staphylococcus aureus")
 #' as.mo("Staphylococcus aureus (MRSA)")
-#' as.mo("Sthafilokkockus aaureuz") # handles incorrect spelling
+#' as.mo("Zthafilokkoockus oureuz") # handles incorrect spelling
 #' as.mo("MRSA")   # Methicillin Resistant S. aureus
 #' as.mo("VISA")   # Vancomycin Intermediate S. aureus
 #' as.mo("VRSA")   # Vancomycin Resistant S. aureus
@@ -178,11 +174,14 @@
 #' df <- df %>%
 #'   mutate(mo = as.mo(paste(genus, species)))
 #' }
-as.mo <- function(x, Becker = FALSE, Lancefield = FALSE, allow_uncertain = TRUE, reference_df = get_mo_source(), ...) {
-  if (!"AMR" %in% base::.packages()) {
-    require("AMR")
-    # check onLoad() in R/zzz.R: data tables are created there.
-  }
+as.mo <- function(x, 
+                  Becker = FALSE, 
+                  Lancefield = FALSE, 
+                  allow_uncertain = TRUE, 
+                  reference_df = get_mo_source(), 
+                  ...) {
+  
+  load_AMR_package()
   
   # WHONET: xxx = no growth
   x[tolower(as.character(paste0(x, ""))) %in% c("", "xxx", "na", "nan")] <- NA_character_
@@ -240,8 +239,7 @@ as.mo <- function(x, Becker = FALSE, Lancefield = FALSE, allow_uncertain = TRUE,
       left_join(microorganismsDT, by = "fullname_lower") %>% 
       pull(mo)
     
-    # save them to history
-    set_mo_history(x, y, 0, force = isTRUE(list(...)$force_mo_history), disable = isTRUE(list(...)$disable_mo_history))
+    # don't save valid fullnames to history (i.e. values that are in microorganisms$fullname)
     
   } else {
     # will be checked for mo class in validation and uses exec_as.mo internally if necessary
@@ -268,7 +266,7 @@ is.mo <- function(x) {
 #' @importFrom dplyr %>% pull left_join n_distinct progress_estimated filter distinct
 #' @importFrom data.table data.table as.data.table setkey
 #' @importFrom crayon magenta red blue silver italic
-# @importFrom clean percentage
+#' @importFrom cleaner percentage
 # param property a column name of AMR::microorganisms
 # param initial_search logical - is FALSE when coming from uncertain tries, which uses exec_as.mo internally too
 # param dyslexia_mode logical - also check for characters that resemble others
@@ -288,11 +286,8 @@ exec_as.mo <- function(x,
                        disable_mo_history = FALSE,
                        debug = FALSE,
                        reference_data_to_use = microorganismsDT) {
-  
-  if (!"AMR" %in% base::.packages()) {
-    require("AMR")
-    # check onLoad() in R/zzz.R: data tables are created there.
-  }
+
+  load_AMR_package()
   
   # WHONET: xxx = no growth
   x[tolower(as.character(paste0(x, ""))) %in% c("", "xxx", "na", "nan")] <- NA_character_
@@ -482,6 +477,7 @@ exec_as.mo <- function(x,
       trimmed
     }
     
+    x_backup_untouched <- x
     x <- strip_whitespace(x, dyslexia_mode)
     x_backup <- x
     
@@ -518,7 +514,7 @@ exec_as.mo <- function(x,
     x <- gsub("(alpha|beta|gamma).?ha?emoly", "\\1-haemoly", x)
     # remove genus as first word
     x <- gsub("^genus ", "", x)
-    # remove 'uncertain' like texts
+    # remove 'uncertain'-like texts
     x <- trimws(gsub("(uncertain|susp[ie]c[a-z]+|verdacht)", "", x))
     # allow characters that resemble others = dyslexia_mode ----
     if (dyslexia_mode == TRUE) {
@@ -539,15 +535,22 @@ exec_as.mo <- function(x,
       x <- gsub("e+", "e+", x)
       x <- gsub("o+", "o+", x)
       x <- gsub("(.)\\1+", "\\1+", x)
+      # allow multiplication of all other consonants
+      x <- gsub("([bdgjlnrw]+)", "\\1+", x)
       # allow ending in -en or -us
       x <- gsub("e\\+n(?![a-z[])", "(e+n|u+(c|k|q|qu|s|z|x|ks)+)", x, perl = TRUE)
-      # if the input is longer than 10 characters, allow any constant between all characters, as some might have forgotten a character
+      # if the input is longer than 10 characters, allow any forgotten consonant between all characters, as some might just have forgotten one...
       # this will allow "Pasteurella damatis" to be correctly read as "Pasteurella dagmatis".
-      constants <- paste(letters[!letters %in% c("a", "e", "i", "o", "u")], collapse = "")
-
-      x[nchar(x_backup_without_spp) > 10] <- gsub("[+]", paste0("+[", constants, "]?"), x[nchar(x_backup_without_spp) > 10])
+      consonants <- paste(letters[!letters %in% c("a", "e", "i", "o", "u")], collapse = "")
+      x[nchar(x_backup_without_spp) > 10] <- gsub("[+]", paste0("+[", consonants, "]?"), x[nchar(x_backup_without_spp) > 10])
+      # allow au and ou after all these regex implementations
+      x <- gsub("a+[bcdfghjklmnpqrstvwxyz]?u+[bcdfghjklmnpqrstvwxyz]?", "(a+u+|o+u+)[bcdfghjklmnpqrstvwxyz]?", x, fixed = TRUE)
+      x <- gsub("o+[bcdfghjklmnpqrstvwxyz]?u+[bcdfghjklmnpqrstvwxyz]?", "(a+u+|o+u+)[bcdfghjklmnpqrstvwxyz]?", x, fixed = TRUE)
     }
     x <- strip_whitespace(x, dyslexia_mode)
+    # make sure to remove regex overkill (will lead to errors)
+    x <- gsub("++", "+", x, fixed = TRUE)
+    x <- gsub("?+", "?", x, fixed = TRUE)
     
     x_trimmed <- x
     x_trimmed_species <- paste(x_trimmed, "species")
@@ -565,20 +568,20 @@ exec_as.mo <- function(x,
     x_withspaces_start_end <- paste0("^", x_withspaces, "$")
     
     if (isTRUE(debug)) {
-      cat(paste0('x                       "', x, '"\n'))
-      cat(paste0('x_species               "', x_species, '"\n'))
-      cat(paste0('x_withspaces_start_only "', x_withspaces_start_only, '"\n'))
-      cat(paste0('x_withspaces_end_only   "', x_withspaces_end_only, '"\n'))
-      cat(paste0('x_withspaces_start_end  "', x_withspaces_start_end, '"\n'))
-      cat(paste0('x_backup                "', x_backup, '"\n'))
-      cat(paste0('x_backup_without_spp    "', x_backup_without_spp, '"\n'))
-      cat(paste0('x_trimmed               "', x_trimmed, '"\n'))
-      cat(paste0('x_trimmed_species       "', x_trimmed_species, '"\n'))
-      cat(paste0('x_trimmed_without_group "', x_trimmed_without_group, '"\n'))
+      cat(paste0(blue("x"), '                       "', x, '"\n'))
+      cat(paste0(blue("x_species"), '               "', x_species, '"\n'))
+      cat(paste0(blue("x_withspaces_start_only"), ' "', x_withspaces_start_only, '"\n'))
+      cat(paste0(blue("x_withspaces_end_only"), '   "', x_withspaces_end_only, '"\n'))
+      cat(paste0(blue("x_withspaces_start_end"), '  "', x_withspaces_start_end, '"\n'))
+      cat(paste0(blue("x_backup"), '                "', x_backup, '"\n'))
+      cat(paste0(blue("x_backup_without_spp"), '    "', x_backup_without_spp, '"\n'))
+      cat(paste0(blue("x_trimmed"), '               "', x_trimmed, '"\n'))
+      cat(paste0(blue("x_trimmed_species"), '       "', x_trimmed_species, '"\n'))
+      cat(paste0(blue("x_trimmed_without_group"), ' "', x_trimmed_without_group, '"\n'))
     }
     
     progress <- progress_estimated(n = length(x), min_time = 3)
-    
+
     for (i in seq_len(length(x))) {
       
       progress$tick()$print()
@@ -618,13 +621,23 @@ exec_as.mo <- function(x,
           next
         }
       }
+
+      if (toupper(x_backup_untouched[i]) %in% microorganisms.codes$code) {
+        # is a WHONET code, like "HA-"
+        found <- microorganismsDT[mo == microorganisms.codes[which(microorganisms.codes$code == toupper(x_backup_untouched[i])), "mo"][1L], ..property][[1]]
+        if (length(found) > 0) {
+          x[i] <- found[1L]
+          # don't save to history, as all items are already in microorganisms.codes
+          next
+        }
+      }
       
       found <- reference_data_to_use[fullname_lower %in% tolower(c(x_backup[i], x_backup_without_spp[i])), ..property][[1]]
       # most probable: is exact match in fullname
       if (length(found) > 0) {
         x[i] <- found[1L]
         if (initial_search == TRUE) {
-          set_mo_history(x_backup[i], get_mo_code(x[i], property), 0, force = force_mo_history, disable = disable_mo_history)
+          # don't save valid fullnames to history (i.e. values that are in microorganisms$fullname)
         }
         next
       }
@@ -824,8 +837,8 @@ exec_as.mo <- function(x,
           next
         }
         # streptococcal groups: milleri and viridans
-        if (x_trimmed[i] %like_case% "strepto.* milleri"
-            | x_backup_without_spp[i] %like_case% "strepto.* milleri"
+        if (x_trimmed[i] %like_case% "strepto.* mil+er+i"
+            | x_backup_without_spp[i] %like_case% "strepto.* mil+er+i"
             | x_backup_without_spp[i] %like_case% "mgs[^a-z]?$") {
           # Milleri Group Streptococcus (MGS)
           x[i] <- microorganismsDT[mo == "B_STRPT_MILL", ..property][[1]][1L]
@@ -1569,12 +1582,12 @@ exec_as.mo <- function(x,
   if (NROW(uncertainties) > 0 & initial_search == TRUE) {
     options(mo_uncertainties = as.list(distinct(uncertainties, input, .keep_all = TRUE)))
     
-    plural <- c("", "it")
+    plural <- c("", "it", "was")
     if (NROW(uncertainties) > 1) {
-      plural <- c("s", "them")
+      plural <- c("s", "them", "were")
     }
     msg <- paste0("\nResult", plural[1], " of ", nr2char(NROW(uncertainties)), " value", plural[1],
-                  " was guessed with uncertainty. Use mo_uncertainties() to review ", plural[2], ".")
+                  " ", plural[3], " guessed with uncertainty. Use mo_uncertainties() to review ", plural[2], ".")
     warning(red(msg),
             call. = FALSE,
             immediate. = TRUE) # thus will always be shown, even if >= warnings
@@ -1759,12 +1772,13 @@ pillar_shaft.mo <- function(x, ...) {
   out[is.na(x)] <- pillar::style_na("  NA")
   out[x == "UNKNOWN"] <- pillar::style_na("  UNKNOWN")
   
-  pillar::new_pillar_shaft_simple(out, align = "left", min_width = 12)
+  # make it always fit exactly
+  pillar::new_pillar_shaft_simple(out, align = "left", width = max(nchar(x)))
 }
 
 #' @exportMethod summary.mo
 #' @importFrom dplyr n_distinct
-#' @importFrom clean freq top_freq
+#' @importFrom cleaner freq top_freq
 #' @export
 #' @noRd
 summary.mo <- function(object, ...) {
@@ -1853,6 +1867,7 @@ mo_uncertainties <- function() {
 
 #' @exportMethod print.mo_uncertainties
 #' @importFrom crayon green yellow red white black bgGreen bgYellow bgRed
+#' @importFrom cleaner percentage
 #' @export
 #' @noRd
 print.mo_uncertainties <- function(x, ...) {
@@ -1880,7 +1895,9 @@ print.mo_uncertainties <- function(x, ...) {
                  paste0(colour2(paste0(" [", x[i, "uncertainty"], "] ")), ' "', x[i, "input"], '" -> ',
                         colour1(paste0(italic(x[i, "fullname"]),
                                        ifelse(!is.na(x[i, "renamed_to"]), paste(", renamed to", italic(x[i, "renamed_to"])), ""),
-                                       " (", x[i, "mo"], ")"))),
+                                       " (", x[i, "mo"],
+                                       ", score: ", percentage(levenshtein_fraction(x[i, "input"], x[i, "fullname"]), digits = 1),
+                                       ")"))),
                  sep = "\n")
   }
   cat(msg)
@@ -1966,4 +1983,16 @@ load_mo_failures_uncertainties_renamed <- function(metadata) {
   options("mo_failures" = metadata$failures)
   options("mo_uncertainties" = metadata$uncertainties)
   options("mo_renamed" = metadata$renamed)
+}
+
+#' @importFrom utils adist
+levenshtein_fraction <- function(input, output) {
+  levenshtein <- double(length = length(input))
+  for (i in seq_len(length(input))) {
+    # determine levenshtein distance, but maximise to nchar of output
+    levenshtein[i] <- base::min(base::as.double(adist(input[i], output[i], ignore.case = TRUE)),
+                                base::nchar(output[i]))
+  }
+  # self-made score between 0 and 1 (for % certainty, so 0 means huge distance, 1 means no distance)
+  (base::nchar(output) - 0.5 * levenshtein) / nchar(output)
 }

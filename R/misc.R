@@ -29,6 +29,14 @@ addin_insert_like <- function() {
   rstudioapi::insertText(" %like% ")
 }
 
+load_AMR_package <- function() {
+  if (!"package:AMR" %in% base::search()) {
+    require(AMR)
+    # check onLoad() in R/zzz.R: data tables are created there.
+  }
+  base::invisible()
+}
+
 #' @importFrom crayon blue bold red
 #' @importFrom dplyr %>% pull
 search_type_in_df <- function(x, type) {
@@ -36,11 +44,17 @@ search_type_in_df <- function(x, type) {
   found <- NULL
 
   colnames(x) <- trimws(colnames(x))
-
+  
   # -- mo
   if (type == "mo") {
     if ("mo" %in% lapply(x, class)) {
       found <- colnames(x)[lapply(x, class) == "mo"][1]
+    } else if ("mo" %in% colnames(x) &
+               suppressWarnings(
+                 all(x$mo %in% c(NA,
+                                 microorganisms$mo,
+                                 microorganisms.translation$mo_old)))) {
+      found <- "mo"
     } else if (any(colnames(x) %like% "^(mo|microorganism|organism|bacteria|bacterie)s?$")) {
       found <- colnames(x)[colnames(x) %like% "^(mo|microorganism|organism|bacteria|bacterie)s?$"][1]
     } else if (any(colnames(x) %like% "^(microorganism|organism|bacteria|bacterie)")) {
@@ -48,7 +62,7 @@ search_type_in_df <- function(x, type) {
     } else if (any(colnames(x) %like% "species")) {
       found <- colnames(x)[colnames(x) %like% "species"][1]
     }
-
+    
   }
   # -- key antibiotics
   if (type == "keyantibiotics") {
@@ -126,46 +140,4 @@ class_integrity_check <- function(value, type, check_vector) {
     value[!value %in% check_vector] <- NA
   }
   value
-}
-
-
-
-
-# Percentages -------------------------------------------------------------
-# Can all be removed when clean 1.2.0 is on CRAN
-
-getdecimalplaces <- function(x, minimum = 0, maximum = 3) {
-  if (maximum < minimum) {
-    maximum <- minimum
-  }
-  if (minimum > maximum) {
-    minimum <- maximum
-  }
-  max_places <- max(unlist(lapply(strsplit(sub("0+$", "", 
-                                               as.character(x * 100)), ".", fixed = TRUE),
-                                  function(y) ifelse(length(y) == 2, nchar(y[2]), 0))), na.rm = TRUE)
-  max(min(max_places,
-          maximum, na.rm = TRUE),
-      minimum, na.rm = TRUE)
-}
-
-round2 <- function(x, digits = 0, force_zero = TRUE) {
-  # https://stackoverflow.com/a/12688836/4575331
-  val <- (trunc((abs(x) * 10 ^ digits) + 0.5) / 10 ^ digits) * sign(x)
-  if (digits > 0 & force_zero == TRUE) {
-    val[val != as.integer(val) & !is.na(val)] <- paste0(val[val != as.integer(val) & !is.na(val)],
-                                          strrep("0", max(0, digits - nchar(gsub(".*[.](.*)$", "\\1", val[val != as.integer(val) & !is.na(val)])))))
-  }
-  val
-}
-
-percentage <- function(x, digits = NULL, ...) {
-  if (is.null(digits)) {
-    digits <- getdecimalplaces(x, minimum = 0, maximum = 1)
-  }
-  # round right: percentage(0.4455) should return "44.6%", not "44.5%"
-  x <- as.numeric(round2(x, digits = digits + 2))
-  x_formatted <- format(as.double(x) * 100, scientific = FALSE, digits = digits, nsmall = digits, ...)
-  x_formatted[!is.na(x)] <- paste0(x_formatted[!is.na(x)], "%")
-  x_formatted
 }

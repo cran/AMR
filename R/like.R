@@ -21,15 +21,17 @@
 
 #' Pattern Matching
 #'
-#' Convenient wrapper around \code{\link[base]{grep}} to match a pattern: \code{a \%like\% b}. It always returns a \code{logical} vector and is always case-insensitive (use \code{a \%like_case\% b} for case-sensitive matching). Also, \code{pattern} (\code{b}) can be as long as \code{x} (\code{a}) to compare items of each index in both vectors, or can both have the same length to iterate over all cases.
-#' @inheritParams base::grepl
-#' @return A \code{logical} vector
+#' Convenient wrapper around [base::grep()] to match a pattern: `a %like% b`. It always returns a [`logical`] vector and is always case-insensitive (use `a %like_case% b` for case-sensitive matching). Also, `pattern` (*b*) can be as long as `x` (*a*) to compare items of each index in both vectors, or can both have the same length to iterate over all cases.
+#' @param x a character vector where matches are sought, or an object which can be coerced by [as.character()] to a character vector.
+#' @param pattern a character string containing a regular expression (or [`character`] string for `fixed = TRUE`) to be matched in the given character vector. Coerced by [as.character()] to a character string if possible.  If a [`character`] vector of length 2 or more is supplied, the first element is used with a warning.
+#' @param ignore.case if `FALSE`, the pattern matching is *case sensitive* and if `TRUE`, case is ignored during matching.
+#' @return A [`logical`] vector
 #' @name like
 #' @rdname like
 #' @export
-#' @details Using RStudio? This function can also be inserted from the Addins menu and can have its own Keyboard Shortcut like Ctrl+Shift+L or Cmd+Shift+L (see Tools > Modify Keyboard Shortcuts...).
-#' @source Idea from the \href{https://github.com/Rdatatable/data.table/blob/master/R/like.R}{\code{like} function from the \code{data.table} package}, but made it case insensitive at default and let it support multiple patterns. Also, if the regex fails the first time, it tries again with \code{perl = TRUE}.
-#' @seealso \code{\link[base]{grep}}
+#' @details Using RStudio? This function can also be inserted from the Addins menu and can have its own Keyboard Shortcut like `Ctrl+Shift+L` or `Cmd+Shift+L` (see `Tools` > `Modify Keyboard Shortcuts...`).
+#' @source Idea from the [`like` function from the `data.table` package](https://github.com/Rdatatable/data.table/blob/master/R/like.R), but made it case insensitive at default and let it support multiple patterns. Also, if the regex fails the first time, it tries again with `perl = TRUE`.
+#' @seealso [base::grep()]
 #' @inheritSection AMR Read more on our website!
 #' @examples
 #' # simple test
@@ -48,11 +50,9 @@
 #'
 #' # get frequencies of bacteria whose name start with 'Ent' or 'ent'
 #' library(dplyr)
-#' library(clean)
 #' example_isolates %>%
-#'   left_join_microorganisms() %>%
-#'   filter(genus %like% '^ent') %>%
-#'   freq(genus, species)
+#'   filter(mo_genus(mo) %like% '^ent') %>%
+#'   freq(mo_fullname(mo))
 like <- function(x, pattern, ignore.case = TRUE) {
   if (length(pattern) > 1) {
     if (length(x) != length(pattern)) {
@@ -85,10 +85,12 @@ like <- function(x, pattern, ignore.case = TRUE) {
     as.integer(x) %in% base::grep(pattern, levels(x), ignore.case = ignore.case)
   } else {
     tryCatch(base::grepl(pattern, x, ignore.case = ignore.case),
-             error = function(e) ifelse(test = grepl("Invalid regexp", e$message),
+             error = function(e) ifelse(grepl("Invalid regexp", e$message),
                                         # try with perl = TRUE:
-                                        yes = return(base::grepl(pattern, x, ignore.case = ignore.case, perl = TRUE)),
-                                        no = stop(e$message)))
+                                        return(base::grepl(pattern = pattern, x = x,
+                                                                 ignore.case = ignore.case, perl = TRUE)),
+                                        # stop otherwise
+                                        stop(e$message)))
   }
 }
 

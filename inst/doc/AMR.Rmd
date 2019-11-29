@@ -144,13 +144,9 @@ Now, let's start the cleaning and the analysis!
 
 # Cleaning the data
 
-We also created a package dedicated to data cleaning and checking, called the `clean` package. It gets automatically installed with the `AMR` package, so we only have to load it:
+We also created a package dedicated to data cleaning and checking, called the `cleaner` package. It gets automatically installed with the `AMR` package. For its `freq()` function to create frequency tables, you don't even need to load it yourself as it is available through the `AMR` package as well.
 
-```{r lib clean, message = FALSE}
-library(clean)
-```
-
-Use the frequency table function `freq()` from this `clean` package to look specifically for unique values in any variable. For example, for the `gender` variable:
+For example, for the `gender` variable:
 
 ```{r freq gender 1, eval = FALSE}
 data %>% freq(gender) # this would be the same: freq(data$gender)
@@ -210,7 +206,7 @@ data <- data %>%
   mutate(first = first_isolate(.))
 ```
 
-So only `r AMR:::percentage(sum(data$first) / nrow(data))` is suitable for resistance analysis! We can now filter on it with the `filter()` function, also from the `dplyr` package:
+So only `r cleaner::percentage(sum(data$first) / nrow(data))` is suitable for resistance analysis! We can now filter on it with the `filter()` function, also from the `dplyr` package:
 
 ```{r 1st isolate filter}
 data_1st <- data %>% 
@@ -230,7 +226,7 @@ data_1st <- data %>%
 weighted_df <- data %>%
   filter(bacteria == as.mo("E. coli")) %>% 
   # only most prevalent patient
-  filter(patient_id == top_freq(freq(., patient_id), 1)[1]) %>% 
+  filter(patient_id == cleaner::top_freq(freq(., patient_id), 1)[1]) %>% 
   arrange(date) %>%
   select(date, patient_id, bacteria, AMX:GEN, first) %>% 
   # maximum of 10 rows
@@ -260,7 +256,7 @@ data <- data %>%
 weighted_df2 <- data %>%
   filter(bacteria == as.mo("E. coli")) %>% 
   # only most prevalent patient
-  filter(patient_id == top_freq(freq(., patient_id), 1)[1]) %>% 
+  filter(patient_id == cleaner::top_freq(freq(., patient_id), 1)[1]) %>% 
   arrange(date) %>%
   select(date, patient_id, bacteria, AMX:GEN, first, first_weighted) %>% 
   # maximum of 10 rows
@@ -272,7 +268,7 @@ weighted_df2 %>%
   knitr::kable(align = "c")
 ```
 
-Instead of `r sum(weighted_df$first)`, now `r sum(weighted_df2$first_weighted)` isolates are flagged. In total, `r AMR:::percentage(sum(data$first_weighted) / nrow(data))` of all isolates are marked 'first weighted' - `r AMR:::percentage((sum(data$first_weighted) / nrow(data)) - (sum(data$first) / nrow(data)))` more than when using the CLSI guideline. In real life, this novel algorithm will yield 5-10% more isolates than the classic CLSI guideline.
+Instead of `r sum(weighted_df$first)`, now `r sum(weighted_df2$first_weighted)` isolates are flagged. In total, `r cleaner::percentage(sum(data$first_weighted) / nrow(data))` of all isolates are marked 'first weighted' - `r cleaner::percentage((sum(data$first_weighted) / nrow(data)) - (sum(data$first) / nrow(data)))` more than when using the CLSI guideline. In real life, this novel algorithm will yield 5-10% more isolates than the classic CLSI guideline.
 
 As with `filter_first_isolate()`, there's a shortcut for this new algorithm too:
 ```{r 1st isolate filter 3, results = 'hide', message = FALSE, warning = FALSE}
@@ -325,10 +321,12 @@ data_1st %>%
 
 ## Resistance percentages
 
-The functions `portion_S()`, `portion_SI()`, `portion_I()`, `portion_IR()` and `portion_R()` can be used to determine the portion of a specific antimicrobial outcome. As per the EUCAST guideline of 2019, we calculate resistance as the portion of R (`portion_R()`) and susceptibility as the portion of S and I (`portion_SI()`). These functions can be used on their own:
+The functions `resistance()` and `susceptibility()` can be used to calculate antimicrobial resistance or susceptibility. For more specific analyses, the functions `proportion_S()`, `proportion_SI()`, `proportion_I()`, `proportion_IR()` and `proportion_R()` can be used to determine the proportion of a specific antimicrobial outcome. 
+
+As per the EUCAST guideline of 2019, we calculate resistance as the proportion of R (`proportion_R()`, equal to `resistance()`) and susceptibility as the proportion of S and I (`proportion_SI()`, equal to `susceptibility()`). These functions can be used on their own:
 
 ```{r}
-data_1st %>% portion_R(AMX)
+data_1st %>% resistance(AMX)
 ```
 
 Or can be used in conjuction with `group_by()` and `summarise()`, both from the `dplyr` package:
@@ -336,12 +334,12 @@ Or can be used in conjuction with `group_by()` and `summarise()`, both from the 
 ```{r, eval = FALSE}
 data_1st %>% 
   group_by(hospital) %>% 
-  summarise(amoxicillin = portion_R(AMX))
+  summarise(amoxicillin = resistance(AMX))
 ```
 ```{r, echo = FALSE}
 data_1st %>% 
   group_by(hospital) %>% 
-  summarise(amoxicillin = portion_R(AMX)) %>% 
+  summarise(amoxicillin = resistance(AMX)) %>% 
   knitr::kable(align = "c", big.mark = ",")
 ```
 
@@ -350,32 +348,32 @@ Of course it would be very convenient to know the number of isolates responsible
 ```{r, eval = FALSE}
 data_1st %>% 
   group_by(hospital) %>% 
-  summarise(amoxicillin = portion_R(AMX),
+  summarise(amoxicillin = resistance(AMX),
             available = n_rsi(AMX))
 ```
 ```{r, echo = FALSE}
 data_1st %>% 
   group_by(hospital) %>% 
-  summarise(amoxicillin = portion_R(AMX),
+  summarise(amoxicillin = resistance(AMX),
             available = n_rsi(AMX)) %>% 
   knitr::kable(align = "c", big.mark = ",")
 ```
 
-These functions can also be used to get the portion of multiple antibiotics, to calculate empiric susceptibility of combination therapies very easily:
+These functions can also be used to get the proportion of multiple antibiotics, to calculate empiric susceptibility of combination therapies very easily:
 
 ```{r, eval = FALSE}
 data_1st %>% 
   group_by(genus) %>% 
-  summarise(amoxiclav = portion_SI(AMC),
-            gentamicin = portion_SI(GEN),
-            amoxiclav_genta = portion_SI(AMC, GEN))
+  summarise(amoxiclav = susceptibility(AMC),
+            gentamicin = susceptibility(GEN),
+            amoxiclav_genta = susceptibility(AMC, GEN))
 ```
 ```{r, echo = FALSE}
 data_1st %>% 
   group_by(genus) %>% 
-  summarise(amoxiclav = portion_SI(AMC),
-            gentamicin = portion_SI(GEN),
-            amoxiclav_genta = portion_SI(AMC, GEN)) %>% 
+  summarise(amoxiclav = susceptibility(AMC),
+            gentamicin = susceptibility(GEN),
+            amoxiclav_genta = susceptibility(AMC, GEN)) %>% 
   knitr::kable(align = "c", big.mark = ",")
 ```
 
@@ -384,12 +382,13 @@ To make a transition to the next part, let's see how this difference could be pl
 ```{r plot 1}
 data_1st %>% 
   group_by(genus) %>% 
-  summarise("1. Amoxi/clav" = portion_SI(AMC),
-            "2. Gentamicin" = portion_SI(GEN),
-            "3. Amoxi/clav + genta" = portion_SI(AMC, GEN)) %>% 
-  tidyr::gather("antibiotic", "S", -genus) %>%
+  summarise("1. Amoxi/clav" = susceptibility(AMC),
+            "2. Gentamicin" = susceptibility(GEN),
+            "3. Amoxi/clav + genta" = susceptibility(AMC, GEN)) %>% 
+  # pivot_longer() from the tidyr package "lengthens" data:
+  tidyr::pivot_longer(-genus, names_to = "antibiotic") %>% 
   ggplot(aes(x = genus,
-             y = S,
+             y = value,
              fill = antibiotic)) +
   geom_col(position = "dodge2")
 ```
@@ -412,7 +411,7 @@ ggplot(a_data_set) +
   geom_bar(aes(year))
 ```
 
-The `AMR` package contains functions to extend this `ggplot2` package, for example `geom_rsi()`. It automatically transforms data with `count_df()` or `portion_df()` and show results in stacked bars. Its simplest and shortest example:
+The `AMR` package contains functions to extend this `ggplot2` package, for example `geom_rsi()`. It automatically transforms data with `count_df()` or `proportion_df()` and show results in stacked bars. Its simplest and shortest example:
 
 ```{r plot 3}
 ggplot(data_1st) +
@@ -432,7 +431,7 @@ ggplot(data_1st %>% group_by(genus)) +
   geom_rsi(x = "genus") + 
   # split plots on antibiotic
   facet_rsi(facet = "antibiotic") +
-  # make R red, I yellow and S green
+  # set colours to the R/SI interpretations
   scale_rsi_colours() +
   # show percentages on y axis
   scale_y_percent(breaks = 0:4 * 25) +
@@ -460,19 +459,24 @@ data_1st %>%
 
 ## Independence test
 
-The next example uses the included `example_isolates`, which is an anonymised data set containing 2,000 microbial blood culture isolates with their full antibiograms found in septic patients in 4 different hospitals in the Netherlands, between 2001 and 2017. This `data.frame` can be used to practice AMR analysis.
+The next example uses the `example_isolates` data set. This is a data set included with this package and contains 2,000 microbial isolates with their full antibiograms. It reflects reality and can be used to practice AMR analysis.
 
 We will compare the resistance to fosfomycin (column `FOS`) in hospital A and D. The input for the `fisher.test()` can be retrieved with a transformation like this:
 
 ```{r, results = 'markup'}
+# use package 'tidyr' to pivot data; 
+# it gets installed with this 'AMR' package
+library(tidyr)
+
 check_FOS <- example_isolates %>%
   filter(hospital_id %in% c("A", "D")) %>% # filter on only hospitals A and D
   select(hospital_id, FOS) %>%             # select the hospitals and fosfomycin
   group_by(hospital_id) %>%                # group on the hospitals
   count_df(combine_SI = TRUE) %>%          # count all isolates per group (hospital_id)
-  tidyr::spread(hospital_id, value) %>%    # transform output so A and D are columns
-  select(A, D) %>%                         # and select these only
-  as.matrix()                              # transform to good old matrix for fisher.test()
+  pivot_wider(names_from = hospital_id,    # transform output so A and D are columns
+              values_from = value) %>%     
+  select(A, D) %>%                         # and only select these columns
+  as.matrix()                              # transform to a good old matrix for fisher.test()
 
 check_FOS
 ```
@@ -484,4 +488,4 @@ We can apply the test now with:
 fisher.test(check_FOS)                            
 ```
 
-As can be seen, the p value is `r round(fisher.test(check_FOS)$p.value, 3)`, which means that the fosfomycin resistances found in hospital A and D are really different.
+As can be seen, the p value is `r round(fisher.test(check_FOS)$p.value, 3)`, which means that the fosfomycin resistance found in hospital A and D are really different.

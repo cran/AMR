@@ -16,29 +16,20 @@ x \%like\% pattern
 x \%like_case\% pattern
 }
 \arguments{
-\item{x}{a character vector where matches are sought, or an
-    object which can be coerced by \code{as.character} to a character
-    vector.  \link{Long vectors} are supported.}
+\item{x}{a character vector where matches are sought, or an object which can be coerced by \code{\link[=as.character]{as.character()}} to a character vector.}
 
-\item{pattern}{character string containing a \link{regular expression}
-    (or character string for \code{fixed = TRUE}) to be matched
-    in the given character vector.  Coerced by
-    \code{\link{as.character}} to a character string if possible.  If a
-    character vector of length 2 or more is supplied, the first element
-    is used with a warning.  Missing values are allowed except for
-    \code{regexpr} and \code{gregexpr}.}
+\item{pattern}{a character string containing a regular expression (or \code{\link{character}} string for \code{fixed = TRUE}) to be matched in the given character vector. Coerced by \code{\link[=as.character]{as.character()}} to a character string if possible.  If a \code{\link{character}} vector of length 2 or more is supplied, the first element is used with a warning.}
 
-\item{ignore.case}{if \code{FALSE}, the pattern matching is \emph{case
-      sensitive} and if \code{TRUE}, case is ignored during matching.}
+\item{ignore.case}{if \code{FALSE}, the pattern matching is \emph{case sensitive} and if \code{TRUE}, case is ignored during matching.}
 }
 \value{
-A \code{logical} vector
+A \code{\link{logical}} vector
 }
 \description{
-Convenient wrapper around \code{\link[base]{grep}} to match a pattern: \code{a \%like\% b}. It always returns a \code{logical} vector and is always case-insensitive (use \code{a \%like_case\% b} for case-sensitive matching). Also, \code{pattern} (\code{b}) can be as long as \code{x} (\code{a}) to compare items of each index in both vectors, or can both have the same length to iterate over all cases.
+Convenient wrapper around \code{\link[base:grep]{base::grep()}} to match a pattern: \code{a \%like\% b}. It always returns a \code{\link{logical}} vector and is always case-insensitive (use \code{a \%like_case\% b} for case-sensitive matching). Also, \code{pattern} (\emph{b}) can be as long as \code{x} (\emph{a}) to compare items of each index in both vectors, or can both have the same length to iterate over all cases.
 }
 \details{
-Using RStudio? This function can also be inserted from the Addins menu and can have its own Keyboard Shortcut like Ctrl+Shift+L or Cmd+Shift+L (see Tools > Modify Keyboard Shortcuts...).
+Using RStudio? This function can also be inserted from the Addins menu and can have its own Keyboard Shortcut like \code{Ctrl+Shift+L} or \code{Cmd+Shift+L} (see \code{Tools} > \verb{Modify Keyboard Shortcuts...}).
 }
 \section{Read more on our website!}{
 
@@ -62,12 +53,10 @@ a \%like\% b
 
 # get frequencies of bacteria whose name start with 'Ent' or 'ent'
 library(dplyr)
-library(clean)
 example_isolates \%>\%
-  left_join_microorganisms() \%>\%
-  filter(genus \%like\% '^ent') \%>\%
-  freq(genus, species)
+  filter(mo_genus(mo) \%like\% '^ent') \%>\%
+  freq(mo_fullname(mo))
 }
 \seealso{
-\code{\link[base]{grep}}
+\code{\link[base:grep]{base::grep()}}
 }

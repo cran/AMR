@@ -3,25 +3,25 @@
 \docType{data}
 \name{example_isolates}
 \alias{example_isolates}
-\title{Data set with 2,000 blood culture isolates}
+\title{Data set with 2,000 example isolates}
 \format{A \code{\link{data.frame}} with 2,000 observations and 49 variables:
-\describe{
-  \item{\code{date}}{date of receipt at the laboratory}
-  \item{\code{hospital_id}}{ID of the hospital, from A to D}
-  \item{\code{ward_icu}}{logical to determine if ward is an intensive care unit}
-  \item{\code{ward_clinical}}{logical to determine if ward is a regular clinical ward}
-  \item{\code{ward_outpatient}}{logical to determine if ward is an outpatient clinic}
-  \item{\code{age}}{age of the patient}
-  \item{\code{gender}}{gender of the patient}
-  \item{\code{patient_id}}{ID of the patient, first 10 characters of an SHA hash containing irretrievable information}
-  \item{\code{mo}}{ID of microorganism created with \code{\link{as.mo}}, see also \code{\link{microorganisms}}}
-  \item{\code{PEN:RIF}}{40 different antibiotics with class \code{rsi} (see \code{\link{as.rsi}}); these column names occur in \code{\link{antibiotics}} data set and can be translated with \code{\link{ab_name}}}
+\itemize{
+\item \code{date}\cr date of receipt at the laboratory
+\item \code{hospital_id}\cr ID of the hospital, from A to D
+\item \code{ward_icu}\cr logical to determine if ward is an intensive care unit
+\item \code{ward_clinical}\cr logical to determine if ward is a regular clinical ward
+\item \code{ward_outpatient}\cr logical to determine if ward is an outpatient clinic
+\item \code{age}\cr age of the patient
+\item \code{gender}\cr gender of the patient
+\item \code{patient_id}\cr ID of the patient
+\item \code{mo}\cr ID of microorganism created with \code{\link[=as.mo]{as.mo()}}, see also \link{microorganisms}
+\item \code{PEN:RIF}\cr 40 different antibiotics with class \code{\link{rsi}} (see \code{\link[=as.rsi]{as.rsi()}}); these column names occur in \link{antibiotics} data set and can be translated with \code{\link[=ab_name]{ab_name()}}
 }}
 \usage{
 example_isolates
 }
 \description{
-An anonymised data set containing 2,000 microbial blood culture isolates with their full antibiograms found 4 different hospitals in the Netherlands, between 2001 and 2017. This \code{data.frame} can be used to practice AMR analysis. For examples, please read \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{the tutorial on our website}.
+A data set containing 2,000 microbial isolates with their full antibiograms. The data set reflects reality and can be used to practice AMR analysis. For examples, please read \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{the tutorial on our website}.
 }
 \section{Read more on our website!}{
 
