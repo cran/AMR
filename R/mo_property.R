@@ -6,22 +6,22 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Property of a microorganism
 #'
-#' Use these functions to return a specific property of a microorganism. All input values will be evaluated internally with [as.mo()], which makes it possible for input of these functions to use microbial abbreviations, codes and names. See Examples.
+#' Use these functions to return a specific property of a microorganism. All input values will be evaluated internally with [as.mo()], which makes it possible to use microbial abbreviations, codes and names as input. Please see *Examples*.
 #' @param x any (vector of) text that can be coerced to a valid microorganism code with [as.mo()]
 #' @param property one of the column names of the [microorganisms] data set or `"shortname"`
 #' @param language language of the returned text, defaults to system language (see [get_locale()]) and can also be set with `getOption("AMR_locale")`. Use `language = NULL` or `language = ""` to prevent translation.
@@ -32,7 +32,7 @@
 #' - `mo_ref("Chlamydia psittaci")` will return `"Page, 1968"` (with a warning about the renaming)
 #' - `mo_ref("Chlamydophila psittaci")` will return `"Everett et al., 1999"` (without a warning)
 #'
-#' The Gram stain - [mo_gramstain()] - will be determined on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002) who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram positive - all other bacteria are considered Gram negative. Species outside the kingdom of Bacteria will return a value `NA`.
+#' The Gram stain - [mo_gramstain()] - will be determined on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002) who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value `NA`.
 #'
 #' All output will be [translate]d where possible.
 #'
@@ -43,8 +43,9 @@
 #' @name mo_property
 #' @return
 #' - An [`integer`] in case of [mo_year()]
-#' - A [`list`] in case of [mo_taxonomy()]
+#' - A [`list`] in case of [mo_taxonomy()] and [mo_info()]
 #' - A named [`character`] in case of [mo_url()]
+#' - A [`double`] in case of [mo_snomed()]
 #' - A [`character`] in all other cases
 #' @export
 #' @seealso [microorganisms]
@@ -62,11 +63,12 @@
 #'
 #' # colloquial properties ----------------------------------------------------
 #' mo_name("E. coli")            # "Escherichia coli"
-#' mo_fullname("E. coli")        # "Escherichia coli", same as mo_name()
+#' mo_fullname("E. coli")        # "Escherichia coli" - same as mo_name()
 #' mo_shortname("E. coli")       # "E. coli"
 #'
 #' # other properties ---------------------------------------------------------
 #' mo_gramstain("E. coli")       # "Gram-negative"
+#' mo_snomed("E. coli")          # 112283007, 116395006, ... (SNOMED codes)
 #' mo_type("E. coli")            # "Bacteria" (equal to kingdom, but may be translated)
 #' mo_rank("E. coli")            # "species"
 #' mo_url("E. coli")             # get the direct url to the online database entry
@@ -143,7 +145,7 @@ mo_fullname <- mo_name
 #' @rdname mo_property
 #' @export
 mo_shortname <- function(x, language = get_locale(), ...) {
-  x.mo <- AMR::as.mo(x, ...)
+  x.mo <- as.mo(x, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
 
   replace_empty <- function(x) {
@@ -221,7 +223,7 @@ mo_type <- function(x, language = get_locale(), ...) {
 #' @rdname mo_property
 #' @export
 mo_gramstain <- function(x, language = get_locale(), ...) {
-  x.mo <- AMR::as.mo(x, ...)
+  x.mo <- as.mo(x, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
 
   x.phylum <- mo_phylum(x.mo)
@@ -247,6 +249,12 @@ mo_gramstain <- function(x, language = get_locale(), ...) {
 
   load_mo_failures_uncertainties_renamed(metadata)
   translate_AMR(x, language = language, only_unknown = FALSE)
+}
+
+#' @rdname mo_property
+#' @export
+mo_snomed <- function(x, ...) {
+  mo_validate(x = x, property = "snomed", ...)
 }
 
 #' @rdname mo_property
@@ -282,17 +290,17 @@ mo_rank <- function(x, ...) {
 #' @rdname mo_property
 #' @export
 mo_taxonomy <- function(x, language = get_locale(),  ...) {
-  x <- AMR::as.mo(x, ...)
+  x <- as.mo(x, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
 
-  result <- base::list(kingdom = AMR::mo_kingdom(x, language = language),
-             phylum = AMR::mo_phylum(x, language = language),
-             class = AMR::mo_class(x, language = language),
-             order = AMR::mo_order(x, language = language),
-             family = AMR::mo_family(x, language = language),
-             genus = AMR::mo_genus(x, language = language),
-             species = AMR::mo_species(x, language = language),
-             subspecies = AMR::mo_subspecies(x, language = language))
+  result <- base::list(kingdom = mo_kingdom(x, language = language),
+             phylum = mo_phylum(x, language = language),
+             class = mo_class(x, language = language),
+             order = mo_order(x, language = language),
+             family = mo_family(x, language = language),
+             genus = mo_genus(x, language = language),
+             species = mo_species(x, language = language),
+             subspecies = mo_subspecies(x, language = language))
 
   load_mo_failures_uncertainties_renamed(metadata)
   result
@@ -301,12 +309,12 @@ mo_taxonomy <- function(x, language = get_locale(),  ...) {
 #' @rdname mo_property
 #' @export
 mo_synonyms <- function(x, ...) {
-  x <- AMR::as.mo(x, ...)
+  x <- as.mo(x, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
 
-  IDs <- AMR::mo_property(x = x, property = "col_id", language = NULL)
+  IDs <- mo_property(x = x, property = "col_id", language = NULL)
   syns <- lapply(IDs, function(col_id) {
-    res <- sort(AMR::microorganisms.old[which(AMR::microorganisms.old$col_id_new == col_id), "fullname"])
+    res <- sort(microorganisms.old[which(microorganisms.old$col_id_new == col_id), "fullname"])
     if (length(res) == 0) {
       NULL
     } else {
@@ -327,7 +335,7 @@ mo_synonyms <- function(x, ...) {
 #' @rdname mo_property
 #' @export
 mo_info <- function(x, language = get_locale(),  ...) {
-  x <- AMR::as.mo(x, ...)
+  x <- as.mo(x, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
 
   info <- lapply(x, function(y)
@@ -352,12 +360,12 @@ mo_info <- function(x, language = get_locale(),  ...) {
 #' @importFrom dplyr %>% left_join select mutate case_when
 #' @export
 mo_url <- function(x, open = FALSE, ...) {
-  mo <- AMR::as.mo(x = x, ... = ...)
-  mo_names <- AMR::mo_name(mo)
+  mo <- as.mo(x = x, ... = ...)
+  mo_names <- mo_name(mo)
   metadata <- get_mo_failures_uncertainties_renamed()
 
   df <- data.frame(mo, stringsAsFactors = FALSE) %>%
-    left_join(select(AMR::microorganisms, mo, source, species_id), by = "mo") %>%
+    left_join(select(microorganisms, mo, source, species_id), by = "mo") %>%
     mutate(url = case_when(source == "CoL" ~
                              paste0(gsub("{year}", catalogue_of_life$year, catalogue_of_life$url_CoL, fixed = TRUE), "details/species/id/", species_id),
                            source == "DSMZ" ~
@@ -386,7 +394,7 @@ mo_property <- function(x, property = "fullname", language = get_locale(), ...) 
   if (length(property) != 1L) {
     stop("'property' must be of length 1.")
   }
-  if (!property %in% colnames(AMR::microorganisms)) {
+  if (!property %in% colnames(microorganisms)) {
     stop("invalid property: '", property, "' - use a column name of the `microorganisms` data set")
   }
 
@@ -395,7 +403,7 @@ mo_property <- function(x, property = "fullname", language = get_locale(), ...) 
 
 mo_validate <- function(x, property, ...) {
   
-  load_AMR_package()
+  check_dataset_integrity()
 
   dots <- list(...)
   Becker <- dots$Becker
@@ -409,7 +417,7 @@ mo_validate <- function(x, property, ...) {
 
   # try to catch an error when inputting an invalid parameter
   # so the 'call.' can be set to FALSE
-  tryCatch(x[1L] %in% AMR::microorganisms[1, property],
+  tryCatch(x[1L] %in% microorganisms[1, property],
            error = function(e) stop(e$message, call. = FALSE))
   
   if (is.mo(x) 
@@ -418,7 +426,7 @@ mo_validate <- function(x, property, ...) {
     # this will not reset mo_uncertainties and mo_failures
     # because it's already a valid MO
     x <- exec_as.mo(x, property = property, initial_search = FALSE, ...)
-  } else if (!all(x %in% pull(AMR::microorganisms, property))
+  } else if (!all(x %in% pull(microorganisms, property))
              | Becker %in% c(TRUE, "all")
              | Lancefield %in% c(TRUE, "all")) {
     x <- exec_as.mo(x, property = property, ...)
@@ -428,6 +436,8 @@ mo_validate <- function(x, property, ...) {
     return(to_class_mo(x))
   } else if (property == "col_id") {
     return(as.integer(x))
+  } else if (property == "snomed") {
+    return(as.double(eval(parse(text = x))))
   } else {
     return(x)
   }

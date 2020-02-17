@@ -6,41 +6,50 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Class 'disk'
 #'
-#' This transforms a vector to a new class [`disk`], which is a growth zone size (around an antibiotic disk) in millimeters between 6 and 99.
+#' This transforms a vector to a new class [`disk`], which is a growth zone size (around an antibiotic disk) in millimetres between 6 and 50.
+#' @inheritSection lifecycle Stable lifecycle
 #' @rdname as.disk
 #' @param x vector
 #' @param na.rm a logical indicating whether missing values should be removed
 #' @details Interpret disk values as RSI values with [as.rsi()]. It supports guidelines from EUCAST and CLSI.
-#' @return Ordered integer factor with new class [`disk`]
+#' @return An [`integer`] with additional new class [`disk`]
 #' @aliases disk
 #' @export
 #' @seealso [as.rsi()]
 #' @inheritSection AMR Read more on our website!
 #' @examples
-#' # interpret disk values
-#' as.rsi(x = 12,
-#'        mo = as.mo("S. pneumoniae"),
-#'        ab = "AMX",
+#' # transform existing disk zones to the `disk` class
+#' library(dplyr)
+#' df <- data.frame(microorganism = "E. coli",
+#'                  AMP = 20,
+#'                  CIP = 14,
+#'                  GEN = 18,
+#'                  TOB = 16)
+#' df <- df %>% mutate_at(vars(AMP:TOB), as.disk)
+#' df
+#' 
+#' # interpret disk values, see ?as.rsi
+#' as.rsi(x = as.disk(18),
+#'        mo = "Strep pneu",  # `mo` will be coerced with as.mo()
+#'        ab = "ampicillin",  # and `ab` with as.ab()
 #'        guideline = "EUCAST")
-#' as.rsi(x = 12,
-#'        mo = as.mo("S. pneumoniae"),
-#'        ab = "AMX",
-#'        guideline = "CLSI")
+#'        
+#' as.rsi(df)
 as.disk <- function(x, na.rm = FALSE) {
   if (is.disk(x)) {
     x
@@ -56,8 +65,8 @@ as.disk <- function(x, na.rm = FALSE) {
     # force it to be integer
     x <- suppressWarnings(as.integer(x))
 
-    # disks can never be less than 9 mm (size of a disk) or more than 50 mm
-    x[x < 6 | x > 99] <- NA_integer_
+    # disks can never be less than 6 mm (size of smallest disk) or more than 50 mm
+    x[x < 6 | x > 50] <- NA_integer_
     na_after <- length(x[is.na(x)])
 
     if (na_before != na_after) {
@@ -80,7 +89,7 @@ as.disk <- function(x, na.rm = FALSE) {
 #' @export
 #' @importFrom dplyr %>%
 is.disk <- function(x) {
-  class(x) %>% identical(c("disk", "integer"))
+  inherits(x, "disk")
 }
 
 #' @exportMethod print.disk

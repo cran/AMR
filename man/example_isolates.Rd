@@ -15,7 +15,7 @@
 \item \code{gender}\cr gender of the patient
 \item \code{patient_id}\cr ID of the patient
 \item \code{mo}\cr ID of microorganism created with \code{\link[=as.mo]{as.mo()}}, see also \link{microorganisms}
-\item \code{PEN:RIF}\cr 40 different antibiotics with class \code{\link{rsi}} (see \code{\link[=as.rsi]{as.rsi()}}); these column names occur in \link{antibiotics} data set and can be translated with \code{\link[=ab_name]{ab_name()}}
+\item \code{PEN:RIF}\cr 40 different antibiotics with class \code{\link{rsi}} (see \code{\link[=as.rsi]{as.rsi()}}); these column names occur in the \link{antibiotics} data set and can be translated with \code{\link[=ab_name]{ab_name()}}
 }}
 \usage{
 example_isolates
@@ -25,7 +25,7 @@ A data set containing 2,000 microbial isolates with their full antibiograms. The
 }
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \keyword{datasets}

@@ -15,3 +15,30 @@ oops
 
 eucast_rules(oops, info = FALSE)
 
+## ---- warning = FALSE, message = FALSE----------------------------------------
+data <- data.frame(mo = c("Staphylococcus aureus",
+                          "Enterococcus faecalis",
+                          "Escherichia coli",
+                          "Klebsiella pneumoniae",
+                          "Pseudomonas aeruginosa"),
+                   VAN = "-",       # Vancomycin
+                   AMX = "-",       # Amoxicillin
+                   COL = "-",       # Colistin
+                   CAZ = "-",       # Ceftazidime
+                   CXM = "-",       # Cefuroxime
+                   PEN = "S",       # Penicillin G
+                   FOX = "S",       # Cefoxitin
+                   stringsAsFactors = FALSE)
+
+## ---- eval = FALSE------------------------------------------------------------
+#  data
+
+## ---- echo = FALSE------------------------------------------------------------
+knitr::kable(data, align = "lccccccc")
+
+## ---- eval = FALSE------------------------------------------------------------
+#  eucast_rules(data, info = FALSE)
+
+## ---- echo = FALSE, message = FALSE-------------------------------------------
+knitr::kable(eucast_rules(data, info = FALSE), align = "lccccccc")
+

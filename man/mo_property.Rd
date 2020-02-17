@@ -15,6 +15,7 @@
 \alias{mo_kingdom}
 \alias{mo_type}
 \alias{mo_gramstain}
+\alias{mo_snomed}
 \alias{mo_ref}
 \alias{mo_authors}
 \alias{mo_year}
@@ -51,6 +52,8 @@ mo_type(x, language = get_locale(), ...)
 
 mo_gramstain(x, language = get_locale(), ...)
 
+mo_snomed(x, ...)
+
 mo_ref(x, ...)
 
 mo_authors(x, ...)
@@ -83,13 +86,14 @@ mo_property(x, property = "fullname", language = get_locale(), ...)
 \value{
 \itemize{
 \item An \code{\link{integer}} in case of \code{\link[=mo_year]{mo_year()}}
-\item A \code{\link{list}} in case of \code{\link[=mo_taxonomy]{mo_taxonomy()}}
+\item A \code{\link{list}} in case of \code{\link[=mo_taxonomy]{mo_taxonomy()}} and \code{\link[=mo_info]{mo_info()}}
 \item A named \code{\link{character}} in case of \code{\link[=mo_url]{mo_url()}}
+\item A \code{\link{double}} in case of \code{\link[=mo_snomed]{mo_snomed()}}
 \item A \code{\link{character}} in all other cases
 }
 }
 \description{
-Use these functions to return a specific property of a microorganism. All input values will be evaluated internally with \code{\link[=as.mo]{as.mo()}}, which makes it possible for input of these functions to use microbial abbreviations, codes and names. See Examples.
+Use these functions to return a specific property of a microorganism. All input values will be evaluated internally with \code{\link[=as.mo]{as.mo()}}, which makes it possible to use microbial abbreviations, codes and names as input. Please see \emph{Examples}.
 }
 \details{
 All functions will return the most recently known taxonomic property according to the Catalogue of Life, except for \code{\link[=mo_ref]{mo_ref()}}, \code{\link[=mo_authors]{mo_authors()}} and \code{\link[=mo_year]{mo_year()}}. This leads to the following results:
@@ -99,7 +103,7 @@ All functions will return the most recently known taxonomic property according t
 \item \code{mo_ref("Chlamydophila psittaci")} will return \code{"Everett et al., 1999"} (without a warning)
 }
 
-The Gram stain - \code{\link[=mo_gramstain]{mo_gramstain()}} - will be determined on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002) who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram positive - all other bacteria are considered Gram negative. Species outside the kingdom of Bacteria will return a value \code{NA}.
+The Gram stain - \code{\link[=mo_gramstain]{mo_gramstain()}} - will be determined on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002) who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value \code{NA}.
 
 All output will be \link{translate}d where possible.
 
@@ -125,7 +129,7 @@ This package contains the complete taxonomic tree of almost all microorganisms (
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -141,11 +145,12 @@ mo_subspecies("E. coli")      # ""
 
 # colloquial properties ----------------------------------------------------
 mo_name("E. coli")            # "Escherichia coli"
-mo_fullname("E. coli")        # "Escherichia coli", same as mo_name()
+mo_fullname("E. coli")        # "Escherichia coli" - same as mo_name()
 mo_shortname("E. coli")       # "E. coli"
 
 # other properties ---------------------------------------------------------
 mo_gramstain("E. coli")       # "Gram-negative"
+mo_snomed("E. coli")          # 112283007, 116395006, ... (SNOMED codes)
 mo_type("E. coli")            # "Bacteria" (equal to kingdom, but may be translated)
 mo_rank("E. coli")            # "species"
 mo_url("E. coli")             # get the direct url to the online database entry

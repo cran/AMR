@@ -4,7 +4,7 @@
 \name{microorganisms.codes}
 \alias{microorganisms.codes}
 \title{Translation table for common microorganism codes}
-\format{A \code{\link{data.frame}} with 5,433 observations and 2 variables:
+\format{A \code{\link{data.frame}} with 5,450 observations and 2 variables:
 \itemize{
 \item \code{code}\cr Commonly used code of a microorganism
 \item \code{mo}\cr ID of the microorganism in the \link{microorganisms} data set
@@ -13,7 +13,7 @@
 microorganisms.codes
 }
 \description{
-A data set containing commonly used codes for microorganisms, from laboratory systems and WHONET. Define your own with \code{\link[=set_mo_source]{set_mo_source()}}.
+A data set containing commonly used codes for microorganisms, from laboratory systems and WHONET. Define your own with \code{\link[=set_mo_source]{set_mo_source()}}. They will all be searched when using \code{\link[=as.mo]{as.mo()}} and consequently all the \code{\link[=mo_property]{mo_*}} functions.
 }
 \section{Catalogue of Life}{
 
@@ -25,7 +25,7 @@ This package contains the complete taxonomic tree of almost all microorganisms (
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \seealso{

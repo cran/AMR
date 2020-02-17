@@ -6,22 +6,23 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Determine multidrug-resistant organisms (MDRO)
 #'
 #' Determine which isolates are multidrug-resistant organisms (MDRO) according to international and national guidelines.
+#' @inheritSection lifecycle Maturing lifecycle
 #' @param guideline a specific guideline to follow. When left empty, the publication by Magiorakos *et al.* (2012, Clinical Microbiology and Infection) will be followed, please see *Details*.
 #' @param info a logical to indicate whether progress should be printed to the console
 #' @inheritParams eucast_rules
@@ -89,6 +90,8 @@ mdro <- function(x,
                  verbose = FALSE,
                  ...) {
   
+  check_dataset_integrity()
+  
   if (verbose == TRUE & interactive()) {
     txt <- paste0("WARNING: In Verbose mode, the mdro() function does not return the MDRO results, but instead returns a data set in logbook form with extensive info about which isolates would be MDRO-positive, or why they are not.",
                   "\n\nThis may overwrite your existing data if you use e.g.:",
@@ -146,7 +149,7 @@ mdro <- function(x,
   if (is.null(col_mo) & guideline$code == "tb") {
     message(blue("NOTE: No column found as input for `col_mo`,",
                  bold("assuming all records contain", italic("Mycobacterium tuberculosis.\n"))))
-    x$mo <- AMR::as.mo("Mycobacterium tuberculosis")
+    x$mo <- as.mo("Mycobacterium tuberculosis")
     col_mo <- "mo"
   }
   if (is.null(col_mo)) {

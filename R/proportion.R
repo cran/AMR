@@ -6,24 +6,25 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Calculate microbial resistance
 #'
-#' @description These functions can be used to calculate the (co-)resistance or susceptibility of microbial isolates (i.e. percentage of S, SI, I, IR or R). All functions support quasiquotation with pipes, can be used in [dplyr::summarise()] and support grouped variables, please see *Examples*.
+#' @description These functions can be used to calculate the (co-)resistance or susceptibility of microbial isolates (i.e. percentage of S, SI, I, IR or R). All functions support quasiquotation with pipes, can be used in `summarise()`][dplyr::summarise()] and also support grouped variables, please see *Examples*.
 #'
 #' [resistance()] should be used to calculate resistance, [susceptibility()] should be used to calculate susceptibility.\cr
+#' @inheritSection lifecycle Stable lifecycle
 #' @param ... one or more vectors (or columns) with antibiotic interpretations. They will be transformed internally with [as.rsi()] if needed. Use multiple columns to calculate (the lack of) co-resistance: the probability where one of two drugs have a resistant or susceptible result. See Examples.
 #' @param minimum the minimum allowed number of available (tested) isolates. Any isolate count lower than `minimum` will return `NA` with a warning. The default number of `30` isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see Source.
 #' @param as_percent a logical to indicate whether the output must be returned as a hundred fold with % sign (a character). A value of `0.123456` will then be returned as `"12.3%"`.
@@ -39,11 +40,11 @@
 #'  
 #' **Remember that you should filter your table to let it contain only first isolates!** This is needed to exclude duplicates and to reduce selection bias. Use [first_isolate()] to determine them in your data set.
 #'
-#' These functions are not meant to count isolates, but to calculate the proportion of resistance/susceptibility. Use the [AMR::count()] functions to count isolates. The function [susceptibility()] is essentially equal to `count_susceptible() / count_all()`. *Low counts can infuence the outcome - the `proportion` functions may camouflage this, since they only return the proportion (albeit being dependent on the `minimum` parameter).*
+#' These functions are not meant to count isolates, but to calculate the proportion of resistance/susceptibility. Use the `count()`][AMR::count()] functions to count isolates. The function [susceptibility()] is essentially equal to `count_susceptible() / count_all()`. *Low counts can influence the outcome - the `proportion` functions may camouflage this, since they only return the proportion (albeit being dependent on the `minimum` parameter).*
 #'
 #' The function [proportion_df()] takes any variable from `data` that has an [`rsi`] class (created with [as.rsi()]) and calculates the proportions R, I and S. The function [rsi_df()] works exactly like [proportion_df()], but adds the number of isolates.
 #' @section Combination therapy:
-#' When using more than one variable for `...` (= combination therapy)), use `only_all_tested` to only count isolates that are tested for all antibiotics/variables that you test them for. See this example for two antibiotics, Antibiotic A and Antibiotic B, about how [susceptibility()] works to calculate the %SI:
+#' When using more than one variable for `...` (= combination therapy)), use `only_all_tested` to only count isolates that are tested for all antibiotics/variables that you test them for. See this example for two antibiotics, Drug A and Drug B, about how [susceptibility()] works to calculate the %SI:
 #'
 #' ```
 #' --------------------------------------------------------------------

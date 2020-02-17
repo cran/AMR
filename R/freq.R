@@ -6,16 +6,16 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
@@ -58,14 +58,14 @@ freq.mo <- function(x, ...) {
 freq.rsi <- function(x, ...) {
   x_name <- deparse(substitute(x))
   x_name <- gsub(".*[$]", "", x_name)
-  ab <- suppressMessages(suppressWarnings(AMR::as.ab(x_name)))
+  ab <- suppressMessages(suppressWarnings(as.ab(x_name)))
   if (!is.na(ab)) {
     freq.default(x = x, ...,
                  .add_header = list(Drug = paste0(ab_name(ab), " (", ab, ", ", ab_atc(ab), ")"),
                                     group = ab_group(ab),
-                                    `%SI` = AMR::susceptibility(x, minimum = 0, as_percent = TRUE)))
+                                    `%SI` = susceptibility(x, minimum = 0, as_percent = TRUE)))
   } else {
     freq.default(x = x, ...,
-                 .add_header = list(`%SI` = AMR::susceptibility(x, minimum = 0, as_percent = TRUE)))
+                 .add_header = list(`%SI` = susceptibility(x, minimum = 0, as_percent = TRUE)))
   }
 }

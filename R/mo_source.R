@@ -6,16 +6,16 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
@@ -24,6 +24,7 @@
 #' @description These functions can be used to predefine your own reference to be used in [as.mo()] and consequently all `mo_*` functions like [mo_genus()] and [mo_gramstain()].
 #'
 #' This is **the fastest way** to have your organisation (or analysis) specific codes picked up and translated by this package.
+#' @inheritSection lifecycle Stable lifecycle
 #' @param path location of your reference file, see Details
 #' @rdname mo_source
 #' @name mo_source
@@ -40,12 +41,12 @@
 #' 
 #' Imagine this data on a sheet of an Excel file (mo codes were looked up in the `microorganisms` data set). The first column contains the organisation specific codes, the second column contains an MO code from this package:
 #' ```
-#'   |         A          |      B      |
-#' --|--------------------|-------------|
-#' 1 | Organisation XYZ   | mo          |
-#' 2 | lab_mo_ecoli       | B_ESCHR_COL |
-#' 3 | lab_mo_kpneumoniae | B_KLBSL_PNE |
-#' 4 |                    |             |
+#'   |         A          |       B      |
+#' --|--------------------|--------------|
+#' 1 | Organisation XYZ   | mo           |
+#' 2 | lab_mo_ecoli       | B_ESCHR_COLI |
+#' 3 | lab_mo_kpneumoniae | B_KLBSL_PNMN |
+#' 4 |                    |              |
 #' ```
 #'
 #' We save it as `"home/me/ourcodes.xlsx"`. Now we have to set it as a source:
@@ -59,7 +60,7 @@
 #' And now we can use it in our functions:
 #' ```
 #' as.mo("lab_mo_ecoli")
-#' \[1\] B_ESCHR_COLI
+#' [1] B_ESCHR_COLI
 #'
 #' mo_genus("lab_mo_kpneumoniae")
 #' [1] "Klebsiella"
@@ -69,7 +70,7 @@
 #' [1] B_ESCHR_COLI B_ESCHR_COLI B_ESCHR_COLI
 #' ```
 #'
-#' If we edit the Excel file to, let's say, this:
+#' If we edit the Excel file to, let's say, by adding row 4 like this:
 #' ```
 #'   |         A          |       B      |
 #' --|--------------------|--------------|
@@ -80,7 +81,7 @@
 #' 5 |                    |              |
 #' ```
 #'
-#' ...any new usage of an MO function in this package will update your data:
+#' ...any new usage of an MO function in this package will update your data file:
 #' ```
 #' as.mo("lab_mo_ecoli")
 #' # Updated mo_source file '~/.mo_source.rds' from 'home/me/ourcodes.xlsx'.
@@ -90,9 +91,8 @@
 #' [1] "Staphylococcus"
 #' ```
 #'
-#' To remove the reference completely, just use any of these:
+#' To remove the reference data file completely, just use `""` or `NULL` as input for `[set_mo_source()]`:
 #' ```
-#' set_mo_source("")
 #' set_mo_source(NULL)
 #' # Removed mo_source file '~/.mo_source.rds'.
 #' ```
@@ -126,9 +126,7 @@ set_mo_source <- function(path) {
 
   } else if (path %like% "[.]xlsx?$") {
     # is Excel file (old or new)
-    if (!"readxl" %in% utils::installed.packages()) {
-      stop("Install the 'readxl' package first.")
-    }
+    stopifnot_installed_package("readxl")
     df <- readxl::read_excel(path)
 
   } else if (path %like% "[.]tsv$") {
@@ -204,6 +202,9 @@ get_mo_source <- function() {
 }
 
 mo_source_isvalid <- function(x) {
+  
+  check_dataset_integrity()
+  
   if (deparse(substitute(x)) == "get_mo_source()") {
     return(TRUE)
   }
@@ -219,5 +220,5 @@ mo_source_isvalid <- function(x) {
   if (!"mo" %in% colnames(x)) {
     return(FALSE)
   }
-  all(x$mo %in% c("", AMR::microorganisms$mo))
+  all(x$mo %in% c("", microorganisms$mo, microorganisms.translation$mo_old), na.rm = TRUE)
 }

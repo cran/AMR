@@ -6,22 +6,23 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Transform to antibiotic ID
 #'
 #' Use this function to determine the antibiotic code of one or more antibiotics. The data set [antibiotics] will be searched for abbreviations, official names and synonyms (brand names).
+#' @inheritSection lifecycle Maturing lifecycle
 #' @param x character vector to determine to antibiotic ID
 #' @param ... arguments passed on to internal functions
 #' @rdname as.ab
@@ -42,7 +43,7 @@
 #' @inheritSection AMR Read more on our website!
 #' @export
 #' @examples
-#' # These examples all return "ERY", the ID of Erythromycin:
+#' # these examples all return "ERY", the ID of erythromycin:
 #' as.ab("J01FA01")
 #' as.ab("J 01 FA 01")
 #' as.ab("Erythromycin")
@@ -53,17 +54,26 @@
 #' as.ab("eritromicine") # spelled wrong, yet works
 #' as.ab("Erythrocin")   # trade name
 #' as.ab("Romycin")      # trade name
+#' 
+#' # spelling from different languages and dyslexia are no problem
+#' ab_atc("ceftriaxon")
+#' ab_atc("cephtriaxone")     # small spelling error
+#' ab_atc("cephthriaxone")    # or a bit more severe
+#' ab_atc("seephthriaaksone") # and even this works
 #'
-#' # Use ab_* functions to get a specific properties (see ?ab_property);
+#' # use ab_* functions to get a specific properties (see ?ab_property);
 #' # they use as.ab() internally:
 #' ab_name("J01FA01")    # "Erythromycin"
 #' ab_name("eryt")       # "Erythromycin"
 as.ab <- function(x, ...) {
+  
+  check_dataset_integrity()
+  
   if (is.ab(x)) {
     return(x)
   }
 
-  if (all(toupper(x) %in% AMR::antibiotics$ab)) {
+  if (all(toupper(x) %in% antibiotics$ab)) {
     # valid AB code, but not yet right class
     return(structure(.Data = toupper(x),
                      class = "ab"))
@@ -86,6 +96,10 @@ as.ab <- function(x, ...) {
   # spaces around non-characters must be removed: amox + clav -> amox/clav
   x_bak_clean <- gsub("(.*[a-zA-Z0-9]) ([^a-zA-Z0-9].*)", "\\1\\2", x_bak_clean)
   x_bak_clean <- gsub("(.*[^a-zA-Z0-9]) ([a-zA-Z0-9].*)", "\\1\\2", x_bak_clean)
+  # remove hyphen after a starting "co"
+  x_bak_clean <- gsub("^co-", "co", x_bak_clean, ignore.case = TRUE)
+  # replace text 'and' with a slash
+  x_bak_clean <- gsub(" and ", "/", x_bak_clean, ignore.case = TRUE)
 
   x <- unique(x_bak_clean)
   x_new <- rep(NA_character_, length(x))
@@ -106,54 +120,67 @@ as.ab <- function(x, ...) {
     }
 
     # exact AB code
-    found <- AMR::antibiotics[which(AMR::antibiotics$ab == toupper(x[i])), ]$ab
+    found <- antibiotics[which(antibiotics$ab == toupper(x[i])), ]$ab
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
     }
 
     # exact ATC code
-    found <- AMR::antibiotics[which(AMR::antibiotics$atc == toupper(x[i])), ]$ab
+    found <- antibiotics[which(antibiotics$atc == toupper(x[i])), ]$ab
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
     }
 
     # exact CID code
-    found <- AMR::antibiotics[which(AMR::antibiotics$cid == x[i]), ]$ab
+    found <- antibiotics[which(antibiotics$cid == x[i]), ]$ab
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
     }
 
     # exact name
-    found <- AMR::antibiotics[which(toupper(AMR::antibiotics$name) == toupper(x[i])), ]$ab
+    found <- antibiotics[which(toupper(antibiotics$name) == toupper(x[i])), ]$ab
+    if (length(found) > 0) {
+      x_new[i] <- found[1L]
+      next
+    }
+    
+    # exact LOINC code
+    loinc_found <- unlist(lapply(antibiotics$loinc,
+                                   function(s) if (x[i] %in% s) {
+                                     TRUE
+                                   } else {
+                                     FALSE
+                                   }))
+    found <- antibiotics$ab[loinc_found == TRUE]
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
     }
 
     # exact synonym
-    synonym_found <- unlist(lapply(AMR::antibiotics$synonyms,
+    synonym_found <- unlist(lapply(antibiotics$synonyms,
                                    function(s) if (toupper(x[i]) %in% toupper(s)) {
                                      TRUE
                                    } else {
                                      FALSE
                                    }))
-    found <- AMR::antibiotics$ab[synonym_found == TRUE]
+    found <- antibiotics$ab[synonym_found == TRUE]
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
     }
 
     # exact abbreviation
-    abbr_found <- unlist(lapply(AMR::antibiotics$abbreviations,
+    abbr_found <- unlist(lapply(antibiotics$abbreviations,
                                 function(a) if (toupper(x[i]) %in% toupper(a)) {
                                   TRUE
                                 } else {
                                   FALSE
                                 }))
-    found <- AMR::antibiotics$ab[abbr_found == TRUE]
+    found <- antibiotics$ab[abbr_found == TRUE]
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
@@ -161,7 +188,7 @@ as.ab <- function(x, ...) {
 
     # first >=4 characters of name
     if (nchar(x[i]) >= 4) {
-      found <- AMR::antibiotics[which(toupper(AMR::antibiotics$name) %like% paste0("^", x[i])), ]$ab
+      found <- antibiotics[which(toupper(antibiotics$name) %like% paste0("^", x[i])), ]$ab
       if (length(found) > 0) {
         x_new[i] <- found[1L]
         next
@@ -191,19 +218,19 @@ as.ab <- function(x, ...) {
     x_spelling <- gsub("(.)\\1+", "\\1+", x_spelling)
   
     # try if name starts with it
-    found <- AMR::antibiotics[which(AMR::antibiotics$name %like% paste0("^", x_spelling)), ]$ab
+    found <- antibiotics[which(antibiotics$name %like% paste0("^", x_spelling)), ]$ab
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
     }
     # and try if any synonym starts with it
-    synonym_found <- unlist(lapply(AMR::antibiotics$synonyms,
+    synonym_found <- unlist(lapply(antibiotics$synonyms,
                                    function(s) if (any(s %like% paste0("^", x_spelling))) {
                                      TRUE
                                    } else {
                                      FALSE
                                    }))
-    found <- AMR::antibiotics$ab[synonym_found == TRUE]
+    found <- antibiotics$ab[synonym_found == TRUE]
     if (length(found) > 0) {
       x_new[i] <- found[1L]
       next
@@ -303,7 +330,7 @@ as.ab <- function(x, ...) {
 #' @rdname as.ab
 #' @export
 is.ab <- function(x) {
-  identical(class(x), "ab")
+  inherits(x, "ab")
 }
 
 #' @exportMethod print.ab
@@ -350,7 +377,7 @@ as.data.frame.ab <- function(x, ...) {
 "[<-.ab" <- function(i, j, ..., value) {
   y <- NextMethod()
   attributes(y) <- attributes(i)
-  class_integrity_check(y, "antimicrobial code", AMR::antibiotics$ab)
+  class_integrity_check(y, "antimicrobial code", antibiotics$ab)
 }
 #' @exportMethod [[<-.ab
 #' @export
@@ -358,7 +385,7 @@ as.data.frame.ab <- function(x, ...) {
 "[[<-.ab" <- function(i, j, ..., value) {
   y <- NextMethod()
   attributes(y) <- attributes(i)
-  class_integrity_check(y, "antimicrobial code", AMR::antibiotics$ab)
+  class_integrity_check(y, "antimicrobial code", antibiotics$ab)
 }
 #' @exportMethod c.ab
 #' @export
@@ -366,7 +393,7 @@ as.data.frame.ab <- function(x, ...) {
 c.ab <- function(x, ...) {
   y <- NextMethod()
   attributes(y) <- attributes(x)
-  class_integrity_check(y, "antimicrobial code", AMR::antibiotics$ab)
+  class_integrity_check(y, "antimicrobial code", antibiotics$ab)
 }
 
 #' @importFrom pillar type_sum

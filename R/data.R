@@ -6,16 +6,16 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
@@ -23,7 +23,7 @@
 #'
 #' Two data sets containing all antibiotics/antimycotics and antivirals. Use [as.ab()] or one of the [ab_property()] functions to retrieve values from the [antibiotics] data set. Three identifiers are included in this data set: an antibiotic ID (`ab`, primarily used in this package) as defined by WHONET/EARS-Net, an ATC code (`atc`) as defined by the WHO, and a Compound ID (`cid`) as found in PubChem. Other properties in this data set are derived from one or more of these codes.
 #' @format
-#' ### For the [antibiotics] data set: a [`data.frame`] with 452 observations and 13 variables:
+#' ### For the [antibiotics] data set: a [`data.frame`] with 452 observations and 14 variables:
 #' - `ab`\cr Antibiotic ID as used in this package (like `AMC`), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available
 #' - `atc`\cr ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC, like `J01CR02`
 #' - `cid`\cr Compound ID as found in PubChem
@@ -37,6 +37,7 @@
 #' - `oral_units`\cr Units of `oral_ddd`
 #' - `iv_ddd`\cr Defined Daily Dose (DDD), parenteral treatment
 #' - `iv_units`\cr Units of `iv_ddd`
+#' - `loinc`\cr All LOINC codes (Logical Observation Identifiers Names and Codes) associated with the name of the antimicrobial agent. Use [ab_loinc()] to retrieve them quickly, see [ab_property()].
 #' 
 #' ### For the [antivirals] data set: a [`data.frame`] with 102 observations and 9 variables:
 #' - `atc`\cr ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC
@@ -51,6 +52,12 @@
 #' @details Properties that are based on an ATC code are only available when an ATC is available. These properties are: `atc_group1`, `atc_group2`, `oral_ddd`, `oral_units`, `iv_ddd` and `iv_units`.
 #'
 #' Synonyms (i.e. trade names) are derived from the Compound ID (`cid`) and consequently only available where a CID is available.
+#' 
+#' ### Direct download
+#' These data sets are available as 'flat files' for use even without R - you can find the files here:
+#' 
+#' * <https://gitlab.com/msberends/AMR/raw/master/data-raw/antibiotics.txt>
+#' * <https://gitlab.com/msberends/AMR/raw/master/data-raw/antivirals.txt>
 #' @source World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology (WHOCC): <https://www.whocc.no/atc_ddd_index/>
 #'
 #' WHONET 2019 software: <http://www.whonet.org/software.html>
@@ -68,7 +75,7 @@
 #'
 #' A data set containing the microbial taxonomy of six kingdoms from the Catalogue of Life. MO codes can be looked up using [as.mo()].
 #' @inheritSection catalogue_of_life Catalogue of Life
-#' @format A [`data.frame`] with 69,447 observations and 16 variables:
+#' @format A [`data.frame`] with 69,447 observations and 17 variables:
 #' - `mo`\cr ID of microorganism as used by this package
 #' - `col_id`\cr Catalogue of Life ID
 #' - `fullname`\cr Full name, like `"Escherichia coli"`
@@ -78,6 +85,7 @@
 #' - `species_id`\cr ID of the species as used by the Catalogue of Life
 #' - `source`\cr Either "CoL", "DSMZ" (see Source) or "manually added"
 #' - `prevalence`\cr Prevalence of the microorganism, see [as.mo()]
+#' - `snomed`\cr SNOMED code of the microorganism. Use [mo_snomed()] to retrieve it quickly, see [mo_property()].
 #' @details Manually added were:
 #' - 11 entries of *Streptococcus* (beta-haemolytic: groups A, B, C, D, F, G, H, K and unspecified; other: viridans, milleri)
 #' - 2 entries of *Staphylococcus* (coagulase-negative (CoNS) and coagulase-positive (CoPS))
@@ -86,6 +94,11 @@
 #' - 5 other 'undefined' entries (unknown, unknown Gram negatives, unknown Gram positives, unknown yeast and unknown fungus)
 #' - 6 families under the Enterobacterales order, according to Adeolu *et al.* (2016, PMID 27620848), that are not in the Catalogue of Life
 #' - 12,600 species from the DSMZ (Deutsche Sammlung von Mikroorganismen und Zellkulturen) since the DSMZ contain the latest taxonomic information based on recent publications
+#' 
+#'  ### Direct download
+#'  This data set is available as 'flat file' for use even without R - you can find the file here:
+#' 
+#' * <https://gitlab.com/msberends/AMR/raw/master/data-raw/microorganisms.txt>
 #' @section About the records from DSMZ (see source):
 #' Names of prokaryotes are defined as being validly published by the International Code of Nomenclature of Bacteria. Validly published are all names which are included in the Approved Lists of Bacterial Names and the names subsequently published in the International Journal of Systematic Bacteriology (IJSB) and, from January 2000, in the International Journal of Systematic and Evolutionary Microbiology (IJSEM) as original articles or in the validation lists.
 #'
@@ -122,8 +135,8 @@ catalogue_of_life <- list(
 
 #' Translation table for common microorganism codes
 #'
-#' A data set containing commonly used codes for microorganisms, from laboratory systems and WHONET. Define your own with [set_mo_source()].
-#' @format A [`data.frame`] with 5,433 observations and 2 variables:
+#' A data set containing commonly used codes for microorganisms, from laboratory systems and WHONET. Define your own with [set_mo_source()]. They will all be searched when using [as.mo()] and consequently all the [`mo_*`][mo_property()] functions.
+#' @format A [`data.frame`] with 5,450 observations and 2 variables:
 #' - `code`\cr Commonly used code of a microorganism
 #' - `mo`\cr ID of the microorganism in the [microorganisms] data set
 #' @inheritSection catalogue_of_life Catalogue of Life
@@ -144,7 +157,7 @@ catalogue_of_life <- list(
 #' - `gender`\cr gender of the patient
 #' - `patient_id`\cr ID of the patient
 #' - `mo`\cr ID of microorganism created with [as.mo()], see also [microorganisms]
-#' - `PEN:RIF`\cr 40 different antibiotics with class [`rsi`] (see [as.rsi()]); these column names occur in [antibiotics] data set and can be translated with [ab_name()]
+#' - `PEN:RIF`\cr 40 different antibiotics with class [`rsi`] (see [as.rsi()]); these column names occur in the [antibiotics] data set and can be translated with [ab_name()]
 #' @inheritSection AMR Read more on our website!
 "example_isolates"
 
@@ -181,9 +194,9 @@ catalogue_of_life <- list(
 #' @inheritSection AMR Read more on our website!
 "WHONET"
 
-#' Data set for RSI interpretation
+#' Data set for R/SI interpretation
 #'
-#' Data set to interpret MIC and disk diffusion to RSI values. Included guidelines are CLSI (2011-2019) and EUCAST (2011-2019). Use [as.rsi()] to transform MICs or disks measurements to RSI values.
+#' Data set to interpret MIC and disk diffusion to R/SI values. Included guidelines are CLSI (2011-2019) and EUCAST (2011-2020). Use [as.rsi()] to transform MICs or disks measurements to R/SI values.
 #' @format A [`data.frame`] with 13,975 observations and 9 variables:
 #' - `guideline`\cr Name of the guideline
 #' - `method`\cr Either "MIC" or "DISK"
@@ -192,34 +205,8 @@ catalogue_of_life <- list(
 #' - `ab`\cr Antibiotic ID, see [as.ab()]
 #' - `ref_tbl`\cr Info about where the guideline rule can be found
 #' - `disk_dose`\cr Dose of the used disk diffusion method
-#' - `breakpoint_S`\cr Lowest MIC value or highest number of millimeters that leads to "S"
-#' - `breakpoint_R`\cr Highest MIC value or lowest number of millimeters that leads to "R"
+#' - `breakpoint_S`\cr Lowest MIC value or highest number of millimetres that leads to "S"
+#' - `breakpoint_R`\cr Highest MIC value or lowest number of millimetres that leads to "R"
+#' @details The repository of this `AMR` package contains a file comprising this exact data set: <https://gitlab.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt>. This file **allows for machine reading EUCAST and CLSI guidelines**, which is almost impossible with the Excel and PDF files distributed by EUCAST and CLSI. This file is updated automatically.
 #' @inheritSection AMR Read more on our website!
 "rsi_translation"
-
-# transforms data set to data.frame with only ASCII values, to comply with CRAN policies
-dataset_UTF8_to_ASCII <- function(df) {
-  trans <- function(vect) {
-    iconv(vect, from = "UTF-8", to = "ASCII//TRANSLIT")
-  }
-  df <- as.data.frame(df, stringsAsFactors = FALSE)
-  for (i in seq_len(NCOL(df))) {
-    col <- df[, i]
-    if (is.list(col)) {
-      for (j in seq_len(length(col))) {
-        col[[j]] <- trans(col[[j]])
-      }
-      df[, i] <- list(col)
-    } else {
-      if (is.factor(col)) {
-        levels(col) <- trans(levels(col))
-      } else if (is.character(col)) {
-        col <- trans(col)
-      } else {
-        col
-      }
-      df[, i] <- col
-    }
-  }
-  df
-}

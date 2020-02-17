@@ -6,16 +6,16 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
@@ -29,12 +29,26 @@ addin_insert_like <- function() {
   rstudioapi::insertText(" %like% ")
 }
 
-load_AMR_package <- function() {
-  if (!"package:AMR" %in% base::search()) {
-    require(AMR)
-    # check onLoad() in R/zzz.R: data tables are created there.
+check_dataset_integrity <- function() {
+  tryCatch({
+    check_microorganisms <- all(c("mo", "fullname", "kingdom", "phylum",
+                                  "class", "order", "family", "genus", 
+                                  "species", "subspecies", "rank",
+                                  "col_id", "species_id", "source",
+                                  "ref", "prevalence", "snomed") %in% colnames(microorganisms),
+                                na.rm = TRUE) & NROW(microorganisms) == NROW(microorganismsDT)
+    check_antibiotics <- all(c("ab", "atc", "cid", "name", "group", 
+                               "atc_group1", "atc_group2", "abbreviations",
+                               "synonyms", "oral_ddd", "oral_units", 
+                               "iv_ddd", "iv_units", "loinc") %in% colnames(antibiotics),
+                             na.rm = TRUE)
+  }, error = function(e)
+    stop('Please use the command \'library("AMR")\' before using this function, to load the needed reference data.', call. = FALSE)
+  )
+  if (!check_microorganisms | !check_antibiotics) {
+    stop("Data set `microorganisms` or data set `antibiotics` is overwritten by your global environment and prevents the AMR package from working correctly. Please rename your object before using this function.", call. = FALSE)
   }
-  base::invisible()
+  invisible(TRUE)
 }
 
 #' @importFrom crayon blue bold red
@@ -117,7 +131,10 @@ search_type_in_df <- function(x, type) {
 stopifnot_installed_package <- function(package) {
   # no "utils::installed.packages()" since it requires non-staged install since R 3.6.0
   # https://developer.r-project.org/Blog/public/2019/02/14/staged-install/index.html
-  get(".packageName", envir = asNamespace(package))
+  tryCatch(get(".packageName", envir = asNamespace(package)),
+           error = function(e) stop("package '", package, "' required but not installed",
+                                    ' - try to install it with: install.packages("', package, '")',
+                                    call. = FALSE))
   return(invisible())
 }
 
@@ -140,4 +157,29 @@ class_integrity_check <- function(value, type, check_vector) {
     value[!value %in% check_vector] <- NA
   }
   value
+}
+
+# transforms data set to data.frame with only ASCII values, to comply with CRAN policies
+dataset_UTF8_to_ASCII <- function(df) {
+  trans <- function(vect) {
+    iconv(vect, from = "UTF-8", to = "ASCII//TRANSLIT")
+  }
+  df <- as.data.frame(df, stringsAsFactors = FALSE)
+  for (i in seq_len(NCOL(df))) {
+    col <- df[, i]
+    if (is.list(col)) {
+      col <- lapply(col, function(j) trans(j))
+      df[, i] <- list(col)
+    } else {
+      if (is.factor(col)) {
+        levels(col) <- trans(levels(col))
+      } else if (is.character(col)) {
+        col <- trans(col)
+      } else {
+        col
+      }
+      df[, i] <- col
+    }
+  }
+  df
 }

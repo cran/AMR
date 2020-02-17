@@ -6,22 +6,23 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Property of an antibiotic
 #'
 #' Use these functions to return a specific property of an antibiotic from the [antibiotics] data set. All input values will be evaluated internally with [as.ab()].
+#' @inheritSection lifecycle Maturing lifecycle
 #' @param x any (vector of) text that can be coerced to a valid microorganism code with [as.ab()]
 #' @param tolower logical to indicate whether the first character of every output should be transformed to a lower case character. This will lead to e.g. "polymyxin B" and not "polymyxin b".
 #' @param property one of the column names of one of the [antibiotics] data set
@@ -46,18 +47,18 @@
 #' ab_name("AMX")       # "Amoxicillin"
 #' ab_atc("AMX")        # J01CA04 (ATC code from the WHO)
 #' ab_cid("AMX")        # 33613 (Compound ID from PubChem)
-#'
 #' ab_synonyms("AMX")   # a list with brand names of amoxicillin
 #' ab_tradenames("AMX") # same
-#'
 #' ab_group("AMX")      # "Beta-lactams/penicillins"
 #' ab_atc_group1("AMX") # "Beta-lactam antibacterials, penicillins"
 #' ab_atc_group2("AMX") # "Penicillins with extended spectrum"
 #'
+#' # smart lowercase tranformation
 #' ab_name(x = c("AMC", "PLB"))  # "Amoxicillin/clavulanic acid" "Polymyxin B"
 #' ab_name(x = c("AMC", "PLB"),
 #'         tolower = TRUE)       # "amoxicillin/clavulanic acid" "polymyxin B"
 #'
+#' # defined daily doses (DDD)
 #' ab_ddd("AMX", "oral")               #  1
 #' ab_ddd("AMX", "oral", units = TRUE) # "g"
 #' ab_ddd("AMX", "iv")                 #  1
@@ -65,12 +66,19 @@
 #'
 #' ab_info("AMX")       # all properties as a list
 #'
-#' # all ab_* functions use as.ab() internally:
-#' ab_name("Fluclox")   # "Flucloxacillin"
-#' ab_name("fluklox")   # "Flucloxacillin"
-#' ab_name("floxapen")  # "Flucloxacillin"
-#' ab_name(21319)       # "Flucloxacillin" (using CID)
-#' ab_name("J01CF05")   # "Flucloxacillin" (using ATC)
+#' # all ab_* functions use as.ab() internally, so you can go from 'any' to 'any':
+#' ab_atc("AMP")           # ATC code of AMP (ampicillin)
+#' ab_group("J01CA01")     # Drug group of ampicillins ATC code
+#' ab_loinc("ampicillin")  # LOINC codes of ampicillin
+#' ab_name("21066-6")      # "Ampicillin" (using LOINC)
+#' ab_name(6249)           # "Ampicillin" (using CID)
+#' ab_name("J01CA01")      # "Ampicillin" (using ATC)
+#' 
+#' # spelling from different languages and dyslexia are no problem
+#' ab_atc("ceftriaxon")
+#' ab_atc("cephtriaxone")
+#' ab_atc("cephthriaxone")
+#' ab_atc("seephthriaaksone")
 ab_name <- function(x, language = get_locale(), tolower = FALSE, ...) {
   x <- translate_AMR(ab_validate(x = x, property = "name", ...), language = language)
   if (tolower == TRUE) {
@@ -132,6 +140,18 @@ ab_atc_group2 <- function(x, language = get_locale(), ...) {
 
 #' @rdname ab_property
 #' @export
+ab_loinc <- function(x, ...) {
+  loincs <- ab_validate(x = x, property = "loinc", ...)
+  names(loincs) <- x
+  if (length(loincs) == 1) {
+    unname(unlist(loincs))
+  } else {
+    loincs
+  }
+}
+
+#' @rdname ab_property
+#' @export
 ab_ddd <- function(x, administration = "oral", units = FALSE, ...) {
   if (!administration %in% c("oral", "iv")) {
     stop("`administration` must be 'oral' or 'iv'", call. = FALSE)
@@ -148,7 +168,7 @@ ab_ddd <- function(x, administration = "oral", units = FALSE, ...) {
 #' @rdname ab_property
 #' @export
 ab_info <- function(x, language = get_locale(), ...) {
-  x <- AMR::as.ab(x, ...)
+  x <- as.ab(x, ...)
   base::list(ab = as.character(x),
              atc = ab_atc(x),
              cid = ab_cid(x),
@@ -169,7 +189,7 @@ ab_property <- function(x, property = "name", language = get_locale(), ...) {
   if (length(property) != 1L) {
     stop("'property' must be of length 1.")
   }
-  if (!property %in% colnames(AMR::antibiotics)) {
+  if (!property %in% colnames(antibiotics)) {
     stop("invalid property: '", property, "' - use a column name of the `antibiotics` data set")
   }
 
@@ -177,19 +197,17 @@ ab_property <- function(x, property = "name", language = get_locale(), ...) {
 }
 
 ab_validate <- function(x, property, ...) {
-  if (!"AMR" %in% base::.packages()) {
-    library("AMR")
-    # check onLoad() in R/zzz.R: data tables are created there.
-  }
+  
+  check_dataset_integrity()
   
   # try to catch an error when inputting an invalid parameter
   # so the 'call.' can be set to FALSE
-  tryCatch(x[1L] %in% AMR::antibiotics[1, property],
+  tryCatch(x[1L] %in% antibiotics[1, property],
            error = function(e) stop(e$message, call. = FALSE))
   x_bak <- x
-  if (!all(x %in% AMR::antibiotics[, property])) {
-    x <- data.frame(ab = AMR::as.ab(x, ...), stringsAsFactors = FALSE) %>%
-      left_join(AMR::antibiotics, by = "ab") %>%
+  if (!all(x %in% antibiotics[, property])) {
+    x <- data.frame(ab = as.ab(x, ...), stringsAsFactors = FALSE) %>%
+      left_join(antibiotics, by = "ab") %>%
       pull(property)
   }
   if (property == "ab") {

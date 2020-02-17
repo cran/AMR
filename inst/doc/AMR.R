@@ -68,11 +68,8 @@ data <- data %>% left_join(patients_table)
 ## ----preview data set 2, echo = FALSE, results = 'asis'-----------------------
 knitr::kable(head(data), align = "c")
 
-## ----freq gender 1, eval = FALSE----------------------------------------------
-#  data %>% freq(gender) # this would be the same: freq(data$gender)
-
-## ----freq gender 2, echo = FALSE, results = 'markup'--------------------------
-data %>% freq(gender, markdown = FALSE, header = TRUE)
+## ----freq gender 1, results="asis"--------------------------------------------
+data %>% freq(gender) # this would be the same: freq(data$gender)
 
 ## ----transform mo 1-----------------------------------------------------------
 data <- data %>%

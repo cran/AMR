@@ -6,16 +6,16 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
@@ -91,20 +91,23 @@ NULL
 #' microorganisms %>% freq(kingdom)
 #' microorganisms %>% group_by(kingdom) %>% freq(phylum, nmax = NULL)
 catalogue_of_life_version <- function() {
+  
+  check_dataset_integrity()
+  
   # see the `catalogue_of_life` list in R/data.R
   lst <- list(catalogue_of_life =
                 list(version = gsub("{year}", catalogue_of_life$year, catalogue_of_life$version, fixed = TRUE),
                      url = gsub("{year}", catalogue_of_life$year, catalogue_of_life$url_CoL, fixed = TRUE),
-                     n = nrow(filter(AMR::microorganisms, source == "CoL"))),
+                     n = nrow(filter(microorganisms, source == "CoL"))),
               deutsche_sammlung_von_mikroorganismen_und_zellkulturen =
                 list(version = "Prokaryotic Nomenclature Up-to-Date from DSMZ",
                      url = catalogue_of_life$url_DSMZ,
                      yearmonth = catalogue_of_life$yearmonth_DSMZ,
-                     n = nrow(filter(AMR::microorganisms, source == "DSMZ"))),
+                     n = nrow(filter(microorganisms, source == "DSMZ"))),
               total_included =
                 list(
-                  n_total_species = nrow(AMR::microorganisms),
-                  n_total_synonyms = nrow(AMR::microorganisms.old)))
+                  n_total_species = nrow(microorganisms),
+                  n_total_synonyms = nrow(microorganisms.old)))
 
   structure(.Data = lst,
             class = c("catalogue_of_life_version", "list"))

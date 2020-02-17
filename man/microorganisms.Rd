@@ -4,7 +4,7 @@
 \name{microorganisms}
 \alias{microorganisms}
 \title{Data set with ~70,000 microorganisms}
-\format{A \code{\link{data.frame}} with 69,447 observations and 16 variables:
+\format{A \code{\link{data.frame}} with 69,447 observations and 17 variables:
 \itemize{
 \item \code{mo}\cr ID of microorganism as used by this package
 \item \code{col_id}\cr Catalogue of Life ID
@@ -15,6 +15,7 @@
 \item \code{species_id}\cr ID of the species as used by the Catalogue of Life
 \item \code{source}\cr Either "CoL", "DSMZ" (see Source) or "manually added"
 \item \code{prevalence}\cr Prevalence of the microorganism, see \code{\link[=as.mo]{as.mo()}}
+\item \code{snomed}\cr SNOMED code of the microorganism. Use \code{\link[=mo_snomed]{mo_snomed()}} to retrieve it quickly, see \code{\link[=mo_property]{mo_property()}}.
 }}
 \source{
 Catalogue of Life: Annual Checklist (public online taxonomic database), \url{http://www.catalogueoflife.org} (check included annual version with \code{\link[=catalogue_of_life_version]{catalogue_of_life_version()}}).
@@ -38,6 +39,13 @@ Manually added were:
 \item 6 families under the Enterobacterales order, according to Adeolu \emph{et al.} (2016, PMID 27620848), that are not in the Catalogue of Life
 \item 12,600 species from the DSMZ (Deutsche Sammlung von Mikroorganismen und Zellkulturen) since the DSMZ contain the latest taxonomic information based on recent publications
 }
+\subsection{Direct download}{
+
+This data set is available as 'flat file' for use even without R - you can find the file here:
+\itemize{
+\item \url{https://gitlab.com/msberends/AMR/raw/master/data-raw/microorganisms.txt}
+}
+}
 }
 \section{About the records from DSMZ (see source)}{
 
@@ -56,7 +64,7 @@ This package contains the complete taxonomic tree of almost all microorganisms (
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \seealso{

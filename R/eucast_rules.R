@@ -6,29 +6,30 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 # global variables
-EUCAST_VERSION_BREAKPOINTS <- "9.0, 2019"
+EUCAST_VERSION_BREAKPOINTS <- "10.0, 2020"
 EUCAST_VERSION_EXPERT_RULES <- "3.1, 2016"
 
-#' EUCAST rules
+#' Apply EUCAST rules
 #' 
 #' @description
 #' Apply susceptibility rules as defined by the European Committee on Antimicrobial Susceptibility Testing (EUCAST, <http://eucast.org>), see *Source*. This includes (1) expert rules, (2) intrinsic resistance and (3) inferred resistance as defined in their breakpoint tables. 
 #' 
 #' To improve the interpretation of the antibiogram before EUCAST rules are applied, some non-EUCAST rules are applied at default, see Details.
+#' @inheritSection lifecycle Maturing lifecycle
 #' @param x data with antibiotic columns, like e.g. `AMX` and `AMC`
 #' @param info print progress
 #' @param rules a character vector that specifies which rules should be applied - one or more of `c("breakpoints", "expert", "other", "all")`
@@ -48,6 +49,7 @@ EUCAST_VERSION_EXPERT_RULES <- "3.1, 2016"
 #' - Set amoxicillin/clavulanic acid (AMC) = S where amoxicillin (AMX) = S;
 #' - Set piperacillin/tazobactam (TZP) = S where piperacillin (PIP) = S;
 #' - Set trimethoprim/sulfamethoxazole (SXT) = S where trimethoprim (TMP) = S.
+#' 
 #' To *not* use these rules, please use `eucast_rules(..., rules = c("breakpoints", "expert"))`.
 #'
 #' The file containing all EUCAST rules is located here: <https://gitlab.com/msberends/AMR/blob/master/data-raw/eucast_rules.tsv>.
@@ -199,6 +201,8 @@ eucast_rules <- function(x,
                          rules = c("breakpoints", "expert", "other", "all"),
                          verbose = FALSE,
                          ...) {
+  
+  check_dataset_integrity()
   
   if (verbose == TRUE & interactive()) {
     txt <- paste0("WARNING: In Verbose mode, the eucast_rules() function does not apply rules to the data, but instead returns a data set in logbook form with extensive info about which rows and columns would be effected and in which way.",
@@ -562,7 +566,7 @@ eucast_rules <- function(x,
       strsplit(",") %>%
       unlist() %>%
       trimws() %>%
-      sapply(function(x) if (x %in% AMR::antibiotics$ab) ab_name(x, language = NULL, tolower = TRUE) else x) %>%
+      sapply(function(x) if (x %in% antibiotics$ab) ab_name(x, language = NULL, tolower = TRUE) else x) %>%
       sort() %>%
       paste(collapse = ", ")
     x <- gsub("_", " ", x, fixed = TRUE)
@@ -651,9 +655,11 @@ eucast_rules <- function(x,
         cat(bold(
           case_when(
             rule_group_current %like% "breakpoint" ~
-              paste0("\nEUCAST Clinical Breakpoints (v", EUCAST_VERSION_BREAKPOINTS, ")\n"),
+              paste0("\nEUCAST Clinical Breakpoints (",
+                     red(paste0("v", EUCAST_VERSION_BREAKPOINTS)), ")\n"),
             rule_group_current %like% "expert" ~
-              paste0("\nEUCAST Expert Rules, Intrinsic Resistance and Exceptional Phenotypes (v", EUCAST_VERSION_EXPERT_RULES, ")\n"),
+              paste0("\nEUCAST Expert Rules, Intrinsic Resistance and Exceptional Phenotypes (", 
+                     red(paste0("v", EUCAST_VERSION_EXPERT_RULES)), ")\n"),
             TRUE ~
               "\nOther rules by this AMR package\n"
           )
@@ -662,8 +668,8 @@ eucast_rules <- function(x,
       # Print rule  -------------------------------------------------------------
       if (rule_current != rule_previous) {
         # is new rule within group, print its name
-        if (rule_current %in% c(AMR::microorganisms$family,
-                                AMR::microorganisms$fullname)) {
+        if (rule_current %in% c(microorganisms$family,
+                                microorganisms$fullname)) {
           cat(italic(rule_current))
         } else {
           cat(rule_current)
@@ -679,7 +685,7 @@ eucast_rules <- function(x,
     # be sure to comprise all coagulase-negative/-positive Staphylococci when they are mentioned
     if (eucast_rules_df[i, 3] %like% "coagulase-") {
       suppressWarnings(
-        all_staph <- AMR::microorganisms %>%
+        all_staph <- microorganisms %>%
           filter(genus == "Staphylococcus") %>%
           mutate(CNS_CPS = mo_name(mo, Becker = "all"))
       )

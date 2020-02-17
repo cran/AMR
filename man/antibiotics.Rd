@@ -5,7 +5,7 @@
 \alias{antibiotics}
 \alias{antivirals}
 \title{Data sets with ~550 antimicrobials}
-\format{\subsection{For the \link{antibiotics} data set: a \code{\link{data.frame}} with 452 observations and 13 variables:}{
+\format{\subsection{For the \link{antibiotics} data set: a \code{\link{data.frame}} with 452 observations and 14 variables:}{
 \itemize{
 \item \code{ab}\cr Antibiotic ID as used in this package (like \code{AMC}), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available
 \item \code{atc}\cr ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC, like \code{J01CR02}
@@ -20,6 +20,7 @@
 \item \code{oral_units}\cr Units of \code{oral_ddd}
 \item \code{iv_ddd}\cr Defined Daily Dose (DDD), parenteral treatment
 \item \code{iv_units}\cr Units of \code{iv_ddd}
+\item \code{loinc}\cr All LOINC codes (Logical Observation Identifiers Names and Codes) associated with the name of the antimicrobial agent. Use \code{\link[=ab_loinc]{ab_loinc()}} to retrieve them quickly, see \code{\link[=ab_property]{ab_property()}}.
 }
 }
 
@@ -55,6 +56,14 @@ Two data sets containing all antibiotics/antimycotics and antivirals. Use \code{
 Properties that are based on an ATC code are only available when an ATC is available. These properties are: \code{atc_group1}, \code{atc_group2}, \code{oral_ddd}, \code{oral_units}, \code{iv_ddd} and \code{iv_units}.
 
 Synonyms (i.e. trade names) are derived from the Compound ID (\code{cid}) and consequently only available where a CID is available.
+\subsection{Direct download}{
+
+These data sets are available as 'flat files' for use even without R - you can find the files here:
+\itemize{
+\item \url{https://gitlab.com/msberends/AMR/raw/master/data-raw/antibiotics.txt}
+\item \url{https://gitlab.com/msberends/AMR/raw/master/data-raw/antivirals.txt}
+}
+}
 }
 \section{WHOCC}{
 
@@ -70,7 +79,7 @@ The WHOCC is located in Oslo at the Norwegian Institute of Public Health and fun
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \seealso{

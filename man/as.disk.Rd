@@ -16,29 +16,45 @@ is.disk(x)
 \item{na.rm}{a logical indicating whether missing values should be removed}
 }
 \value{
-Ordered integer factor with new class \code{\link{disk}}
+An \code{\link{integer}} with additional new class \code{\link{disk}}
 }
 \description{
-This transforms a vector to a new class \code{\link{disk}}, which is a growth zone size (around an antibiotic disk) in millimeters between 6 and 99.
+This transforms a vector to a new class \code{\link{disk}}, which is a growth zone size (around an antibiotic disk) in millimetres between 6 and 50.
 }
 \details{
 Interpret disk values as RSI values with \code{\link[=as.rsi]{as.rsi()}}. It supports guidelines from EUCAST and CLSI.
 }
+\section{Stable lifecycle}{
+
+\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, we are largely happy with the unlying code, and major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; we will avoid removing arguments or changing the meaning of existing arguments.
+
+If the unlying code needs breaking changes, they will occur gradually. To begin with, the function or argument will be deprecated; it will continue to work but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+}
+
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
-# interpret disk values
-as.rsi(x = 12,
-       mo = as.mo("S. pneumoniae"),
-       ab = "AMX",
+# transform existing disk zones to the `disk` class
+library(dplyr)
+df <- data.frame(microorganism = "E. coli",
+                 AMP = 20,
+                 CIP = 14,
+                 GEN = 18,
+                 TOB = 16)
+df <- df \%>\% mutate_at(vars(AMP:TOB), as.disk)
+df
+
+# interpret disk values, see ?as.rsi
+as.rsi(x = as.disk(18),
+       mo = "Strep pneu",  # `mo` will be coerced with as.mo()
+       ab = "ampicillin",  # and `ab` with as.ab()
        guideline = "EUCAST")
-as.rsi(x = 12,
-       mo = as.mo("S. pneumoniae"),
-       ab = "AMX",
-       guideline = "CLSI")
+       
+as.rsi(df)
 }
 \seealso{
 \code{\link[=as.rsi]{as.rsi()}}

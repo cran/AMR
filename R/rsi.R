@@ -6,37 +6,40 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Class 'rsi'
 #'
 #' Interpret MIC values and disk diffusion diameters according to EUCAST or CLSI, or clean up existing R/SI values. This transforms the input to a new class [`rsi`], which is an ordered factor with levels `S < I < R`. Invalid antimicrobial interpretations will be translated as `NA` with a warning.
+#' @inheritSection lifecycle Stable lifecycle
 #' @rdname as.rsi
-#' @param x vector of values (for class [`mic`]: an MIC value in mg/L, for class [`disk`]: a disk diffusion radius in millimeters)
-#' @param mo a microorganism code, generated with [as.mo()]
-#' @param ab an antimicrobial code, generated with [as.ab()]
+#' @param x vector of values (for class [`mic`]: an MIC value in mg/L, for class [`disk`]: a disk diffusion radius in millimetres)
+#' @param mo any (vector of) text that can be coerced to a valid microorganism code with [as.mo()]
+#' @param ab any (vector of) text that can be coerced to a valid antimicrobial code with [as.ab()]
 #' @inheritParams first_isolate
-#' @param guideline defaults to the latest included EUCAST guideline, run `unique(AMR::rsi_translation$guideline)` for all options
+#' @param guideline defaults to the latest included EUCAST guideline, run `unique(rsi_translation$guideline)` for all options
 #' @param threshold maximum fraction of invalid antimicrobial interpretations of `x`, please see *Examples*
 #' @param ... parameters passed on to methods
-#' @details Run `unique(AMR::rsi_translation$guideline)` for a list of all supported guidelines.
+#' @details Run `unique(rsi_translation$guideline)` for a list of all supported guidelines. The repository of this package contains [this machine readable version](https://gitlab.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt) of these guidelines.
+#' 
+#' These guidelines are machine readable, since [](https://gitlab.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt).
 #'
 #' After using [as.rsi()], you can use [eucast_rules()] to (1) apply inferred susceptibility and resistance based on results of other antimicrobials and (2) apply intrinsic resistance based on taxonomic properties of a microorganism.
 #'
 #' The function [is.rsi.eligible()] returns `TRUE` when a columns contains at most 5% invalid antimicrobial interpretations (not S and/or I and/or R), and `FALSE` otherwise. The threshold of 5% can be set with the `threshold` parameter.
 #' @section Interpretation of R and S/I:
-#' In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories R and S/I as shown below (<http://www.eucast.org/newsiandr/>). Results of several consultations on the new definitions are available on the EUCAST website under "Consultations".
+#' In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories R and S/I as shown below (<http://www.eucast.org/newsiandr/>).
 #'
 #' - **R = Resistant**\cr
 #'   A microorganism is categorised as *Resistant* when there is a high likelihood of therapeutic failure even when there is increased exposure. Exposure is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
@@ -53,37 +56,50 @@
 #' @seealso [as.mic()]
 #' @inheritSection AMR Read more on our website!
 #' @examples
-#' rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370)))
-#' rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370), "A", "B", "C"))
-#' is.rsi(rsi_data)
-#'
-#' # this can also coerce combined MIC/RSI values:
-#' as.rsi("<= 0.002; S") # will return S
-#'
-#' # interpret MIC values
+#' # For INTERPRETING disk diffusion and MIC values -----------------------
+#' 
+#' # single values
 #' as.rsi(x = as.mic(2),
 #'        mo = as.mo("S. pneumoniae"),
-#'        ab = "AMX",
-#'        guideline = "EUCAST")
-#' as.rsi(x = as.mic(4),
-#'        mo = as.mo("S. pneumoniae"),
-#'        ab = "AMX",
+#'        ab = "AMP",
 #'        guideline = "EUCAST")
 #'
+#' as.rsi(x = as.disk(18),
+#'        mo = "Strep pneu",  # `mo` will be coerced with as.mo()
+#'        ab = "ampicillin",  # and `ab` with as.ab()
+#'        guideline = "EUCAST")
+#'        
+#' # a whole data set, even with combined MIC values and disk zones
+#' df <- data.frame(microorganism = "E. coli",
+#'                  AMP = as.mic(8),
+#'                  CIP = as.mic(0.256),
+#'                  GEN = as.disk(18),
+#'                  TOB = as.disk(16))
+#' as.rsi(df)
+#'
+#'
+#' # For CLEANING existing R/SI values ------------------------------------
+#' 
+#' as.rsi(c("S", "I", "R", "A", "B", "C"))
+#' as.rsi("<= 0.002; S") # will return "S"
+#' 
+#' rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370)))
+#' is.rsi(rsi_data)
 #' plot(rsi_data)    # for percentages
 #' barplot(rsi_data) # for frequencies
 #' freq(rsi_data)    # frequency table with informative header
 #'
-#' # using dplyr's mutate
 #' library(dplyr)
 #' example_isolates %>%
 #'   mutate_at(vars(PEN:RIF), as.rsi)
 #'
-#'
-#' # fastest way to transform all columns with already valid AB results to class `rsi`:
+#' # fastest way to transform all columns with already valid AMR results to class `rsi`:
 #' example_isolates %>%
-#'   mutate_if(is.rsi.eligible,
-#'             as.rsi)
+#'   mutate_if(is.rsi.eligible, as.rsi)
+#'   
+#' # note: from dplyr 1.0.0 on, this will be: 
+#' # example_isolates %>%
+#' #   mutate(across(is.rsi.eligible, as.rsi))
 #'
 #' # default threshold of `is.rsi.eligible` is 5%.
 #' is.rsi.eligible(WHONET$`First name`) # fails, >80% is invalid
@@ -185,7 +201,7 @@ as.rsi.disk <- function(x, mo, ab, guideline = "EUCAST", ...) {
 get_guideline <- function(guideline) {
   guideline_param <- toupper(guideline)
   if (guideline_param %in% c("CLSI", "EUCAST")) {
-    guideline_param <- AMR::rsi_translation %>%
+    guideline_param <- rsi_translation %>%
       filter(guideline %like% guideline_param) %>%
       pull(guideline) %>%
       sort() %>%
@@ -193,9 +209,9 @@ get_guideline <- function(guideline) {
       .[1]
   }
   
-  if (!guideline_param %in% AMR::rsi_translation$guideline) {
+  if (!guideline_param %in% rsi_translation$guideline) {
     stop(paste0("invalid guideline: '", guideline,
-                "'.\nValid guidelines are: ", paste0("'", rev(sort(unique(AMR::rsi_translation$guideline))), "'", collapse = ", ")),
+                "'.\nValid guidelines are: ", paste0("'", rev(sort(unique(rsi_translation$guideline))), "'", collapse = ", ")),
          call. = FALSE)
   }
   
@@ -219,23 +235,25 @@ exec_as.rsi <- function(method, x, mo, ab, guideline) {
   mo_order <- as.mo(mo_order(mo))
   mo_becker <- as.mo(mo, Becker = TRUE)
   mo_lancefield <- as.mo(mo, Lancefield = TRUE)
+  mo_other <- as.mo("other")
   
   guideline_coerced <- get_guideline(guideline)
   if (guideline_coerced != guideline) {
     message(blue(paste0("Note: Using guideline ", bold(guideline_coerced), " as input for `guideline`.")))
   }
-
+  
   new_rsi <- rep(NA_character_, length(x))
-  trans <- AMR::rsi_translation %>%
+  trans <- rsi_translation %>%
     filter(guideline == guideline_coerced & method == method_param) %>%
     mutate(lookup = paste(mo, ab))
-
+  
   lookup_mo <- paste(mo, ab)
   lookup_genus <- paste(mo_genus, ab)
   lookup_family <- paste(mo_family, ab)
   lookup_order <- paste(mo_order, ab)
   lookup_becker <- paste(mo_becker, ab)
   lookup_lancefield <- paste(mo_lancefield, ab)
+  lookup_other <- paste(mo_other, ab)
   
   for (i in seq_len(length(x))) {
     get_record <- trans %>%
@@ -244,7 +262,8 @@ exec_as.rsi <- function(method, x, mo, ab, guideline) {
                            lookup_family[i],
                            lookup_order[i],
                            lookup_becker[i],
-                           lookup_lancefield[i])) %>%
+                           lookup_lancefield[i],
+                           lookup_other[i])) %>%
       # be as specific as possible (i.e. prefer species over genus):
       arrange(desc(nchar(mo))) %>%
       .[1L, ]
@@ -303,7 +322,7 @@ as.rsi.data.frame <- function(x, col_mo = NULL, guideline = "EUCAST", ...) {
         message(red(paste0("Unknown drug: `", bold(ab_cols[i]), "`. Rename this column to a drug name or code, and check the output with as.ab().")))
         next
       }
-      message(blue(paste0("Interpreting column `", bold(ab_cols[i]), "` (",
+      message(blue(paste0("Interpreting MIC values of column `", bold(ab_cols[i]), "` (",
                           ifelse(ab_col_coerced != ab_cols[i], paste0(ab_col_coerced, ", "), ""),
                           ab_name(ab_col_coerced, tolower = TRUE), ")...")),
               appendLF = FALSE)
@@ -324,7 +343,7 @@ as.rsi.data.frame <- function(x, col_mo = NULL, guideline = "EUCAST", ...) {
         message(red(paste0("Unknown drug: `", bold(ab_cols[i]), "`. Rename this column to a drug name or code, and check the output with as.ab().")))
         next
       }
-      message(blue(paste0("Interpreting column `", bold(ab_cols[i]), "` (",
+      message(blue(paste0("Interpreting disk zones of column `", bold(ab_cols[i]), "` (",
                           ifelse(ab_col_coerced != ab_cols[i], paste0(ab_col_coerced, ", "), ""),
                           ab_name(ab_col_coerced, tolower = TRUE), ")...")),
               appendLF = FALSE)
@@ -343,8 +362,7 @@ as.rsi.data.frame <- function(x, col_mo = NULL, guideline = "EUCAST", ...) {
 #' @rdname as.rsi
 #' @export
 is.rsi <- function(x) {
-  identical(class(x),
-            c("rsi", "ordered", "factor"))
+  inherits(x, "rsi")
 }
 
 #' @rdname as.rsi

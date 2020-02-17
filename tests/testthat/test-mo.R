@@ -6,16 +6,16 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
@@ -24,11 +24,9 @@ context("mo.R")
 test_that("as.mo works", {
   
   skip_on_cran()
-  
-  clear_mo_history(force = TRUE)
-  
+ 
   library(dplyr)
-  MOs <- AMR::microorganisms %>% filter(!is.na(mo), nchar(mo) > 3)
+  MOs <- microorganisms %>% filter(!is.na(mo), nchar(mo) > 3)
   expect_identical(as.character(MOs$mo), as.character(as.mo(MOs$mo)))
   
   expect_identical(
@@ -38,6 +36,7 @@ test_that("as.mo works", {
   expect_equal(as.character(as.mo("Escherichia coli")), "B_ESCHR_COLI")
   expect_equal(as.character(as.mo("Escherichia  coli")), "B_ESCHR_COLI")
   expect_equal(as.character(as.mo(22242416)), "B_ESCHR_COLI")
+  expect_equal(as.character(as.mo(112283007)), "B_ESCHR_COLI")
   expect_equal(as.character(as.mo("Escherichia  species")), "B_ESCHR")
   expect_equal(as.character(as.mo("Escherichia")), "B_ESCHR")
   expect_equal(as.character(as.mo("Esch spp.")), "B_ESCHR")
@@ -240,9 +239,8 @@ test_that("as.mo works", {
   expect_output(print(mo_uncertainties()))
   
   # Salmonella (City) are all actually Salmonella enterica spp (City)
-  expect_equal(as.character(suppressWarnings(as.mo("Salmonella Goettingen"))),
-               "B_SLMNL_ENTR")
-  expect_equal(as.character(as.mo("Salmonella Group A")), "B_SLMNL")
+  expect_equal(suppressWarnings(mo_name(c("Salmonella Goettingen", "Salmonella Typhimurium", "Salmonella Group A"))),
+               c("Salmonella enterica", "Salmonella typhimurium", "Salmonella"))
   
   # no virusses
   expect_equal(as.character(as.mo("Virus")), NA_character_)

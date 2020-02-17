@@ -1,3 +1,51 @@
+# AMR 1.0.0
+
+This software is now out of beta and considered stable. Nonetheless, this package will be developed continually.
+
+### New
+* Support for the newest [EUCAST Clinical Breakpoint Tables v.10.0](http://www.eucast.org/clinical_breakpoints/), valid from 1 January 2020. This affects translation of MIC and disk zones using `as.rsi()` and inferred resistance and susceptibility using `eucast_rules()`.
+* The repository of this package now contains a clean version of the EUCAST and CLSI guidelines from 2011-2020 to translate MIC and disk diffusion values to R/SI: <https://gitlab.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt>. This **allows for machine reading these guidelines**, which is almost impossible with the Excel and PDF files distributed by EUCAST and CLSI. This file used to process the EUCAST Clinical Breakpoints Excel file [can be found here](https://gitlab.com/msberends/AMR/blob/master/data-raw/read_EUCAST.R).
+* Support for LOINC and SNOMED codes
+  * Support for LOINC codes in the `antibiotics` data set. Use `ab_loinc()` to retrieve LOINC codes, or use a LOINC code for input in any `ab_*` function:
+    ```r
+    ab_loinc("ampicillin")
+    #> [1] "21066-6" "3355-5"  "33562-0" "33919-2" "43883-8" "43884-6" "87604-5"
+    ab_name("21066-6")
+    #> [1] "Ampicillin"
+    ab_atc("21066-6")
+    #> [1] "J01CA01"
+    ```
+  * Support for SNOMED CT codes in the `microorganisms` data set. Use `mo_snomed()` to retrieve SNOMED codes, or use a SNOMED code for input in any `mo_*` function:
+    ```r
+    mo_snomed("S. aureus")
+    #> [1] 115329001   3092008 113961008
+    mo_name(115329001)
+    #> [1] "Staphylococcus aureus"
+    mo_gramstain(115329001)
+    #> [1] "Gram-positive"
+    ```
+
+### Changes
+* The `as.mo()` function previously wrote to the package folder to improve calculation speed for previously calculated results. This is no longer the case, to comply with CRAN policies. Consequently, the function `clear_mo_history()` was removed.
+* Bugfix for some WHONET microorganism codes that were not interpreted correctly when using `as.rsi()`
+* Improvements for the algorithm used by `as.mo()` (and consequently all `mo_*` functions, that use `as.mo()` internally):
+  * Support for missing spaces, e.g. in `as.mo("Methicillin-resistant S.aureus")`
+  * Better support for determination of *Salmonella* biovars
+  * Speed improvements, especially for the *G. species* format (G for genus), like *E. coli* and *K pneumoniae*
+  * Support for more common codes used in laboratory information systems
+* Input values for `as.disk()` limited to a maximum of 50 millimeters
+* Added a lifecycle state to every function, following [the lifecycle circle of the `tidyverse`](https://www.tidyverse.org/lifecycle)
+* For in `as.ab()`: support for drugs starting with "co-" like co-amoxiclav, co-trimoxazole, co-trimazine and co-trimazole (thanks to Peter Dutey)
+* Changes to the `antibiotics` data set (thanks to Peter Dutey):
+  * Added more synonyms to colistin, imipenem and piperacillin/tazobactam
+  * Moved synonyms Rifinah and Rimactazid from rifampicin (`RIF`) to rifampicin/isoniazid (`RFI`). Please note that [the combination rifampicin/isoniazid has no DDDs defined](https://www.whocc.no/atc_ddd_index/?code=J04AM02&showdescription=no), so e.g. `ab_ddd("Rimactazid")` will now return `NA`.
+  * Moved synonyms Bactrimel and Cotrimazole from sulfamethoxazole (`SMX`) to trimethoprim/sulfamethoxazole (`SXT`)
+
+### Other
+* Add a `CITATION` file
+* Full support for the upcoming R 4.0
+* Removed unnecessary `AMR::` calls
+
 # AMR 0.9.0
 
 ### Breaking

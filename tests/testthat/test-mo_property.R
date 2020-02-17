@@ -6,16 +6,16 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
@@ -63,7 +63,7 @@ test_that("mo_property works", {
   expect_true(mo_url("Escherichia coli") %like% "www.catalogueoflife.org")
 
   # test integrity
-  MOs <- AMR::microorganisms
+  MOs <- microorganisms
   expect_identical(MOs$fullname, mo_fullname(MOs$fullname, language = "en"))
 
   # check languages
@@ -93,6 +93,9 @@ test_that("mo_property works", {
   expect_identical(suppressWarnings(mo_ref("Chlamydia psittaci")), "Page, 1968")
   expect_identical(mo_ref("Chlamydophila psittaci"), "Everett et al., 1999")
 
+  expect_equal(mo_snomed("Escherichia coli"), 
+               c(112283007, 116395006, 116396007, 103429008, 83285000, 116394005, 407166006, 457914007))
+  
   # old codes must throw a warning in mo_* family
   expect_warning(mo_name(c("B_ESCHR_COL", "B_STPHY_AUR")))
   

@@ -6,21 +6,22 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Get ATC properties from WHOCC website
 #'
+#' @inheritSection lifecycle Questioning lifecycle
 #' @description Gets data from the WHO to determine properties of an ATC (e.g. an antibiotic) like name, defined daily dose (DDD) or standard unit.
 #' 
 #' **This function requires an internet connection.**
@@ -75,12 +76,14 @@ atc_online_property <- function(atc_code,
                                 property,
                                 administration = "O",
                                 url = "https://www.whocc.no/atc_ddd_index/?code=%s&showdescription=no") {
+  
+  check_dataset_integrity()
 
   if (!all(c("curl", "rvest", "xml2") %in% rownames(utils::installed.packages()))) {
     stop("Packages 'xml2', 'rvest' and 'curl' are required for this function")
   }
 
-  if (!all(atc_code %in% AMR::antibiotics)) {
+  if (!all(atc_code %in% antibiotics)) {
     atc_code <- as.character(ab_atc(atc_code))
   }
 

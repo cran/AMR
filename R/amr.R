@@ -6,16 +6,16 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
@@ -38,15 +38,17 @@
 #' - Getting properties for any microorganism (like Gram stain, species, genus or family)
 #' - Getting properties for any antibiotic (like name, EARS-Net code, ATC code, PubChem code, defined daily dose or trade name)
 #' - Plotting antimicrobial resistance
-#' - Applying EUCAST expert rules
+#' - Getting SNOMED codes of a microorganism, or get its name associated with a SNOMED code
+#' - Getting LOINC codes of an antibiotic, or get its name associated with a LOINC code
+#' - Machine reading the EUCAST and CLSI guidelines from 2011-2020 to translate MIC values and disk diffusion diameters to R/SI
 
 #' @section Read more on our website!:
-#' On our website <https://msberends.gitlab.io/AMR> you can find [a tutorial](https://msberends.gitlab.io/AMR/articles/AMR.html) about how to conduct AMR analysis, the [complete documentation of all functions](https://msberends.gitlab.io/AMR/reference) (which reads a lot easier than here in R) and [an example analysis using WHONET data](https://msberends.gitlab.io/AMR/articles/WHONET.html).
+#' On our website <https://msberends.gitlab.io/AMR> you can find [a comprehensive tutorial](https://msberends.gitlab.io/AMR/articles/AMR.html) about how to conduct AMR analysis, the [complete documentation of all functions](https://msberends.gitlab.io/AMR/reference) (which reads a lot easier than here in R) and [an example analysis using WHONET data](https://msberends.gitlab.io/AMR/articles/WHONET.html).
 #' @section Contact us:
 #' For suggestions, comments or questions, please contact us at:
 #'
 #' Matthijs S. Berends \cr
-#' m.s.berends at umcg dot nl \cr
+#' m.s.berends \[at\] umcg \[dot\] nl \cr
 #' Department of Medical Microbiology, University of Groningen \cr
 #' University Medical Center Groningen \cr
 #' Post Office Box 30001 \cr

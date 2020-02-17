@@ -35,6 +35,12 @@ WHONET 2019 software: \url{http://www.whonet.org/software.html}
 European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}
 }
 
+\section{Maturing lifecycle}{
+
+\if{html}{\figure{lifecycle_maturing.svg}{options: style=margin-bottom:5px} \cr}
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. We will strive to maintain backward compatibility, but the function needs wider usage and more extensive testing in order to optimise the unlying code.
+}
+
 \section{WHOCC}{
 
 \if{html}{\figure{logo_who.png}{options: height=60px style=margin-bottom:5px} \cr}
@@ -49,11 +55,11 @@ The WHOCC is located in Oslo at the Norwegian Institute of Public Health and fun
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
-# These examples all return "ERY", the ID of Erythromycin:
+# these examples all return "ERY", the ID of erythromycin:
 as.ab("J01FA01")
 as.ab("J 01 FA 01")
 as.ab("Erythromycin")
@@ -65,7 +71,13 @@ as.ab("eritromicine") # spelled wrong, yet works
 as.ab("Erythrocin")   # trade name
 as.ab("Romycin")      # trade name
 
-# Use ab_* functions to get a specific properties (see ?ab_property);
+# spelling from different languages and dyslexia are no problem
+ab_atc("ceftriaxon")
+ab_atc("cephtriaxone")     # small spelling error
+ab_atc("cephthriaxone")    # or a bit more severe
+ab_atc("seephthriaaksone") # and even this works
+
+# use ab_* functions to get a specific properties (see ?ab_property);
 # they use as.ab() internally:
 ab_name("J01FA01")    # "Erythromycin"
 ab_name("eryt")       # "Erythromycin"

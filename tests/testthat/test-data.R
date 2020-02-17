@@ -6,22 +6,25 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 context("data.R")
 
 test_that("data sets are valid", {
+  
+  expect_true(check_dataset_integrity()) # in misc.R
+  
   # IDs should always be unique
   expect_identical(nrow(microorganisms), length(unique(microorganisms$mo)))
   expect_identical(class(microorganisms$mo), "mo")
@@ -51,8 +54,18 @@ test_that("creation of data sets is valid", {
   DT <- make_DT()
   expect_lt(nrow(DT[prevalence == 1]), nrow(DT[prevalence == 2]))
   expect_lt(nrow(DT[prevalence == 2]), nrow(DT[prevalence == 3]))
+  expect_true(all(c("mo", "fullname",
+                    "kingdom", "phylum", "class", "order", "family", "genus", "species", "subspecies",
+                    "rank", "col_id", "species_id", "source", "ref", "prevalence",
+                    "kingdom_index", "fullname_lower", "g_species") %in% colnames(DT)))
+
+  oldDT <- make_oldDT()
+  expect_true(all(c("col_id", "col_id_new", "fullname", "ref", "prevalence",
+                    "fullname_lower", "g_species") %in% colnames(oldDT)))
+  
   old <- make_trans_tbl()
   expect_gt(length(old), 0)
+  
 })
 
 test_that("CoL version info works", {

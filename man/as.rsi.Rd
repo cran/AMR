@@ -23,15 +23,15 @@ is.rsi(x)
 is.rsi.eligible(x, threshold = 0.05)
 }
 \arguments{
-\item{x}{vector of values (for class \code{\link{mic}}: an MIC value in mg/L, for class \code{\link{disk}}: a disk diffusion radius in millimeters)}
+\item{x}{vector of values (for class \code{\link{mic}}: an MIC value in mg/L, for class \code{\link{disk}}: a disk diffusion radius in millimetres)}
 
 \item{...}{parameters passed on to methods}
 
-\item{mo}{a microorganism code, generated with \code{\link[=as.mo]{as.mo()}}}
+\item{mo}{any (vector of) text that can be coerced to a valid microorganism code with \code{\link[=as.mo]{as.mo()}}}
 
-\item{ab}{an antimicrobial code, generated with \code{\link[=as.ab]{as.ab()}}}
+\item{ab}{any (vector of) text that can be coerced to a valid antimicrobial code with \code{\link[=as.ab]{as.ab()}}}
 
-\item{guideline}{defaults to the latest included EUCAST guideline, run \code{unique(AMR::rsi_translation$guideline)} for all options}
+\item{guideline}{defaults to the latest included EUCAST guideline, run \code{unique(rsi_translation$guideline)} for all options}
 
 \item{col_mo}{column name of the IDs of the microorganisms (see \code{\link[=as.mo]{as.mo()}}), defaults to the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
 
@@ -44,7 +44,9 @@ Ordered factor with new class \code{\link{rsi}}
 Interpret MIC values and disk diffusion diameters according to EUCAST or CLSI, or clean up existing R/SI values. This transforms the input to a new class \code{\link{rsi}}, which is an ordered factor with levels \verb{S < I < R}. Invalid antimicrobial interpretations will be translated as \code{NA} with a warning.
 }
 \details{
-Run \code{unique(AMR::rsi_translation$guideline)} for a list of all supported guidelines.
+Run \code{unique(rsi_translation$guideline)} for a list of all supported guidelines. The repository of this package contains \href{https://gitlab.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt}{this machine readable version} of these guidelines.
+
+These guidelines are machine readable, since \href{https://gitlab.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt}{}.
 
 After using \code{\link[=as.rsi]{as.rsi()}}, you can use \code{\link[=eucast_rules]{eucast_rules()}} to (1) apply inferred susceptibility and resistance based on results of other antimicrobials and (2) apply intrinsic resistance based on taxonomic properties of a microorganism.
 
@@ -52,7 +54,7 @@ The function \code{\link[=is.rsi.eligible]{is.rsi.eligible()}} returns \code{TRU
 }
 \section{Interpretation of R and S/I}{
 
-In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories R and S/I as shown below (\url{http://www.eucast.org/newsiandr/}). Results of several consultations on the new definitions are available on the EUCAST website under "Consultations".
+In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories R and S/I as shown below (\url{http://www.eucast.org/newsiandr/}).
 \itemize{
 \item \strong{R = Resistant}\cr
 A microorganism is categorised as \emph{Resistant} when there is a high likelihood of therapeutic failure even when there is increased exposure. Exposure is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
@@ -65,43 +67,64 @@ A microorganism is categorised as \emph{Susceptible, Increased exposure} when th
 This AMR package honours this new insight. Use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
 }
 
+\section{Stable lifecycle}{
+
+\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, we are largely happy with the unlying code, and major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; we will avoid removing arguments or changing the meaning of existing arguments.
+
+If the unlying code needs breaking changes, they will occur gradually. To begin with, the function or argument will be deprecated; it will continue to work but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+}
+
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
-rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370)))
-rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370), "A", "B", "C"))
-is.rsi(rsi_data)
+# For INTERPRETING disk diffusion and MIC values -----------------------
 
-# this can also coerce combined MIC/RSI values:
-as.rsi("<= 0.002; S") # will return S
-
-# interpret MIC values
+# single values
 as.rsi(x = as.mic(2),
        mo = as.mo("S. pneumoniae"),
-       ab = "AMX",
-       guideline = "EUCAST")
-as.rsi(x = as.mic(4),
-       mo = as.mo("S. pneumoniae"),
-       ab = "AMX",
+       ab = "AMP",
        guideline = "EUCAST")
 
+as.rsi(x = as.disk(18),
+       mo = "Strep pneu",  # `mo` will be coerced with as.mo()
+       ab = "ampicillin",  # and `ab` with as.ab()
+       guideline = "EUCAST")
+       
+# a whole data set, even with combined MIC values and disk zones
+df <- data.frame(microorganism = "E. coli",
+                 AMP = as.mic(8),
+                 CIP = as.mic(0.256),
+                 GEN = as.disk(18),
+                 TOB = as.disk(16))
+as.rsi(df)
+
+
+# For CLEANING existing R/SI values ------------------------------------
+
+as.rsi(c("S", "I", "R", "A", "B", "C"))
+as.rsi("<= 0.002; S") # will return "S"
+
+rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370)))
+is.rsi(rsi_data)
 plot(rsi_data)    # for percentages
 barplot(rsi_data) # for frequencies
 freq(rsi_data)    # frequency table with informative header
 
-# using dplyr's mutate
 library(dplyr)
 example_isolates \%>\%
   mutate_at(vars(PEN:RIF), as.rsi)
 
-
-# fastest way to transform all columns with already valid AB results to class `rsi`:
+# fastest way to transform all columns with already valid AMR results to class `rsi`:
 example_isolates \%>\%
-  mutate_if(is.rsi.eligible,
-            as.rsi)
+  mutate_if(is.rsi.eligible, as.rsi)
+  
+# note: from dplyr 1.0.0 on, this will be: 
+# example_isolates \%>\%
+#   mutate(across(is.rsi.eligible, as.rsi))
 
 # default threshold of `is.rsi.eligible` is 5\%.
 is.rsi.eligible(WHONET$`First name`) # fails, >80\% is invalid

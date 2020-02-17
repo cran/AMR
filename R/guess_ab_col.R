@@ -6,22 +6,23 @@
 # https://gitlab.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2019 Berends MS (m.s.berends@umcg.nl), Luz CF (c.f.luz@umcg.nl)  #
+# (c) 2018-2020 Berends MS, Luz CF et al.                              #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
 #                                                                      #
-# This R package was created for academic research and was publicly    #
-# released in the hope that it will be useful, but it comes WITHOUT    #
-# ANY WARRANTY OR LIABILITY.                                           #
+# We created this package for both routine data analysis and academic  #
+# research and it was publicly released in the hope that it will be    #
+# useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
 #' Guess antibiotic column
 #'
 #' This tries to find a column name in a data set based on information from the [antibiotics] data set. Also supports WHONET abbreviations.
+#' @inheritSection lifecycle Maturing lifecycle
 #' @param x a [`data.frame`]
 #' @param search_string a text to search `x` for, will be checked with [as.ab()] if this value is not a column in `x`
 #' @param verbose a logical to indicate whether additional info should be printed
@@ -125,7 +126,7 @@ get_column_abx <- function(x,
   # only check columns that are a valid AB code, ATC code, name, abbreviation or synonym,
   # or already have the rsi class (as.rsi) 
   # and that have no more than 50% invalid values
-  vectr_antibiotics <- unique(toupper(unlist(AMR::antibiotics[, c("ab", "atc", "name", "abbreviations", "synonyms")])))
+  vectr_antibiotics <- unique(toupper(unlist(antibiotics[, c("ab", "atc", "name", "abbreviations", "synonyms")])))
   vectr_antibiotics <- vectr_antibiotics[!is.na(vectr_antibiotics) & nchar(vectr_antibiotics) >= 3]
   x_columns <- sapply(colnames(x), function(col, df = x_bak) {
     if (toupper(col) %in% vectr_antibiotics | 
@@ -204,7 +205,7 @@ get_column_abx <- function(x,
       # missing a soft dependency may lower the reliability
       missing <- soft_dependencies[!soft_dependencies %in% names(x)]
       missing_txt <- data.frame(missing = missing,
-                                missing_names = AMR::ab_name(missing, tolower = TRUE),
+                                missing_names = ab_name(missing, tolower = TRUE),
                                 stringsAsFactors = FALSE) %>%
         mutate(txt = paste0(bold(missing), " (", missing_names, ")")) %>%
         arrange(missing_names) %>%

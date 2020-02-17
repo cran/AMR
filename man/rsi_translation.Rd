@@ -3,7 +3,7 @@
 \docType{data}
 \name{rsi_translation}
 \alias{rsi_translation}
-\title{Data set for RSI interpretation}
+\title{Data set for R/SI interpretation}
 \format{A \code{\link{data.frame}} with 13,975 observations and 9 variables:
 \itemize{
 \item \code{guideline}\cr Name of the guideline
@@ -13,18 +13,21 @@
 \item \code{ab}\cr Antibiotic ID, see \code{\link[=as.ab]{as.ab()}}
 \item \code{ref_tbl}\cr Info about where the guideline rule can be found
 \item \code{disk_dose}\cr Dose of the used disk diffusion method
-\item \code{breakpoint_S}\cr Lowest MIC value or highest number of millimeters that leads to "S"
-\item \code{breakpoint_R}\cr Highest MIC value or lowest number of millimeters that leads to "R"
+\item \code{breakpoint_S}\cr Lowest MIC value or highest number of millimetres that leads to "S"
+\item \code{breakpoint_R}\cr Highest MIC value or lowest number of millimetres that leads to "R"
 }}
 \usage{
 rsi_translation
 }
 \description{
-Data set to interpret MIC and disk diffusion to RSI values. Included guidelines are CLSI (2011-2019) and EUCAST (2011-2019). Use \code{\link[=as.rsi]{as.rsi()}} to transform MICs or disks measurements to RSI values.
+Data set to interpret MIC and disk diffusion to R/SI values. Included guidelines are CLSI (2011-2019) and EUCAST (2011-2020). Use \code{\link[=as.rsi]{as.rsi()}} to transform MICs or disks measurements to R/SI values.
+}
+\details{
+The repository of this \code{AMR} package contains a file comprising this exact data set: \url{https://gitlab.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt}. This file \strong{allows for machine reading EUCAST and CLSI guidelines}, which is almost impossible with the Excel and PDF files distributed by EUCAST and CLSI. This file is updated automatically.
 }
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \keyword{datasets}
