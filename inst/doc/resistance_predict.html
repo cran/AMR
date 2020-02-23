@@ -12,7 +12,7 @@
 
 <meta name="author" content="Matthijs S. Berends" />
 
-<meta name="date" content="2020-02-17" />
+<meta name="date" content="2020-02-22" />
 
 <title>How to predict antimicrobial resistance</title>
 
@@ -303,7 +303,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">How to predict antimicrobial resistance</h1>
 <h4 class="author">Matthijs S. Berends</h4>
-<h4 class="date">17 February 2020</h4>
+<h4 class="date">22 February 2020</h4>
 
 
 <div id="TOC">
@@ -344,32 +344,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <span id="cb2-12"><a href="#cb2-12"></a>                     <span class="dt">model =</span> <span class="st">&quot;binomial&quot;</span>)</span></code></pre></div>
 <p>The function will look for a date column itself if <code>col_date</code> is not set.</p>
 <p>When running any of these commands, a summary of the regression model will be printed unless using <code>resistance_predict(..., info = FALSE)</code>.</p>
-<pre><code># NOTE: Using column `date` as input for `col_date`.
-# 
-# Logistic regression model (logit) with binomial distribution
-# ------------------------------------------------------------
-# 
-# Call:
-# glm(formula = df_matrix ~ year, family = binomial)
-# 
-# Deviance Residuals: 
-#     Min       1Q   Median       3Q      Max  
-# -2.6817  -1.4087  -0.5657   0.9672   3.5728  
-# 
-# Coefficients:
-#               Estimate Std. Error z value Pr(&gt;|z|)    
-# (Intercept) -224.39872   48.03354  -4.672 2.99e-06 ***
-# year           0.11061    0.02388   4.633 3.61e-06 ***
-# ---
-# Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-# 
-# (Dispersion parameter for binomial family taken to be 1)
-# 
-#     Null deviance: 61.512  on 14  degrees of freedom
-# Residual deviance: 38.692  on 13  degrees of freedom
-# AIC: 95.212
-# 
-# Number of Fisher Scoring iterations: 4</code></pre>
+<pre><code># NOTE: Using column `date` as input for `col_date`.</code></pre>
 <p>This text is only a printed summary - the actual result (output) of the function is a <code>data.frame</code> containing for each year: the number of observations, the actual observed resistance, the estimated resistance and the standard error below and above the estimation:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>predict_TZP</span>
 <span id="cb4-2"><a href="#cb4-2"></a><span class="co">#    year      value    se_min    se_max observations   observed  estimated</span></span>

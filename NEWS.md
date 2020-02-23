@@ -1,3 +1,19 @@
+# AMR 1.0.1
+
+### Changed
+* Fixed important floating point error for some MIC comparisons in EUCAST 2020 guideline
+* Interpretation from MIC values (and disk zones) to R/SI can now be used with `mutate_at()` of the `dplyr` package:
+  ```r
+  yourdata %>% 
+    mutate_at(vars(antibiotic1:antibiotic25), as.rsi, mo = "E. coli")
+    
+  yourdata %>% 
+    mutate_at(vars(antibiotic1:antibiotic25), as.rsi, mo = .$mybacteria)
+  ```
+* Added antibiotic abbreviations for a laboratory manufacturer (GLIMS) for cefuroxime, cefotaxime, ceftazidime, cefepime, cefoxitin and trimethoprim/sulfamethoxazole
+* Added `uti` (as abbreviation of urinary tract infections) as parameter to `as.rsi()`, so interpretation of MIC values and disk zones can be made dependent on isolates specifically from UTIs
+* Info printing in functions `eucast_rules()`, `first_isolate()`, `mdro()` and `resistance_predict()` will now at default only print when R is in an interactive mode (i.e. not in RMarkdown)
+
 # AMR 1.0.0
 
 This software is now out of beta and considered stable. Nonetheless, this package will be developed continually.

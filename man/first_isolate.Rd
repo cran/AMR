@@ -27,7 +27,7 @@ first_isolate(
   type = "keyantibiotics",
   ignore_I = TRUE,
   points_threshold = 2,
-  info = TRUE,
+  info = interactive(),
   include_unknown = FALSE,
   ...
 )
@@ -123,6 +123,14 @@ Any difference from S to R (or vice versa) will (re)select an isolate as a first
 
 A difference from I to S|R (or vice versa) means 0.5 points, a difference from S to R (or vice versa) means 1 point. When the sum of points exceeds \code{points_threshold}, which default to \code{2}, an isolate will be (re)selected as a first weighted isolate.
 }
+}
+
+\section{Stable lifecycle}{
+
+\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, we are largely happy with the unlying code, and major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; we will avoid removing arguments or changing the meaning of existing arguments.
+
+If the unlying code needs breaking changes, they will occur gradually. To begin with, the function or argument will be deprecated; it will continue to work but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Read more on our website!}{

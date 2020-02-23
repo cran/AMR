@@ -34,6 +34,8 @@ test_that("rsi works", {
   barplot(as.rsi(c("S", "I", "R")))
   plot(as.rsi(c("S", "I", "R")))
   print(as.rsi(c("S", "I", "R")))
+  
+  expect_equal(as.character(as.rsi(c(1:3))), c("S", "I", "R"))
 
   expect_equal(suppressWarnings(as.logical(as.rsi("INVALID VALUE"))), NA)
 
@@ -55,8 +57,16 @@ test_that("rsi works", {
                  as.logical() %>%
                  sum(),
                40)
+  
+  expect_output(print(tibble(ab = as.rsi("S"))))
+  
+  expect_error(as.rsi.mic(as.mic(16)))
+  expect_error(as.rsi.disk(as.disk(16)))
+  
+  expect_error(get_guideline("this one does not exist"))
 
 })
+
 
 test_that("mic2rsi works", {
   
@@ -81,6 +91,19 @@ test_that("mic2rsi works", {
                 as.rsi() %>%
                 pull(amox_mic) %>%
                 is.rsi())
+  
+  expect_warning(data.frame(mo = "E. coli",
+                            NIT = c("<= 2", 32)) %>%
+                   as.rsi())
+  expect_message(data.frame(mo = "E. coli",
+                            NIT = c("<= 2", 32),
+                            uti = TRUE) %>%
+                   as.rsi())
+  expect_message(
+    data.frame(mo = "E. coli",
+               NIT = c("<= 2", 32),
+               specimen = c("urine", "blood")) %>%
+      as.rsi())
 })
 
 test_that("disk2rsi works", {

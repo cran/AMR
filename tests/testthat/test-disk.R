@@ -31,5 +31,9 @@ test_that("disk works", {
   expect_silent(as.disk(levels(as.disk(15))))
 
   expect_warning(as.disk("INVALID VALUE"))
+  
+  expect_output(print(as.disk(12)))
+  library(dplyr)
+  expect_output(print(tibble(d = as.disk(12))))
 
 })
