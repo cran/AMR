@@ -19,41 +19,20 @@
 # Visit our website for more info: https://msberends.gitlab.io/AMR.    #
 # ==================================================================== #
 
-context("join_microorganisms.R")
+context("pca.R")
 
-test_that("joins work", {
-  unjoined <- example_isolates
-  inner <- example_isolates %>% inner_join_microorganisms()
-  left <- example_isolates %>% left_join_microorganisms()
-  semi <- example_isolates %>% semi_join_microorganisms()
-  anti <- example_isolates %>% anti_join_microorganisms()
-  suppressWarnings(right <- example_isolates %>% right_join_microorganisms())
-  suppressWarnings(full <- example_isolates %>% full_join_microorganisms())
-
-  expect_true(ncol(unjoined) < ncol(inner))
-  expect_true(nrow(unjoined) == nrow(inner))
-
-  expect_true(ncol(unjoined) < ncol(left))
-  expect_true(nrow(unjoined) == nrow(left))
-
-  expect_true(ncol(semi) == ncol(semi))
-  expect_true(nrow(semi) == nrow(semi))
-
-  expect_true(nrow(anti) == 0)
-
-  expect_true(nrow(unjoined) < nrow(right))
-  expect_true(nrow(unjoined) < nrow(full))
-
-
-  expect_equal(nrow(inner_join_microorganisms("B_ESCHR_COLI")), 1)
-  expect_equal(nrow(inner_join_microorganisms("B_ESCHR_COLI", by = c("mo" = "mo"))), 1)
-
-  expect_equal(nrow(left_join_microorganisms("B_ESCHR_COLI")), 1)
-
-  expect_equal(nrow(semi_join_microorganisms("B_ESCHR_COLI")), 1)
-  expect_equal(nrow(anti_join_microorganisms("B_ESCHR_COLI")), 0)
-
-  expect_warning(right_join_microorganisms("B_ESCHR_COLI"))
-  expect_warning(full_join_microorganisms("B_ESCHR_COLI"))
-
+test_that("PCA works", {
+  library(dplyr)
+  resistance_data <- example_isolates %>% 
+    filter(mo %in% as.mo(c("E. coli", "K. pneumoniae", "S. aureus"))) %>% 
+    select(mo, AMC, CXM, CTX, TOB, TMP) %>% 
+    group_by(order = mo_order(mo),       # group on anything, like order
+             genus = mo_genus(mo)) %>%   #  and genus as we do here
+    summarise_if(is.rsi, resistance, minimum = 0)
+  
+  pca_model <- pca(resistance_data)
+  
+  expect_s3_class(pca_model, "pca")
+  
+  ggplot_pca(pca_model, ellipse = TRUE)
 })

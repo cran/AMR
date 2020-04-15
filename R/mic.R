@@ -235,9 +235,15 @@ barplot.mic <- function(height,
   axis(2, seq(0, max(table(droplevels.factor(height)))))
 }
 
-#' @importFrom pillar type_sum
+#' @importFrom vctrs vec_ptype_abbr
 #' @export
-type_sum.mic <- function(x) {
+vec_ptype_abbr.mic <- function(x, ...) {
+  "mic"
+}
+
+#' @importFrom vctrs vec_ptype_full
+#' @export
+vec_ptype_full.mic <- function(x, ...) {
   "mic"
 }
 
@@ -247,4 +253,47 @@ pillar_shaft.mic <- function(x, ...) {
   out <- trimws(format(x))
   out[is.na(x)] <- pillar::style_na(NA)
   pillar::new_pillar_shaft_simple(out, align = "right", min_width = 4)
+}
+
+#' @exportMethod [.mic
+#' @export
+#' @noRd
+"[.mic" <- function(x, ...) {
+  y <- NextMethod()
+  attributes(y) <- attributes(x)
+  y
+}
+#' @exportMethod [[.mic
+#' @export
+#' @noRd
+"[[.mic" <- function(x, ...) {
+  y <- NextMethod()
+  attributes(y) <- attributes(x)
+  y
+}
+#' @exportMethod [<-.mic
+#' @export
+#' @noRd
+"[<-.mic" <- function(i, j, ..., value) {
+  value <- as.mic(value)
+  y <- NextMethod()
+  attributes(y) <- attributes(i)
+  y
+}
+#' @exportMethod [[<-.mic
+#' @export
+#' @noRd
+"[[<-.mic" <- function(i, j, ..., value) {
+  value <- as.mic(value)
+  y <- NextMethod()
+  attributes(y) <- attributes(i)
+  y
+}
+#' @exportMethod c.mic
+#' @export
+#' @noRd
+c.mic <- function(x, ...) {
+  y <- NextMethod()
+  attributes(y) <- attributes(x)
+  y
 }

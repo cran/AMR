@@ -78,9 +78,9 @@
 #' - Uncertainty level 3: allow all of level 1 and 2, strip off text elements from the end, allow any part of a taxonomic name.
 #' 
 #' This leads to e.g.:
-#' - `"Streptococcus group B (known as S. agalactiae)"`. The text between brackets will be removed and a warning will be thrown that the result *Streptococcus group B* (`B_STRPT_GRPB`) needs review.
-#' - `"S. aureus - please mind: MRSA"`. The last word will be stripped, after which the function will try to find a match. If it does not, the second last word will be stripped, etc. Again, a warning will be thrown that the result *Staphylococcus aureus* (`B_STPHY_AURS`) needs review.
-#' - `"Fluoroquinolone-resistant Neisseria gonorrhoeae"`. The first word will be stripped, after which the function will try to find a match. A warning will be thrown that the result *Neisseria gonorrhoeae* (`B_NESSR_GNRR`) needs review.
+#' - `"Streptococcus group B (known as S. agalactiae)"`. The text between brackets will be removed and a warning will be thrown that the result *Streptococcus group B* (``r as.mo("Streptococcus group B")``) needs review.
+#' - `"S. aureus - please mind: MRSA"`. The last word will be stripped, after which the function will try to find a match. If it does not, the second last word will be stripped, etc. Again, a warning will be thrown that the result *Staphylococcus aureus* (``r as.mo("Staphylococcus aureus")``) needs review.
+#' - `"Fluoroquinolone-resistant Neisseria gonorrhoeae"`. The first word will be stripped, after which the function will try to find a match. A warning will be thrown that the result *Neisseria gonorrhoeae* (``r as.mo("Neisseria gonorrhoeae")``) needs review.
 #'
 #' The level of uncertainty can be set using the argument `allow_uncertain`. The default is `allow_uncertain = TRUE`, which is equal to uncertainty level 2. Using `allow_uncertain = FALSE` is equal to uncertainty level 0 and will skip all rules. You can also use e.g. `as.mo(..., allow_uncertain = 1)` to only allow up to level 1 uncertainty.
 #' 
@@ -177,8 +177,14 @@ as.mo <- function(x,
   
   check_dataset_integrity()
   
+  # start off with replaced language-specific non-ASCII characters with ASCII characters
+  x <- parse_and_convert(x)
+  
   # WHONET: xxx = no growth
   x[tolower(as.character(paste0(x, ""))) %in% c("", "xxx", "na", "nan")] <- NA_character_
+  # Laboratory systems: remove entries like "no growth" etc
+  x[trimws2(x) %like% "(no .*growth|keine? .*wachtstum|geen .*groei|no .*crecimientonon|sem .*crescimento|pas .*croissance)"] <- NA_character_
+  x[trimws2(x) %like% "^(no|not|kein|geen|niet|non|sem) [a-z]+"] <- "UNKNOWN"
   
   uncertainty_level <- translate_allow_uncertain(allow_uncertain)
 
@@ -234,7 +240,7 @@ is.mo <- function(x) {
   inherits(x, "mo")
 }
 
-#' @importFrom dplyr %>% pull left_join n_distinct progress_estimated filter distinct
+#' @importFrom dplyr %>% pull left_join n_distinct filter distinct
 #' @importFrom data.table data.table as.data.table setkey
 #' @importFrom crayon magenta red blue silver italic
 #' @importFrom cleaner percentage
@@ -256,36 +262,22 @@ exec_as.mo <- function(x,
   
   check_dataset_integrity()
   
+  # start off with replaced language-specific non-ASCII characters with ASCII characters
+  x <- parse_and_convert(x)
+
   # WHONET: xxx = no growth
   x[tolower(as.character(paste0(x, ""))) %in% c("", "xxx", "na", "nan")] <- NA_character_
-  
+  # Laboratory systems: remove entries like "no growth" etc
+  x[trimws2(x) %like% "(no .*growth|keine? .*wachtstum|geen .*groei|no .*crecimientonon|sem .*crescimento|pas .*croissance)"] <- NA_character_
+  x[trimws2(x) %like% "^(no|not|kein|geen|niet|non|sem) [a-z]+"] <- "UNKNOWN"
+
   if (initial_search == TRUE) {
     options(mo_failures = NULL)
     options(mo_uncertainties = NULL)
     options(mo_renamed = NULL)
   }
   options(mo_renamed_last_run = NULL)
-  
-  if (NCOL(x) == 2) {
-    # support tidyverse selection like: df %>% select(colA, colB)
-    # paste these columns together
-    x_vector <- vector("character", NROW(x))
-    for (i in seq_len(NROW(x))) {
-      x_vector[i] <- paste(pull(x[i, ], 1), pull(x[i, ], 2), sep = " ")
-    }
-    x <- x_vector
-  } else {
-    if (NCOL(x) > 2) {
-      stop("`x` can be 2 columns at most", call. = FALSE)
-    }
-    x[is.null(x)] <- NA
-    
-    # support tidyverse selection like: df %>% select(colA)
-    if (!is.vector(x) & !is.null(dim(x))) {
-      x <- pull(x, 1)
-    }
-  }
-  
+
   uncertainties <- data.frame(uncertainty = integer(0),
                               input = character(0),
                               fullname = character(0),
@@ -298,7 +290,7 @@ exec_as.mo <- function(x,
   
   x_input <- x
   # already strip leading and trailing spaces
-  x <- trimws(x, which = "both")
+  x <- trimws(x)
   # only check the uniques, which is way faster
   x <- unique(x)
   # remove empty values (to later fill them in again with NAs)
@@ -417,7 +409,7 @@ exec_as.mo <- function(x,
     strip_whitespace <- function(x, dyslexia_mode) {
       # all whitespaces (tab, new lines, etc.) should be one space
       # and spaces before and after should be omitted
-      trimmed <- trimws(gsub("[\\s]+", " ", x, perl = TRUE), which = "both")
+      trimmed <- trimws2(x)
       # also, make sure the trailing and leading characters are a-z or 0-9
       # in case of non-regex
       if (dyslexia_mode == FALSE) {
@@ -439,8 +431,9 @@ exec_as.mo <- function(x,
     # remove spp and species
     x <- gsub(" +(spp.?|ssp.?|sp.? |ss ?.?|subsp.?|subspecies|biovar |serovar |species)", " ", x)
     x <- gsub("(spp.?|subsp.?|subspecies|biovar|serovar|species)", "", x)
+    x <- gsub("^([a-z]{2,4})(spe.?)$", "\\1", x) # when ending in SPE instead of SPP and preceded by 2-4 characters
     x <- strip_whitespace(x, dyslexia_mode)
-    
+
     x_backup_without_spp <- x
     x_species <- paste(x, "species")
     # translate to English for supported languages of mo_property
@@ -454,6 +447,8 @@ exec_as.mo <- function(x,
     x <- gsub("(hefe|gist|gisten|levadura|lievito|fermento|levure)[a-z]*", "yeast", x)
     x <- gsub("(schimmels?|mofo|molde|stampo|moisissure|fungi)[a-z]*", "fungus", x)
     x <- gsub("fungus[ph|f]rya", "fungiphrya", x)
+    # no contamination
+    x <- gsub("(contamination|kontamination|mengflora|contaminaci.n|contamina..o)", "", x)
     # remove non-text in case of "E. coli" except dots and spaces
     x <- trimws(gsub("[^.a-zA-Z0-9/ \\-]+", " ", x))
     # but make sure that dots are followed by a space
@@ -680,8 +675,8 @@ exec_as.mo <- function(x,
         next
       }
       
-      if (x_backup_without_spp[i] %like_case% "virus") {
-        # there is no fullname like virus, so don't try to coerce it
+      if (x_backup_without_spp[i] %like_case% "(virus|viridae)") {
+        # there is no fullname like virus or viridae, so don't try to coerce it
         x[i] <- NA_character_
         next
       }
@@ -1467,7 +1462,8 @@ exec_as.mo <- function(x,
     if (n_distinct(failures) > 1) {
       plural <- c("values", "them", "were")
     }
-    total_failures <- length(x_input[as.character(x_input) %in% as.character(failures) & !x_input %in% c(NA, NULL, NaN)])
+    x_input_clean <- trimws2(x_input)
+    total_failures <- length(x_input_clean[as.character(x_input_clean) %in% as.character(failures) & !x_input %in% c(NA, NULL, NaN)])
     total_n <- length(x_input[!x_input %in% c(NA, NULL, NaN)])
     msg <- paste0(nr2char(n_distinct(failures)), " unique ", plural[1],
                   " (covering ", percentage(total_failures / total_n),
@@ -1475,7 +1471,7 @@ exec_as.mo <- function(x,
     if (n_distinct(failures) <= 10) {
       msg <- paste0(msg, ": ", paste('"', unique(failures), '"', sep = "", collapse = ", "))
     }
-    msg <- paste0(msg,  ". Use mo_failures() to review ", plural[2], ". Edit the `allow_uncertain` parameter if needed (see ?as.mo).")
+    msg <- paste0(msg,  ".\nUse mo_failures() to review ", plural[2], ". Edit the `allow_uncertain` parameter if needed (see ?as.mo).")
     warning(red(paste0("\n", msg)),
             call. = FALSE,
             immediate. = TRUE) # thus will always be shown, even if >= warnings
@@ -1675,10 +1671,46 @@ print.mo <- function(x, ...) {
   print.default(x, quote = FALSE)
 }
 
-#' @importFrom pillar type_sum
+#' @importFrom vctrs vec_ptype_abbr
 #' @export
-type_sum.mo <- function(x) {
+vec_ptype_abbr.mo <- function(x, ...) {
   "mo"
+}
+
+#' @importFrom vctrs vec_ptype_full
+#' @export
+vec_ptype_full.mo <- function(x, ...) {
+  "mo"
+}
+
+#' @importFrom vctrs vec_ptype2
+#' @export
+vec_ptype2.mo <- function(x, y, ...) {
+  vctrs::vec_ptype2(x = as.character(x), y = as.character(y), ...)
+}
+
+#' @importFrom vctrs vec_cast
+#' @export
+vec_cast.mo <- function(x, to, ...) {
+  as.mo(vctrs::vec_cast(x = as.character(x), to = as.character(to), ...))
+}
+
+#' @importFrom vctrs vec_cast
+#' @export
+vec_cast.mo.mo <- function(x, to, ...) {
+  as.mo(vctrs::vec_cast(x = as.character(x), to = as.character(to), ...))
+}
+
+#' @importFrom vctrs vec_cast
+#' @export
+vec_cast.mo.character <- function(x, to, ...) {
+  vctrs::vec_cast(x = as.character(x), to = as.character(to), ...)
+}
+
+#' @importFrom vctrs vec_cast
+#' @export
+vec_cast.character.mo <- function(x, to, ...) {
+  as.mo(vctrs::vec_cast(x = as.character(x), to = as.character(to), ...))
 }
 
 #' @importFrom pillar pillar_shaft
@@ -1693,9 +1725,13 @@ pillar_shaft.mo <- function(x, ...) {
   # markup NA and UNKNOWN
   out[is.na(x)] <- pillar::style_na("  NA")
   out[x == "UNKNOWN"] <- pillar::style_na("  UNKNOWN")
-  
+
   # make it always fit exactly
-  pillar::new_pillar_shaft_simple(out, align = "left", width = max(nchar(x)))
+  pillar::new_pillar_shaft_simple(out,
+                                  align = "left", 
+                                  width = max(nchar(x)) + ifelse(length(x[x %in% c(NA, "UNKNOWN")]) > 0, 
+                                                                 2,
+                                                                 0))
 }
 
 #' @exportMethod summary.mo
@@ -1751,6 +1787,7 @@ as.data.frame.mo <- function(x, ...) {
 "[<-.mo" <- function(i, j, ..., value) {
   y <- NextMethod()
   attributes(y) <- attributes(i)
+  # must only contain valid MOs
   class_integrity_check(y, "microorganism code", c(as.character(microorganisms$mo), 
                                                    as.character(microorganisms.translation$mo_old)))
 }
@@ -1760,6 +1797,7 @@ as.data.frame.mo <- function(x, ...) {
 "[[<-.mo" <- function(i, j, ..., value) {
   y <- NextMethod()
   attributes(y) <- attributes(i)
+  # must only contain valid MOs
   class_integrity_check(y, "microorganism code", c(as.character(microorganisms$mo), 
                                                    as.character(microorganisms.translation$mo_old)))
 }
@@ -1769,6 +1807,7 @@ as.data.frame.mo <- function(x, ...) {
 c.mo <- function(x, ...) {
   y <- NextMethod()
   attributes(y) <- attributes(x)
+  # must only contain valid MOs
   class_integrity_check(y, "microorganism code", c(as.character(microorganisms$mo), 
                                                    as.character(microorganisms.translation$mo_old)))
 }
@@ -1906,10 +1945,38 @@ load_mo_failures_uncertainties_renamed <- function(metadata) {
 levenshtein_fraction <- function(input, output) {
   levenshtein <- double(length = length(input))
   for (i in seq_len(length(input))) {
-    # determine levenshtein distance, but maximise to nchar of output
+    # determine Levenshtein distance, but maximise to nchar of output
     levenshtein[i] <- base::min(base::as.double(adist(input[i], output[i], ignore.case = TRUE)),
                                 base::nchar(output[i]))
   }
   # self-made score between 0 and 1 (for % certainty, so 0 means huge distance, 1 means no distance)
   (base::nchar(output) - 0.5 * levenshtein) / nchar(output)
+}
+
+trimws2 <- function(x) {
+  trimws(gsub("[\\s]+", " ", x, perl = TRUE))
+}
+
+parse_and_convert <- function(x) {
+  tryCatch({
+    if (!is.null(dim(x))) {
+      if (NCOL(x) > 2) {
+        stop("A maximum of two columns is allowed.", call. = FALSE)
+      } else if (NCOL(x) == 2) {
+        # support tidyverse selection like: df %>% select(colA, colB)
+        # paste these columns together
+        x <- as.data.frame(x, stringsAsFactors = FALSE)
+        colnames(x) <- c("A", "B")
+        x <- paste(x$A, x$B)
+      } else {
+        # support tidyverse selection like: df %>% select(colA)
+        x <- as.data.frame(x, stringsAsFactors = FALSE)[[1]]
+      }
+    }
+    x[is.null(x)] <- NA
+    parsed <- iconv(x, to = "UTF-8")
+    parsed[is.na(parsed) & !is.na(x)] <- iconv(x[is.na(parsed) & !is.na(x)], from = "Latin1", to = "ASCII//TRANSLIT")
+    parsed <- gsub('"', "", parsed, fixed = TRUE)
+  }, error = function(e) stop(e$message, call. = FALSE)) # this will also be thrown when running `as.mo(no_existing_object)`
+  parsed
 }

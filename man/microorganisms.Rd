@@ -3,8 +3,9 @@
 \docType{data}
 \name{microorganisms}
 \alias{microorganisms}
-\title{Data set with ~70,000 microorganisms}
-\format{A \code{\link{data.frame}} with 69,447 observations and 17 variables:
+\title{Data set with 69,447 microorganisms}
+\format{
+A \code{\link{data.frame}} with 69,447 observations and 17 variables:
 \itemize{
 \item \code{mo}\cr ID of microorganism as used by this package
 \item \code{col_id}\cr Catalogue of Life ID
@@ -16,7 +17,8 @@
 \item \code{source}\cr Either "CoL", "DSMZ" (see Source) or "manually added"
 \item \code{prevalence}\cr Prevalence of the microorganism, see \code{\link[=as.mo]{as.mo()}}
 \item \code{snomed}\cr SNOMED code of the microorganism. Use \code{\link[=mo_snomed]{mo_snomed()}} to retrieve it quickly, see \code{\link[=mo_property]{mo_property()}}.
-}}
+}
+}
 \source{
 Catalogue of Life: Annual Checklist (public online taxonomic database), \url{http://www.catalogueoflife.org} (check included annual version with \code{\link[=catalogue_of_life_version]{catalogue_of_life_version()}}).
 
@@ -36,7 +38,7 @@ Manually added were:
 \item 3 entries of \emph{Trichomonas} (\emph{Trichomonas vaginalis}, and its family and genus)
 \item 1 entry of \emph{Blastocystis} (\emph{Blastocystis hominis}), although it officially does not exist (Noel \emph{et al.} 2005, PMID 15634993)
 \item 5 other 'undefined' entries (unknown, unknown Gram negatives, unknown Gram positives, unknown yeast and unknown fungus)
-\item 6 families under the Enterobacterales order, according to Adeolu \emph{et al.} (2016, PMID 27620848), that are not in the Catalogue of Life
+\item 6 families under the Enterobacterales order, according to Adeolu \emph{et al.} (2016, PMID 27620848), that are not (yet) in the Catalogue of Life
 \item 12,600 species from the DSMZ (Deutsche Sammlung von Mikroorganismen und Zellkulturen) since the DSMZ contain the latest taxonomic information based on recent publications
 }
 \subsection{Direct download}{
@@ -44,6 +46,11 @@ Manually added were:
 This data set is available as 'flat file' for use even without R - you can find the file here:
 \itemize{
 \item \url{https://gitlab.com/msberends/AMR/raw/master/data-raw/microorganisms.txt}
+}
+
+The file in R format (which data structure) can be found here:
+\itemize{
+\item \url{https://gitlab.com/msberends/AMR/raw/master/data/microorganisms.rda}
 }
 }
 }

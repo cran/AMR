@@ -4,8 +4,9 @@
 \name{antibiotics}
 \alias{antibiotics}
 \alias{antivirals}
-\title{Data sets with ~550 antimicrobials}
-\format{\subsection{For the \link{antibiotics} data set: a \code{\link{data.frame}} with 452 observations and 14 variables:}{
+\title{Data sets with 557 antimicrobials}
+\format{
+\subsection{For the \link{antibiotics} data set: a \code{\link{data.frame}} with 455 observations and 14 variables:}{
 \itemize{
 \item \code{ab}\cr Antibiotic ID as used in this package (like \code{AMC}), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available
 \item \code{atc}\cr ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC, like \code{J01CR02}
@@ -36,7 +37,10 @@
 \item \code{iv_ddd}\cr Defined Daily Dose (DDD), parenteral treatment
 \item \code{iv_units}\cr Units of \code{iv_ddd}
 }
-}}
+}
+
+An object of class \code{data.frame} with 102 rows and 9 columns.
+}
 \source{
 World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology (WHOCC): \url{https://www.whocc.no/atc_ddd_index/}
 
@@ -62,6 +66,12 @@ These data sets are available as 'flat files' for use even without R - you can f
 \itemize{
 \item \url{https://gitlab.com/msberends/AMR/raw/master/data-raw/antibiotics.txt}
 \item \url{https://gitlab.com/msberends/AMR/raw/master/data-raw/antivirals.txt}
+}
+
+Files in R format (which data structure) can be found here:
+\itemize{
+\item \url{https://gitlab.com/msberends/AMR/raw/master/data/antibiotics.rda}
+\item \url{https://gitlab.com/msberends/AMR/raw/master/data/antivirals.rda}
 }
 }
 }

@@ -37,8 +37,8 @@ data <- data.frame(mo = c("Staphylococcus aureus",
 knitr::kable(data, align = "lccccccc")
 
 ## ---- eval = FALSE------------------------------------------------------------
-#  eucast_rules(data, info = FALSE)
+#  eucast_rules(data)
 
 ## ---- echo = FALSE, message = FALSE-------------------------------------------
-knitr::kable(eucast_rules(data, info = FALSE), align = "lccccccc")
+knitr::kable(eucast_rules(data), align = "lccccccc")
 

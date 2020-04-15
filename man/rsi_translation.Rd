@@ -4,7 +4,8 @@
 \name{rsi_translation}
 \alias{rsi_translation}
 \title{Data set for R/SI interpretation}
-\format{A \code{\link{data.frame}} with 13,975 observations and 9 variables:
+\format{
+A \code{\link{data.frame}} with 18,964 observations and 10 variables:
 \itemize{
 \item \code{guideline}\cr Name of the guideline
 \item \code{method}\cr Either "MIC" or "DISK"
@@ -15,7 +16,9 @@
 \item \code{disk_dose}\cr Dose of the used disk diffusion method
 \item \code{breakpoint_S}\cr Lowest MIC value or highest number of millimetres that leads to "S"
 \item \code{breakpoint_R}\cr Highest MIC value or lowest number of millimetres that leads to "R"
-}}
+\item \code{uti}\cr A logical value (\code{TRUE}/\code{FALSE}) to indicate whether the rule applies to a urinary tract infection (UTI)
+}
+}
 \usage{
 rsi_translation
 }
