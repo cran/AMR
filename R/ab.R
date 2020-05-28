@@ -27,7 +27,6 @@
 #' @param ... arguments passed on to internal functions
 #' @rdname as.ab
 #' @inheritSection WHOCC WHOCC
-#' @importFrom dplyr %>% filter slice pull
 #' @details All entries in the [antibiotics] data set have three different identifiers: a human readable EARS-Net code (column `ab`, used by ECDC and WHONET), an ATC code (column `atc`, used by WHO), and a CID code (column `cid`, Compound ID, used by PubChem). The data set contains more than 5,000 official brand names from many different countries, as found in PubChem.
 #'
 #' Use the [ab_property()] functions to get properties based on the returned antibiotic ID, see Examples.
@@ -76,7 +75,7 @@ as.ab <- function(x, ...) {
   if (all(toupper(x) %in% antibiotics$ab)) {
     # valid AB code, but not yet right class
     return(structure(.Data = toupper(x),
-                     class = "ab"))
+                     class = c("ab", "character")))
   }
 
   x_bak <- x
@@ -216,6 +215,8 @@ as.ab <- function(x, ...) {
     x_spelling <- gsub("(o\\+n|o\\+ne\\+)$", "o+ne*", x_spelling)
     # replace multiple same characters to single one with '+', like "ll" -> "l+"
     x_spelling <- gsub("(.)\\1+", "\\1+", x_spelling)
+    # replace spaces and slashes with a possibility on both
+    x_spelling <- gsub("[ /]", "( .*|.*/)", x_spelling)
   
     # try if name starts with it
     found <- antibiotics[which(antibiotics$name %like% paste0("^", x_spelling)), ]$ab
@@ -333,7 +334,7 @@ as.ab <- function(x, ...) {
   }
 
   structure(.Data = x_result,
-            class = "ab")
+            class = c("ab", "character"))
 }
 
 #' @rdname as.ab
@@ -342,29 +343,26 @@ is.ab <- function(x) {
   inherits(x, "ab")
 }
 
-#' @exportMethod print.ab
+#' @method print ab
 #' @export
 #' @noRd
 print.ab <- function(x, ...) {
-  cat("Class 'ab'\n")
+  cat("Class <ab>\n")
   print(as.character(x), quote = FALSE)
 }
 
-#' @exportMethod as.data.frame.ab
+#' @method as.data.frame ab
 #' @export
 #' @noRd
 as.data.frame.ab <- function(x, ...) {
-  # same as as.data.frame.character but with removed stringsAsFactors
-  nm <- paste(deparse(substitute(x), width.cutoff = 500L),
-              collapse = " ")
+  nm <- deparse1(substitute(x))
   if (!"nm" %in% names(list(...))) {
-    as.data.frame.vector(x, ..., nm = nm)
+    as.data.frame.vector(as.ab(x), ..., nm = nm)
   } else {
-    as.data.frame.vector(x, ...)
+    as.data.frame.vector(as.ab(x), ...)
   }
 }
-
-#' @exportMethod [.ab
+#' @method [ ab
 #' @export
 #' @noRd
 "[.ab" <- function(x, ...) {
@@ -372,7 +370,7 @@ as.data.frame.ab <- function(x, ...) {
   attributes(y) <- attributes(x)
   y
 }
-#' @exportMethod [[.ab
+#' @method [[ ab
 #' @export
 #' @noRd
 "[[.ab" <- function(x, ...) {
@@ -380,7 +378,7 @@ as.data.frame.ab <- function(x, ...) {
   attributes(y) <- attributes(x)
   y
 }
-#' @exportMethod [<-.ab
+#' @method [<- ab
 #' @export
 #' @noRd
 "[<-.ab" <- function(i, j, ..., value) {
@@ -388,7 +386,7 @@ as.data.frame.ab <- function(x, ...) {
   attributes(y) <- attributes(i)
   class_integrity_check(y, "antimicrobial code", antibiotics$ab)
 }
-#' @exportMethod [[<-.ab
+#' @method [[<- ab
 #' @export
 #' @noRd
 "[[<-.ab" <- function(i, j, ..., value) {
@@ -396,31 +394,11 @@ as.data.frame.ab <- function(x, ...) {
   attributes(y) <- attributes(i)
   class_integrity_check(y, "antimicrobial code", antibiotics$ab)
 }
-#' @exportMethod c.ab
+#' @method c ab
 #' @export
 #' @noRd
 c.ab <- function(x, ...) {
   y <- NextMethod()
   attributes(y) <- attributes(x)
   class_integrity_check(y, "antimicrobial code", antibiotics$ab)
-}
-
-#' @importFrom vctrs vec_ptype_abbr
-#' @export
-vec_ptype_abbr.ab <- function(x, ...) {
-  "ab"
-}
-
-#' @importFrom vctrs vec_ptype_full
-#' @export
-vec_ptype_full.ab <- function(x, ...) {
-  "ab"
-}
-
-#' @importFrom pillar pillar_shaft
-#' @export
-pillar_shaft.ab <- function(x, ...) {
-  out <- format(x)
-  out[is.na(x)] <- pillar::style_na("NA")
-  pillar::new_pillar_shaft_simple(out, align = "left", min_width = 4)
 }

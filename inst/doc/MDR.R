@@ -6,7 +6,8 @@ knitr::opts_chunk$set(
 library(AMR)
 
 ## ---- message = FALSE---------------------------------------------------------
-library(dplyr) # to support pipes: %>%
+library(dplyr)   # to support pipes: %>%
+library(cleaner) # to create frequency tables
 
 ## ---- results = 'hide'--------------------------------------------------------
 example_isolates %>% 
@@ -14,7 +15,6 @@ example_isolates %>%
   freq() # show frequency table of the result
 
 ## ---- echo = FALSE, results = 'asis', message = FALSE, warning = FALSE--------
-library(dplyr)
 example_isolates %>% 
   mdro(info = FALSE) %>% 
   freq() # show frequency table of the result

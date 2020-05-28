@@ -50,9 +50,9 @@
 #'
 #'
 #' # Get a note when a species was renamed
-#' mo_shortname("Chlamydia psittaci")
-#' # Note: 'Chlamydia psittaci' (Page, 1968) was renamed
-#' #       'Chlamydophila psittaci' (Everett et al., 1999)
+#' mo_shortname("Chlamydophila psittaci")
+#' # Note: 'Chlamydophila psittaci' (Everett et al., 1999) was renamed back to
+#' #       'Chlamydia psittaci' (Page, 1968)
 #' # [1] "C. psittaci"
 #'
 #' # Get any property from the entire taxonomic tree for all included species
@@ -70,9 +70,9 @@
 #'
 #' # Do not get mistaken - this package is about microorganisms
 #' mo_kingdom("C. elegans")
-#' # [1] "Bacteria"                        # Bacteria?!
+#' # [1] "Fungi"                 # Fungi?!
 #' mo_name("C. elegans")
-#' # [1] "Chroococcus limneticus elegans"  # Because a microorganism was found
+#' # [1] "Cladosporium elegans"  # Because a microorganism was found
 NULL
 
 #' Version info of included Catalogue of Life
@@ -83,13 +83,7 @@ NULL
 #' @return a [`list`], which prints in pretty format
 #' @inheritSection catalogue_of_life Catalogue of Life
 #' @inheritSection AMR Read more on our website!
-#' @importFrom crayon bold underline
-#' @importFrom dplyr filter
 #' @export
-#' @examples
-#' library(dplyr)
-#' microorganisms %>% freq(kingdom)
-#' microorganisms %>% group_by(kingdom) %>% freq(phylum, nmax = NULL)
 catalogue_of_life_version <- function() {
   
   check_dataset_integrity()
@@ -113,16 +107,16 @@ catalogue_of_life_version <- function() {
             class = c("catalogue_of_life_version", "list"))
 }
 
-#' @exportMethod print.catalogue_of_life_version
+#' @method print catalogue_of_life_version
 #' @export
 #' @noRd
 print.catalogue_of_life_version <- function(x, ...) {
   lst <- x
-  cat(paste0(bold("Included in this AMR package are:\n\n"),
-             underline(lst$catalogue_of_life$version), "\n",
+  cat(paste0(font_bold("Included in this AMR package are:\n\n"),
+             font_underline(lst$catalogue_of_life$version), "\n",
              "  Available at: ", lst$catalogue_of_life$url, "\n",
              "  Number of included species: ", format(lst$catalogue_of_life$n, big.mark = ","), "\n",
-             underline(paste0(lst$deutsche_sammlung_von_mikroorganismen_und_zellkulturen$version, " (",
+             font_underline(paste0(lst$deutsche_sammlung_von_mikroorganismen_und_zellkulturen$version, " (",
                               lst$deutsche_sammlung_von_mikroorganismen_und_zellkulturen$yearmonth, ")")), "\n",
              "  Available at: ", lst$deutsche_sammlung_von_mikroorganismen_und_zellkulturen$url, "\n",
              "  Number of included species: ", format(lst$deutsche_sammlung_von_mikroorganismen_und_zellkulturen$n, big.mark = ","), "\n\n",

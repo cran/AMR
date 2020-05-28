@@ -33,6 +33,7 @@
 #' @seealso [as.rsi()]
 #' @inheritSection AMR Read more on our website!
 #' @examples
+#' \dontrun{
 #' # transform existing disk zones to the `disk` class
 #' library(dplyr)
 #' df <- data.frame(microorganism = "E. coli",
@@ -50,10 +51,9 @@
 #'        guideline = "EUCAST")
 #'        
 #' as.rsi(df)
+#' }
 as.disk <- function(x, na.rm = FALSE) {
-  if (is.disk(x)) {
-    x
-  } else {
+  if (!is.disk(x)) {
     x <- x %>% unlist()
     if (na.rm == TRUE) {
       x <- x[!is.na(x)]
@@ -79,10 +79,9 @@ as.disk <- function(x, na.rm = FALSE) {
               "%) that were invalid disk zones: ",
               list_missing, call. = FALSE)
     }
-
-    class(x) <- "disk"
-    x
   }
+  structure(as.integer(x),
+            class = c("disk", "integer"))
 }
 
 all_valid_disks <- function(x) {
@@ -92,54 +91,19 @@ all_valid_disks <- function(x) {
 
 #' @rdname as.disk
 #' @export
-#' @importFrom dplyr %>%
 is.disk <- function(x) {
   inherits(x, "disk")
 }
 
-#' @exportMethod as.data.frame.disk
-#' @export
-#' @noRd
-as.data.frame.disk <- function(x, ...) {
-  # same as as.data.frame.integer but with removed stringsAsFactors, since it will be class "disk"
-  nm <- paste(deparse(substitute(x), width.cutoff = 500L),
-              collapse = " ")
-  if (!"nm" %in% names(list(...))) {
-    as.data.frame.vector(x, ..., nm = nm)
-  } else {
-    as.data.frame.vector(x, ...)
-  }
-}
-
-#' @exportMethod print.disk
+#' @method print disk
 #' @export
 #' @noRd
 print.disk <- function(x, ...) {
-  cat("Class 'disk'\n")
+  cat("Class <disk>\n")
   print(as.integer(x), quote = FALSE)
 }
 
-#' @importFrom pillar pillar_shaft
-#' @export
-pillar_shaft.disk <- function(x, ...) {
-  out <- trimws(format(x))
-  out[is.na(x)] <- pillar::style_na(NA)
-  pillar::new_pillar_shaft_simple(out, align = "right", min_width = 3)
-}
-
-#' @importFrom vctrs vec_ptype_abbr
-#' @export
-vec_ptype_abbr.disk <- function(x, ...) {
-  "disk"
-}
-
-#' @importFrom vctrs vec_ptype_full
-#' @export
-vec_ptype_full.disk <- function(x, ...) {
-  "disk"
-}
-
-#' @exportMethod [.disk
+#' @method [ disk
 #' @export
 #' @noRd
 "[.disk" <- function(x, ...) {
@@ -147,7 +111,7 @@ vec_ptype_full.disk <- function(x, ...) {
   attributes(y) <- attributes(x)
   y
 }
-#' @exportMethod [[.disk
+#' @method [[ disk
 #' @export
 #' @noRd
 "[[.disk" <- function(x, ...) {
@@ -155,7 +119,7 @@ vec_ptype_full.disk <- function(x, ...) {
   attributes(y) <- attributes(x)
   y
 }
-#' @exportMethod [<-.disk
+#' @method [<- disk
 #' @export
 #' @noRd
 "[<-.disk" <- function(i, j, ..., value) {
@@ -164,7 +128,7 @@ vec_ptype_full.disk <- function(x, ...) {
   attributes(y) <- attributes(i)
   y
 }
-#' @exportMethod [[<-.disk
+#' @method [[<- disk
 #' @export
 #' @noRd
 "[[<-.disk" <- function(i, j, ..., value) {
@@ -173,7 +137,7 @@ vec_ptype_full.disk <- function(x, ...) {
   attributes(y) <- attributes(i)
   y
 }
-#' @exportMethod c.disk
+#' @method c disk
 #' @export
 #' @noRd
 c.disk <- function(x, ...) {

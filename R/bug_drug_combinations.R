@@ -32,8 +32,6 @@
 #' @param ... arguments passed on to `FUN`
 #' @inheritParams rsi_df
 #' @inheritParams base::formatC
-#' @importFrom dplyr %>% rename group_by select mutate filter summarise ungroup
-#' @importFrom tidyr pivot_longer
 #' @details The function [format()] calculates the resistance per bug-drug combination. Use `combine_IR = FALSE` (default) to test R vs. S+I and `combine_IR = TRUE` to test R+I vs. S. 
 #' 
 #' The language of the output can be overwritten with `options(AMR_locale)`, please see [translate].
@@ -74,29 +72,42 @@ bug_drug_combinations <- function(x,
     stop("`col_mo` must be set.", call. = FALSE)
   }
   
-  x <- x %>%
-    as.data.frame(stringsAsFactors = FALSE) %>% 
-    mutate(mo = x %>% 
-             pull(col_mo) %>% 
-             FUN(...)) %>% 
-    group_by(mo) %>% 
-    select_if(is.rsi) %>% 
-    pivot_longer(-mo, names_to = "ab") %>% 
-    group_by(mo, ab) %>% 
-    summarise(S = sum(value == "S", na.rm = TRUE),
-              I = sum(value == "I", na.rm = TRUE),
-              R = sum(value == "R", na.rm = TRUE)) %>%
-    ungroup() %>%
-    mutate(total = S + I + R) %>%
-    as.data.frame(stringsAsFactors = FALSE)
-
-  structure(.Data = x, class = c("bug_drug_combinations", class(x)))
+  x <- as.data.frame(x, stringsAsFactors = FALSE)
+  x[, col_mo] <- FUN(x[, col_mo, drop = TRUE])
+  x <- x[, c(col_mo, names(which(sapply(x, is.rsi))))]
+  
+  unique_mo <- sort(unique(x[, col_mo, drop = TRUE]))
+  
+  out <- data.frame(
+    mo = character(0),
+    ab = character(0),
+    S = integer(0),
+    I = integer(0),
+    R = integer(0),
+    total = integer(0))
+  
+  for (i in seq_len(length(unique_mo))) {
+    # filter on MO group and only select R/SI columns
+    x_mo_filter <- x[which(x[, col_mo, drop = TRUE] == unique_mo[i]), names(which(sapply(x, is.rsi)))]
+    # turn and merge everything
+    pivot <- lapply(x_mo_filter, function(x) {
+      m <- as.matrix(table(x))
+      data.frame(S = m["S", ], I = m["I", ], R = m["R", ], stringsAsFactors = FALSE)
+    })
+    merged <- do.call(rbind, pivot)
+    out_group <- data.frame(mo = unique_mo[i],
+                            ab = rownames(merged),
+                            S = merged$S,
+                            I = merged$I,
+                            R = merged$R,
+                            total = merged$S + merged$I + merged$R)
+    out <- rbind(out, out_group)
+  }
+  
+  structure(.Data = out, class = c("bug_drug_combinations", class(x)))
 }
 
-#' @importFrom dplyr everything rename %>% ungroup group_by summarise mutate_all arrange everything lag
-#' @importFrom tidyr pivot_wider
-#' @importFrom cleaner percentage
-#' @exportMethod format.bug_drug_combinations
+#' @method format bug_drug_combinations
 #' @export
 #' @rdname bug_drug_combinations
 format.bug_drug_combinations <- function(x,
@@ -110,10 +121,10 @@ format.bug_drug_combinations <- function(x,
                                          decimal.mark = getOption("OutDec"),
                                          big.mark = ifelse(decimal.mark == ",", ".", ","),
                                          ...) {
-  x <- x %>% filter(total >= minimum)
+  x <- subset(x, total >= minimum)
   
   if (remove_intrinsic_resistant == TRUE) {
-    x <- x %>% filter(R != total)
+    x <- subset(x, R != total)
   }
   if (combine_SI == TRUE | combine_IR == FALSE) {
     x$isolates <- x$R
@@ -137,41 +148,79 @@ format.bug_drug_combinations <- function(x,
     ab_txt
   }
   
+  remove_NAs <- function(.data) {
+    cols <- colnames(.data)
+    .data <- as.data.frame(sapply(.data, function(x) ifelse(is.na(x), "", x), simplify = FALSE))
+    colnames(.data) <- cols
+    .data
+  }
+  
+  create_var <- function(.data, ...) {
+    dots <- list(...)
+    for (i in seq_len(length(dots))) {
+      .data[, names(dots)[i]] <- dots[[i]]
+    }
+    .data
+  }
+  
   y <- x %>%
-    mutate(ab = as.ab(ab),
-           ab_txt = give_ab_name(ab = ab, format = translate_ab, language = language)) %>% 
+    create_var(ab = as.ab(x$ab),
+               ab_txt = give_ab_name(ab = x$ab, format = translate_ab, language = language)) %>%
     group_by(ab, ab_txt, mo) %>% 
     summarise(isolates = sum(isolates, na.rm = TRUE),
               total = sum(total, na.rm = TRUE)) %>% 
-    ungroup() %>% 
-    mutate(txt = paste0(percentage(isolates / total, decimal.mark = decimal.mark, big.mark = big.mark), 
-                        " (", trimws(format(isolates, big.mark = big.mark)), "/", 
-                        trimws(format(total, big.mark = big.mark)), ")")) %>% 
-    select(ab, ab_txt, mo, txt) %>%
-    arrange(mo) %>% 
-    pivot_wider(names_from = mo, values_from = txt) %>% 
-    mutate_all(~ifelse(is.na(.), "", .)) %>% 
-    mutate(ab_group = ab_group(ab, language = language),
-           ab_txt) %>% 
-    select(ab_group, ab_txt, everything(), -ab) %>% 
-    arrange(ab_group, ab_txt) %>% 
-    mutate(ab_group = ifelse(ab_group != lag(ab_group) | is.na(lag(ab_group)), ab_group, ""))
+    ungroup()
   
+  y <- y %>% 
+    create_var(txt = paste0(percentage(y$isolates / y$total, decimal.mark = decimal.mark, big.mark = big.mark), 
+                                          " (", trimws(format(y$isolates, big.mark = big.mark)), "/",
+                                          trimws(format(y$total, big.mark = big.mark)), ")")) %>% 
+    select(ab, ab_txt, mo, txt) %>%
+    arrange(mo)
+
+  # replace tidyr::pivot_wider() from here
+  for (i in unique(y$mo)) {
+    mo_group <- y[which(y$mo == i), c("ab", "txt")]
+    colnames(mo_group) <- c("ab", i)
+    rownames(mo_group) <- NULL
+    y <- y %>% 
+      left_join(mo_group, by = "ab")
+  }
+  y <- y %>% 
+    distinct(ab, .keep_all = TRUE) %>% 
+    select(-mo, -txt) %>% 
+    # replace tidyr::pivot_wider() until here
+    remove_NAs()
+  
+  select_ab_vars <- function(.data) {
+    .data[, c("ab_group", "ab_txt", colnames(.data)[!colnames(.data) %in% c("ab_group", "ab_txt", "ab")])]
+  }
+
+  y <- y %>% 
+    create_var(ab_group = ab_group(y$ab, language = language)) %>% 
+    select_ab_vars() %>% 
+    arrange(ab_group, ab_txt)
+  y <- y %>% 
+    create_var(ab_group = ifelse(y$ab_group != lag(y$ab_group) | is.na(lag(y$ab_group)), y$ab_group, ""))
+
   if (add_ab_group == FALSE) {
-    y <- y %>% select(-ab_group) %>% rename("Drug" = ab_txt)
+    y <- y %>% 
+      select(-ab_group) %>%
+      rename("Drug" = ab_txt)
     colnames(y)[1] <- translate_AMR(colnames(y)[1], language = get_locale(), only_unknown = FALSE)
   } else {
     y <- y %>% rename("Group" = ab_group,
                       "Drug" = ab_txt)
     colnames(y)[1:2] <- translate_AMR(colnames(y)[1:2], language = get_locale(), only_unknown = FALSE)
   }
+  
+  rownames(y) <- NULL
   y
 }
 
-#' @exportMethod print.bug_drug_combinations
+#' @method print bug_drug_combinations
 #' @export
-#' @importFrom crayon blue
 print.bug_drug_combinations <- function(x, ...) {
   print(as.data.frame(x, stringsAsFactors = FALSE))
-  message(blue("NOTE: Use 'format()' on this result to get a publicable/printable format."))
+  message(font_blue("NOTE: Use 'format()' on this result to get a publicable/printable format."))
 }

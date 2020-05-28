@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
 library(dplyr)   # part of tidyverse
 library(ggplot2) # part of tidyverse
 library(AMR)     # this package
+library(cleaner) # to create frequency tables
 
 ## -----------------------------------------------------------------------------
 # transform variables

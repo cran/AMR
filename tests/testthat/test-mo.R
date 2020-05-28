@@ -25,7 +25,6 @@ test_that("as.mo works", {
   
   skip_on_cran()
  
-  library(dplyr)
   MOs <- microorganisms %>% filter(!is.na(mo), nchar(mo) > 3)
   expect_identical(as.character(MOs$mo), as.character(as.mo(MOs$mo)))
   
@@ -35,7 +34,6 @@ test_that("as.mo works", {
   
   expect_equal(as.character(as.mo("Escherichia coli")), "B_ESCHR_COLI")
   expect_equal(as.character(as.mo("Escherichia  coli")), "B_ESCHR_COLI")
-  expect_equal(as.character(as.mo(22242416)), "B_ESCHR_COLI")
   expect_equal(as.character(as.mo(112283007)), "B_ESCHR_COLI")
   expect_equal(as.character(as.mo("Escherichia  species")), "B_ESCHR")
   expect_equal(as.character(as.mo("Escherichia")), "B_ESCHR")
@@ -46,7 +44,7 @@ test_that("as.mo works", {
   expect_equal(as.character(as.mo("Klebsiella")), "B_KLBSL")
   expect_equal(as.character(as.mo("K. pneu rhino")), "B_KLBSL_PNMN_RHNS") # K. pneumoniae subspp. rhinoscleromatis
   expect_equal(as.character(as.mo("Bartonella")), "B_BRTNL")
-  expect_equal(as.character(as.mo("C. difficile")), "B_CTRDM_DFFC")
+  expect_equal(as.character(as.mo("C. difficile")), "B_CRDDS_DFFC")
   expect_equal(as.character(as.mo("L. pneumophila")), "B_LGNLL_PNMP")
   expect_equal(as.character(as.mo("Strepto")), "B_STRPT")
   expect_equal(as.character(as.mo("Streptococcus")), "B_STRPT") # not Peptostreptoccus
@@ -64,7 +62,7 @@ test_that("as.mo works", {
   
   expect_equal(as.character(as.mo("MRSE")), "B_STPHY_EPDR")
   expect_equal(as.character(as.mo("VRE")), "B_ENTRC")
-  expect_equal(as.character(as.mo("MRPA")), "B_PSDMN_ARGN")
+  expect_equal(as.character(as.mo("MRPA")), "B_PSDMN_AERG")
   expect_equal(as.character(as.mo("PISP")), "B_STRPT_PNMN")
   expect_equal(as.character(as.mo("PRSP")), "B_STRPT_PNMN")
   expect_equal(as.character(as.mo("VISP")), "B_STRPT_PNMN")
@@ -100,11 +98,11 @@ test_that("as.mo works", {
   # unprevalent MO
   expect_identical(
     as.character(
-      as.mo(c("burnod",
-              "B. nodosa",
-              "B nodosa",
-              "Burkholderia nodosa"))),
-    rep("B_BRKHL_NODS", 4))
+      as.mo(c("parnod",
+              "P. nodosa",
+              "P nodosa",
+              "Paraburkholderia nodosa"))),
+    rep("B_PRBRK_NODS", 4))
   
   # empty values
   expect_identical(as.character(as.mo(c("", NA, NaN))), rep(NA_character_, 3))
@@ -240,7 +238,7 @@ test_that("as.mo works", {
   
   # Salmonella (City) are all actually Salmonella enterica spp (City)
   expect_equal(suppressWarnings(mo_name(c("Salmonella Goettingen", "Salmonella Typhimurium", "Salmonella Group A"))),
-               c("Salmonella enterica", "Salmonella typhimurium", "Salmonella"))
+               c("Salmonella enterica", "Salmonella enterica", "Salmonella"))
   
   # no virusses
   expect_equal(as.character(as.mo("Virus")), NA_character_)
@@ -287,4 +285,5 @@ test_that("as.mo works", {
   expect_warning(x[1] <- "invalid code")
   expect_warning(x[[1]] <- "invalid code")
   expect_warning(c(x[1], "test"))
+  
 })

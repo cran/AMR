@@ -12,7 +12,7 @@
 
 <meta name="author" content="Matthijs S. Berends" />
 
-<meta name="date" content="2020-04-15" />
+<meta name="date" content="2020-05-28" />
 
 <title>How to apply EUCAST rules</title>
 
@@ -20,9 +20,9 @@
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
-code.sourceCode > span { display: inline-block; line-height: 1.25; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-code.sourceCode > span:empty { height: 1.2em; }
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
@@ -32,16 +32,14 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 code.sourceCode { white-space: pre-wrap; }
-code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
 }
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
+    border: none; pointer-events: all; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -50,9 +48,9 @@ pre.numberSource code > span > a:first-child::before
   }
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
-  {   }
+  {  }
 @media screen {
-code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+a.sourceLine::before { text-decoration: underline; }
 }
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
@@ -303,7 +301,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">How to apply EUCAST rules</h1>
 <h4 class="author">Matthijs S. Berends</h4>
-<h4 class="date">15 April 2020</h4>
+<h4 class="date">28 May 2020</h4>
 
 
 <div id="TOC">
@@ -324,34 +322,34 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div id="examples" class="section level2">
 <h2>Examples</h2>
 <p>These rules can be used to discard impossible bug-drug combinations in your data. For example, <em>Klebsiella</em> produces beta-lactamase that prevents ampicillin (or amoxicillin) from working against it. In other words, practically every strain of <em>Klebsiella</em> is resistant to ampicillin.</p>
-<p>Sometimes, laboratory data can still contain such strains with ampicillin being susceptible to ampicillin. This could be because an antibiogram is available before an identification is available, and the antibiogram is then not re-interpreted based on the identification (namely, <em>Klebsiella</em>). EUCAST expert rules solve this, that can be used with <code>eucast_rules()</code>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>oops &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">mo =</span> <span class="kw">c</span>(<span class="st">&quot;Klebsiella&quot;</span>, </span>
-<span id="cb1-2"><a href="#cb1-2"></a>                          <span class="st">&quot;Escherichia&quot;</span>),</span>
-<span id="cb1-3"><a href="#cb1-3"></a>                   <span class="dt">ampicillin =</span> <span class="st">&quot;S&quot;</span>)</span>
-<span id="cb1-4"><a href="#cb1-4"></a>oops</span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="co">#            mo ampicillin</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="co"># 1  Klebsiella          S</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="co"># 2 Escherichia          S</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a></span>
-<span id="cb1-9"><a href="#cb1-9"></a><span class="kw">eucast_rules</span>(oops, <span class="dt">info =</span> <span class="ot">FALSE</span>)</span>
-<span id="cb1-10"><a href="#cb1-10"></a><span class="co">#            mo ampicillin</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a><span class="co"># 1  Klebsiella          R</span></span>
-<span id="cb1-12"><a href="#cb1-12"></a><span class="co"># 2 Escherichia          S</span></span></code></pre></div>
+<p>Sometimes, laboratory data can still contain such strains with ampicillin being susceptible to ampicillin. This could be because an antibiogram is available before an identification is available, and the antibiogram is then not re-interpreted based on the identification (namely, <em>Klebsiella</em>). EUCAST expert rules solve this, that can be applied using <code>eucast_rules()</code>:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1">oops &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">mo =</span> <span class="kw">c</span>(<span class="st">&quot;Klebsiella&quot;</span>, </a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">                          <span class="st">&quot;Escherichia&quot;</span>),</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">                   <span class="dt">ampicillin =</span> <span class="st">&quot;S&quot;</span>)</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">oops</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="co">#            mo ampicillin</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="co"># 1  Klebsiella          S</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="co"># 2 Escherichia          S</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="kw">eucast_rules</span>(oops, <span class="dt">info =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="co">#            mo ampicillin</span></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11"><span class="co"># 1  Klebsiella          R</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="co"># 2 Escherichia          S</span></a></code></pre></div>
 <p>EUCAST rules can not only be used for correction, they can also be used for filling in known resistance and susceptibility based on results of other antimicrobials drugs. This process is called <em>interpretive reading</em> and is part of the <code>eucast_rules()</code> function as well:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>data &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">mo =</span> <span class="kw">c</span>(<span class="st">&quot;Staphylococcus aureus&quot;</span>,</span>
-<span id="cb2-2"><a href="#cb2-2"></a>                          <span class="st">&quot;Enterococcus faecalis&quot;</span>,</span>
-<span id="cb2-3"><a href="#cb2-3"></a>                          <span class="st">&quot;Escherichia coli&quot;</span>,</span>
-<span id="cb2-4"><a href="#cb2-4"></a>                          <span class="st">&quot;Klebsiella pneumoniae&quot;</span>,</span>
-<span id="cb2-5"><a href="#cb2-5"></a>                          <span class="st">&quot;Pseudomonas aeruginosa&quot;</span>),</span>
-<span id="cb2-6"><a href="#cb2-6"></a>                   <span class="dt">VAN =</span> <span class="st">&quot;-&quot;</span>,       <span class="co"># Vancomycin</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a>                   <span class="dt">AMX =</span> <span class="st">&quot;-&quot;</span>,       <span class="co"># Amoxicillin</span></span>
-<span id="cb2-8"><a href="#cb2-8"></a>                   <span class="dt">COL =</span> <span class="st">&quot;-&quot;</span>,       <span class="co"># Colistin</span></span>
-<span id="cb2-9"><a href="#cb2-9"></a>                   <span class="dt">CAZ =</span> <span class="st">&quot;-&quot;</span>,       <span class="co"># Ceftazidime</span></span>
-<span id="cb2-10"><a href="#cb2-10"></a>                   <span class="dt">CXM =</span> <span class="st">&quot;-&quot;</span>,       <span class="co"># Cefuroxime</span></span>
-<span id="cb2-11"><a href="#cb2-11"></a>                   <span class="dt">PEN =</span> <span class="st">&quot;S&quot;</span>,       <span class="co"># Penicillin G</span></span>
-<span id="cb2-12"><a href="#cb2-12"></a>                   <span class="dt">FOX =</span> <span class="st">&quot;S&quot;</span>,       <span class="co"># Cefoxitin</span></span>
-<span id="cb2-13"><a href="#cb2-13"></a>                   <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>data</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">data &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">mo =</span> <span class="kw">c</span>(<span class="st">&quot;Staphylococcus aureus&quot;</span>,</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">                          <span class="st">&quot;Enterococcus faecalis&quot;</span>,</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">                          <span class="st">&quot;Escherichia coli&quot;</span>,</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">                          <span class="st">&quot;Klebsiella pneumoniae&quot;</span>,</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">                          <span class="st">&quot;Pseudomonas aeruginosa&quot;</span>),</a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">                   <span class="dt">VAN =</span> <span class="st">&quot;-&quot;</span>,       <span class="co"># Vancomycin</span></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">                   <span class="dt">AMX =</span> <span class="st">&quot;-&quot;</span>,       <span class="co"># Amoxicillin</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">                   <span class="dt">COL =</span> <span class="st">&quot;-&quot;</span>,       <span class="co"># Colistin</span></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">                   <span class="dt">CAZ =</span> <span class="st">&quot;-&quot;</span>,       <span class="co"># Ceftazidime</span></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10">                   <span class="dt">CXM =</span> <span class="st">&quot;-&quot;</span>,       <span class="co"># Cefuroxime</span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11">                   <span class="dt">PEN =</span> <span class="st">&quot;S&quot;</span>,       <span class="co"># Penicillin G</span></a>
+<a class="sourceLine" id="cb2-12" data-line-number="12">                   <span class="dt">FOX =</span> <span class="st">&quot;S&quot;</span>,       <span class="co"># Cefoxitin</span></a>
+<a class="sourceLine" id="cb2-13" data-line-number="13">                   <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">data</a></code></pre></div>
 <table>
 <thead>
 <tr class="header">
@@ -418,7 +416,9 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">eucast_rules</span>(data)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">eucast_rules</span>(data)</a></code></pre></div>
+<pre><code># Warning: Not all columns with antimicrobial results are of class &lt;rsi&gt;.
+# Transform eligible columns to class &lt;rsi&gt; on beforehand: your_data %&gt;% mutate_if(is.rsi.eligible, as.rsi)</code></pre>
 <table>
 <thead>
 <tr class="header">

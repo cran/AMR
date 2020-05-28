@@ -8,20 +8,22 @@ knitr::opts_chunk$set(
 )
 
 ## ----example table, echo = FALSE, results = 'asis'----------------------------
-knitr::kable(dplyr::tibble(date = Sys.Date(),
-                           patient_id = c("abcd", "abcd", "efgh"),
-                           mo = "Escherichia coli", 
-                           AMX = c("S", "S", "R"),
-                           CIP = c("S", "R", "S")), 
+knitr::kable(data.frame(date = Sys.Date(),
+                        patient_id = c("abcd", "abcd", "efgh"),
+                        mo = "Escherichia coli", 
+                        AMX = c("S", "S", "R"),
+                        CIP = c("S", "R", "S"),
+                        stringsAsFactors = FALSE), 
              align = "c")
 
-## ----lib packages, message = FALSE--------------------------------------------
+## ----lib packages, message = FALSE, warning = FALSE, results = 'asis'---------
 library(dplyr)
 library(ggplot2)
 library(AMR)
+library(cleaner)
 
 # (if not yet installed, install with:)
-# install.packages(c("tidyverse", "AMR"))
+# install.packages(c("dplyr", "ggplot2", "AMR", "cleaner"))
 
 ## ----create patients----------------------------------------------------------
 patients <- unlist(lapply(LETTERS, paste0, 1:10))
@@ -69,7 +71,7 @@ data <- data %>% left_join(patients_table)
 knitr::kable(head(data), align = "c")
 
 ## ----freq gender 1, results="asis"--------------------------------------------
-data %>% freq(gender) # this would be the same: freq(data$gender)
+data %>% freq(gender)
 
 ## ----transform mo 1-----------------------------------------------------------
 data <- data %>%
@@ -104,7 +106,7 @@ data_1st <- data %>%
 weighted_df <- data %>%
   filter(bacteria == as.mo("E. coli")) %>% 
   # only most prevalent patient
-  filter(patient_id == cleaner::top_freq(freq(., patient_id), 1)[1]) %>% 
+  filter(patient_id == top_freq(freq(., patient_id), 1)[1]) %>% 
   arrange(date) %>%
   select(date, patient_id, bacteria, AMX:GEN, first) %>% 
   # maximum of 10 rows
@@ -125,7 +127,7 @@ data <- data %>%
 weighted_df2 <- data %>%
   filter(bacteria == as.mo("E. coli")) %>% 
   # only most prevalent patient
-  filter(patient_id == cleaner::top_freq(freq(., patient_id), 1)[1]) %>% 
+  filter(patient_id == top_freq(freq(., patient_id), 1)[1]) %>% 
   arrange(date) %>%
   select(date, patient_id, bacteria, AMX:GEN, first, first_weighted) %>% 
   # maximum of 10 rows
@@ -265,8 +267,7 @@ data_1st %>%
   coord_flip()
 
 ## ---- results = 'markup'------------------------------------------------------
-# use package 'tidyr' to pivot data; 
-# it gets installed with this 'AMR' package
+# use package 'tidyr' to pivot data:
 library(tidyr)
 
 check_FOS <- example_isolates %>%

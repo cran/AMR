@@ -14,7 +14,7 @@
 \alias{filter_glycopeptides}
 \alias{filter_macrolides}
 \alias{filter_tetracyclines}
-\title{Filter isolates on result in antibiotic class}
+\title{Filter isolates on result in antimicrobial class}
 \usage{
 filter_ab_class(x, ab_class, result = NULL, scope = "any", ...)
 
@@ -54,7 +54,7 @@ filter_tetracyclines(x, result = NULL, scope = "any", ...)
 \item{...}{parameters passed on to \code{filter_at} from the \code{dplyr} package}
 }
 \description{
-Filter isolates on results in specific antibiotic variables based on their antibiotic class. This makes it easy to filter on isolates that were tested for e.g. any aminoglycoside.
+Filter isolates on results in specific antimicrobial classes. This makes it easy to filter on isolates that were tested for e.g. any aminoglycoside.
 }
 \details{
 The \code{group} column in \link{antibiotics} data set will be searched for \code{ab_class} (case-insensitive). If no results are found, the \code{atc_group1} and \code{atc_group2} columns will be searched. Next, \code{x} will be checked for column names with a value in any abbreviations, codes or official names found in the \link{antibiotics} data set.
@@ -62,12 +62,13 @@ The \code{group} column in \link{antibiotics} data set will be searched for \cod
 \section{Stable lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, we are largely happy with the unlying code, and major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; we will avoid removing arguments or changing the meaning of existing arguments.
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. To begin with, the function or argument will be deprecated; it will continue to work but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \examples{
+\dontrun{
 library(dplyr)
 
 # filter on isolates that have any result for any aminoglycoside
@@ -96,4 +97,5 @@ example_isolates \%>\%
 example_isolates \%>\%
   filter_aminoglycosides("R", "all") \%>\%
   filter_fluoroquinolones("R", "all")
+}
 }

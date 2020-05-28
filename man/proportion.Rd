@@ -74,7 +74,7 @@ rsi_df(
 A \code{\link{double}} or, when \code{as_percent = TRUE}, a \code{\link{character}}.
 }
 \description{
-These functions can be used to calculate the (co-)resistance or susceptibility of microbial isolates (i.e. percentage of S, SI, I, IR or R). All functions support quasiquotation with pipes, can be used in \code{summarise()}][dplyr::summarise()] and also support grouped variables, please see \emph{Examples}.
+These functions can be used to calculate the (co-)resistance or susceptibility of microbial isolates (i.e. percentage of S, SI, I, IR or R). All functions support quasiquotation with pipes, can be used in \code{summarise()} from the \code{dplyr} package and also support grouped variables, please see \emph{Examples}.
 
 \code{\link[=resistance]{resistance()}} should be used to calculate resistance, \code{\link[=susceptibility]{susceptibility()}} should be used to calculate susceptibility.\cr
 }
@@ -85,7 +85,7 @@ The function \code{\link[=resistance]{resistance()}} is equal to the function \c
 
 These functions are not meant to count isolates, but to calculate the proportion of resistance/susceptibility. Use the \code{count()}][AMR::count()] functions to count isolates. The function \code{\link[=susceptibility]{susceptibility()}} is essentially equal to \code{count_susceptible() / count_all()}. \emph{Low counts can influence the outcome - the \code{proportion} functions may camouflage this, since they only return the proportion (albeit being dependent on the \code{minimum} parameter).}
 
-The function \code{\link[=proportion_df]{proportion_df()}} takes any variable from \code{data} that has an \code{\link{rsi}} class (created with \code{\link[=as.rsi]{as.rsi()}}) and calculates the proportions R, I and S. The function \code{\link[=rsi_df]{rsi_df()}} works exactly like \code{\link[=proportion_df]{proportion_df()}}, but adds the number of isolates.
+The function \code{\link[=proportion_df]{proportion_df()}} takes any variable from \code{data} that has an \code{\link{rsi}} class (created with \code{\link[=as.rsi]{as.rsi()}}) and calculates the proportions R, I and S. It also supports grouped variables. The function \code{\link[=rsi_df]{rsi_df()}} works exactly like \code{\link[=proportion_df]{proportion_df()}}, but adds the number of isolates.
 }
 \section{Combination therapy}{
 
@@ -121,9 +121,9 @@ Using \code{only_all_tested} has no impact when only using one antibiotic as inp
 \section{Stable lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, we are largely happy with the unlying code, and major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; we will avoid removing arguments or changing the meaning of existing arguments.
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. To begin with, the function or argument will be deprecated; it will continue to work but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Interpretation of R and S/I}{
@@ -160,72 +160,72 @@ proportion_I(example_isolates$AMX)
 proportion_IR(example_isolates$AMX)
 proportion_R(example_isolates$AMX)
 
-library(dplyr)
-example_isolates \%>\%
-  group_by(hospital_id) \%>\%
-  summarise(r = resistance(CIP),
-            n = n_rsi(CIP)) # n_rsi works like n_distinct in dplyr, see ?n_rsi
+if (require("dplyr")) {
+  example_isolates \%>\%
+    group_by(hospital_id) \%>\%
+    summarise(r = resistance(CIP),
+              n = n_rsi(CIP)) # n_rsi works like n_distinct in dplyr, see ?n_rsi
+ 
+  example_isolates \%>\%
+    group_by(hospital_id) \%>\%
+    summarise(R  = resistance(CIP, as_percent = TRUE),
+              SI = susceptibility(CIP, as_percent = TRUE),
+              n1 = count_all(CIP),  # the actual total; sum of all three
+              n2 = n_rsi(CIP),      # same - analogous to n_distinct
+              total = n())          # NOT the number of tested isolates!
+ 
+  # Calculate co-resistance between amoxicillin/clav acid and gentamicin,
+  # so we can see that combination therapy does a lot more than mono therapy:
+  example_isolates \%>\% susceptibility(AMC)  # \%SI = 76.3\%
+  example_isolates \%>\% count_all(AMC)       #   n = 1879
+ 
+  example_isolates \%>\% susceptibility(GEN)  # \%SI = 75.4\%
+  example_isolates \%>\% count_all(GEN)       #   n = 1855
+ 
+  example_isolates \%>\% susceptibility(AMC, GEN) # \%SI = 94.1\%
+  example_isolates \%>\% count_all(AMC, GEN)      #   n = 1939
+ 
+ 
+  # See Details on how `only_all_tested` works. Example:
+  example_isolates \%>\%
+    summarise(numerator = count_susceptible(AMC, GEN),
+              denominator = count_all(AMC, GEN),
+              proportion = susceptibility(AMC, GEN))
+ 
+  example_isolates \%>\%
+    summarise(numerator = count_susceptible(AMC, GEN, only_all_tested = TRUE),
+              denominator = count_all(AMC, GEN, only_all_tested = TRUE),
+              proportion = susceptibility(AMC, GEN, only_all_tested = TRUE))
+ 
+ 
+  example_isolates \%>\%
+    group_by(hospital_id) \%>\%
+    summarise(cipro_p = susceptibility(CIP, as_percent = TRUE),
+              cipro_n = count_all(CIP),
+              genta_p = susceptibility(GEN, as_percent = TRUE),
+              genta_n = count_all(GEN),
+              combination_p = susceptibility(CIP, GEN, as_percent = TRUE),
+              combination_n = count_all(CIP, GEN))
+ 
+  # Get proportions S/I/R immediately of all rsi columns
+  example_isolates \%>\%
+    select(AMX, CIP) \%>\%
+    proportion_df(translate = FALSE)
+ 
+  # It also supports grouping variables
+  example_isolates \%>\%
+    select(hospital_id, AMX, CIP) \%>\%
+    group_by(hospital_id) \%>\%
+    proportion_df(translate = FALSE)
+}
 
-example_isolates \%>\%
-  group_by(hospital_id) \%>\%
-  summarise(R  = resistance(CIP, as_percent = TRUE),
-            SI = susceptibility(CIP, as_percent = TRUE),
-            n1 = count_all(CIP),  # the actual total; sum of all three
-            n2 = n_rsi(CIP),      # same - analogous to n_distinct
-            total = n())          # NOT the number of tested isolates!
-
-# Calculate co-resistance between amoxicillin/clav acid and gentamicin,
-# so we can see that combination therapy does a lot more than mono therapy:
-example_isolates \%>\% susceptibility(AMC)  # \%SI = 76.3\%
-example_isolates \%>\% count_all(AMC)       #   n = 1879
-
-example_isolates \%>\% susceptibility(GEN)  # \%SI = 75.4\%
-example_isolates \%>\% count_all(GEN)       #   n = 1855
-
-example_isolates \%>\% susceptibility(AMC, GEN) # \%SI = 94.1\%
-example_isolates \%>\% count_all(AMC, GEN)      #   n = 1939
-
-
-# See Details on how `only_all_tested` works. Example:
-example_isolates \%>\%
-  summarise(numerator = count_susceptible(AMC, GEN),
-            denominator = count_all(AMC, GEN),
-            proportion = susceptibility(AMC, GEN))
-example_isolates \%>\%
-  summarise(numerator = count_susceptible(AMC, GEN, only_all_tested = TRUE),
-            denominator = count_all(AMC, GEN, only_all_tested = TRUE),
-            proportion = susceptibility(AMC, GEN, only_all_tested = TRUE))
-
-
-example_isolates \%>\%
-  group_by(hospital_id) \%>\%
-  summarise(cipro_p = susceptibility(CIP, as_percent = TRUE),
-            cipro_n = count_all(CIP),
-            genta_p = susceptibility(GEN, as_percent = TRUE),
-            genta_n = count_all(GEN),
-            combination_p = susceptibility(CIP, GEN, as_percent = TRUE),
-            combination_n = count_all(CIP, GEN))
-
-# Get proportions S/I/R immediately of all rsi columns
-example_isolates \%>\%
-  select(AMX, CIP) \%>\%
-  proportion_df(translate = FALSE)
-
-# It also supports grouping variables
-example_isolates \%>\%
-  select(hospital_id, AMX, CIP) \%>\%
-  group_by(hospital_id) \%>\%
-  proportion_df(translate = FALSE)
-
-
-\dontrun{
-
-# calculate current empiric combination therapy of Helicobacter gastritis:
-my_table \%>\%
-  filter(first_isolate == TRUE,
-         genus == "Helicobacter") \%>\%
-  summarise(p = susceptibility(AMX, MTR),  # amoxicillin with metronidazole
-            n = count_all(AMX, MTR))
+\dontrun{  
+  # calculate current empiric combination therapy of Helicobacter gastritis:
+  my_table \%>\%
+    filter(first_isolate == TRUE,
+           genus == "Helicobacter") \%>\%
+    summarise(p = susceptibility(AMX, MTR),  # amoxicillin with metronidazole
+              n = count_all(AMX, MTR))
 }
 }
 \seealso{

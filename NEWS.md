@@ -1,5 +1,43 @@
-# AMR 1.1.0
+# AMR 1.2.0
 
+
+### Breaking 
+* Removed code dependency on all other R packages, making this package fully independent of the development process of others. This is a major code change, but will probably not be noticeable by most users.
+
+  Making this package independent of especially the tidyverse (e.g. packages `dplyr` and `tidyr`) tremendously increases sustainability on the long term, since tidyverse functions change quite often. Good for users, but hard for package maintainers. Most of our functions are replaced with versions that only rely on base R, which keeps this package fully functional for many years to come, without requiring a lot of maintenance to keep up with other packages anymore. Another upside it that this package can now be used with all versions of R since R-3.0.0 (April 2013). Our package is being used in settings where the resources are very limited. Fewer dependencies on newer software is helpful for such settings.
+  
+  Negative effects of this change are:
+  * Function `freq()` that was borrowed from the `cleaner` package was removed. Use `cleaner::freq()`, or run `library("cleaner")` before you use `freq()`.
+  * Printing values of class `mo` or `rsi` in a tibble will no longer be in colour and printing `rsi` in a tibble will show the class `<ord>`, not `<rsi>` anymore. This is purely a visual effect.
+  * All functions from the `mo_*` family (like `mo_name()` and `mo_gramstain()`) are noticeably slower when running on hundreds of thousands of rows.
+  * For developers: classes `mo` and `ab` now both also inherit class `character`, to support any data transformation. This change invalidates code that checks for class length == 1.
+
+### Changed
+* Taxonomy:
+  * Updated the taxonomy of microorganisms tot May 2020, using the Catalogue of Life (CoL), the Global Biodiversity Information Facility (GBIF) and the List of Prokaryotic names with Standing in Nomenclature (LPSN, hosted by DSMZ since February 2020). **Note:** a taxonomic update may always impact determination of first isolates (using `first_isolate()`), since some bacterial names might be renamed to other genera or other (sub)species. This is expected behaviour.
+  * Removed the Catalogue of Life IDs (like 776351), since they now work with a species ID (hexadecimal string)
+* EUCAST rules:
+  * The `eucast_rules()` function no longer applies "other" rules at default that are made available by this package (like setting ampicillin = R when ampicillin + enzyme inhibitor = R). The default input value for `rules` is now `c("breakpoints", "expert")` instead of `"all"`, but this can be changed by the user. To return to the old behaviour, set `options(AMR.eucast_rules = "all")`.
+  * Fixed a bug where checking antimicrobial results in the original data were not regarded as valid R/SI values
+  * All "other" rules now apply for all drug combinations in the `antibiotics` data set these two rules:
+    1. A drug **with** enzyme inhibitor will be set to S if the drug **without** enzyme inhibitor is S
+    2. A drug **without** enzyme inhibitor will be set to R if the drug **with** enzyme inhibitor is R
+    
+    This works for all drug combinations, such as ampicillin/sulbactam, ceftazidime/avibactam, trimethoprim/sulfamethoxazole, etc.
+  * Added official drug names to verbose output of `eucast_rules()`
+* Added function `ab_url()` to return the direct URL of an antimicrobial agent from the official WHO website
+* Improvements for algorithm in `as.ab()`, so that e.g. `as.ab("ampi sul")` and `ab_name("ampi sul")` work
+* Functions `ab_atc()` and `ab_group()` now return `NA` if no antimicrobial agent could be found
+* Small fix for some text input that could not be coerced as valid MIC values 
+* Fix for interpretation of generic CLSI interpretation rules (thanks to Anthony Underwood)
+* Fix for `set_mo_source()` to make sure that column `mo` will always be the second column
+* Added abbreviation "cfsc" for Cefoxitin and "cfav" for Ceftazidime/avibactam
+
+### Other
+* Removed previously deprecated function `p.symbol()` - it was replaced with `p_symbol()`
+* Removed function `read.4d()`, that was only useful for reading data from an old test database.
+
+# AMR 1.1.0
 
 ### New
 * Support for easy principal component analysis for AMR, using the new `pca()` function 

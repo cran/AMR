@@ -56,11 +56,10 @@
 #' - `"ml"` = milliliter (e.g. eyedrops)
 #' @export
 #' @rdname atc_online
-#' @importFrom dplyr %>%
 #' @inheritSection AMR Read more on our website!
 #' @source <https://www.whocc.no/atc_ddd_alterations__cumulative/ddd_alterations/abbrevations/>
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # oral DDD (Defined Daily Dose) of amoxicillin
 #' atc_online_property("J01CA04", "DDD", "O")
 #' # parenteral DDD (Defined Daily Dose) of amoxicillin
@@ -77,17 +76,23 @@ atc_online_property <- function(atc_code,
                                 administration = "O",
                                 url = "https://www.whocc.no/atc_ddd_index/?code=%s&showdescription=no") {
   
+  stopifnot_installed_package(c("curl", "rvest", "xml2"))
+  has_internet <- get("has_internet", envir = asNamespace("curl"))
+  html_attr <- get("html_attr", envir = asNamespace("rvest"))
+  html_children <- get("html_children", envir = asNamespace("rvest"))
+  html_node <- get("html_node", envir = asNamespace("rvest"))
+  html_nodes <- get("html_nodes", envir = asNamespace("rvest"))
+  html_table <- get("html_table", envir = asNamespace("rvest"))
+  html_text <- get("html_text", envir = asNamespace("rvest"))
+  read_html <- get("read_html", envir = asNamespace("xml2"))
+
   check_dataset_integrity()
-
-  if (!all(c("curl", "rvest", "xml2") %in% rownames(utils::installed.packages()))) {
-    stop("Packages 'xml2', 'rvest' and 'curl' are required for this function")
-  }
-
+  
   if (!all(atc_code %in% antibiotics)) {
     atc_code <- as.character(ab_atc(atc_code))
   }
-
-  if (!curl::has_internet()) {
+  
+  if (!has_internet()) {
     message("There appears to be no internet connection.")
     return(rep(NA, length(atc_code)))
   }
@@ -123,24 +128,25 @@ atc_online_property <- function(atc_code,
     returnvalue <- rep(NA_character_, length(atc_code))
   }
 
-  progress <- progress_estimated(n = length(atc_code))
-
+  progress <- progress_estimated(n = length(atc_code), 3)
+  on.exit(close(progress))
+  
   for (i in seq_len(length(atc_code))) {
 
-    progress$tick()$print()
+    progress$tick()
 
     atc_url <- sub("%s", atc_code[i], url, fixed = TRUE)
 
     if (property == "groups") {
-      tbl <- xml2::read_html(atc_url) %>%
-        rvest::html_node("#content") %>%
-        rvest::html_children() %>%
-        rvest::html_node("a")
+      tbl <- read_html(atc_url) %>%
+        html_node("#content") %>%
+        html_children() %>%
+        html_node("a")
 
       # get URLS of items
-      hrefs <- tbl %>% rvest::html_attr("href")
+      hrefs <- tbl %>% html_attr("href")
       # get text of items
-      texts <- tbl %>% rvest::html_text()
+      texts <- tbl %>% html_text()
       # select only text items where URL like "code="
       texts <- texts[grepl("?code=", tolower(hrefs), fixed = TRUE)]
       # last one is antibiotics, skip it
@@ -148,13 +154,13 @@ atc_online_property <- function(atc_code,
       returnvalue <- c(list(texts), returnvalue)
 
     } else {
-      tbl <- xml2::read_html(atc_url) %>%
-        rvest::html_nodes("table") %>%
-        rvest::html_table(header = TRUE) %>%
+      tbl <- read_html(atc_url) %>%
+        html_nodes("table") %>%
+        html_table(header = TRUE) %>%
         as.data.frame(stringsAsFactors = FALSE)
 
       # case insensitive column names
-      colnames(tbl) <- tolower(colnames(tbl)) %>% gsub("^atc.*", "atc", .)
+      colnames(tbl) <- gsub("^atc.*", "atc", tolower(colnames(tbl)))
 
       if (length(tbl) == 0) {
         warning("ATC not found: ", atc_code[i], ". Please check ", atc_url, ".", call. = FALSE)

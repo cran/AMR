@@ -8,25 +8,25 @@
 get_locale()
 }
 \description{
-For language-dependent output of AMR functions, like \code{\link[=mo_name]{mo_name()}}, \code{\link[=mo_type]{mo_type()}} and \code{\link[=ab_name]{ab_name()}}.
+For language-dependent output of AMR functions, like \code{\link[=mo_name]{mo_name()}}, \code{\link[=mo_gramstain]{mo_gramstain()}}, \code{\link[=mo_type]{mo_type()}} and \code{\link[=ab_name]{ab_name()}}.
 }
 \details{
 Strings will be translated to foreign languages if they are defined in a local translation file. Additions to this file can be suggested at our repository. The file can be found here: \url{https://gitlab.com/msberends/AMR/blob/master/data-raw/translations.tsv}.
 
-Currently supported languages can be found if running: \code{unique(AMR:::translations_file$lang)}.
+Currently supported languages are (besides English): Dutch, French, German, Italian, Portuguese, Spanish. Not all these languages currently have translations available for all antimicrobial agents and colloquial microorganism names.
 
 Please suggest your own translations \href{https://gitlab.com/msberends/AMR/issues/new?issue[title]=Translation\%20suggestion}{by creating a new issue on our repository}.
 
-This file will be read by all functions where a translated output can be desired, like all \code{\link[=mo_property]{mo_property()}} functions (\code{\link[=mo_fullname]{mo_fullname()}}, \code{\link[=mo_type]{mo_type()}}, etc.).
+This file will be read by all functions where a translated output can be desired, like all \code{\link[=mo_property]{mo_property()}} functions (\code{\link[=mo_name]{mo_name()}}, \code{\link[=mo_gramstain]{mo_gramstain()}}, \code{\link[=mo_type]{mo_type()}}, etc.).
 
 The system language will be used at default, if that language is supported. The system language can be overwritten with \code{Sys.setenv(AMR_locale = yourlanguage)}.
 }
 \section{Stable lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, we are largely happy with the unlying code, and major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; we will avoid removing arguments or changing the meaning of existing arguments.
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. To begin with, the function or argument will be deprecated; it will continue to work but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Read more on our website!}{

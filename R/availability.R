@@ -28,11 +28,11 @@
 #' @details The function returns a [`data.frame`] with columns `"resistant"` and `"visual_resistance"`. The values in that columns are calculated with [resistance()].
 #' @return [`data.frame`] with column names of `tbl` as row names
 #' @inheritSection AMR Read more on our website!
-#' @importFrom cleaner percentage
 #' @export
 #' @examples
 #' availability(example_isolates)
 #'
+#' \dontrun{
 #' library(dplyr)
 #' example_isolates %>% availability()
 #'
@@ -44,6 +44,7 @@
 #'   filter(mo == as.mo("E. coli")) %>%
 #'   select_if(is.rsi) %>%
 #'   availability()
+#' }
 availability <- function(tbl, width = NULL) {
   x <- base::sapply(tbl, function(x) {
     1 - base::sum(base::is.na(x)) / base::length(x) 

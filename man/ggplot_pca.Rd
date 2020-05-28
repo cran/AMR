@@ -102,18 +102,19 @@ ggplot_pca(
 Produces a \code{ggplot2} variant of a so-called \href{https://en.wikipedia.org/wiki/Biplot}{biplot} for PCA (principal component analysis), but is more flexible and more appealing than the base \R \code{\link[=biplot]{biplot()}} function.
 }
 \details{
-The colours for labels and points can be changed by adding another scale layer for colour, like \code{\link[=scale_colour_viridis_d]{scale_colour_viridis_d()}} or \code{\link[=scale_colour_brewer]{scale_colour_brewer()}}.
+The colours for labels and points can be changed by adding another scale layer for colour, like \code{scale_colour_viridis_d()} or \code{scale_colour_brewer()}.
 }
 \section{Maturing lifecycle}{
 
 \if{html}{\figure{lifecycle_maturing.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. We will strive to maintain backward compatibility, but the function needs wider usage and more extensive testing in order to optimise the unlying code.
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. This function needs wider usage and more extensive testing in order to optimise the unlying code.
 }
 
 \examples{
 # `example_isolates` is a dataset available in the AMR package.
 # See ?example_isolates.
 
+\dontrun{
 # See ?pca for more info about Principal Component Analysis (PCA).
 library(dplyr)
 pca_model <- example_isolates \%>\% 
@@ -127,4 +128,5 @@ biplot(pca_model)
 
 # new 
 ggplot_pca(pca_model)
+}
 }

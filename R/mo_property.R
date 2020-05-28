@@ -22,6 +22,7 @@
 #' Property of a microorganism
 #'
 #' Use these functions to return a specific property of a microorganism. All input values will be evaluated internally with [as.mo()], which makes it possible to use microbial abbreviations, codes and names as input. Please see *Examples*.
+#' @inheritSection lifecycle Stable lifecycle
 #' @param x any (vector of) text that can be coerced to a valid microorganism code with [as.mo()]
 #' @param property one of the column names of the [microorganisms] data set or `"shortname"`
 #' @param language language of the returned text, defaults to system language (see [get_locale()]) and can also be set with `getOption("AMR_locale")`. Use `language = NULL` or `language = ""` to prevent translation.
@@ -31,6 +32,8 @@
 #' - `mo_name("Chlamydia psittaci")` will return `"Chlamydophila psittaci"` (with a warning about the renaming)
 #' - `mo_ref("Chlamydia psittaci")` will return `"Page, 1968"` (with a warning about the renaming)
 #' - `mo_ref("Chlamydophila psittaci")` will return `"Everett et al., 1999"` (without a warning)
+#'
+#' The short name - [mo_shortname()] - almost always returns the first character of the genus and the full species, like *"E. coli"*. Exceptions are abbreviations of staphylococci and beta-haemolytic streptococci, like *"CoNS"* (Coagulase-Negative Staphylococci) and *"GBS"* (Group B Streptococci).
 #'
 #' The Gram stain - [mo_gramstain()] - will be determined on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002) who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value `NA`.
 #'
@@ -146,6 +149,7 @@ mo_fullname <- mo_name
 #' @export
 mo_shortname <- function(x, language = get_locale(), ...) {
   x.mo <- as.mo(x, ...)
+
   metadata <- get_mo_failures_uncertainties_renamed()
 
   replace_empty <- function(x) {
@@ -155,7 +159,7 @@ mo_shortname <- function(x, language = get_locale(), ...) {
   
   # get first char of genus and complete species in English
   shortnames <- paste0(substr(mo_genus(x.mo, language = NULL), 1, 1), ". ", replace_empty(mo_species(x.mo, language = NULL)))
-  
+
   # exceptions for Staphylococci
   shortnames[shortnames == "S. coagulase-negative"] <- "CoNS"
   shortnames[shortnames == "S. coagulase-positive"] <- "CoPS"
@@ -312,9 +316,9 @@ mo_synonyms <- function(x, ...) {
   x <- as.mo(x, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
 
-  IDs <- mo_property(x = x, property = "col_id", language = NULL)
-  syns <- lapply(IDs, function(col_id) {
-    res <- sort(microorganisms.old[which(microorganisms.old$col_id_new == col_id), "fullname"])
+  IDs <- mo_name(x = x, language = NULL)
+  syns <- lapply(IDs, function(newname) {
+    res <- sort(microorganisms.old[which(microorganisms.old$fullname_new == newname), "fullname"])
     if (length(res) == 0) {
       NULL
     } else {
@@ -356,30 +360,27 @@ mo_info <- function(x, language = get_locale(),  ...) {
 }
 
 #' @rdname mo_property
-#' @importFrom utils browseURL
-#' @importFrom dplyr %>% left_join select mutate case_when
 #' @export
 mo_url <- function(x, open = FALSE, ...) {
   mo <- as.mo(x = x, ... = ...)
   mo_names <- mo_name(mo)
   metadata <- get_mo_failures_uncertainties_renamed()
-
+  
   df <- data.frame(mo, stringsAsFactors = FALSE) %>%
-    left_join(select(microorganisms, mo, source, species_id), by = "mo") %>%
-    mutate(url = case_when(source == "CoL" ~
-                             paste0(gsub("{year}", catalogue_of_life$year, catalogue_of_life$url_CoL, fixed = TRUE), "details/species/id/", species_id),
-                           source == "DSMZ" ~
-                             paste0(catalogue_of_life$url_DSMZ, "/", unlist(lapply(strsplit(mo_names, ""), function(x) x[1]))),
-                           TRUE ~
-                             NA_character_))
-
+    left_join(select(microorganisms, mo, source, species_id), by = "mo")
+  df$url <- ifelse(df$source == "CoL",
+                   paste0(catalogue_of_life$url_CoL, "details/species/id/", df$species_id, "/"),
+                   ifelse(df$source == "DSMZ",
+                          paste0(catalogue_of_life$url_DSMZ, "/advanced_search?adv[taxon-name]=", gsub(" ", "+", mo_names), "/"),
+                          NA_character_))
   u <- df$url
   names(u) <- mo_names
+  
   if (open == TRUE) {
     if (length(u) > 1) {
       warning("only the first URL will be opened, as `browseURL()` only suports one string.")
     }
-    browseURL(u[1L])
+    utils::browseURL(u[1L])
   }
 
   load_mo_failures_uncertainties_renamed(metadata)
@@ -388,7 +389,6 @@ mo_url <- function(x, open = FALSE, ...) {
 
 
 #' @rdname mo_property
-#' @importFrom data.table data.table as.data.table setkey
 #' @export
 mo_property <- function(x, property = "fullname", language = get_locale(), ...) {
   if (length(property) != 1L) {
@@ -417,7 +417,7 @@ mo_validate <- function(x, property, ...) {
 
   # try to catch an error when inputting an invalid parameter
   # so the 'call.' can be set to FALSE
-  tryCatch(x[1L] %in% microorganisms[1, property],
+  tryCatch(x[1L] %in% MO_lookup[1, property, drop = TRUE],
            error = function(e) stop(e$message, call. = FALSE))
   
   if (is.mo(x) 
@@ -426,7 +426,7 @@ mo_validate <- function(x, property, ...) {
     # this will not reset mo_uncertainties and mo_failures
     # because it's already a valid MO
     x <- exec_as.mo(x, property = property, initial_search = FALSE, ...)
-  } else if (!all(x %in% pull(microorganisms, property))
+  } else if (!all(x %in% MO_lookup[, property, drop = TRUE])
              | Becker %in% c(TRUE, "all")
              | Lancefield %in% c(TRUE, "all")) {
     x <- exec_as.mo(x, property = property, ...)

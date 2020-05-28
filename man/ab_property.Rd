@@ -14,6 +14,7 @@
 \alias{ab_loinc}
 \alias{ab_ddd}
 \alias{ab_info}
+\alias{ab_url}
 \title{Property of an antibiotic}
 \usage{
 ab_name(x, language = get_locale(), tolower = FALSE, ...)
@@ -38,6 +39,8 @@ ab_ddd(x, administration = "oral", units = FALSE, ...)
 
 ab_info(x, language = get_locale(), ...)
 
+ab_url(x, open = FALSE, ...)
+
 ab_property(x, property = "name", language = get_locale(), ...)
 }
 \arguments{
@@ -52,6 +55,8 @@ ab_property(x, property = "name", language = get_locale(), ...)
 \item{administration}{way of administration, either \code{"oral"} or \code{"iv"}}
 
 \item{units}{a logical to indicate whether the units instead of the DDDs itself must be returned, see Examples}
+
+\item{open}{browse the URL using \code{\link[utils:browseURL]{utils::browseURL()}}}
 
 \item{property}{one of the column names of one of the \link{antibiotics} data set}
 }
@@ -68,11 +73,15 @@ Use these functions to return a specific property of an antibiotic from the \lin
 }
 \details{
 All output will be \link{translate}d where possible.
-}
-\section{Maturing lifecycle}{
 
-\if{html}{\figure{lifecycle_maturing.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. We will strive to maintain backward compatibility, but the function needs wider usage and more extensive testing in order to optimise the unlying code.
+The function \code{\link[=ab_url]{ab_url()}} will return the direct URL to the official WHO website. A warning will be returned if the required ATC code is not available.
+}
+\section{Stable lifecycle}{
+
+\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
+
+If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Source}{
@@ -99,6 +108,7 @@ ab_tradenames("AMX") # same
 ab_group("AMX")      # "Beta-lactams/penicillins"
 ab_atc_group1("AMX") # "Beta-lactam antibacterials, penicillins"
 ab_atc_group2("AMX") # "Penicillins with extended spectrum"
+ab_url("AMX")        # link to the official WHO page
 
 # smart lowercase tranformation
 ab_name(x = c("AMC", "PLB"))  # "Amoxicillin/clavulanic acid" "Polymyxin B"

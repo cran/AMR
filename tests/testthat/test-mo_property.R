@@ -93,21 +93,18 @@ test_that("mo_property works", {
   expect_identical(suppressWarnings(mo_ref("Chlamydia psittaci")), "Page, 1968")
   expect_identical(mo_ref("Chlamydophila psittaci"), "Everett et al., 1999")
 
-  expect_equal(mo_snomed("Escherichia coli"), 
-               c(112283007, 116395006, 116396007, 103429008, 83285000, 116394005, 407166006, 457914007))
+  expect_equal(mo_snomed("Escherichia coli"), 112283007)
   
   # old codes must throw a warning in mo_* family
   expect_warning(mo_name(c("B_ESCHR_COL", "B_STPHY_AUR")))
   
   # outcome of mo_fullname must always return the fullname from the data set
-  library(dplyr)
-  x <- microorganisms %>%
-    transmute(mo,
-              # fullname from the original data:
-              f1 = fullname,
-              # newly created fullname based on MO code:
-              f2 = mo_fullname(mo, language = "en")) %>%
-    filter(f1 != f2)
-  expect_equal(nrow(x), 0)
-
+  x <- data.frame(mo = microorganisms$mo,
+                  # fullname from the original data:
+                  f1 = microorganisms$fullname,
+                  # newly created fullname based on MO code:
+                  f2 = mo_fullname(microorganisms$mo, language = "en"),
+                  stringsAsFactors = FALSE)
+  expect_equal(nrow(subset(x, f1 != f2)), 0)
+  
 })

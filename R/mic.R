@@ -30,7 +30,6 @@
 #' @return Ordered [`factor`] with new class [`mic`]
 #' @aliases mic
 #' @export
-#' @importFrom dplyr %>%
 #' @seealso [as.rsi()]
 #' @inheritSection AMR Read more on our website!
 #' @examples
@@ -52,7 +51,6 @@
 #'
 #' plot(mic_data)
 #' barplot(mic_data)
-#' freq(mic_data)
 as.mic <- function(x, na.rm = FALSE) {
   if (is.mic(x)) {
     x
@@ -75,7 +73,7 @@ as.mic <- function(x, na.rm = FALSE) {
     x <- gsub("=>", ">=", x, fixed = TRUE)
     # starting dots must start with 0
     x <- gsub("^[.]+", "0.", x)
-    # <=0.2560.512 should be 0.512
+    # values like "<=0.2560.512" should be 0.512
     x <- gsub(".*[.].*[.]", "0.", x)
     # remove ending .0
     x <- gsub("[.]+0$", "", x)
@@ -90,11 +88,13 @@ as.mic <- function(x, na.rm = FALSE) {
     x <- gsub("(.*[.])0+$", "\\10", x)
     # remove ending .0 again
     x[x %like% "[.]"] <- gsub("0+$", "", x[x %like% "[.]"])
+    # never end with dot
+    x <- gsub("[.]$", "", x)
     # force to be character
     x <- as.character(x)
     # trim it
     x <- trimws(x)
-
+    
     ## previously unempty values now empty - should return a warning later on
     x[x.bak != "" & x == ""] <- "invalid"
 
@@ -136,33 +136,32 @@ all_valid_mics <- function(x) {
 
 #' @rdname as.mic
 #' @export
-#' @importFrom dplyr %>%
 is.mic <- function(x) {
   inherits(x, "mic")
 }
 
-#' @exportMethod as.double.mic
+#' @method as.double mic
 #' @export
 #' @noRd
 as.double.mic <- function(x, ...) {
   as.double(gsub("(<|=|>)+", "", as.character(x)))
 }
 
-#' @exportMethod as.integer.mic
+#' @method as.integer mic
 #' @export
 #' @noRd
 as.integer.mic <- function(x, ...) {
   as.integer(gsub("(<|=|>)+", "", as.character(x)))
 }
 
-#' @exportMethod as.numeric.mic
+#' @method as.numeric mic
 #' @export
 #' @noRd
 as.numeric.mic <- function(x, ...) {
   as.numeric(gsub("(<|=|>)+", "", as.character(x)))
 }
 
-#' @exportMethod droplevels.mic
+#' @method droplevels mic
 #' @export
 #' @noRd
 droplevels.mic <- function(x, exclude = ifelse(anyNA(levels(x)), NULL, NA), ...) {
@@ -171,18 +170,16 @@ droplevels.mic <- function(x, exclude = ifelse(anyNA(levels(x)), NULL, NA), ...)
   x
 }
 
-#' @exportMethod print.mic
+#' @method print mic
 #' @export
-#' @importFrom dplyr %>% tibble group_by summarise pull
 #' @noRd
 print.mic <- function(x, ...) {
-  cat("Class 'mic'\n")
+  cat("Class <mic>\n")
   print(as.character(x), quote = FALSE)
 }
 
-#' @exportMethod summary.mic
+#' @method summary mic
 #' @export
-#' @importFrom dplyr %>%
 #' @noRd
 summary.mic <- function(object, ...) {
   x <- object
@@ -197,7 +194,7 @@ summary.mic <- function(object, ...) {
   )
 }
 
-#' @exportMethod plot.mic
+#' @method plot mic
 #' @export
 #' @importFrom graphics barplot axis par
 #' @noRd
@@ -216,7 +213,7 @@ plot.mic <- function(x,
   axis(2, seq(0, max(table(droplevels.factor(x)))))
 }
 
-#' @exportMethod barplot.mic
+#' @method barplot mic
 #' @export
 #' @importFrom graphics barplot axis
 #' @noRd
@@ -235,27 +232,7 @@ barplot.mic <- function(height,
   axis(2, seq(0, max(table(droplevels.factor(height)))))
 }
 
-#' @importFrom vctrs vec_ptype_abbr
-#' @export
-vec_ptype_abbr.mic <- function(x, ...) {
-  "mic"
-}
-
-#' @importFrom vctrs vec_ptype_full
-#' @export
-vec_ptype_full.mic <- function(x, ...) {
-  "mic"
-}
-
-#' @importFrom pillar pillar_shaft
-#' @export
-pillar_shaft.mic <- function(x, ...) {
-  out <- trimws(format(x))
-  out[is.na(x)] <- pillar::style_na(NA)
-  pillar::new_pillar_shaft_simple(out, align = "right", min_width = 4)
-}
-
-#' @exportMethod [.mic
+#' @method [ mic
 #' @export
 #' @noRd
 "[.mic" <- function(x, ...) {
@@ -263,7 +240,7 @@ pillar_shaft.mic <- function(x, ...) {
   attributes(y) <- attributes(x)
   y
 }
-#' @exportMethod [[.mic
+#' @method [[ mic
 #' @export
 #' @noRd
 "[[.mic" <- function(x, ...) {
@@ -271,7 +248,7 @@ pillar_shaft.mic <- function(x, ...) {
   attributes(y) <- attributes(x)
   y
 }
-#' @exportMethod [<-.mic
+#' @method [<- mic
 #' @export
 #' @noRd
 "[<-.mic" <- function(i, j, ..., value) {
@@ -280,7 +257,7 @@ pillar_shaft.mic <- function(x, ...) {
   attributes(y) <- attributes(i)
   y
 }
-#' @exportMethod [[<-.mic
+#' @method [[<- mic
 #' @export
 #' @noRd
 "[[<-.mic" <- function(i, j, ..., value) {
@@ -289,7 +266,7 @@ pillar_shaft.mic <- function(x, ...) {
   attributes(y) <- attributes(i)
   y
 }
-#' @exportMethod c.mic
+#' @method c mic
 #' @export
 #' @noRd
 c.mic <- function(x, ...) {

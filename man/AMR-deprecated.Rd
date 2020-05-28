@@ -2,7 +2,6 @@
 % Please edit documentation in R/deprecated.R
 \name{AMR-deprecated}
 \alias{AMR-deprecated}
-\alias{p.symbol}
 \alias{portion_R}
 \alias{portion_IR}
 \alias{portion_I}
@@ -11,8 +10,6 @@
 \alias{portion_df}
 \title{Deprecated functions}
 \usage{
-p.symbol(...)
-
 portion_R(...)
 
 portion_IR(...)
@@ -31,7 +28,7 @@ These functions are so-called '\link{Deprecated}'. They will be removed in a fut
 \section{Retired lifecycle}{
 
 \if{html}{\figure{lifecycle_retired.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{retired}. A retired function is no longer under active development, and (if appropiate) a better alternative is available. We will only make the necessary changes to ensure that retired functions remain available. No new arguments will be added, and only the most critical bugs will be fixed.
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{retired}. A retired function is no longer under active development, and (if appropiate) a better alternative is available. No new arguments will be added, and only the most critical bugs will be fixed. In a future version, this function will be removed.
 }
 
 \section{Read more on our website!}{

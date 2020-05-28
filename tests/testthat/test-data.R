@@ -27,9 +27,9 @@ test_that("data sets are valid", {
   
   # IDs should always be unique
   expect_identical(nrow(microorganisms), length(unique(microorganisms$mo)))
-  expect_identical(class(microorganisms$mo), "mo")
+  expect_identical(class(microorganisms$mo), c("mo", "character"))
   expect_identical(nrow(antibiotics), length(unique(antibiotics$ab)))
-  expect_identical(class(antibiotics$ab), "ab")
+  expect_identical(class(antibiotics$ab), c("ab", "character"))
   
   # check cross table reference
   expect_true(all(microorganisms.codes$mo %in% microorganisms$mo))
@@ -51,17 +51,17 @@ test_that("data sets are valid", {
 })
 
 test_that("creation of data sets is valid", {
-  DT <- make_DT()
-  expect_lt(nrow(DT[prevalence == 1]), nrow(DT[prevalence == 2]))
-  expect_lt(nrow(DT[prevalence == 2]), nrow(DT[prevalence == 3]))
+  df <- create_MO_lookup()
+  expect_lt(nrow(df[which(df$prevalence == 1), ]), nrow(df[which(df$prevalence == 2), ]))
+  expect_lt(nrow(df[which(df$prevalence == 2), ]), nrow(df[which(df$prevalence == 3), ]))
   expect_true(all(c("mo", "fullname",
                     "kingdom", "phylum", "class", "order", "family", "genus", "species", "subspecies",
-                    "rank", "col_id", "species_id", "source", "ref", "prevalence",
-                    "kingdom_index", "fullname_lower", "g_species") %in% colnames(DT)))
+                    "rank", "ref", "species_id", "source", "prevalence", "snomed",
+                    "kingdom_index", "fullname_lower", "g_species") %in% colnames(df)))
 
-  oldDT <- make_oldDT()
-  expect_true(all(c("col_id", "col_id_new", "fullname", "ref", "prevalence",
-                    "fullname_lower", "g_species") %in% colnames(oldDT)))
+  olddf <- create_MO.old_lookup()
+  expect_true(all(c("fullname", "fullname_new", "ref", "prevalence",
+                    "fullname_lower", "g_species") %in% colnames(olddf)))
   
   old <- make_trans_tbl()
   expect_gt(length(old), 0)

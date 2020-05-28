@@ -103,7 +103,7 @@ Valid options for the statistical model (parameter \code{model}) are:
 \section{Maturing lifecycle}{
 
 \if{html}{\figure{lifecycle_maturing.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. We will strive to maintain backward compatibility, but the function needs wider usage and more extensive testing in order to optimise the unlying code.
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. This function needs wider usage and more extensive testing in order to optimise the unlying code.
 }
 
 \section{Interpretation of R and S/I}{
@@ -132,24 +132,25 @@ x <- resistance_predict(example_isolates,
                         year_min = 2010,
                         model = "binomial")
 plot(x)
-ggplot_rsi_predict(x)
+if (require("ggplot2")) {
+  ggplot_rsi_predict(x)
+}
 
-# use dplyr so you can actually read it:
-library(dplyr)
-x <- example_isolates \%>\%
-  filter_first_isolate() \%>\%
-  filter(mo_genus(mo) == "Staphylococcus") \%>\%
-  resistance_predict("PEN", model = "binomial")
-plot(x)
+# using dplyr:
+if (require("dplyr")) {
+  x <- example_isolates \%>\%
+    filter_first_isolate() \%>\%
+    filter(mo_genus(mo) == "Staphylococcus") \%>\%
+    resistance_predict("PEN", model = "binomial")
+  plot(x)
 
-
-# get the model from the object
-mymodel <- attributes(x)$model
-summary(mymodel)
-
+  # get the model from the object
+  mymodel <- attributes(x)$model
+  summary(mymodel)
+}
 
 # create nice plots with ggplot2 yourself
-if (!require(ggplot2)) {
+if (require(ggplot2) & require("dplyr")) {
 
   data <- example_isolates \%>\%
     filter(mo == as.mo("E. coli")) \%>\%

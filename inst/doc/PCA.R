@@ -38,7 +38,6 @@ biplot(pca_result)
 ggplot_pca(pca_result)
 
 ## -----------------------------------------------------------------------------
-
 ggplot_pca(pca_result, ellipse = TRUE) +
   ggplot2::labs(title = "An AMR/PCA biplot!")
 

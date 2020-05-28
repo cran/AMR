@@ -39,7 +39,7 @@ This excludes \emph{Enterococci} at default (who are in group D), use \code{Lanc
 
 \item{allow_uncertain}{a number between \code{0} (or \code{"none"}) and \code{3} (or \code{"all"}), or \code{TRUE} (= \code{2}) or \code{FALSE} (= \code{0}) to indicate whether the input should be checked for less probable results, please see \emph{Details}}
 
-\item{reference_df}{a \code{\link{data.frame}} to use for extra reference when translating \code{x} to a valid \code{\link{mo}}. See \code{\link[=set_mo_source]{set_mo_source()}} and \code{\link[=get_mo_source]{get_mo_source()}} to automate the usage of your own codes (e.g. used in your analysis or organisation).}
+\item{reference_df}{a \code{\link{data.frame}} to be used for extra reference when translating \code{x} to a valid \code{\link{mo}}. See \code{\link[=set_mo_source]{set_mo_source()}} and \code{\link[=get_mo_source]{get_mo_source()}} to automate the usage of your own codes (e.g. used in your analysis or organisation).}
 
 \item{...}{other parameters passed on to functions}
 }
@@ -133,9 +133,9 @@ Group 3 (least prevalent microorganisms) consists of all other microorganisms.
 \section{Stable lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, we are largely happy with the unlying code, and major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; we will avoid removing arguments or changing the meaning of existing arguments.
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. To begin with, the function or argument will be deprecated; it will continue to work but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Catalogue of Life}{
@@ -166,7 +166,6 @@ as.mo("Zthafilokkoockus oureuz") # handles incorrect spelling
 as.mo("MRSA")    # Methicillin Resistant S. aureus
 as.mo("VISA")    # Vancomycin Intermediate S. aureus
 as.mo("VRSA")    # Vancomycin Resistant S. aureus
-as.mo(22242419)  # Catalogue of Life ID
 as.mo(115329001) # SNOMED CT code
 
 # Dyslexia is no problem - these all work:

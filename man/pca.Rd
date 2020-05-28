@@ -17,7 +17,7 @@ pca(
 \arguments{
 \item{x}{a \link{data.frame} containing numeric columns}
 
-\item{...}{columns of \code{x} to be selected for PCA}
+\item{...}{columns of \code{x} to be selected for PCA, can be unquoted since it supports quasiquotation.}
 
 \item{retx}{a logical value indicating whether the rotated variables
     should be returned.}
@@ -62,13 +62,14 @@ The result of the \code{\link[=pca]{pca()}} function is a \link{prcomp} object, 
 \section{Maturing lifecycle}{
 
 \if{html}{\figure{lifecycle_maturing.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. We will strive to maintain backward compatibility, but the function needs wider usage and more extensive testing in order to optimise the unlying code.
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. This function needs wider usage and more extensive testing in order to optimise the unlying code.
 }
 
 \examples{
 # `example_isolates` is a dataset available in the AMR package.
 # See ?example_isolates.
 
+\dontrun{
 # calculate the resistance per group first
 library(dplyr)
 resistance_data <- example_isolates \%>\% 
@@ -84,4 +85,5 @@ pca_result
 summary(pca_result)
 biplot(pca_result)
 ggplot_pca(pca_result) # a new and convenient plot function
+}
 }

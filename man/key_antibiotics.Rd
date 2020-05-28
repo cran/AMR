@@ -68,7 +68,9 @@ key_antibiotics_equal(
 These function can be used to determine first isolates (see \code{\link[=first_isolate]{first_isolate()}}). Using key antibiotics to determine first isolates is more reliable than without key antibiotics. These selected isolates will then be called first \emph{weighted} isolates.
 }
 \details{
-The function \code{\link[=key_antibiotics]{key_antibiotics()}} returns a character vector with 12 antibiotic results for every isolate. These isolates can then be compared using \code{\link[=key_antibiotics_equal]{key_antibiotics_equal()}}, to check if two isolates have generally the same antibiogram. Missing and invalid values are replaced with a dot (\code{"."}). The \code{\link[=first_isolate]{first_isolate()}} function only uses this function on the same microbial species from the same patient. Using this, an MRSA will be included after a susceptible \emph{S. aureus} (MSSA) found within the same episode (see \code{episode} parameter of \code{\link[=first_isolate]{first_isolate()}}). Without key antibiotic comparison it would not.
+The function \code{\link[=key_antibiotics]{key_antibiotics()}} returns a character vector with 12 antibiotic results for every isolate. These isolates can then be compared using \code{\link[=key_antibiotics_equal]{key_antibiotics_equal()}}, to check if two isolates have generally the same antibiogram. Missing and invalid values are replaced with a dot (\code{"."}) by \code{\link[=key_antibiotics]{key_antibiotics()}} and ignored by \code{\link[=key_antibiotics_equal]{key_antibiotics_equal()}}.
+
+The \code{\link[=first_isolate]{first_isolate()}} function only uses this function on the same microbial species from the same patient. Using this, e.g. an MRSA will be included after a susceptible \emph{S. aureus} (MSSA) is found within the same patient episode. Without key antibiotic comparison it would not. See \code{\link[=first_isolate]{first_isolate()}} for more info.
 
 At default, the antibiotics that are used for \strong{Gram-positive bacteria} are:
 \itemize{
@@ -107,9 +109,9 @@ The function \code{\link[=key_antibiotics_equal]{key_antibiotics_equal()}} check
 \section{Stable lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, we are largely happy with the unlying code, and major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; we will avoid removing arguments or changing the meaning of existing arguments.
+The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. To begin with, the function or argument will be deprecated; it will continue to work but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Key antibiotics}{
@@ -134,6 +136,7 @@ On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://
 # `example_isolates` is a dataset available in the AMR package.
 # See ?example_isolates.
 
+\dontrun{
 library(dplyr)
 # set key antibiotics to a new variable
 my_patients <- example_isolates \%>\%
@@ -148,7 +151,7 @@ my_patients <- example_isolates \%>\%
 # Check the difference, in this data set it results in 7\% more isolates:
 sum(my_patients$first_regular, na.rm = TRUE)
 sum(my_patients$first_weighted, na.rm = TRUE)
-
+}
 
 # output of the `key_antibiotics` function could be like this:
 strainA <- "SSSRR.S.R..S"

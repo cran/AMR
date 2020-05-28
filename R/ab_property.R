@@ -22,15 +22,18 @@
 #' Property of an antibiotic
 #'
 #' Use these functions to return a specific property of an antibiotic from the [antibiotics] data set. All input values will be evaluated internally with [as.ab()].
-#' @inheritSection lifecycle Maturing lifecycle
+#' @inheritSection lifecycle Stable lifecycle
 #' @param x any (vector of) text that can be coerced to a valid microorganism code with [as.ab()]
 #' @param tolower logical to indicate whether the first character of every output should be transformed to a lower case character. This will lead to e.g. "polymyxin B" and not "polymyxin b".
 #' @param property one of the column names of one of the [antibiotics] data set
 #' @param language language of the returned text, defaults to system language (see [get_locale()]) and can also be set with `getOption("AMR_locale")`. Use `language = NULL` or `language = ""` to prevent translation.
 #' @param administration way of administration, either `"oral"` or `"iv"`
 #' @param units a logical to indicate whether the units instead of the DDDs itself must be returned, see Examples
+#' @param open browse the URL using [utils::browseURL()]
 #' @param ... other parameters passed on to [as.ab()]
 #' @details All output will be [translate]d where possible.
+#' 
+#' The function [ab_url()] will return the direct URL to the official WHO website. A warning will be returned if the required ATC code is not available.
 #' @inheritSection as.ab Source
 #' @rdname ab_property
 #' @name ab_property
@@ -52,6 +55,7 @@
 #' ab_group("AMX")      # "Beta-lactams/penicillins"
 #' ab_atc_group1("AMX") # "Beta-lactam antibacterials, penicillins"
 #' ab_atc_group2("AMX") # "Penicillins with extended spectrum"
+#' ab_url("AMX")        # link to the official WHO page
 #'
 #' # smart lowercase tranformation
 #' ab_name(x = c("AMC", "PLB"))  # "Amoxicillin/clavulanic acid" "Polymyxin B"
@@ -183,6 +187,31 @@ ab_info <- function(x, language = get_locale(), ...) {
                                   units = ab_ddd(x, administration = "iv", units = TRUE))))
 }
 
+
+#' @rdname ab_property
+#' @export
+ab_url <- function(x, open = FALSE, ...) {
+  ab <- as.ab(x = x, ... = ...)
+  u <- paste0("https://www.whocc.no/atc_ddd_index/?code=", ab_atc(ab), "&showdescription=no")
+  u[is.na(ab_atc(ab))] <- NA_character_
+  names(u) <- ab_name(ab)
+  
+  NAs <- ab_name(ab, tolower = TRUE, language = NULL)[!is.na(ab) & is.na(ab_atc(ab))]
+  if (length(NAs) > 0) {
+    warning("No ATC code available for ", paste0(NAs, collapse = ", "), ".")
+  }
+  
+  if (open == TRUE) {
+    if (length(u) > 1 & !is.na(u[1L])) {
+      warning("only the first URL will be opened, as `browseURL()` only suports one string.")
+    }
+    if (!is.na(u[1L])) {
+      utils::browseURL(u[1L])
+    }
+  }
+  u
+}
+
 #' @rdname ab_property
 #' @export
 ab_property <- function(x, property = "name", language = get_locale(), ...) {
@@ -217,8 +246,7 @@ ab_validate <- function(x, property, ...) {
   } else if (property %like% "ddd") {
     return(as.double(x))
   } else {
-    # return "(input)" for NAs
-    x[is.na(x) & !is.na(x_bak)] <- paste0("(", x_bak[is.na(x) & !is.na(x_bak)], ")")
+    x[is.na(x) & !is.na(x_bak)] <- NA
     return(x)
   }
 }
