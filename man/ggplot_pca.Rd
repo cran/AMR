@@ -35,6 +35,7 @@ ggplot_pca(
   arrows_colour = "darkblue",
   arrows_size = 0.5,
   arrows_textsize = 3,
+  arrows_textangled = TRUE,
   arrows_alpha = 0.75,
   base_textsize = 10,
   ...
@@ -92,6 +93,8 @@ ggplot_pca(
 
 \item{arrows_textsize}{the size of the text at the end of the arrows}
 
+\item{arrows_textangled}{a logical whether the text at the end of the arrows should be angled}
+
 \item{arrows_alpha}{the alpha (transparency) of the arrows and their text}
 
 \item{base_textsize}{the text size for all plot elements except the labels and arrows}
@@ -107,26 +110,32 @@ The colours for labels and points can be changed by adding another scale layer f
 \section{Maturing lifecycle}{
 
 \if{html}{\figure{lifecycle_maturing.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. This function needs wider usage and more extensive testing in order to optimise the unlying code.
+The \link[=lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. Since this function needs wider usage and more extensive testing, you are very welcome \href{https://github.com/msberends/AMR/issues}{to suggest changes at our repository} or \link[=AMR]{write us an email (see section 'Contact Us')}.
 }
 
 \examples{
 # `example_isolates` is a dataset available in the AMR package.
 # See ?example_isolates.
 
-\dontrun{
 # See ?pca for more info about Principal Component Analysis (PCA).
-library(dplyr)
-pca_model <- example_isolates \%>\% 
-  filter(mo_genus(mo) == "Staphylococcus") \%>\% 
-  group_by(species = mo_shortname(mo)) \%>\%
-  summarise_if (is.rsi, resistance) \%>\%
-  pca(FLC, AMC, CXM, GEN, TOB, TMP, SXT, CIP, TEC, TCY, ERY)
+\dontrun{
+  library(dplyr)
+  pca_model <- example_isolates \%>\% 
+    filter(mo_genus(mo) == "Staphylococcus") \%>\% 
+    group_by(species = mo_shortname(mo)) \%>\%
+    summarise_if (is.rsi, resistance) \%>\%
+    pca(FLC, AMC, CXM, GEN, TOB, TMP, SXT, CIP, TEC, TCY, ERY)
+    
+  # old (base R)
+  biplot(pca_model)
   
-# old
-biplot(pca_model)
-
-# new 
-ggplot_pca(pca_model)
+  # new 
+  ggplot_pca(pca_model)
+  
+  if (require("ggplot2")) {
+    ggplot_pca(pca_model) +
+      scale_colour_viridis_d() +
+      labs(title = "Title here")
+  }
 }
 }

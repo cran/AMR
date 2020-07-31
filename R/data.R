@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' Data sets with `r format(nrow(antibiotics) + nrow(antivirals), big.mark = ",")` antimicrobials
@@ -56,13 +56,13 @@
 #' ### Direct download
 #' These data sets are available as 'flat files' for use even without R - you can find the files here:
 #' 
-#' * <https://gitlab.com/msberends/AMR/raw/master/data-raw/antibiotics.txt>
-#' * <https://gitlab.com/msberends/AMR/raw/master/data-raw/antivirals.txt>
+#' * <https://github.com/msberends/AMR/raw/master/data-raw/antibiotics.txt>
+#' * <https://github.com/msberends/AMR/raw/master/data-raw/antivirals.txt>
 #' 
 #' Files in R format (with preserved data structure) can be found here:
 #' 
-#' * <https://gitlab.com/msberends/AMR/raw/master/data/antibiotics.rda>
-#' * <https://gitlab.com/msberends/AMR/raw/master/data/antivirals.rda>
+#' * <https://github.com/msberends/AMR/raw/master/data/antibiotics.rda>
+#' * <https://github.com/msberends/AMR/raw/master/data/antivirals.rda>
 #' @source World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology (WHOCC): <https://www.whocc.no/atc_ddd_index/>
 #'
 #' WHONET 2019 software: <http://www.whonet.org/software.html>
@@ -94,6 +94,7 @@
 #' - 11 entries of *Streptococcus* (beta-haemolytic: groups A, B, C, D, F, G, H, K and unspecified; other: viridans, milleri)
 #' - 2 entries of *Staphylococcus* (coagulase-negative (CoNS) and coagulase-positive (CoPS))
 #' - 3 entries of *Trichomonas* (*Trichomonas vaginalis*, and its family and genus)
+#' - 1 entry of *Candida* (*Candida krusei*), that is not (yet) in the Catalogue of Life
 #' - 1 entry of *Blastocystis* (*Blastocystis hominis*), although it officially does not exist (Noel *et al.* 2005, PMID 15634993)
 #' - 5 other 'undefined' entries (unknown, unknown Gram negatives, unknown Gram positives, unknown yeast and unknown fungus)
 #' - 6 families under the Enterobacterales order, according to Adeolu *et al.* (2016, PMID 27620848), that are not (yet) in the Catalogue of Life
@@ -102,20 +103,21 @@
 #' ### Direct download
 #' This data set is available as 'flat file' for use even without R - you can find the file here:
 #' 
-#' * <https://gitlab.com/msberends/AMR/raw/master/data-raw/microorganisms.txt>
+#' * <https://github.com/msberends/AMR/raw/master/data-raw/microorganisms.txt>
 #' 
 #' The file in R format (with preserved data structure) can be found here:
 #' 
-#' * <https://gitlab.com/msberends/AMR/raw/master/data/microorganisms.rda>
+#' * <https://github.com/msberends/AMR/raw/master/data/microorganisms.rda>
 #' @section About the records from DSMZ (see source):
 #' Names of prokaryotes are defined as being validly published by the International Code of Nomenclature of Bacteria. Validly published are all names which are included in the Approved Lists of Bacterial Names and the names subsequently published in the International Journal of Systematic Bacteriology (IJSB) and, from January 2000, in the International Journal of Systematic and Evolutionary Microbiology (IJSEM) as original articles or in the validation lists.
-#'
-#' From: <https://www.dsmz.de/services/online-tools/prokaryotic-nomenclature-up-to-date/complete-list-readme>
+#' *(from <https://www.dsmz.de/services/online-tools/prokaryotic-nomenclature-up-to-date/complete-list-readme>)*
+#' 
+#' In February 2020, the DSMZ records were merged with the List of Prokaryotic names with Standing in Nomenclature (LPSN).
 #' @source Catalogue of Life: Annual Checklist (public online taxonomic database), <http://www.catalogueoflife.org> (check included annual version with [catalogue_of_life_version()]).
 #' 
 #' Parte, A.C. (2018). LPSN — List of Prokaryotic names with Standing in Nomenclature (bacterio.net), 20 years on. International Journal of Systematic and Evolutionary Microbiology, 68, 1825-1829; doi: 10.1099/ijsem.0.002786
 #'
-#' Leibniz Institute DSMZ-German Collection of Microorganisms and Cell Cultures, Germany, Prokaryotic Nomenclature Up-to-Date, <https://www.dsmz.de/services/online-tools/prokaryotic-nomenclature-up-to-date> (check included version with [catalogue_of_life_version()]).
+#' Leibniz Institute DSMZ-German Collection of Microorganisms and Cell Cultures, Germany, Prokaryotic Nomenclature Up-to-Date, <https://www.dsmz.de/services/online-tools/prokaryotic-nomenclature-up-to-date> and <https://lpsn.dsmz.de> (check included version with [catalogue_of_life_version()]).
 #' @inheritSection AMR Read more on our website!
 #' @seealso [as.mo()], [mo_property()], [microorganisms.codes]
 "microorganisms"
@@ -157,7 +159,7 @@ catalogue_of_life <- list(
 
 #' Data set with `r format(nrow(example_isolates), big.mark = ",")` example isolates
 #'
-#' A data set containing `r format(nrow(example_isolates), big.mark = ",")` microbial isolates with their full antibiograms. The data set reflects reality and can be used to practice AMR analysis. For examples, please read [the tutorial on our website](https://msberends.gitlab.io/AMR/articles/AMR.html).
+#' A data set containing `r format(nrow(example_isolates), big.mark = ",")` microbial isolates with their full antibiograms. The data set reflects reality and can be used to practice AMR analysis. For examples, please read [the tutorial on our website](https://msberends.github.io/AMR/articles/AMR.html).
 #' @format A [`data.frame`] with `r format(nrow(example_isolates), big.mark = ",")` observations and `r ncol(example_isolates)` variables:
 #' - `date`\cr date of receipt at the laboratory
 #' - `hospital_id`\cr ID of the hospital, from A to D
@@ -231,6 +233,6 @@ catalogue_of_life <- list(
 #' - `breakpoint_S`\cr Lowest MIC value or highest number of millimetres that leads to "S"
 #' - `breakpoint_R`\cr Highest MIC value or lowest number of millimetres that leads to "R"
 #' - `uti`\cr A logical value (`TRUE`/`FALSE`) to indicate whether the rule applies to a urinary tract infection (UTI)
-#' @details The repository of this `AMR` package contains a file comprising this exact data set: <https://gitlab.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt>. This file **allows for machine reading EUCAST and CLSI guidelines**, which is almost impossible with the Excel and PDF files distributed by EUCAST and CLSI. This file is updated automatically.
+#' @details The repository of this `AMR` package contains a file comprising this exact data set: <https://github.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt>. This file **allows for machine reading EUCAST and CLSI guidelines**, which is almost impossible with the Excel and PDF files distributed by EUCAST and CLSI. The file is updated automatically.
 #' @inheritSection AMR Read more on our website!
 "rsi_translation"

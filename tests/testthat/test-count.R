@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,25 +16,26 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 context("count.R")
 
 test_that("counts work", {
+  skip_on_cran()
   
   expect_equal(count_resistant(example_isolates$AMX), count_R(example_isolates$AMX))
   expect_equal(count_susceptible(example_isolates$AMX), count_SI(example_isolates$AMX))
   expect_equal(count_all(example_isolates$AMX), n_rsi(example_isolates$AMX))
   
   # AMX resistance in `example_isolates`
-    expect_equal(count_R(example_isolates$AMX), 683)
-    expect_equal(count_I(example_isolates$AMX), 3)
-    expect_equal(suppressWarnings(count_S(example_isolates$AMX)), 543)
-    expect_equal(count_R(example_isolates$AMX) + count_I(example_isolates$AMX),
-                 suppressWarnings(count_IR(example_isolates$AMX)))
-    expect_equal(suppressWarnings(count_S(example_isolates$AMX)) + count_I(example_isolates$AMX),
-                 count_SI(example_isolates$AMX))
+  expect_equal(count_R(example_isolates$AMX), 683)
+  expect_equal(count_I(example_isolates$AMX), 3)
+  expect_equal(suppressWarnings(count_S(example_isolates$AMX)), 543)
+  expect_equal(count_R(example_isolates$AMX) + count_I(example_isolates$AMX),
+               suppressWarnings(count_IR(example_isolates$AMX)))
+  expect_equal(suppressWarnings(count_S(example_isolates$AMX)) + count_I(example_isolates$AMX),
+               count_SI(example_isolates$AMX))
   
   library(dplyr)
   expect_equal(example_isolates %>% count_susceptible(AMC), 1433)
@@ -45,7 +46,7 @@ test_that("counts work", {
   expect_identical(example_isolates %>% count_all(AMC, GEN, only_all_tested = TRUE),
                    example_isolates %>% count_susceptible(AMC, GEN, only_all_tested = TRUE) +
                      example_isolates %>% count_resistant(AMC, GEN, only_all_tested = TRUE))
-
+  
   # count of cases
   expect_equal(example_isolates %>%
                  group_by(hospital_id) %>%
@@ -83,8 +84,8 @@ test_that("counts work", {
   expect_error(count_resistant("test", as_percent = "test"))
   expect_error(count_susceptible("test", minimum = "test"))
   expect_error(count_susceptible("test", as_percent = "test"))
-
+  
   expect_error(count_df(c("A", "B", "C")))
   expect_error(count_df(example_isolates[, "date"]))
-
+  
 })

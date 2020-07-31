@@ -13,6 +13,7 @@
 \alias{filter_fluoroquinolones}
 \alias{filter_glycopeptides}
 \alias{filter_macrolides}
+\alias{filter_penicillins}
 \alias{filter_tetracyclines}
 \title{Filter isolates on result in antimicrobial class}
 \usage{
@@ -40,29 +41,31 @@ filter_glycopeptides(x, result = NULL, scope = "any", ...)
 
 filter_macrolides(x, result = NULL, scope = "any", ...)
 
+filter_penicillins(x, result = NULL, scope = "any", ...)
+
 filter_tetracyclines(x, result = NULL, scope = "any", ...)
 }
 \arguments{
 \item{x}{a data set}
 
-\item{ab_class}{an antimicrobial class, like \code{"carbapenems"}, as can be found in \code{\link[=antibiotics]{antibiotics$group}}}
+\item{ab_class}{an antimicrobial class, like \code{"carbapenems"}. The columns \code{group}, \code{atc_group1} and \code{atc_group2} of the \link{antibiotics} data set will be searched (case-insensitive) for this value.}
 
 \item{result}{an antibiotic result: S, I or R (or a combination of more of them)}
 
 \item{scope}{the scope to check which variables to check, can be \code{"any"} (default) or \code{"all"}}
 
-\item{...}{parameters passed on to \code{filter_at} from the \code{dplyr} package}
+\item{...}{previously used when this package still depended on the \code{dplyr} package, now ignored}
 }
 \description{
-Filter isolates on results in specific antimicrobial classes. This makes it easy to filter on isolates that were tested for e.g. any aminoglycoside.
+Filter isolates on results in specific antimicrobial classes. This makes it easy to filter on isolates that were tested for e.g. any aminoglycoside, or to filter on carbapenem-resistant isolates without the need to specify the drugs.
 }
 \details{
-The \code{group} column in \link{antibiotics} data set will be searched for \code{ab_class} (case-insensitive). If no results are found, the \code{atc_group1} and \code{atc_group2} columns will be searched. Next, \code{x} will be checked for column names with a value in any abbreviations, codes or official names found in the \link{antibiotics} data set.
+All columns of \code{x} will be searched for known antibiotic names, abbreviations, brand names and codes (ATC, EARS-Net, WHO, etc.). This means that a filter function like e.g. \code{\link[=filter_aminoglycosides]{filter_aminoglycosides()}} will include column names like 'gen', 'genta', 'J01GB03', 'tobra', 'Tobracin', etc.
 }
 \section{Stable lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
+The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
 If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
@@ -72,6 +75,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 library(dplyr)
 
 # filter on isolates that have any result for any aminoglycoside
+example_isolates \%>\% filter_ab_class("aminoglycoside")
 example_isolates \%>\% filter_aminoglycosides()
 
 # this is essentially the same as (but without determination of column names):
@@ -81,7 +85,7 @@ example_isolates \%>\%
 
 
 # filter on isolates that show resistance to ANY aminoglycoside
-example_isolates \%>\% filter_aminoglycosides("R")
+example_isolates \%>\% filter_aminoglycosides("R", "any")
 
 # filter on isolates that show resistance to ALL aminoglycosides
 example_isolates \%>\% filter_aminoglycosides("R", "all")
@@ -97,5 +101,12 @@ example_isolates \%>\%
 example_isolates \%>\%
   filter_aminoglycosides("R", "all") \%>\%
   filter_fluoroquinolones("R", "all")
+
+# with dplyr 1.0.0 and higher (that adds 'across()'), this is equal:
+example_isolates \%>\% filter_carbapenems("R", "all")
+example_isolates \%>\% filter(across(carbapenems(), ~. == "R"))
 }
+}
+\seealso{
+\code{\link[=antibiotic_class_selectors]{antibiotic_class_selectors()}} for the \code{select()} equivalent.
 }

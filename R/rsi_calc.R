@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 dots2vars <- function(...) {
@@ -33,35 +33,48 @@ rsi_calc <- function(...,
                      only_all_tested = FALSE,
                      only_count = FALSE) {
   
+  stop_ifnot(is.numeric(minimum), "`minimum` must be numeric", call = -2)
+  stop_ifnot(is.logical(as_percent), "`as_percent` must be logical", call = -2)
+  stop_ifnot(is.logical(only_all_tested), "`only_all_tested` must be logical", call = -2)
+  
   data_vars <- dots2vars(...)
   
-  if (!is.numeric(minimum)) {
-    stop("`minimum` must be numeric", call. = FALSE)
-  }
-  if (!is.logical(as_percent)) {
-    stop("`as_percent` must be logical", call. = FALSE)
-  }
-  if (!is.logical(only_all_tested)) {
-    stop("`only_all_tested` must be logical", call. = FALSE)
+  dots_df <- switch(1, ...)
+  if (is.data.frame(dots_df)) {
+    # make sure to remove all other classes like tibbles, data.tables, etc
+    dots_df <- as.data.frame(dots_df, stringsAsFactors = FALSE)
   }
   
-  dots_df <- switch(1, ...)
   dots <- base::eval(base::substitute(base::alist(...)))
-  if ("also_single_tested" %in% names(dots)) {
-    stop("`also_single_tested` was replaced by `only_all_tested`. Please read Details in the help page (`?proportion`) as this may have a considerable impact on your analysis.", call. = FALSE)
-  }
+  stop_if(length(dots) == 0, "no variables selected", call = -2)
+  
+  stop_if("also_single_tested" %in% names(dots),
+          "`also_single_tested` was replaced by `only_all_tested`.\n",
+          "Please read Details in the help page (`?proportion`) as this may have a considerable impact on your analysis.", call = -2)
   ndots <- length(dots)
   
-  if ("data.frame" %in% class(dots_df)) {
+  if (is.data.frame(dots_df)) {
     # data.frame passed with other columns, like: example_isolates %>% proportion_S(AMC, GEN)
+    
     dots <- as.character(dots)
-    dots <- dots[dots != "."]
+    # remove first element, it's the data.frame
+    if (length(dots) == 1) {
+      dots <- character(0)
+    } else {
+      dots <- dots[2:length(dots)]
+    }
     if (length(dots) == 0 | all(dots == "df")) {
       # for complete data.frames, like example_isolates %>% select(AMC, GEN) %>% proportion_S()
       # and the old rsi function, which has "df" as name of the first parameter
       x <- dots_df
     } else {
-      x <- dots_df[, dots[dots %in% colnames(dots_df)]]
+      # get dots that are in column names already, and the ones that will be once evaluated using dots_df or global env
+      # this is to support susceptibility(example_isolates, AMC, dplyr::all_of(some_vector_with_AB_names))
+      dots <- c(dots[dots %in% colnames(dots_df)],
+                eval(parse(text = dots[!dots %in% colnames(dots_df)]), envir = dots_df, enclos = globalenv()))
+      dots_not_exist <- dots[!dots %in% colnames(dots_df)]
+      stop_if(length(dots_not_exist) > 0, "column(s) not found: ", paste0("'", dots_not_exist, "'", collapse = ", "), call = -2)
+      x <- dots_df[, dots, drop = FALSE]
     }
   } else if (ndots == 1) {
     # only 1 variable passed (can also be data.frame), like: proportion_S(example_isolates$AMC) and example_isolates$AMC %>% proportion_S()
@@ -69,10 +82,10 @@ rsi_calc <- function(...,
   } else {
     # multiple variables passed without pipe, like: proportion_S(example_isolates$AMC, example_isolates$GEN)
     x <- NULL
-    try(x <- as.data.frame(dots), silent = TRUE)
+    try(x <- as.data.frame(dots, stringsAsFactors = FALSE), silent = TRUE)
     if (is.null(x)) {
       # support for example_isolates %>% group_by(hospital_id) %>% summarise(amox = susceptibility(GEN, AMX))
-      x <- as.data.frame(list(...))
+      x <- as.data.frame(list(...), stringsAsFactors = FALSE)
     }
   }
   
@@ -88,10 +101,10 @@ rsi_calc <- function(...,
   if (is.data.frame(x)) {
     rsi_integrity_check <- character(0)
     for (i in seq_len(ncol(x))) {
-      # check integrity of columns: force rsi class
-      if (!is.rsi(x %>% pull(i))) {
-        rsi_integrity_check <- c(rsi_integrity_check, x %>% pull(i) %>% as.character())
-        x[, i] <- suppressWarnings(x %>% pull(i) %>% as.rsi()) # warning will be given later
+      # check integrity of columns: force <rsi> class
+      if (!is.rsi(x[, i, drop = TRUE])) {
+        rsi_integrity_check <- c(rsi_integrity_check, as.character(x[, i, drop = TRUE]))
+        x[, i] <- suppressWarnings(as.rsi(x[, i, drop = TRUE])) # warning will be given later
         print_warning <- TRUE
       }
     }
@@ -99,23 +112,20 @@ rsi_calc <- function(...,
       # this will give a warning for invalid results, of all input columns (so only 1 warning)
       rsi_integrity_check <- as.rsi(rsi_integrity_check)
     }
-
+    
+    x_transposed <- as.list(as.data.frame(t(x)))
     if (only_all_tested == TRUE) {
-      # THE NUMBER OF ISOLATES WHERE *ALL* ABx ARE S/I/R
-      x <- apply(X = as.data.frame(lapply(x, as.integer), stringsAsFactors = FALSE),
+      # no NAs in any column
+      y <- apply(X = as.data.frame(lapply(x, as.integer), stringsAsFactors = FALSE),
                  MARGIN = 1,
                  FUN = base::min)
-      numerator <- sum(as.integer(x) %in% as.integer(ab_result), na.rm = TRUE)
-      denominator <- length(x) - sum(is.na(x))
-      
+      numerator <- sum(as.integer(y) %in% as.integer(ab_result), na.rm = TRUE)
+      denominator <- sum(sapply(x_transposed, function(y) !(any(is.na(y)))))
     } else {
-      # THE NUMBER OF ISOLATES WHERE *ANY* ABx IS S/I/R
+      # may contain NAs in any column
       other_values <- base::setdiff(c(NA, levels(ab_result)), ab_result)
-      other_values_filter <- base::apply(x, 1, function(y) {
-        base::all(y %in% other_values) & base::any(is.na(y))
-      })
-      numerator <- sum(as.logical(by(x, seq_len(nrow(x)), function(row) any(unlist(row) %in% ab_result, na.rm = TRUE))))
-      denominator <- nrow(x[!other_values_filter, ])
+      numerator <- sum(sapply(x_transposed, function(y) any(y %in% ab_result, na.rm = TRUE)))
+      denominator <- sum(sapply(x_transposed, function(y) !(all(y %in% other_values) & any(is.na(y)))))
     }
   } else {
     # x is not a data.frame
@@ -140,7 +150,7 @@ rsi_calc <- function(...,
     if (data_vars != "") {
       data_vars <- paste(" for", data_vars)
     }
-    warning("Introducing NA: only ", denominator, " results available", data_vars, " (`minimum` was set to ", minimum, ").", call. = FALSE)
+    warning("Introducing NA: only ", denominator, " results available", data_vars, " (`minimum` = ", minimum, ").", call. = FALSE)
     fraction <- NA
   } else {
     fraction <- numerator / denominator
@@ -164,26 +174,18 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
                         combine_SI_missing = FALSE) {
   
   check_dataset_integrity()
-  
-  if (!"data.frame" %in% class(data)) {
-    stop(paste0("`", type, "_df` must be called on a data.frame"), call. = FALSE)
-  }
-  
+  stop_ifnot(is.data.frame(data), "`data` must be a data.frame", call = -2)
+  stop_if(any(dim(data) == 0), "`data` must contain rows and columns", call = -2)
+  stop_ifnot(any(sapply(data, is.rsi), na.rm = TRUE), "no columns with class <rsi> found. See ?as.rsi.", call = -2)
   if (isTRUE(combine_IR) & isTRUE(combine_SI_missing)) {
     combine_SI <- FALSE
   }
-  if (isTRUE(combine_SI) & isTRUE(combine_IR)) {
-    stop("either `combine_SI` or `combine_IR` can be TRUE, not both", call. = FALSE)
-  }
+  stop_if(isTRUE(combine_SI) & isTRUE(combine_IR), "either `combine_SI` or `combine_IR` can be TRUE, not both", call = -2)
+  stop_ifnot(is.numeric(minimum), "`minimum` must be numeric", call = -2)
+  stop_ifnot(is.logical(as_percent), "`as_percent` must be logical", call = -2)
   
-  if (!any(sapply(data, is.rsi), na.rm = TRUE)) {
-    stop("No columns with class <rsi> found. See ?as.rsi.", call. = FALSE)
-  }
+  translate_ab <- get_translate_ab(translate_ab)
   
-  if (as.character(translate_ab) %in% c("TRUE", "official")) {
-    translate_ab <- "name"
-  }
-
   # select only groups and antibiotics
   if (has_groups(data)) {
     data_has_groups <- TRUE
@@ -212,7 +214,7 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
     out <- data.frame(antibiotic = character(0),
                       interpretation = character(0),
                       value = double(0),
-                      isolates <- integer(0),
+                      isolates = integer(0),
                       stringsAsFactors = FALSE)
     if (data_has_groups) {
       group_values <- unique(.data[, which(colnames(.data) %in% groups), drop = FALSE])
@@ -220,10 +222,18 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
       .data <- .data[, which(!colnames(.data) %in% groups), drop = FALSE]
     }
     for (i in seq_len(ncol(.data))) {
-      col_results <- as.data.frame(as.matrix(table(.data[, i, drop = TRUE])))
+      values <- .data[, i, drop = TRUE]
+      if (isTRUE(combine_SI)) {
+        values <- factor(values, levels = c("SI", "R"), ordered = TRUE)
+      } else if (isTRUE(combine_IR)) {
+        values <- factor(values, levels = c("S", "IR"), ordered = TRUE)
+      } else {
+        values <- factor(values, levels = c("S", "I", "R"), ordered = TRUE)
+      }
+      col_results <- as.data.frame(as.matrix(table(values)))
       col_results$interpretation <- rownames(col_results)
       col_results$isolates <- col_results[, 1, drop = TRUE]
-      if (nrow(col_results) > 0) {
+      if (NROW(col_results) > 0 && sum(col_results$isolates, na.rm = TRUE) > 0) {
         if (sum(col_results$isolates, na.rm = TRUE) >= minimum) {
           col_results$value <- col_results$isolates / sum(col_results$isolates, na.rm = TRUE)
         } else {
@@ -237,6 +247,12 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
                               isolates = col_results$isolates,
                               stringsAsFactors = FALSE)
         if (data_has_groups) {
+          if (nrow(group_values) < nrow(out_new)) {
+            # repeat group_values for the number of rows in out_new
+            repeated <- rep(seq_len(nrow(group_values)),
+                            each = nrow(out_new) / nrow(group_values))
+            group_values <- group_values[repeated, , drop = FALSE]
+          }
           out_new <- cbind(group_values, out_new)
         }
         out <- rbind(out, out_new)
@@ -268,12 +284,14 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
   } else if (isTRUE(combine_IR)) {
     out$interpretation <- factor(out$interpretation, levels = c("S", "IR"), ordered = TRUE)
   } else {
-    out$interpretation <- as.rsi(out$interpretation)
+    # don't use as.rsi() here, as it would add the class <rsi> and we would like
+    # the same data structure as output, regardless of input
+    out$interpretation <- factor(out$interpretation, levels = c("S", "I", "R"), ordered = TRUE)
   }
   
   if (data_has_groups) {
     # ordering by the groups and two more: "antibiotic" and "interpretation"
-    out <- out[do.call("order", out[, seq_len(length(groups) + 2)]), ]
+    out <- ungroup(out[do.call("order", out[, seq_len(length(groups) + 2)]), ])
   } else {
     out <- out[order(out$antibiotic, out$interpretation), ]
   }
@@ -287,4 +305,20 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
   
   rownames(out) <- NULL
   out
+}
+
+get_translate_ab <- function(translate_ab) {
+  translate_ab <- as.character(translate_ab)[1L]
+  if (translate_ab %in% c("TRUE", "official")) {
+    return("name")
+  } else if (translate_ab %in% c(NA_character_, "FALSE")) {
+    return(FALSE)
+  } else {
+    translate_ab <- tolower(translate_ab)
+    stop_ifnot(translate_ab %in% colnames(AMR::antibiotics),
+               "invalid value for 'translate_ab', this must be a column name of the antibiotics data set\n",
+               "or TRUE (equals 'name') or FALSE to not translate at all.",
+               call = FALSE)
+    translate_ab
+  }
 }

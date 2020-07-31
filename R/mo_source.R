@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' User-defined reference data set for microorganisms
@@ -109,13 +109,11 @@
 #' @export
 #' @inheritSection AMR Read more on our website!
 set_mo_source <- function(path) {
-
+  
   file_location <- path.expand("~/mo_source.rds")
-
-  if (length(path) > 1) {
-    stop("`path` must be of length 1.")
-  }
-
+  
+  stop_ifnot(length(path) == 1, "`path` must be of length 1")
+  
   if (is.null(path) || path %in% c(FALSE, "")) {
     options(mo_source = NULL)
     options(mo_source_timestamp = NULL)
@@ -125,23 +123,21 @@ set_mo_source <- function(path) {
     }
     return(invisible())
   }
-
-  if (!file.exists(path)) {
-    stop("File not found: ", path)
-  }
-
+  
+  stop_ifnot(file.exists(path),
+             "file not found: ", path)
+  
   if (path %like% "[.]rds$") {
     df <- readRDS(path)
-
+    
   } else if (path %like% "[.]xlsx?$") {
     # is Excel file (old or new)
-    stopifnot_installed_package("readxl")
-    read_excel <- get("read_excel", envir = asNamespace("readxl"))
+    read_excel <- import_fn("read_excel", "readxl")
     df <- read_excel(path)
-
+    
   } else if (path %like% "[.]tsv$") {
     df <- utils::read.table(header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-
+    
   } else {
     # try comma first
     try(
@@ -160,21 +156,21 @@ set_mo_source <- function(path) {
         silent = TRUE)
     }
   }
-
+  
   # check integrity
   mo_source_isvalid(df)
-
+  
   df <- subset(df, !is.na(mo))
-
+  
   # keep only first two columns, second must be mo
   if (colnames(df)[1] == "mo") {
     df <- df[, c(colnames(df)[2], "mo")]
   } else {
     df <- df[, c(colnames(df)[1], "mo")]
   }
-
+  
   df <- as.data.frame(df, stringAsFactors = FALSE)
-
+  
   # success
   if (file.exists(file_location)) {
     action <- "Updated"
@@ -232,21 +228,21 @@ mo_source_isvalid <- function(x, refer_to_name = "`reference_df`", stop_on_error
   }
   if (is.null(x)) {
     if (stop_on_error == TRUE) {
-      stop(refer_to_name, " cannot be NULL.", call. = FALSE)
+      stop(refer_to_name, " cannot be NULL", call. = FALSE)
     } else {
       return(FALSE)
     }
   }
   if (!is.data.frame(x)) {
     if (stop_on_error == TRUE) {
-      stop(refer_to_name, " must be a data.frame.", call. = FALSE)
+      stop(refer_to_name, " must be a data.frame", call. = FALSE)
     } else {
       return(FALSE)
     }
   }
   if (!"mo" %in% colnames(x)) {
     if (stop_on_error == TRUE) {
-      stop(refer_to_name, " must contain a column 'mo'.", call. = FALSE)
+      stop(refer_to_name, " must contain a column 'mo'", call. = FALSE)
     } else {
       return(FALSE)
     }
@@ -261,7 +257,7 @@ mo_source_isvalid <- function(x, refer_to_name = "`reference_df`", stop_on_error
       }
       stop("Value", plural, " ", paste0("'", invalid[, 1, drop = TRUE], "'", collapse = ", "), 
            " found in ", tolower(refer_to_name), 
-           ", but with invalid microorganism code", plural, " ", paste0("'", invalid$mo, "'", collapse = ", "), ".",
+           ", but with invalid microorganism code", plural, " ", paste0("'", invalid$mo, "'", collapse = ", "),
            call. = FALSE)
     } else {
       return(FALSE)

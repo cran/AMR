@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' Pattern Matching
@@ -64,7 +64,7 @@
 #' }
 like <- function(x, pattern, ignore.case = TRUE) {
   # set to fixed if no regex found
-  fixed <- all(!grepl("[$.^*?+}{|)(]", pattern))
+  fixed <- all(!grepl("[\\[$.^*?+-}{|)(]", pattern))
   if (ignore.case == TRUE) {
     # set here, otherwise if fixed = TRUE, this warning will be thrown: argument 'ignore.case = TRUE' will be ignored
     x <- tolower(x)
@@ -96,20 +96,25 @@ like <- function(x, pattern, ignore.case = TRUE) {
       return(res)
     }
   }
-
+  
   # the regular way how grepl works; just one pattern against one or more x
   if (is.factor(x)) {
     as.integer(x) %in% base::grep(pattern, levels(x), ignore.case = FALSE, fixed = fixed)
   } else {
     tryCatch(base::grepl(pattern, x, ignore.case = FALSE, fixed = fixed),
-             error = function(e) ifelse(grepl("Invalid regexp", e$message),
-                                        # try with perl = TRUE:
-                                        return(base::grepl(pattern = pattern, x = x,
-                                                           ignore.case = FALSE, 
-                                                           fixed = fixed,
-                                                           perl = TRUE)),
-                                        # stop otherwise
-                                        stop(e$message)))
+             error = function(e) {
+               if (grepl("invalid reg(ular )?exp", e$message, ignore.case = TRUE)) {
+                 # try with perl = TRUE:
+                 return(base::grepl(pattern = pattern, 
+                                    x = x,
+                                    ignore.case = FALSE, 
+                                    fixed = fixed,
+                                    perl = TRUE))
+               } else {
+                 # stop otherwise
+                 stop(e$message)
+               }
+             })
   }
 }
 

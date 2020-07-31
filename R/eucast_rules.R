@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 # global variables
@@ -52,7 +52,7 @@ EUCAST_VERSION_EXPERT_RULES <- "3.1, 2016"
 #' 
 #' These rules are not applied at default, since they are not approved by EUCAST. To use these rules, please use `eucast_rules(..., rules = "all")`, or set the default behaviour of the `[eucast_rules()]` function with `options(AMR.eucast_rules = "all")` (or any other valid input value(s) to the `rules` parameter).
 #'
-#' The file containing all EUCAST rules is located here: <https://gitlab.com/msberends/AMR/blob/master/data-raw/eucast_rules.tsv>.
+#' The file containing all EUCAST rules is located here: <https://github.com/msberends/AMR/blob/master/data-raw/eucast_rules.tsv>.
 #'
 #' @section Antibiotics:
 #' To define antibiotics column names, leave as it is to determine it automatically with [guess_ab_col()] or input a text (case-insensitive), or use `NULL` to skip a column (e.g. `TIC = NULL` to skip ticarcillin). Manually defined but non-existing columns will be skipped with a warning.
@@ -206,7 +206,7 @@ eucast_rules <- function(x,
                   "\n\nThis may overwrite your existing data if you use e.g.:",
                   "\ndata <- eucast_rules(data, verbose = TRUE)\n\nDo you want to continue?")
     if ("rstudioapi" %in% rownames(utils::installed.packages())) {
-      showQuestion <- get("showQuestion", envir = asNamespace("rstudioapi"))
+      showQuestion <- import_fn("showQuestion", "rstudioapi")
       q_continue <- showQuestion("Using verbose = TRUE with eucast_rules()", txt)
     } else {
       q_continue <- utils::menu(choices = c("OK", "Cancel"), graphics = FALSE, title = txt)
@@ -217,26 +217,17 @@ eucast_rules <- function(x,
     }
   }
   
-  if (!is.data.frame(x)) {
-    stop("`x` must be a data frame.", call. = FALSE)
-  }
+  stop_ifnot(is.data.frame(x), "`x` must be a data frame")
   
   # try to find columns based on type
   # -- mo
   if (is.null(col_mo)) {
     col_mo <- search_type_in_df(x = x, type = "mo")
   }
-  if (is.null(col_mo)) {
-    stop("`col_mo` must be set.", call. = FALSE)
-  }
+  stop_if(is.null(col_mo), "`col_mo` must be set")
   
-  if (!all(rules %in% c("breakpoints", "expert", "other", "all"))) {
-    stop('`rules` must be one or more of: "breakpoints", "expert", "other", "all".')
-  }
-  
-  if (is.null(col_mo)) {
-    stop("`col_mo` must be set")
-  }
+  stop_ifnot(all(rules %in% c("breakpoints", "expert", "other", "all")),
+             '`rules` must be one or more of: "breakpoints", "expert", "other", "all".')
   
   decimal.mark <- getOption("OutDec")
   big.mark <- ifelse(decimal.mark != ",", ",", ".")
@@ -518,6 +509,8 @@ eucast_rules <- function(x,
   
   # save original table
   x_original <- x
+  x_original_attr <- attributes(x)
+  x_original <- as.data.frame(x_original, stringsAsFactors = FALSE) # no tibbles, data.tables, etc.
   
   # join to microorganisms data set
   x <- as.data.frame(x, stringsAsFactors = FALSE)
@@ -526,7 +519,7 @@ eucast_rules <- function(x,
     left_join_microorganisms(by = col_mo, suffix = c("_oldcols", ""))
   x$gramstain <- mo_gramstain(x[, col_mo, drop = TRUE], language = NULL)
   x$genus_species <- paste(x$genus, x$species)
-
+  
   if (ab_missing(AMP) & !ab_missing(AMX)) {
     # ampicillin column is missing, but amoxicillin is available
     message(font_blue(paste0("NOTE: Using column `", font_bold(AMX), "` as input for ampicillin (J01CA01) since many EUCAST rules depend on it.")))
@@ -612,7 +605,7 @@ eucast_rules <- function(x,
     if (info == TRUE) {
       cat(font_bold(paste0("\nRules by this AMR package (",
                            font_red(paste0("v", utils::packageVersion("AMR"), ", ", 
-                                           format(utils::packageDate("AMR"), "%Y"))), ")\n")))
+                                           format(utils::packageDate("AMR"), "%Y"))), "), see ?eucast_rules\n")))
     }
     
     ab_enzyme <- subset(antibiotics, name %like% "/")[, c("ab", "name")]
@@ -709,8 +702,8 @@ eucast_rules <- function(x,
     
     if (info == TRUE & !rule_group_current %like% "other" & eucast_notification_shown == FALSE) {
       cat(paste0("\n", font_grey(strrep("-", options()$width - 1)),
-        "\nRules by the ", font_bold("European Committee on Antimicrobial Susceptibility Testing (EUCAST)"),
-        "\n", font_blue("http://eucast.org/"), "\n"))
+                 "\nRules by the ", font_bold("European Committee on Antimicrobial Susceptibility Testing (EUCAST)"),
+                 "\n", font_blue("http://eucast.org/"), "\n"))
       eucast_notification_shown <- TRUE
     }
     
@@ -850,9 +843,9 @@ eucast_rules <- function(x,
     
     cat(paste0("\n", font_grey(strrep("-", options()$width - 1)), "\n"))
     cat(font_bold(paste("The rules", paste0(wouldve, "affected"),
-                   formatnr(n_distinct(verbose_info$row)),
-                   "out of", formatnr(nrow(x_original)),
-                   "rows, making a total of", formatnr(nrow(verbose_info)), "edits\n")))
+                        formatnr(n_distinct(verbose_info$row)),
+                        "out of", formatnr(nrow(x_original)),
+                        "rows, making a total of", formatnr(nrow(verbose_info)), "edits\n")))
     
     n_added <- verbose_info %>% filter(is.na(old)) %>% nrow()
     n_changed <- verbose_info %>% filter(!is.na(old)) %>% nrow()
@@ -865,8 +858,8 @@ eucast_rules <- function(x,
     }
     cat(colour(paste0("=> ", wouldve, "added ",
                       font_bold(formatnr(verbose_info %>%
-                                      filter(is.na(old)) %>%
-                                      nrow()), "test results"),
+                                           filter(is.na(old)) %>%
+                                           nrow()), "test results"),
                       "\n")))
     if (n_added > 0) {
       added_summary <- verbose_info %>%
@@ -889,8 +882,8 @@ eucast_rules <- function(x,
     }
     cat(colour(paste0("=> ", wouldve, "changed ",
                       font_bold(formatnr(verbose_info %>%
-                                      filter(!is.na(old)) %>%
-                                      nrow()), "test results"),
+                                           filter(!is.na(old)) %>%
+                                           nrow()), "test results"),
                       "\n")))
     if (n_changed > 0) {
       changed_summary <- verbose_info %>%
@@ -922,6 +915,8 @@ eucast_rules <- function(x,
     rownames(verbose_info) <- NULL
     verbose_info
   } else {
+    # reset original attributes
+    attributes(x_original) <- x_original_attr
     x_original
   }
 }

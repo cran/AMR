@@ -1,5 +1,58 @@
-# AMR 1.2.0
+# AMR 1.3.0
 
+
+### New
+* Function `ab_from_text()` to retrieve antimicrobial drug names, doses and forms of administration from clinical texts in e.g. health care records, which also corrects for misspelling since it uses `as.ab()` internally
+* [Tidyverse selection helpers](https://tidyselect.r-lib.org/reference/language.html) for antibiotic classes, that help to select the columns of antibiotics that are of a specific antibiotic class, without the need to define the columns or antibiotic abbreviations. They can be used in any function that allows selection helpers, like `dplyr::select()` and `tidyr::pivot_longer()`:
+  ```r
+  library(dplyr)
+  
+  # Columns 'IPM' and 'MEM' are in the example_isolates data set
+  example_isolates %>% 
+    select(carbapenems())
+  #> Selecting carbapenems: `IPM` (imipenem), `MEM` (meropenem)
+  ```
+* Added `mo_domain()` as an alias to `mo_kingdom()`
+* Added function `filter_penicillins()` to filter isolates on a specific result in any column with a name in the antimicrobial 'penicillins' class (more specific: ATC subgroup *Beta-lactam antibacterials, penicillins*)
+* Added official antimicrobial names to all `filter_ab_class()` functions, such as `filter_aminoglycosides()`
+* Added antibiotics code "FOX1" for cefoxitin screening (abbreviation "cfsc") to the `antibiotics` data set
+* Added Monuril as trade name for fosfomycin
+* Added parameter `conserve_capped_values` to `as.rsi()` for interpreting MIC values - it makes sure that values starting with "<" (but not "<=") will always return "S" and values starting with ">" (but not ">=") will always return "R". The default behaviour of `as.rsi()` has not changed, so you need to specifically do `as.rsi(..., conserve_capped_values = TRUE)`.
+
+### Changed
+* Big speed improvement for using any function on microorganism codes from earlier package versions (prior to `AMR` v1.2.0), such as `as.mo()`, `mo_name()`, `first_isolate()`, `eucast_rules()`, `mdro()`, etc.
+
+  As a consequence, very old microbial codes (from `AMR` v0.5.0 and lower) **are not supported anymore**. Use `as.mo()` on your microorganism names or codes to transform them to current abbreviations used in this package.
+* Improvements for `susceptibility()` and `resistance()` and all `count_*()`, `proportion_*()` functions:
+  * 95% speed improvement by using other base R functions for calculation
+  * Using unexisting columns wil now return an error instead of dropping them silently
+  * Using variables for column names (as well as selectors like `dplyr::all_of()`) now works again
+* Improvements for `as.ab()`:
+  * Dramatic improvement of the algorithm behind `as.ab()`, making many more input errors translatable, such as digitalised health care records, using too few or too many vowels or consonants and many more
+  * Added progress bar
+  * Fixed a bug where `as.ab()` would return an error on invalid input values
+  * The `as.ab()` function will now throw a note if more than 1 antimicrobial drug could be retrieved from a single input value.
+* Fixed a bug where `eucast_rules()` would not work on a tibble when the `tibble` or `dplyr` package was loaded
+* Fixed a bug for CLSI 2019 guidelines (using `as.rsi()`), that also included results for animals. It now only contains interpretation guidelines for humans.
+* All `*_join_microorganisms()` functions and `bug_drug_combinations()` now return the original data class (e.g. `tibble`s and `data.table`s)
+* For functions `rsi_df()`, `proportion_df()` and `count_df()`:
+  * Fixed a bug for using grouped versions
+  * Fixed a bug where not all different antimicrobial results were added as rows
+  * Fixed a bug when only calculating counts (`count_df()`) when all antibiotics in the data set have only `NA`s
+* Improved auto-determination for columns of types `<mo>` and `<Date>`
+* Fixed a bug in `bug_drug_combinations()` for when only one antibiotic was in the input data
+* Changed the summary for class `<rsi>`, to highlight the %SI vs. %R
+* Improved error handling, giving more useful info when functions return an error
+* Any progress bar will now only show in interactive mode (i.e. not in R Markdown)
+* Speed improvement for `mdro()` and `filter_ab_class()`
+* New option `arrows_textangled` for `ggplot_pca()` to indicate whether the text at the end of the arrows should be angled (defaults to `TRUE`, as it was in previous versions)
+* Added parenteral DDD to benzylpenicillin
+* Fixed a bug where `as.mic()` could not handle dots without a leading zero (like `"<=.25`)
+
+### Other
+* Moved primary location of this project from GitLab to [GitHub](https://github.com/msberends/AMR), giving us native support for automated syntax checking without being dependent on external services such as AppVeyor and Travis CI.
+
+# AMR 1.2.0
 
 ### Breaking 
 * Removed code dependency on all other R packages, making this package fully independent of the development process of others. This is a major code change, but will probably not be noticeable by most users.
@@ -14,7 +67,7 @@
 
 ### Changed
 * Taxonomy:
-  * Updated the taxonomy of microorganisms tot May 2020, using the Catalogue of Life (CoL), the Global Biodiversity Information Facility (GBIF) and the List of Prokaryotic names with Standing in Nomenclature (LPSN, hosted by DSMZ since February 2020). **Note:** a taxonomic update may always impact determination of first isolates (using `first_isolate()`), since some bacterial names might be renamed to other genera or other (sub)species. This is expected behaviour.
+  * Updated the taxonomy of microorganisms to May 2020, using the Catalogue of Life (CoL), the Global Biodiversity Information Facility (GBIF) and the List of Prokaryotic names with Standing in Nomenclature (LPSN, hosted by DSMZ since February 2020). **Note:** a taxonomic update may always impact determination of first isolates (using `first_isolate()`), since some bacterial names might be renamed to other genera or other (sub)species. This is expected behaviour.
   * Removed the Catalogue of Life IDs (like 776351), since they now work with a species ID (hexadecimal string)
 * EUCAST rules:
   * The `eucast_rules()` function no longer applies "other" rules at default that are made available by this package (like setting ampicillin = R when ampicillin + enzyme inhibitor = R). The default input value for `rules` is now `c("breakpoints", "expert")` instead of `"all"`, but this can be changed by the user. To return to the old behaviour, set `options(AMR.eucast_rules = "all")`.
@@ -81,7 +134,7 @@ This software is now out of beta and considered stable. Nonetheless, this packag
 
 ### New
 * Support for the newest [EUCAST Clinical Breakpoint Tables v.10.0](http://www.eucast.org/clinical_breakpoints/), valid from 1 January 2020. This affects translation of MIC and disk zones using `as.rsi()` and inferred resistance and susceptibility using `eucast_rules()`.
-* The repository of this package now contains a clean version of the EUCAST and CLSI guidelines from 2011-2020 to translate MIC and disk diffusion values to R/SI: <https://gitlab.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt>. This **allows for machine reading these guidelines**, which is almost impossible with the Excel and PDF files distributed by EUCAST and CLSI. This file used to process the EUCAST Clinical Breakpoints Excel file [can be found here](https://gitlab.com/msberends/AMR/blob/master/data-raw/read_EUCAST.R).
+* The repository of this package now contains a clean version of the EUCAST and CLSI guidelines from 2011-2020 to translate MIC and disk diffusion values to R/SI: <https://github.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt>. This **allows for machine reading these guidelines**, which is almost impossible with the Excel and PDF files distributed by EUCAST and CLSI. This file used to process the EUCAST Clinical Breakpoints Excel file [can be found here](https://github.com/msberends/AMR/blob/master/data-raw/read_EUCAST.R).
 * Support for LOINC and SNOMED codes
   * Support for LOINC codes in the `antibiotics` data set. Use `ab_loinc()` to retrieve LOINC codes, or use a LOINC code for input in any `ab_*` function:
     ```r
@@ -398,9 +451,7 @@ This software is now out of beta and considered stable. Nonetheless, this packag
   * All references to antibiotics in our package now use EARS-Net codes, like `AMX` for amoxicillin
   * Functions `atc_certe`, `ab_umcg` and `atc_trivial_nl` have been removed
   * All `atc_*` functions are superceded by `ab_*` functions
-  * All output will be translated by using an included translation file which [can be viewed here](https://gitlab.com/msberends/AMR/blob/master/data-raw/translations.tsv).
-    
-    Please [create an issue in one of our repositories](https://gitlab.com/msberends/AMR/issues/new?issue[title]=Translation%20suggestion) if you want additions in this file.
+  * All output will be translated by using an included translation file which [can be viewed here](https://github.com/msberends/AMR/blob/master/data-raw/translations.tsv)
 * Improvements to plotting AMR results with `ggplot_rsi()`:
   * New parameter `colours` to set the bar colours
   * New parameters `title`, `subtitle`, `caption`, `x.title` and `y.title` to set titles and axis descriptions
@@ -424,9 +475,7 @@ This software is now out of beta and considered stable. Nonetheless, this packag
       freq(age) %>%
       boxplot()
     ```
-* Removed all hardcoded EUCAST rules and replaced them with a new reference file which [can be viewed here](https://gitlab.com/msberends/AMR/blob/master/data-raw/eucast_rules.tsv).
-  
-  Please [create an issue in one of our repositories](https://gitlab.com/msberends/AMR/issues/new?issue[title]=EUCAST%20edit) if you want changes in this file.
+* Removed all hardcoded EUCAST rules and replaced them with a new reference file which [can be viewed here](https://github.com/msberends/AMR/blob/master/data-raw/eucast_rules.tsv)
 * Added ceftazidim intrinsic resistance to *Streptococci*
 * Changed default settings for `age_groups()`, to let groups of fives and tens end with 100+ instead of 120+
 * Fix for `freq()` for when all values are `NA`
@@ -643,7 +692,7 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
 # AMR 0.5.0
 
 #### New
-* Repository moved to GitLab: https://gitlab.com/msberends/AMR
+* Repository moved to GitLab
 * Function `count_all` to get all available isolates (that like all `portion_*` and `count_*` functions also supports `summarise` and `group_by`), the old `n_rsi` is now an alias of `count_all`
 * Function `get_locale` to determine language for language-dependent output for some `mo_*` functions. This is now the default value for their `language` parameter, by which the system language will be used at default.
 * Data sets `microorganismsDT`, `microorganisms.prevDT`, `microorganisms.unprevDT` and `microorganisms.oldDT` to improve the speed of `as.mo`. They are for reference only, since they are primarily for internal use of `as.mo`.

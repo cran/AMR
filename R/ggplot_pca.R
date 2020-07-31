@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' PCA biplot with `ggplot2`
@@ -40,6 +40,7 @@
 #' @param arrows_colour the colour of the arrow and their text
 #' @param arrows_size the size (thickness) of the arrow lines
 #' @param arrows_textsize the size of the text at the end of the arrows
+#' @param arrows_textangled a logical whether the text at the end of the arrows should be angled
 #' @param arrows_alpha the alpha (transparency) of the arrows and their text
 #' @param base_textsize the text size for all plot elements except the labels and arrows
 #' @param ... Parameters passed on to functions
@@ -58,20 +59,26 @@
 #' # `example_isolates` is a dataset available in the AMR package.
 #' # See ?example_isolates.
 #'
-#' \dontrun{
 #' # See ?pca for more info about Principal Component Analysis (PCA).
-#' library(dplyr)
-#' pca_model <- example_isolates %>% 
-#'   filter(mo_genus(mo) == "Staphylococcus") %>% 
-#'   group_by(species = mo_shortname(mo)) %>%
-#'   summarise_if (is.rsi, resistance) %>%
-#'   pca(FLC, AMC, CXM, GEN, TOB, TMP, SXT, CIP, TEC, TCY, ERY)
+#' \dontrun{
+#'   library(dplyr)
+#'   pca_model <- example_isolates %>% 
+#'     filter(mo_genus(mo) == "Staphylococcus") %>% 
+#'     group_by(species = mo_shortname(mo)) %>%
+#'     summarise_if (is.rsi, resistance) %>%
+#'     pca(FLC, AMC, CXM, GEN, TOB, TMP, SXT, CIP, TEC, TCY, ERY)
+#'     
+#'   # old (base R)
+#'   biplot(pca_model)
 #'   
-#' # old
-#' biplot(pca_model)
-#' 
-#' # new 
-#' ggplot_pca(pca_model)
+#'   # new 
+#'   ggplot_pca(pca_model)
+#'   
+#'   if (require("ggplot2")) {
+#'     ggplot_pca(pca_model) +
+#'       scale_colour_viridis_d() +
+#'       labs(title = "Title here")
+#'   }
 #' }
 ggplot_pca <- function(x,
                        choices = 1:2,
@@ -91,26 +98,28 @@ ggplot_pca <- function(x,
                        arrows_colour = "darkblue",
                        arrows_size = 0.5,
                        arrows_textsize = 3,
+                       arrows_textangled = TRUE,
                        arrows_alpha = 0.75,
                        base_textsize = 10,
                        ...) {
   
-  stopifnot_installed_package("ggplot2")
-  stopifnot_msg(length(choices) == 2, "`choices` must be of length 2")
-  stopifnot_msg(is.logical(scale), "`scale` must be TRUE or FALSE")
-  stopifnot_msg(is.logical(pc.biplot), "`pc.biplot` must be TRUE or FALSE")
-  stopifnot_msg(is.numeric(choices), "`choices` must be numeric")
-  stopifnot_msg(is.numeric(labels_textsize), "`labels_textsize` must be numeric")
-  stopifnot_msg(is.numeric(labels_text_placement), "`labels_text_placement` must be numeric")
-  stopifnot_msg(is.logical(ellipse), "`ellipse` must be TRUE or FALSE")
-  stopifnot_msg(is.numeric(ellipse_prob), "`ellipse_prob` must be numeric")
-  stopifnot_msg(is.numeric(ellipse_size), "`ellipse_size` must be numeric")
-  stopifnot_msg(is.numeric(ellipse_alpha), "`ellipse_alpha` must be numeric")
-  stopifnot_msg(is.logical(arrows), "`arrows` must be TRUE or FALSE")
-  stopifnot_msg(is.numeric(arrows_size), "`arrows_size` must be numeric")
-  stopifnot_msg(is.numeric(arrows_textsize), "`arrows_textsize` must be numeric")
-  stopifnot_msg(is.numeric(arrows_alpha), "`arrows_alpha` must be numeric")
-  stopifnot_msg(is.numeric(base_textsize), "`base_textsize` must be numeric")
+  stop_ifnot_installed("ggplot2")
+  stop_ifnot(length(choices) == 2, "`choices` must be of length 2")
+  stop_ifnot(is.logical(arrows), "`arrows` must be TRUE or FALSE")
+  stop_ifnot(is.logical(arrows_textangled), "`arrows_textangled` must be TRUE or FALSE")
+  stop_ifnot(is.logical(ellipse), "`ellipse` must be TRUE or FALSE")
+  stop_ifnot(is.logical(pc.biplot), "`pc.biplot` must be TRUE or FALSE")
+  stop_ifnot(is.logical(scale), "`scale` must be TRUE or FALSE")
+  stop_ifnot(is.numeric(arrows_alpha), "`arrows_alpha` must be numeric")
+  stop_ifnot(is.numeric(arrows_size), "`arrows_size` must be numeric")
+  stop_ifnot(is.numeric(arrows_textsize), "`arrows_textsize` must be numeric")
+  stop_ifnot(is.numeric(base_textsize), "`base_textsize` must be numeric")
+  stop_ifnot(is.numeric(choices), "`choices` must be numeric")
+  stop_ifnot(is.numeric(ellipse_alpha), "`ellipse_alpha` must be numeric")
+  stop_ifnot(is.numeric(ellipse_prob), "`ellipse_prob` must be numeric")
+  stop_ifnot(is.numeric(ellipse_size), "`ellipse_size` must be numeric")
+  stop_ifnot(is.numeric(labels_text_placement), "`labels_text_placement` must be numeric")
+  stop_ifnot(is.numeric(labels_textsize), "`labels_textsize` must be numeric")
   
   calculations <- pca_calculations(pca_model = x,
                                    groups = groups, 
@@ -206,12 +215,20 @@ ggplot_pca <- function(x,
                                                           type = "open"), 
                                    colour = arrows_colour, 
                                    size = arrows_size,
-                                   alpha = arrows_alpha) +
-      ggplot2::geom_text(data = df.v, 
-                         ggplot2::aes(label = varname, x = xvar, y = yvar, angle = angle, hjust = hjust), 
-                         colour = arrows_colour,
-                         size = arrows_textsize,
-                         alpha = arrows_alpha)
+                                   alpha = arrows_alpha)
+    if (arrows_textangled == TRUE) {
+      g <- g + ggplot2::geom_text(data = df.v, 
+                                  ggplot2::aes(label = varname, x = xvar, y = yvar, angle = angle, hjust = hjust), 
+                                  colour = arrows_colour,
+                                  size = arrows_textsize,
+                                  alpha = arrows_alpha)
+    } else {
+      g <- g + ggplot2::geom_text(data = df.v, 
+                                  ggplot2::aes(label = varname, x = xvar, y = yvar, hjust = hjust), 
+                                  colour = arrows_colour,
+                                  size = arrows_textsize,
+                                  alpha = arrows_alpha)
+    }
   }
   
   # Add caption label about total explained variance

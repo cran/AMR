@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,12 +16,13 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 context("join_microorganisms.R")
 
 test_that("joins work", {
+  skip_on_cran()
   unjoined <- example_isolates
   inner <- example_isolates %>% inner_join_microorganisms()
   left <- example_isolates %>% left_join_microorganisms()
@@ -55,5 +56,9 @@ test_that("joins work", {
 
   expect_warning(right_join_microorganisms("B_ESCHR_COLI"))
   expect_warning(full_join_microorganisms("B_ESCHR_COLI"))
+  
+  library(dplyr)
+  x <- tibble(bact = as.mo("E.coli"))
+  expect_warning(left_join_microorganisms(x %>% group_by(bact), "bact"))
 
 })

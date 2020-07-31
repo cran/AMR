@@ -6,12 +6,14 @@
 \alias{is.ab}
 \title{Transform to antibiotic ID}
 \usage{
-as.ab(x, ...)
+as.ab(x, flag_multiple_results = TRUE, ...)
 
 is.ab(x)
 }
 \arguments{
 \item{x}{character vector to determine to antibiotic ID}
+
+\item{flag_multiple_results}{logical to indicate whether a note should be printed to the console that probably more than one antibiotic code or name can be retrieved from a single input value.}
 
 \item{...}{arguments passed on to internal functions}
 }
@@ -23,6 +25,14 @@ Use this function to determine the antibiotic code of one or more antibiotics. T
 }
 \details{
 All entries in the \link{antibiotics} data set have three different identifiers: a human readable EARS-Net code (column \code{ab}, used by ECDC and WHONET), an ATC code (column \code{atc}, used by WHO), and a CID code (column \code{cid}, Compound ID, used by PubChem). The data set contains more than 5,000 official brand names from many different countries, as found in PubChem.
+
+All these properties will be searched for the user input. The \code{\link[=as.ab]{as.ab()}} can correct for different forms of misspelling:
+\itemize{
+\item Wrong spelling of drug names (like "tobramicin" or "gentamycin"), which corrects for most audible similarities such as f/ph, x/ks, c/z/s, t/th, etc.
+\item Too few or too many vowels or consonants
+\item Switching two characters (like "mreopenem", often the case in clinical data, when doctors typed too fast)
+\item Digitalised paper records, leaving artefacts like 0/o/O (zero and O's), B/8, n/r, etc.
+}
 
 Use the \code{\link[=ab_property]{ab_property()}} functions to get properties based on the returned antibiotic ID, see Examples.
 }
@@ -38,7 +48,7 @@ European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{htt
 \section{Maturing lifecycle}{
 
 \if{html}{\figure{lifecycle_maturing.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. This function needs wider usage and more extensive testing in order to optimise the unlying code.
+The \link[=lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. Since this function needs wider usage and more extensive testing, you are very welcome \href{https://github.com/msberends/AMR/issues}{to suggest changes at our repository} or \link[=AMR]{write us an email (see section 'Contact Us')}.
 }
 
 \section{WHOCC}{
@@ -55,7 +65,7 @@ The WHOCC is located in Oslo at the Norwegian Institute of Public Health and fun
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
@@ -83,5 +93,8 @@ ab_name("J01FA01")    # "Erythromycin"
 ab_name("eryt")       # "Erythromycin"
 }
 \seealso{
-\link{antibiotics} for the dataframe that is being used to determine ATCs.
+\itemize{
+\item \link{antibiotics} for the dataframe that is being used to determine ATCs
+\item \code{\link[=ab_from_text]{ab_from_text()}} for a function to retrieve antimicrobial drugs from clinical text (from health care records)
+}
 }

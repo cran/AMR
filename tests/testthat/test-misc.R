@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,12 +16,13 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 context("misc.R")
 
 test_that("percentages works", {
+  skip_on_cran()
   expect_equal(percentage(0.25), "25%")
   expect_equal(percentage(0.5), "50%")
   expect_equal(percentage(0.500, digits = 1), "50.0%")
@@ -32,6 +33,7 @@ test_that("percentages works", {
 })
 
 test_that("functions missing in older R versions work", {
+  skip_on_cran()
   expect_equal(strrep("A", 5), "AAAAA")
   expect_equal(strrep(c("A", "B"), c(5, 2)), c("AAAAA", "BB"))
   expect_equal(trimws(" test "), "test")
@@ -40,6 +42,7 @@ test_that("functions missing in older R versions work", {
 })
 
 test_that("looking up ab columns works", {
+  skip_on_cran()
   expect_warning(generate_warning_abs_missing(c("AMP", "AMX")))
   expect_warning(generate_warning_abs_missing(c("AMP", "AMX"), any = TRUE))
   expect_warning(get_column_abx(example_isolates, hard_dependencies = "FUS"))

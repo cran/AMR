@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' Age in years of individuals
@@ -42,21 +42,18 @@
 #' df
 age <- function(x, reference = Sys.Date(), exact = FALSE, na.rm = FALSE) {
   if (length(x) != length(reference)) {
-    if (length(reference) == 1) {
-      reference <- rep(reference, length(x))
-    } else {
-      stop("`x` and `reference` must be of same length, or `reference` must be of length 1.")
-    }
+    stop_if(length(reference) != 1, "`x` and `reference` must be of same length, or `reference` must be of length 1.")
+    reference <- rep(reference, length(x))
   }
   x <- as.POSIXlt(x)
   reference <- as.POSIXlt(reference)
-
+  
   # from https://stackoverflow.com/a/25450756/4575331
   years_gap <- reference$year - x$year
   ages <- ifelse(reference$mon < x$mon | (reference$mon == x$mon & reference$mday < x$mday),
-                  as.integer(years_gap - 1),
-                  as.integer(years_gap))
-
+                 as.integer(years_gap - 1),
+                 as.integer(years_gap))
+  
   # add decimals
   if (exact == TRUE) {
     # get dates of `x` when `x` would have the year of `reference`
@@ -72,7 +69,7 @@ age <- function(x, reference = Sys.Date(), exact = FALSE, na.rm = FALSE) {
     # and finally add to ages
     ages <- ages + mod
   }
-
+  
   if (any(ages < 0, na.rm = TRUE)) {
     ages[ages < 0] <- NA
     warning("NAs introduced for ages below 0.")
@@ -84,7 +81,7 @@ age <- function(x, reference = Sys.Date(), exact = FALSE, na.rm = FALSE) {
   if (isTRUE(na.rm)) {
     ages <- ages[!is.na(ages)]
   }
-
+  
   ages
 }
 
@@ -141,9 +138,7 @@ age <- function(x, reference = Sys.Date(), exact = FALSE, na.rm = FALSE) {
 #'   ggplot_rsi(x = "age_group")
 #' }
 age_groups <- function(x, split_at = c(12, 25, 55, 75), na.rm = FALSE) {
-  if (!is.numeric(x)) {
-    stop("`x` and must be numeric, not a ", paste0(class(x), collapse = "/"), ".")
-  }
+  stop_ifnot(is.numeric(x), "`x` must be numeric, not ", paste0(class(x), collapse = "/"))
   if (any(x < 0, na.rm = TRUE)) {
     x[x < 0] <- NA
     warning("NAs introduced for ages below 0.")
@@ -166,11 +161,8 @@ age_groups <- function(x, split_at = c(12, 25, 55, 75), na.rm = FALSE) {
     split_at <- c(0, split_at)
   }
   split_at <- split_at[!is.na(split_at)]
-  if (length(split_at) == 1) {
-    # only 0 is available
-    stop("invalid value for `split_at`.")
-  }
-
+  stop_if(length(split_at) == 1, "invalid value for `split_at`") # only 0 is available
+  
   # turn input values to 'split_at' indices
   y <- x
   labs <- split_at
@@ -179,10 +171,10 @@ age_groups <- function(x, split_at = c(12, 25, 55, 75), na.rm = FALSE) {
     # create labels
     labs[i - 1] <- paste0(unique(c(split_at[i - 1], split_at[i] - 1)), collapse = "-")
   }
-
+  
   # last category
   labs[length(labs)] <- paste0(split_at[length(split_at)], "+")
-
+  
   agegroups <- factor(labs[y], levels = labs, ordered = TRUE)
   
   if (isTRUE(na.rm)) {

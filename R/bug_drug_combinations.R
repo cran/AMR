@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' Determine bug-drug combinations
@@ -59,22 +59,20 @@ bug_drug_combinations <- function(x,
                                   col_mo = NULL, 
                                   FUN = mo_shortname,
                                   ...) {
-  if (!is.data.frame(x)) {
-    stop("`x` must be a data frame.", call. = FALSE)
-  }
+  stop_ifnot(is.data.frame(x), "`x` must be a data frame")
+  stop_ifnot(any(sapply(x, is.rsi), na.rm = TRUE), "No columns with class <rsi> found. See ?as.rsi.")
   
   # try to find columns based on type
   # -- mo
   if (is.null(col_mo)) {
     col_mo <- search_type_in_df(x = x, type = "mo")
   }
-  if (is.null(col_mo)) {
-    stop("`col_mo` must be set.", call. = FALSE)
-  }
+  stop_if(is.null(col_mo), "`col_mo` must be set")
   
+  x_class <- class(x)
   x <- as.data.frame(x, stringsAsFactors = FALSE)
   x[, col_mo] <- FUN(x[, col_mo, drop = TRUE])
-  x <- x[, c(col_mo, names(which(sapply(x, is.rsi))))]
+  x <- x[, c(col_mo, names(which(sapply(x, is.rsi)))), drop = FALSE]
   
   unique_mo <- sort(unique(x[, col_mo, drop = TRUE]))
   
@@ -88,7 +86,7 @@ bug_drug_combinations <- function(x,
   
   for (i in seq_len(length(unique_mo))) {
     # filter on MO group and only select R/SI columns
-    x_mo_filter <- x[which(x[, col_mo, drop = TRUE] == unique_mo[i]), names(which(sapply(x, is.rsi)))]
+    x_mo_filter <- x[which(x[, col_mo, drop = TRUE] == unique_mo[i]), names(which(sapply(x, is.rsi))), drop = FALSE]
     # turn and merge everything
     pivot <- lapply(x_mo_filter, function(x) {
       m <- as.matrix(table(x))
@@ -104,7 +102,7 @@ bug_drug_combinations <- function(x,
     out <- rbind(out, out_group)
   }
   
-  structure(.Data = out, class = c("bug_drug_combinations", class(x)))
+  structure(.Data = out, class = c("bug_drug_combinations", x_class))
 }
 
 #' @method format bug_drug_combinations
@@ -121,6 +119,7 @@ format.bug_drug_combinations <- function(x,
                                          decimal.mark = getOption("OutDec"),
                                          big.mark = ifelse(decimal.mark == ",", ".", ","),
                                          ...) {
+  x <- as.data.frame(x, stringsAsFactors = FALSE)
   x <- subset(x, total >= minimum)
   
   if (remove_intrinsic_resistant == TRUE) {
@@ -136,7 +135,7 @@ format.bug_drug_combinations <- function(x,
     format <- tolower(format)
     ab_txt <- rep(format, length(ab))
     for (i in seq_len(length(ab_txt))) {
-      ab_txt[i] <- gsub("ab", ab[i], ab_txt[i])
+      ab_txt[i] <- gsub("ab", as.character(as.ab(ab[i])), ab_txt[i])
       ab_txt[i] <- gsub("cid", ab_cid(ab[i]), ab_txt[i])
       ab_txt[i] <- gsub("group", ab_group(ab[i], language = language), ab_txt[i])
       ab_txt[i] <- gsub("atc_group1", ab_atc_group1(ab[i], language = language), ab_txt[i])
@@ -173,11 +172,11 @@ format.bug_drug_combinations <- function(x,
   
   y <- y %>% 
     create_var(txt = paste0(percentage(y$isolates / y$total, decimal.mark = decimal.mark, big.mark = big.mark), 
-                                          " (", trimws(format(y$isolates, big.mark = big.mark)), "/",
-                                          trimws(format(y$total, big.mark = big.mark)), ")")) %>% 
+                            " (", trimws(format(y$isolates, big.mark = big.mark)), "/",
+                            trimws(format(y$total, big.mark = big.mark)), ")")) %>% 
     select(ab, ab_txt, mo, txt) %>%
     arrange(mo)
-
+  
   # replace tidyr::pivot_wider() from here
   for (i in unique(y$mo)) {
     mo_group <- y[which(y$mo == i), c("ab", "txt")]
@@ -195,14 +194,14 @@ format.bug_drug_combinations <- function(x,
   select_ab_vars <- function(.data) {
     .data[, c("ab_group", "ab_txt", colnames(.data)[!colnames(.data) %in% c("ab_group", "ab_txt", "ab")])]
   }
-
+  
   y <- y %>% 
     create_var(ab_group = ab_group(y$ab, language = language)) %>% 
     select_ab_vars() %>% 
     arrange(ab_group, ab_txt)
   y <- y %>% 
     create_var(ab_group = ifelse(y$ab_group != lag(y$ab_group) | is.na(lag(y$ab_group)), y$ab_group, ""))
-
+  
   if (add_ab_group == FALSE) {
     y <- y %>% 
       select(-ab_group) %>%
@@ -221,6 +220,8 @@ format.bug_drug_combinations <- function(x,
 #' @method print bug_drug_combinations
 #' @export
 print.bug_drug_combinations <- function(x, ...) {
-  print(as.data.frame(x, stringsAsFactors = FALSE))
-  message(font_blue("NOTE: Use 'format()' on this result to get a publicable/printable format."))
+  x_class <- class(x)
+  print(structure(x, class = x_class[x_class != "bug_drug_combinations"]),
+        ...)
+  message(font_blue("NOTE: Use 'format()' on this result to get a publishable/printable format."))
 }

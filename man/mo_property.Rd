@@ -13,6 +13,7 @@
 \alias{mo_class}
 \alias{mo_phylum}
 \alias{mo_kingdom}
+\alias{mo_domain}
 \alias{mo_type}
 \alias{mo_gramstain}
 \alias{mo_snomed}
@@ -47,6 +48,8 @@ mo_class(x, language = get_locale(), ...)
 mo_phylum(x, language = get_locale(), ...)
 
 mo_kingdom(x, language = get_locale(), ...)
+
+mo_domain(x, language = get_locale(), ...)
 
 mo_type(x, language = get_locale(), ...)
 
@@ -96,16 +99,18 @@ mo_property(x, property = "fullname", language = get_locale(), ...)
 Use these functions to return a specific property of a microorganism. All input values will be evaluated internally with \code{\link[=as.mo]{as.mo()}}, which makes it possible to use microbial abbreviations, codes and names as input. Please see \emph{Examples}.
 }
 \details{
-All functions will return the most recently known taxonomic property according to the Catalogue of Life, except for \code{\link[=mo_ref]{mo_ref()}}, \code{\link[=mo_authors]{mo_authors()}} and \code{\link[=mo_year]{mo_year()}}. This leads to the following results:
+All functions will return the most recently known taxonomic property according to the Catalogue of Life, except for \code{\link[=mo_ref]{mo_ref()}}, \code{\link[=mo_authors]{mo_authors()}} and \code{\link[=mo_year]{mo_year()}}. Please refer to this example, knowing that \emph{Escherichia blattae} was renamed to \emph{Shimwellia blattae} in 2010:
 \itemize{
-\item \code{mo_name("Chlamydia psittaci")} will return \code{"Chlamydophila psittaci"} (with a warning about the renaming)
-\item \code{mo_ref("Chlamydia psittaci")} will return \code{"Page, 1968"} (with a warning about the renaming)
-\item \code{mo_ref("Chlamydophila psittaci")} will return \code{"Everett et al., 1999"} (without a warning)
+\item \code{mo_name("Escherichia blattae")} will return \code{"Shimwellia blattae"} (with a message about the renaming)
+\item \code{mo_ref("Escherichia blattae")} will return \code{"Burgess et al., 1973"} (with a message about the renaming)
+\item \code{mo_ref("Shimwellia blattae")} will return \code{"Priest et al., 2010"} (without a message)
 }
 
-The short name - \code{\link[=mo_shortname]{mo_shortname()}} - almost always returns the first character of the genus and the full species, like \emph{"E. coli"}. Exceptions are abbreviations of staphylococci and beta-haemolytic streptococci, like \emph{"CoNS"} (Coagulase-Negative Staphylococci) and \emph{"GBS"} (Group B Streptococci).
+The short name - \code{\link[=mo_shortname]{mo_shortname()}} - almost always returns the first character of the genus and the full species, like \code{"E. coli"}. Exceptions are abbreviations of staphylococci (like \emph{"CoNS"}, Coagulase-Negative Staphylococci) and beta-haemolytic streptococci (like \emph{"GBS"}, Group B Streptococci). Please bear in mind that e.g. \emph{E. coli} could mean \emph{Escherichia coli} (kingdom of Bacteria) as well as \emph{Entamoeba coli} (kingdom of Protozoa). Returning to the full name will be done using \code{\link[=as.mo]{as.mo()}} internally, giving priority to bacteria and human pathogens, i.e. \code{"E. coli"} will be considered \emph{Escherichia coli}. In other words, \code{mo_fullname(mo_shortname("Entamoeba coli"))} returns \code{"Escherichia coli"}.
 
-The Gram stain - \code{\link[=mo_gramstain]{mo_gramstain()}} - will be determined on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002) who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value \code{NA}.
+Since the top-level of the taxonomy is sometimes referred to as 'kingdom' and sometimes as 'domain', the functions \code{\link[=mo_kingdom]{mo_kingdom()}} and \code{\link[=mo_domain]{mo_domain()}} return the exact same results.
+
+The Gram stain - \code{\link[=mo_gramstain]{mo_gramstain()}} - will be determined based on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002, \href{https://pubmed.ncbi.nlm.nih.gov/11837318}{PMID 11837318}), who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value \code{NA}.
 
 All output will be \link{translate}d where possible.
 
@@ -114,7 +119,7 @@ The function \code{\link[=mo_url]{mo_url()}} will return the direct URL to the o
 \section{Stable lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
-The \link[AMR:lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
+The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
 If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
@@ -139,7 +144,7 @@ This package contains the complete taxonomic tree of almost all microorganisms (
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.gitlab.io/AMR} you can find \href{https://msberends.gitlab.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.gitlab.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.gitlab.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{

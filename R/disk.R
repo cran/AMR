@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' Class 'disk'
@@ -59,16 +59,16 @@ as.disk <- function(x, na.rm = FALSE) {
       x <- x[!is.na(x)]
     }
     x.bak <- x
-
+    
     na_before <- length(x[is.na(x)])
-
+    
     # force it to be integer
     x <- suppressWarnings(as.integer(x))
-
+    
     # disks can never be less than 6 mm (size of smallest disk) or more than 50 mm
     x[x < 6 | x > 50] <- NA_integer_
     na_after <- length(x[is.na(x)])
-
+    
     if (na_before != na_after) {
       list_missing <- x.bak[is.na(x) & !is.na(x.bak)] %>%
         unique() %>%

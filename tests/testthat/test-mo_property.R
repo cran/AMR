@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 context("mo_property.R")
@@ -26,6 +26,7 @@ test_that("mo_property works", {
   skip_on_cran()
   
   expect_equal(mo_kingdom("Escherichia coli"), "Bacteria")
+  expect_equal(mo_kingdom("Escherichia coli"), mo_domain("Escherichia coli"))
   expect_equal(mo_phylum("Escherichia coli"), "Proteobacteria")
   expect_equal(mo_class("Escherichia coli"), "Gammaproteobacteria")
   expect_equal(mo_order("Escherichia coli"), "Enterobacterales")
@@ -96,7 +97,7 @@ test_that("mo_property works", {
   expect_equal(mo_snomed("Escherichia coli"), 112283007)
   
   # old codes must throw a warning in mo_* family
-  expect_warning(mo_name(c("B_ESCHR_COL", "B_STPHY_AUR")))
+  expect_message(mo_name(c("B_ESCHR_COL", "B_STPHY_AUR")))
   
   # outcome of mo_fullname must always return the fullname from the data set
   x <- data.frame(mo = microorganisms$mo,

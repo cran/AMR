@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' Property of a microorganism
@@ -28,14 +28,16 @@
 #' @param language language of the returned text, defaults to system language (see [get_locale()]) and can also be set with `getOption("AMR_locale")`. Use `language = NULL` or `language = ""` to prevent translation.
 #' @param ... other parameters passed on to [as.mo()]
 #' @param open browse the URL using [utils::browseURL()]
-#' @details All functions will return the most recently known taxonomic property according to the Catalogue of Life, except for [mo_ref()], [mo_authors()] and [mo_year()]. This leads to the following results:
-#' - `mo_name("Chlamydia psittaci")` will return `"Chlamydophila psittaci"` (with a warning about the renaming)
-#' - `mo_ref("Chlamydia psittaci")` will return `"Page, 1968"` (with a warning about the renaming)
-#' - `mo_ref("Chlamydophila psittaci")` will return `"Everett et al., 1999"` (without a warning)
+#' @details All functions will return the most recently known taxonomic property according to the Catalogue of Life, except for [mo_ref()], [mo_authors()] and [mo_year()]. Please refer to this example, knowing that *Escherichia blattae* was renamed to *Shimwellia blattae* in 2010:
+#' - `mo_name("Escherichia blattae")` will return `"Shimwellia blattae"` (with a message about the renaming)
+#' - `mo_ref("Escherichia blattae")` will return `"Burgess et al., 1973"` (with a message about the renaming)
+#' - `mo_ref("Shimwellia blattae")` will return `"Priest et al., 2010"` (without a message)
 #'
-#' The short name - [mo_shortname()] - almost always returns the first character of the genus and the full species, like *"E. coli"*. Exceptions are abbreviations of staphylococci and beta-haemolytic streptococci, like *"CoNS"* (Coagulase-Negative Staphylococci) and *"GBS"* (Group B Streptococci).
+#' The short name - [mo_shortname()] - almost always returns the first character of the genus and the full species, like `"E. coli"`. Exceptions are abbreviations of staphylococci (like *"CoNS"*, Coagulase-Negative Staphylococci) and beta-haemolytic streptococci (like *"GBS"*, Group B Streptococci). Please bear in mind that e.g. *E. coli* could mean *Escherichia coli* (kingdom of Bacteria) as well as *Entamoeba coli* (kingdom of Protozoa). Returning to the full name will be done using [as.mo()] internally, giving priority to bacteria and human pathogens, i.e. `"E. coli"` will be considered *Escherichia coli*. In other words, `mo_fullname(mo_shortname("Entamoeba coli"))` returns `"Escherichia coli"`.
+#' 
+#' Since the top-level of the taxonomy is sometimes referred to as 'kingdom' and sometimes as 'domain', the functions [mo_kingdom()] and [mo_domain()] return the exact same results.
 #'
-#' The Gram stain - [mo_gramstain()] - will be determined on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002) who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value `NA`.
+#' The Gram stain - [mo_gramstain()] - will be determined based on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002, [PMID 11837318](https://pubmed.ncbi.nlm.nih.gov/11837318)), who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value `NA`.
 #'
 #' All output will be [translate]d where possible.
 #'
@@ -149,9 +151,9 @@ mo_fullname <- mo_name
 #' @export
 mo_shortname <- function(x, language = get_locale(), ...) {
   x.mo <- as.mo(x, ...)
-
+  
   metadata <- get_mo_failures_uncertainties_renamed()
-
+  
   replace_empty <- function(x) {
     x[x == ""] <- "spp."
     x
@@ -159,13 +161,13 @@ mo_shortname <- function(x, language = get_locale(), ...) {
   
   # get first char of genus and complete species in English
   shortnames <- paste0(substr(mo_genus(x.mo, language = NULL), 1, 1), ". ", replace_empty(mo_species(x.mo, language = NULL)))
-
+  
   # exceptions for Staphylococci
   shortnames[shortnames == "S. coagulase-negative"] <- "CoNS"
   shortnames[shortnames == "S. coagulase-positive"] <- "CoPS"
   # exceptions for Streptococci: Streptococcus Group A -> GAS
   shortnames[shortnames %like% "S. group [ABCDFGHK]"] <- paste0("G", gsub("S. group ([ABCDFGHK])", "\\1", shortnames[shortnames %like% "S. group [ABCDFGHK]"]), "S")
-
+  
   load_mo_failures_uncertainties_renamed(metadata)
   translate_AMR(shortnames, language = language, only_unknown = FALSE)
 }
@@ -220,6 +222,10 @@ mo_kingdom <- function(x, language = get_locale(), ...) {
 
 #' @rdname mo_property
 #' @export
+mo_domain <- mo_kingdom
+
+#' @rdname mo_property
+#' @export
 mo_type <- function(x, language = get_locale(), ...) {
   translate_AMR(mo_validate(x = x, property = "kingdom", ...), language = language, only_unknown = FALSE)
 }
@@ -229,7 +235,7 @@ mo_type <- function(x, language = get_locale(), ...) {
 mo_gramstain <- function(x, language = get_locale(), ...) {
   x.mo <- as.mo(x, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
-
+  
   x.phylum <- mo_phylum(x.mo)
   # DETERMINE GRAM STAIN FOR BACTERIA
   # Source: https://itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value=956097
@@ -250,7 +256,7 @@ mo_gramstain <- function(x, language = get_locale(), ...) {
                     "Firmicutes",
                     "Tenericutes")
     | x.mo == "B_GRAMP"] <- "Gram-positive"
-
+  
   load_mo_failures_uncertainties_renamed(metadata)
   translate_AMR(x, language = language, only_unknown = FALSE)
 }
@@ -296,16 +302,16 @@ mo_rank <- function(x, ...) {
 mo_taxonomy <- function(x, language = get_locale(),  ...) {
   x <- as.mo(x, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
-
+  
   result <- base::list(kingdom = mo_kingdom(x, language = language),
-             phylum = mo_phylum(x, language = language),
-             class = mo_class(x, language = language),
-             order = mo_order(x, language = language),
-             family = mo_family(x, language = language),
-             genus = mo_genus(x, language = language),
-             species = mo_species(x, language = language),
-             subspecies = mo_subspecies(x, language = language))
-
+                       phylum = mo_phylum(x, language = language),
+                       class = mo_class(x, language = language),
+                       order = mo_order(x, language = language),
+                       family = mo_family(x, language = language),
+                       genus = mo_genus(x, language = language),
+                       species = mo_species(x, language = language),
+                       subspecies = mo_subspecies(x, language = language))
+  
   load_mo_failures_uncertainties_renamed(metadata)
   result
 }
@@ -315,7 +321,7 @@ mo_taxonomy <- function(x, language = get_locale(),  ...) {
 mo_synonyms <- function(x, ...) {
   x <- as.mo(x, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
-
+  
   IDs <- mo_name(x = x, language = NULL)
   syns <- lapply(IDs, function(newname) {
     res <- sort(microorganisms.old[which(microorganisms.old$fullname_new == newname), "fullname"])
@@ -331,7 +337,7 @@ mo_synonyms <- function(x, ...) {
   } else {
     result <- unlist(syns)
   }
-
+  
   load_mo_failures_uncertainties_renamed(metadata)
   result
 }
@@ -341,7 +347,7 @@ mo_synonyms <- function(x, ...) {
 mo_info <- function(x, language = get_locale(),  ...) {
   x <- as.mo(x, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
-
+  
   info <- lapply(x, function(y)
     c(mo_taxonomy(y, language = language),
       list(synonyms = mo_synonyms(y),
@@ -354,7 +360,7 @@ mo_info <- function(x, language = get_locale(),  ...) {
   } else {
     result <- info[[1L]]
   }
-
+  
   load_mo_failures_uncertainties_renamed(metadata)
   result
 }
@@ -382,7 +388,7 @@ mo_url <- function(x, open = FALSE, ...) {
     }
     utils::browseURL(u[1L])
   }
-
+  
   load_mo_failures_uncertainties_renamed(metadata)
   u
 }
@@ -391,20 +397,17 @@ mo_url <- function(x, open = FALSE, ...) {
 #' @rdname mo_property
 #' @export
 mo_property <- function(x, property = "fullname", language = get_locale(), ...) {
-  if (length(property) != 1L) {
-    stop("'property' must be of length 1.")
-  }
-  if (!property %in% colnames(microorganisms)) {
-    stop("invalid property: '", property, "' - use a column name of the `microorganisms` data set")
-  }
-
+  stop_ifnot(length(property) == 1L, "'property' must be of length 1")
+  stop_ifnot(property %in% colnames(microorganisms),
+             "invalid property: '", property, "' - use a column name of the `microorganisms` data set")
+  
   translate_AMR(mo_validate(x = x, property = property, ...), language = language, only_unknown = TRUE)
 }
 
 mo_validate <- function(x, property, ...) {
   
   check_dataset_integrity()
-
+  
   dots <- list(...)
   Becker <- dots$Becker
   if (is.null(Becker)) {
@@ -414,7 +417,7 @@ mo_validate <- function(x, property, ...) {
   if (is.null(Lancefield)) {
     Lancefield <- FALSE
   }
-
+  
   # try to catch an error when inputting an invalid parameter
   # so the 'call.' can be set to FALSE
   tryCatch(x[1L] %in% MO_lookup[1, property, drop = TRUE],
@@ -434,8 +437,6 @@ mo_validate <- function(x, property, ...) {
   
   if (property == "mo") {
     return(to_class_mo(x))
-  } else if (property == "col_id") {
-    return(as.integer(x))
   } else if (property == "snomed") {
     return(as.double(eval(parse(text = x))))
   } else {

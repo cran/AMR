@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' Class 'mic'
@@ -60,7 +60,7 @@ as.mic <- function(x, na.rm = FALSE) {
       x <- x[!is.na(x)]
     }
     x.bak <- x
-
+    
     # comma to period
     x <- gsub(",", ".", x, fixed = TRUE)
     # transform Unicode for >= and <=
@@ -71,8 +71,8 @@ as.mic <- function(x, na.rm = FALSE) {
     # transform => to >= and =< to <=
     x <- gsub("=<", "<=", x, fixed = TRUE)
     x <- gsub("=>", ">=", x, fixed = TRUE)
-    # starting dots must start with 0
-    x <- gsub("^[.]+", "0.", x)
+    # dots without a leading zero must start with 0
+    x <- gsub("([^0-9]|^)[.]", "\\10.", x)
     # values like "<=0.2560.512" should be 0.512
     x <- gsub(".*[.].*[.]", "0.", x)
     # remove ending .0
@@ -97,7 +97,7 @@ as.mic <- function(x, na.rm = FALSE) {
     
     ## previously unempty values now empty - should return a warning later on
     x[x.bak != "" & x == ""] <- "invalid"
-
+    
     # these are allowed MIC values and will become factor levels
     ops <- c("<", "<=", "", ">=", ">")
     lvls <- c(c(t(sapply(ops, function(x) paste0(x, "0.00", 1:9)))),
@@ -108,11 +108,11 @@ as.mic <- function(x, na.rm = FALSE) {
               c(t(sapply(ops, function(x) paste0(x, sort(c(1:9, 1.5)))))),
               c(t(sapply(ops, function(x) paste0(x, c(10:98)[9:98 %% 2 == TRUE])))),
               c(t(sapply(ops, function(x) paste0(x, sort(c(2 ^ c(7:10), 80 * c(2:12))))))))
-
+    
     na_before <- x[is.na(x) | x == ""] %>% length()
     x[!x %in% lvls] <- NA
     na_after <- x[is.na(x) | x == ""] %>% length()
-
+    
     if (na_before != na_after) {
       list_missing <- x.bak[is.na(x) & !is.na(x.bak) & x.bak != ""] %>%
         unique() %>%
@@ -123,14 +123,15 @@ as.mic <- function(x, na.rm = FALSE) {
               "%) that were invalid MICs: ",
               list_missing, call. = FALSE)
     }
-
+    
     structure(.Data = factor(x, levels = lvls, ordered = TRUE),
               class =  c("mic", "ordered", "factor"))
   }
 }
 
 all_valid_mics <- function(x) {
-  x_mic <- suppressWarnings(as.mic(x[!is.na(x)]))
+  x_mic <- tryCatch(suppressWarnings(as.mic(x[!is.na(x)])),
+                    error = function(e) NA)
   !any(is.na(x_mic)) & !all(is.na(x))
 }
 

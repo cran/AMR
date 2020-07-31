@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 context("mo.R")
@@ -24,6 +24,8 @@ context("mo.R")
 test_that("as.mo works", {
   
   skip_on_cran()
+  
+  library(dplyr)
  
   MOs <- microorganisms %>% filter(!is.na(mo), nchar(mo) > 3)
   expect_identical(as.character(MOs$mo), as.character(as.mo(MOs$mo)))
@@ -50,7 +52,6 @@ test_that("as.mo works", {
   expect_equal(as.character(as.mo("Streptococcus")), "B_STRPT") # not Peptostreptoccus
   expect_equal(as.character(as.mo("Estreptococos grupo B")), "B_STRPT_GRPB")
   expect_equal(as.character(as.mo("Group B Streptococci")), "B_STRPT_GRPB")
-  expect_equal(as.character(suppressWarnings(as.mo("B_STRPTC"))), "B_STRPT") # old MO code (<=v0.5.0)
   expect_equal(as.character(suppressWarnings(as.mo("B_STRPT_PNE"))), "B_STRPT_PNMN") # old MO code (<=v0.8.0)
   
   expect_equal(as.character(as.mo(c("GAS", "GBS"))), c("B_STRPT_GRPA", "B_STRPT_GRPB"))
@@ -144,9 +145,7 @@ test_that("as.mo works", {
   expect_identical(as.character(as.mo("S. sanguinis",   Lancefield = TRUE)),  "B_STRPT_GRPH") # group H
   expect_identical(as.character(as.mo("S. salivarius",  Lancefield = FALSE)), "B_STRPT_SLVR")
   expect_identical(as.character(as.mo("S. salivarius",  Lancefield = TRUE)),  "B_STRPT_GRPK") # group K
-  
-  library(dplyr)
-  
+
   # select with one column
   expect_identical(
     example_isolates[1:10, ] %>%
@@ -259,11 +258,7 @@ test_that("as.mo works", {
   expect_true(example_isolates %>% pull(mo) %>% is.mo())
   
   expect_error(translate_allow_uncertain(5))
-  
-  # very old MO codes (<= v0.5.0)
-  expect_equal(suppressWarnings(as.character(as.mo("F_CCCCS_NEO"))), "F_CRYPT_NFRM")
-  expect_equal(suppressWarnings(as.character(as.mo("F_CANDD_GLB"))), "F_CANDD_GLBR")
-  
+
   # debug mode
   expect_output(print(suppressMessages(suppressWarnings(as.mo("kshgcjkhsdgkshjdfsfvsdfv", debug = TRUE, allow_uncertain = 3)))))
   

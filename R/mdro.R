@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' Determine multidrug-resistant organisms (MDRO)
@@ -46,7 +46,7 @@
 #' - `guideline = "BRMO"`\cr
 #'   The Dutch national guideline - Rijksinstituut voor Volksgezondheid en Milieu "WIP-richtlijn BRMO (Bijzonder Resistente Micro-Organismen) (ZKH)" ([link](https://www.rivm.nl/Documenten_en_publicaties/Professioneel_Praktisch/Richtlijnen/Infectieziekten/WIP_Richtlijnen/WIP_Richtlijnen/Ziekenhuizen/WIP_richtlijn_BRMO_Bijzonder_Resistente_Micro_Organismen_ZKH))
 #'
-#' Please suggest your own (country-specific) guidelines by letting us know: <https://gitlab.com/msberends/AMR/issues/new>.
+#' Please suggest your own (country-specific) guidelines by letting us know: <https://github.com/msberends/AMR/issues/new>.
 #' 
 #' **Note:** Every test that involves the Enterobacteriaceae family, will internally be performed using its newly named order Enterobacterales, since the Enterobacteriaceae family has been taxonomically reclassified by Adeolu *et al.* in 2016. Before that, Enterobacteriaceae was the only family under the Enterobacteriales (with an i) order. All species under the old Enterobacteriaceae family are still under the new Enterobacterales (without an i) order, but divided into multiple families. The way tests are performed now by this [mdro()] function makes sure that results from before 2016 and after 2016 are identical.
 #' @inheritSection as.rsi Interpretation of R and S/I
@@ -95,7 +95,7 @@ mdro <- function(x,
                   "\n\nThis may overwrite your existing data if you use e.g.:",
                   "\ndata <- mdro(data, verbose = TRUE)\n\nDo you want to continue?")
     if ("rstudioapi" %in% rownames(utils::installed.packages())) {
-      showQuestion <- get("showQuestion", envir = asNamespace("rstudioapi"))
+      showQuestion <- import_fn("showQuestion", "rstudioapi")
       q_continue <- showQuestion("Using verbose = TRUE with mdro()", txt)
     } else {
       q_continue <- utils::menu(choices = c("OK", "Cancel"), graphics = FALSE, title = txt)
@@ -106,27 +106,23 @@ mdro <- function(x,
     }
   }
   
-  if (!is.data.frame(x)) {
-    stop("`x` must be a data frame.", call. = FALSE)
-  }
+  stop_ifnot(is.data.frame(x), "`x` must be a data.frame")
+  stop_if(any(dim(x) == 0), "`x` must contain rows and columns")
+  
   # force regular data.frame, not a tibble or data.table
   x <- as.data.frame(x, stringsAsFactors = FALSE)
   
-  if (!is.numeric(pct_required_classes)) {
-    stop("`pct_required_classes` must be numeric.", call. = FALSE)
-  }
+  stop_ifnot(is.numeric(pct_required_classes), "`pct_required_classes` must be numeric")
   if (pct_required_classes > 1) {
     # allow pct_required_classes = 75 -> pct_required_classes = 0.75
     pct_required_classes <- pct_required_classes / 100
   }
-
+  
   if (!is.null(list(...)$country)) {
     warning("Using `country` is deprecated, use `guideline` instead. Please see ?mdro.", call. = FALSE)
     guideline <- list(...)$country
   }
-  if (length(guideline) > 1) {
-    stop("`guideline` must be a length one character string.", call. = FALSE)
-  }
+  stop_ifnot(length(guideline) == 1, "`guideline` must be of length 1")
   
   if (is.null(guideline)) {
     # default to the paper by Magiorakos et al. (2012)
@@ -138,9 +134,8 @@ mdro <- function(x,
   if (tolower(guideline) == "de") {
     guideline <- "MRGN"
   }
-  if (!tolower(guideline) %in% c("brmo", "mrgn", "eucast", "tb", "cmi2012")) {
-    stop("invalid guideline: ", guideline, call. = FALSE)
-  }
+  stop_ifnot(tolower(guideline) %in% c("brmo", "mrgn", "eucast", "tb", "cmi2012"),
+             "invalid guideline: ", guideline)
   guideline <- list(code = tolower(guideline))
   
   # try to find columns based on type
@@ -150,13 +145,11 @@ mdro <- function(x,
   }
   if (is.null(col_mo) & guideline$code == "tb") {
     message(font_blue("NOTE: No column found as input for `col_mo`,",
-                 font_bold("assuming all records contain", font_italic("Mycobacterium tuberculosis."))))
+                      font_bold("assuming all records contain", font_italic("Mycobacterium tuberculosis."))))
     x$mo <- as.mo("Mycobacterium tuberculosis")
     col_mo <- "mo"
   }
-  if (is.null(col_mo)) {
-    stop("`col_mo` must be set.", call. = FALSE)
-  }
+  stop_if(is.null(col_mo), "`col_mo` must be set")
   
   if (guideline$code == "cmi2012") {
     guideline$name <- "Multidrug-resistant, extensively drug-resistant and pandrug-resistant bacteria: an international expert proposal for interim standard definitions for acquired resistance."
@@ -417,9 +410,7 @@ mdro <- function(x,
   RFP <- cols_ab["RFP"]
   abx_tb <- c(CAP, ETH, GAT, INH, PZA, RIF, RIB, RFP)
   abx_tb <- abx_tb[!is.na(abx_tb)]
-  if (guideline$code == "tb" & length(abx_tb) == 0) {
-    stop("No antimycobacterials found in data set.", call. = FALSE)
-  }
+  stop_if(guideline$code == "tb" & length(abx_tb) == 0, "no antimycobacterials found in data set")
   
   if (combine_SI == TRUE) {
     search_result <- "R"
@@ -477,10 +468,9 @@ mdro <- function(x,
       } else if (any_all == "all") {
         search_function <- all
       }
-      row_filter <- as.logical(by(x, 
-                                  seq_len(nrow(x)), 
-                                  function(row) search_function(unlist(row[, cols]) %in% search_result, na.rm = TRUE)))
-      row_filter <- x[row_filter, "row_number", drop = TRUE]
+      x_transposed <- as.list(as.data.frame(t(x[, cols, drop = FALSE])))
+      row_filter <- sapply(x_transposed, function(y) search_function(y %in% search_result, na.rm = TRUE))
+      row_filter <- x[which(row_filter), "row_number", drop = TRUE]
       rows <- rows[rows %in% row_filter]
       x[rows, "MDRO"] <<- to
       x[rows, "reason"] <<- paste0(any_all, " of the required antibiotics ", ifelse(any_all == "any", "is", "are"), " R")
@@ -502,24 +492,23 @@ mdro <- function(x,
       
       if (verbose == TRUE) {
         x[rows, "columns_nonsusceptible"] <<- sapply(rows, 
-                                                      function(row, group_vct = lst_vector) {
-                                                        cols_nonsus <- sapply(x[row, group_vct, drop = FALSE], function(y) y %in% search_result)
-                                                        paste(sort(names(cols_nonsus)[cols_nonsus]), collapse = ", ")
-                                                      })
+                                                     function(row, group_vct = lst_vector) {
+                                                       cols_nonsus <- sapply(x[row, group_vct, drop = FALSE], function(y) y %in% search_result)
+                                                       paste(sort(names(cols_nonsus)[cols_nonsus]), collapse = ", ")
+                                                     })
       }
       x[rows, "classes_affected"] <<- sapply(rows, 
-                                            function(row, group_tbl = lst) {
-                                              sum(sapply(group_tbl, 
-                                                         function(group) {
-                                                           any(unlist(x[row, group[!is.na(group)], drop = TRUE]) %in% search_result, na.rm = TRUE)
-                                                         }),
-                                                  na.rm = TRUE) 
-                                            })
+                                             function(row, group_tbl = lst) {
+                                               sum(sapply(group_tbl, 
+                                                          function(group) {
+                                                            any(unlist(x[row, group[!is.na(group)], drop = TRUE]) %in% search_result, na.rm = TRUE)
+                                                          }),
+                                                   na.rm = TRUE) 
+                                             })
       # for PDR; all agents are R (or I if combine_SI = FALSE)
-      row_filter <- as.logical(by(x[rows, ], 
-                                  seq_len(nrow(x[rows, ])),
-                                  function(row) all(unlist(row[, lst_vector]) %in% search_result, na.rm = TRUE)))
-      x[row_filter, "classes_affected"] <<- 999
+      x_transposed <- as.list(as.data.frame(t(x[rows, lst_vector, drop = FALSE])))
+      row_filter <- sapply(x_transposed, function(y) all(y %in% search_result, na.rm = TRUE))
+      x[which(row_filter), "classes_affected"] <<- 999
     }
     
     if (info == TRUE) {
@@ -534,7 +523,7 @@ mdro <- function(x,
   x$row_number <- seq_len(nrow(x))
   x$reason <- paste0("not covered by ", toupper(guideline$code), " guideline")
   x$columns_nonsusceptible <- ""
-
+  
   if (guideline$code == "cmi2012") {
     # CMI, 2012 ---------------------------------------------------------------
     # Non-susceptible = R and I
@@ -729,7 +718,7 @@ mdro <- function(x,
     x[which((x$classes_in_guideline - x$classes_affected) <= 2), "MDRO"] <- 3
     if (verbose == TRUE) {
       x[which(x$MDRO == 3), "reason"] <- paste0("less than 3 classes remain susceptible (", x$classes_in_guideline[which((x$classes_in_guideline - x$classes_affected) <= 2)] - x$classes_affected[which(x$MDRO == 3)],
-                                                                                       " out of ", x$classes_in_guideline[which(x$MDRO == 3)], " classes)")
+                                                " out of ", x$classes_in_guideline[which(x$MDRO == 3)], " classes)")
     }
     
     # PDR (=4): all agents are R 
@@ -977,14 +966,14 @@ mdro <- function(x,
         ab != "R"
       }
     }
- 
+    
     x$mono_count <- 0
-    x[drug_is_R(INH), "mono_count"] <- x[drug_is_R(INH), "mono_count"] + 1
-    x[drug_is_R(RIF), "mono_count"] <- x[drug_is_R(RIF), "mono_count"] + 1
-    x[drug_is_R(ETH), "mono_count"] <- x[drug_is_R(ETH), "mono_count"] + 1
-    x[drug_is_R(PZA), "mono_count"] <- x[drug_is_R(PZA), "mono_count"] + 1
-    x[drug_is_R(RIB), "mono_count"] <- x[drug_is_R(RIB), "mono_count"] + 1
-    x[drug_is_R(RFP), "mono_count"] <- x[drug_is_R(RFP), "mono_count"] + 1
+    x[drug_is_R(INH), "mono_count"] <- x[drug_is_R(INH), "mono_count", drop = TRUE] + 1
+    x[drug_is_R(RIF), "mono_count"] <- x[drug_is_R(RIF), "mono_count", drop = TRUE] + 1
+    x[drug_is_R(ETH), "mono_count"] <- x[drug_is_R(ETH), "mono_count", drop = TRUE] + 1
+    x[drug_is_R(PZA), "mono_count"] <- x[drug_is_R(PZA), "mono_count", drop = TRUE] + 1
+    x[drug_is_R(RIB), "mono_count"] <- x[drug_is_R(RIB), "mono_count", drop = TRUE] + 1
+    x[drug_is_R(RFP), "mono_count"] <- x[drug_is_R(RFP), "mono_count", drop = TRUE] + 1
     
     x$mono <- x$mono_count > 0
     x$poly <- x$mono_count > 1 & drug_is_not_R(RIF) & drug_is_not_R(INH)
@@ -1013,7 +1002,7 @@ mdro <- function(x,
   # some more info on negative results
   if (verbose == TRUE) {
     if (guideline$code == "cmi2012") {
-        x[which(x$MDRO == 1 & !is.na(x$classes_affected)), "reason"] <- paste0(x$classes_affected[which(x$MDRO == 1 & !is.na(x$classes_affected))], " of ", x$classes_available[which(x$MDRO == 1 & !is.na(x$classes_affected))], " available classes contain R or I (3 required for MDR)")
+      x[which(x$MDRO == 1 & !is.na(x$classes_affected)), "reason"] <- paste0(x$classes_affected[which(x$MDRO == 1 & !is.na(x$classes_affected))], " of ", x$classes_available[which(x$MDRO == 1 & !is.na(x$classes_affected))], " available classes contain R or I (3 required for MDR)")
     } else {
       x[which(x$MDRO == 1), "reason"] <- "too few antibiotics are R"
     }

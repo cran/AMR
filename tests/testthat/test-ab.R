@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,12 +16,14 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 context("ab.R")
 
 test_that("as.ab works", {
+  skip_on_cran()
+  
   expect_equal(as.character(as.ab(c("J01FA01",
                                     "J 01 FA 01",
                                     "Erythromycin",
@@ -40,7 +42,7 @@ test_that("as.ab works", {
   expect_output(print(as.ab("amox")))
   expect_output(print(data.frame(a = as.ab("amox"))))
 
-  expect_warning(as.ab("Z00ZZ00")) # not yet available in data set
+  expect_warning(as.ab("J00AA00")) # ATC not yet available in data set
   expect_warning(as.ab("UNKNOWN"))
   expect_warning(as.ab(""))
 
@@ -54,7 +56,12 @@ test_that("as.ab works", {
   
   expect_equal(as.character(as.ab("Amoxy + clavulaanzuur")),
                "AMC")
-
+  
+  expect_equal(as.character(as.ab(c("mreopenem", "co-maoxiclav"))),
+               c("MEM", "AMC"))
+  
+  expect_message(as.ab("cipro mero"))
+  
   # assigning and subsetting
   x <- antibiotics$ab
   expect_s3_class(x[1], "ab")

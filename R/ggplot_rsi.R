@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,12 +16,12 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' AMR plots with `ggplot2`
 #'
-#' Use these functions to create bar plots for antimicrobial resistance analysis. All functions rely on internal [ggplot2][ggplot2::ggplot()] functions.
+#' Use these functions to create bar plots for antimicrobial resistance analysis. All functions rely on [ggplot2][ggplot2::ggplot()] functions.
 #' @inheritSection lifecycle Maturing lifecycle
 #' @param data a [`data.frame`] with column(s) of class [`rsi`] (see [as.rsi()])
 #' @param position position adjustment of bars, either `"fill"`, `"stack"` or `"dodge"`
@@ -49,13 +49,13 @@
 #'
 #' [facet_rsi()] creates 2d plots (at default based on S/I/R) using [ggplot2::facet_wrap()].
 #'
-#' [scale_y_percent()] transforms the y axis to a 0 to 100% range using [ggplot2::scale_continuous()].
+#' [scale_y_percent()] transforms the y axis to a 0 to 100% range using [ggplot2::scale_y_continuous()].
 #'
-#' [scale_rsi_colours()] sets colours to the bars: pastel blue for S, pastel turquoise for I and pastel red for R, using [ggplot2::scale_brewer()].
+#' [scale_rsi_colours()] sets colours to the bars: pastel blue for S, pastel turquoise for I and pastel red for R, using [ggplot2::scale_fill_manual()].
 #'
 #' [theme_rsi()] is a [ggplot2 theme][[ggplot2::theme()] with minimal distraction.
 #'
-#' [labels_rsi_count()] print datalabels on the bars with percentage and amount of isolates using [ggplot2::geom_text()]
+#' [labels_rsi_count()] print datalabels on the bars with percentage and amount of isolates using [ggplot2::geom_text()].
 #'
 #' [ggplot_rsi()] is a wrapper around all above functions that uses data as first input. This makes it possible to use this function after a pipe (`%>%`). See Examples.
 #' @rdname ggplot_rsi
@@ -164,7 +164,7 @@ ggplot_rsi <- function(data,
                        y.title = "Proportion",
                        ...) {
   
-  stopifnot_installed_package("ggplot2")
+  stop_ifnot_installed("ggplot2")
   
   x <- x[1]
   facet <- facet[1]
@@ -245,11 +245,8 @@ geom_rsi <- function(position = NULL,
                      combine_IR = FALSE,
                      ...)  {
   
-  stopifnot_installed_package("ggplot2")
-  
-  if (is.data.frame(position)) {
-    stop("`position` is invalid. Did you accidentally use '%>%' instead of '+'?", call. = FALSE)
-  }
+  stop_ifnot_installed("ggplot2")
+  stop_if(is.data.frame(position), "`position` is invalid. Did you accidentally use '%>%' instead of '+'?")
   
   y <- "value"
   if (missing(position) | is.null(position)) {
@@ -293,7 +290,7 @@ geom_rsi <- function(position = NULL,
 #' @export
 facet_rsi <- function(facet = c("interpretation", "antibiotic"), nrow = NULL) {
   
-  stopifnot_installed_package("ggplot2")
+  stop_ifnot_installed("ggplot2")
   
   facet <- facet[1]
   
@@ -318,7 +315,7 @@ facet_rsi <- function(facet = c("interpretation", "antibiotic"), nrow = NULL) {
 #' @rdname ggplot_rsi
 #' @export
 scale_y_percent <- function(breaks = seq(0, 1, 0.1), limits = NULL) {
-  stopifnot_installed_package("ggplot2")
+  stop_ifnot_installed("ggplot2")
   
   if (all(breaks[breaks != 0] > 1)) {
     breaks <- breaks / 100
@@ -335,7 +332,7 @@ scale_rsi_colours <- function(colours = c(S = "#61a8ff",
                                           I = "#61f7ff",
                                           IR = "#ff6961",
                                           R = "#ff6961")) {
-  stopifnot_installed_package("ggplot2")
+  stop_ifnot_installed("ggplot2")
   # previous colour: palette = "RdYlGn"
   # previous colours: values = c("#b22222", "#ae9c20", "#7cfc00")
   
@@ -353,7 +350,7 @@ scale_rsi_colours <- function(colours = c(S = "#61a8ff",
 #' @rdname ggplot_rsi
 #' @export
 theme_rsi <- function() {
-  stopifnot_installed_package("ggplot2")
+  stop_ifnot_installed("ggplot2")
   ggplot2::theme_minimal(base_size = 10) +
     ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(),
                    panel.grid.minor = ggplot2::element_blank(),
@@ -372,7 +369,7 @@ labels_rsi_count <- function(position = NULL,
                              combine_IR = FALSE,
                              datalabels.size = 3,
                              datalabels.colour = "gray15") {
-  stopifnot_installed_package("ggplot2")
+  stop_ifnot_installed("ggplot2")
   if (is.null(position)) {
     position <- "fill"
   }
@@ -390,9 +387,9 @@ labels_rsi_count <- function(position = NULL,
                      lineheight = 0.75,
                      data = function(x) {
                        transformed <- rsi_df(data = x,
-                              translate_ab = translate_ab,
-                              combine_SI = combine_SI,
-                              combine_IR = combine_IR)
+                                             translate_ab = translate_ab,
+                                             combine_SI = combine_SI,
+                                             combine_IR = combine_IR)
                        transformed$gr <- transformed[, x_name, drop = TRUE]
                        transformed %>% 
                          group_by(gr) %>% 

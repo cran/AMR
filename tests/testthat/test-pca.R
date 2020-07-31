@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,12 +16,15 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 context("pca.R")
 
 test_that("PCA works", {
+  
+  skip_on_cran()
+  
   resistance_data <- structure(list(order = c("Bacillales", "Enterobacterales", "Enterobacterales"),
                                     genus = c("Staphylococcus", "Escherichia", "Klebsiella"), 
                                     AMC = c(0.00425, 0.13062, 0.10344),
@@ -42,4 +45,5 @@ test_that("PCA works", {
   expect_s3_class(pca_model, "pca")
   
   ggplot_pca(pca_model, ellipse = TRUE)
+  ggplot_pca(pca_model, arrows_textangled = FALSE)
 })

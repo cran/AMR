@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' Get ATC properties from WHOCC website
@@ -76,16 +76,15 @@ atc_online_property <- function(atc_code,
                                 administration = "O",
                                 url = "https://www.whocc.no/atc_ddd_index/?code=%s&showdescription=no") {
   
-  stopifnot_installed_package(c("curl", "rvest", "xml2"))
-  has_internet <- get("has_internet", envir = asNamespace("curl"))
-  html_attr <- get("html_attr", envir = asNamespace("rvest"))
-  html_children <- get("html_children", envir = asNamespace("rvest"))
-  html_node <- get("html_node", envir = asNamespace("rvest"))
-  html_nodes <- get("html_nodes", envir = asNamespace("rvest"))
-  html_table <- get("html_table", envir = asNamespace("rvest"))
-  html_text <- get("html_text", envir = asNamespace("rvest"))
-  read_html <- get("read_html", envir = asNamespace("xml2"))
-
+  has_internet <- import_fn("has_internet", "curl")
+  html_attr <- import_fn("html_attr", "rvest")
+  html_children <- import_fn("html_children", "rvest")
+  html_node <- import_fn("html_node", "rvest")
+  html_nodes <- import_fn("html_nodes", "rvest")
+  html_table <- import_fn("html_table", "rvest")
+  html_text <- import_fn("html_text", "rvest")
+  read_html <- import_fn("read_html", "xml2")
+  
   check_dataset_integrity()
   
   if (!all(atc_code %in% antibiotics)) {
@@ -96,30 +95,25 @@ atc_online_property <- function(atc_code,
     message("There appears to be no internet connection.")
     return(rep(NA, length(atc_code)))
   }
-
-  if (length(property) != 1L) {
-    stop("`property` must be of length 1", call. = FALSE)
-  }
-  if (length(administration) != 1L) {
-    stop("`administration` must be of length 1", call. = FALSE)
-  }
-
+  
+  stop_if(length(property) != 1L, "`property` must be of length 1")
+  stop_if(length(administration) != 1L, "`administration` must be of length 1")
+  
   # also allow unit as property
   if (property %like% "unit") {
     property <- "U"
   }
-
+  
   # validation of properties
   valid_properties <- c("ATC", "Name", "DDD", "U", "Adm.R", "Note", "groups")
   valid_properties.bak <- valid_properties
-
+  
   property <- tolower(property)
   valid_properties <- tolower(valid_properties)
-
-  if (!property %in% valid_properties) {
-    stop("Invalid `property`, use one of ", paste(valid_properties.bak, collapse = ", "), ".")
-  }
-
+  
+  stop_ifnot(property %in% valid_properties,
+             "Invalid `property`, use one of ", paste(valid_properties.bak, collapse = ", "))
+  
   if (property == "ddd") {
     returnvalue <- rep(NA_real_, length(atc_code))
   } else if (property == "groups") {
@@ -127,22 +121,22 @@ atc_online_property <- function(atc_code,
   } else {
     returnvalue <- rep(NA_character_, length(atc_code))
   }
-
+  
   progress <- progress_estimated(n = length(atc_code), 3)
   on.exit(close(progress))
   
   for (i in seq_len(length(atc_code))) {
-
+    
     progress$tick()
-
+    
     atc_url <- sub("%s", atc_code[i], url, fixed = TRUE)
-
+    
     if (property == "groups") {
       tbl <- read_html(atc_url) %>%
         html_node("#content") %>%
         html_children() %>%
         html_node("a")
-
+      
       # get URLS of items
       hrefs <- tbl %>% html_attr("href")
       # get text of items
@@ -152,22 +146,22 @@ atc_online_property <- function(atc_code,
       # last one is antibiotics, skip it
       texts <- texts[seq_len(length(texts)) - 1]
       returnvalue <- c(list(texts), returnvalue)
-
+      
     } else {
       tbl <- read_html(atc_url) %>%
         html_nodes("table") %>%
         html_table(header = TRUE) %>%
         as.data.frame(stringsAsFactors = FALSE)
-
+      
       # case insensitive column names
       colnames(tbl) <- gsub("^atc.*", "atc", tolower(colnames(tbl)))
-
+      
       if (length(tbl) == 0) {
         warning("ATC not found: ", atc_code[i], ". Please check ", atc_url, ".", call. = FALSE)
         returnvalue[i] <- NA
         next
       }
-
+      
       if (property %in% c("atc", "name")) {
         # ATC and name are only in first row
         returnvalue[i] <- tbl[1, property]
@@ -185,11 +179,11 @@ atc_online_property <- function(atc_code,
       }
     }
   }
-
+  
   if (property == "groups" & length(returnvalue) == 1) {
     returnvalue <- returnvalue[[1]]
   }
-
+  
   returnvalue
 }
 

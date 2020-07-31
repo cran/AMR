@@ -1,6 +1,6 @@
 Package: AMR
-Version: 1.2.0
-Date: 2020-05-28
+Version: 1.3.0
+Date: 2020-07-31
 Title: Antimicrobial Resistance Analysis
 Authors@R: c(
     person(role = c("aut", "cre"), 
@@ -38,14 +38,14 @@ Depends: R (>= 3.0.0)
 Suggests: cleaner, dplyr, ggplot2, knitr, microbenchmark, rmarkdown,
         testthat, tidyr, utils
 VignetteBuilder: knitr,rmarkdown
-URL: https://msberends.gitlab.io/AMR, https://gitlab.com/msberends/AMR
-BugReports: https://gitlab.com/msberends/AMR/issues
+URL: https://msberends.github.io/AMR, https://github.com/msberends/AMR
+BugReports: https://github.com/msberends/AMR/issues
 License: GPL-2 | file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2020-05-28 12:55:51 UTC; msberends
+Packaged: 2020-07-31 09:51:03 UTC; msberends
 Author: Matthijs S. Berends [aut, cre]
     (<https://orcid.org/0000-0001-7620-1800>),
   Christian F. Luz [aut, ctb] (<https://orcid.org/0000-0001-5809-5995>),
@@ -63,4 +63,4 @@ Author: Matthijs S. Berends [aut, cre]
   Dennis Souverein [ctb]
 Maintainer: Matthijs S. Berends <m.s.berends@umcg.nl>
 Repository: CRAN
-Date/Publication: 2020-05-28 13:40:07 UTC
+Date/Publication: 2020-07-31 10:12:06 UTC

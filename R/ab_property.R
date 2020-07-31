@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,14 +16,14 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 #' Property of an antibiotic
 #'
 #' Use these functions to return a specific property of an antibiotic from the [antibiotics] data set. All input values will be evaluated internally with [as.ab()].
 #' @inheritSection lifecycle Stable lifecycle
-#' @param x any (vector of) text that can be coerced to a valid microorganism code with [as.ab()]
+#' @param x any (vector of) text that can be coerced to a valid antibiotic code with [as.ab()]
 #' @param tolower logical to indicate whether the first character of every output should be transformed to a lower case character. This will lead to e.g. "polymyxin B" and not "polymyxin b".
 #' @param property one of the column names of one of the [antibiotics] data set
 #' @param language language of the returned text, defaults to system language (see [get_locale()]) and can also be set with `getOption("AMR_locale")`. Use `language = NULL` or `language = ""` to prevent translation.
@@ -157,9 +157,7 @@ ab_loinc <- function(x, ...) {
 #' @rdname ab_property
 #' @export
 ab_ddd <- function(x, administration = "oral", units = FALSE, ...) {
-  if (!administration %in% c("oral", "iv")) {
-    stop("`administration` must be 'oral' or 'iv'", call. = FALSE)
-  }
+  stop_ifnot(administration %in% c("oral", "iv"), "`administration` must be 'oral' or 'iv'")
   ddd_prop <- administration
   if (units == TRUE) {
     ddd_prop <- paste0(ddd_prop, "_units")
@@ -215,13 +213,10 @@ ab_url <- function(x, open = FALSE, ...) {
 #' @rdname ab_property
 #' @export
 ab_property <- function(x, property = "name", language = get_locale(), ...) {
-  if (length(property) != 1L) {
-    stop("'property' must be of length 1.")
-  }
-  if (!property %in% colnames(antibiotics)) {
-    stop("invalid property: '", property, "' - use a column name of the `antibiotics` data set")
-  }
-
+  stop_if(length(property) != 1L, "'property' must be of length 1.")
+  stop_ifnot(property %in% colnames(antibiotics),
+             "invalid property: '", property, "' - use a column name of the `antibiotics` data set")
+  
   translate_AMR(ab_validate(x = x, property = property, ...), language = language)
 }
 

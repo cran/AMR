@@ -3,7 +3,7 @@
 # Antimicrobial Resistance (AMR) Analysis                              #
 #                                                                      #
 # SOURCE                                                               #
-# https://gitlab.com/msberends/AMR                                     #
+# https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
@@ -16,7 +16,7 @@
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.gitlab.io/AMR.    #
+# Visit our website for more info: https://msberends.github.io/AMR.    #
 # ==================================================================== #
 
 # functions from dplyr, will perhaps become poorman
@@ -63,34 +63,38 @@ filter_join_worker <- function(x, y, by = NULL, type = c("anti", "semi")) {
 
 # No export, no Rd
 addin_insert_in <- function() {
-  stopifnot_installed_package("rstudioapi")
-  get("insertText", envir = asNamespace("rstudioapi"))(" %in% ")
+  import_fn("insertText", "rstudioapi")(" %in% ")
 }
 
 # No export, no Rd
 addin_insert_like <- function() {
-  stopifnot_installed_package("rstudioapi")
-  get("insertText", envir = asNamespace("rstudioapi"))(" %like% ")
+  import_fn("insertText", "rstudioapi")(" %like% ")
 }
 
 check_dataset_integrity <- function() {
+  # check if user overwrote our data sets in their global environment
+  data_in_pkg <- data(package = "AMR", envir = asNamespace("AMR"))$results[, "Item", drop = TRUE]
+  data_in_globalenv <- ls(envir = globalenv())
+  overwritten <- data_in_pkg[data_in_pkg %in% data_in_globalenv]
+  stop_if(length(overwritten) > 0,
+          "the following data set is overwritten by your global environment and prevents the AMR package from working correctly:\n",
+          paste0("'", overwritten, "'", collapse = ", "),
+          ".\nPlease rename your object before using this function.", call = FALSE)
+  # check if other packages did not overwrite our data sets
   tryCatch({
     check_microorganisms <- all(c("mo", "fullname", "kingdom", "phylum",
                                   "class", "order", "family", "genus", 
                                   "species", "subspecies", "rank",
                                   "species_id", "source", "ref", "prevalence") %in% colnames(microorganisms),
-                                na.rm = TRUE) & NROW(microorganisms) == NROW(MO_lookup)
+                                na.rm = TRUE)
     check_antibiotics <- all(c("ab", "atc", "cid", "name", "group", 
                                "atc_group1", "atc_group2", "abbreviations",
                                "synonyms", "oral_ddd", "oral_units", 
                                "iv_ddd", "iv_units", "loinc") %in% colnames(antibiotics),
                              na.rm = TRUE)
   }, error = function(e)
-    stop('Please use the command \'library("AMR")\' before using this function, to load the required reference data.', call. = FALSE)
+    stop_('please use the command \'library("AMR")\' before using this function, to load the required reference data.', call = FALSE)
   )
-  if (!check_microorganisms | !check_antibiotics) {
-    stop("Data set `microorganisms` or data set `antibiotics` is overwritten by your global environment and prevents the AMR package from working correctly. Please rename your object before using this function.", call. = FALSE)
-  }
   invisible(TRUE)
 }
 
@@ -103,60 +107,55 @@ search_type_in_df <- function(x, type) {
   
   # -- mo
   if (type == "mo") {
-    if ("mo" %in% lapply(x, class)) {
-      found <- colnames(x)[lapply(x, class) == "mo"][1]
+    if (any(sapply(x, is.mo))) {
+      found <- sort(colnames(x)[sapply(x, is.mo)])[1]
     } else if ("mo" %in% colnames(x) &
                suppressWarnings(
                  all(x$mo %in% c(NA,
                                  microorganisms$mo,
                                  microorganisms.translation$mo_old)))) {
       found <- "mo"
-    } else if (any(colnames(x) %like% "^(mo|microorganism|organism|bacteria|bacterie)s?$")) {
-      found <- colnames(x)[colnames(x) %like% "^(mo|microorganism|organism|bacteria|bacterie)s?$"][1]
-    } else if (any(colnames(x) %like% "^(microorganism|organism|bacteria|bacterie)")) {
-      found <- colnames(x)[colnames(x) %like% "^(microorganism|organism|bacteria|bacterie)"][1]
+    } else if (any(colnames(x) %like% "^(mo|microorganism|organism|bacteria|ba[ck]terie)s?$")) {
+      found <- sort(colnames(x)[colnames(x) %like% "^(mo|microorganism|organism|bacteria|ba[ck]terie)s?$"])[1]
+    } else if (any(colnames(x) %like% "^(microorganism|organism|bacteria|ba[ck]terie)")) {
+      found <- sort(colnames(x)[colnames(x) %like% "^(microorganism|organism|bacteria|ba[ck]terie)"])[1]
     } else if (any(colnames(x) %like% "species")) {
-      found <- colnames(x)[colnames(x) %like% "species"][1]
+      found <- sort(colnames(x)[colnames(x) %like% "species"])[1]
     }
     
   }
   # -- key antibiotics
   if (type == "keyantibiotics") {
     if (any(colnames(x) %like% "^key.*(ab|antibiotics)")) {
-      found <- colnames(x)[colnames(x) %like% "^key.*(ab|antibiotics)"][1]
+      found <- sort(colnames(x)[colnames(x) %like% "^key.*(ab|antibiotics)"])[1]
     }
   }
   # -- date
   if (type == "date") {
     if (any(colnames(x) %like% "^(specimen date|specimen_date|spec_date)")) {
       # WHONET support
-      found <- colnames(x)[colnames(x) %like% "^(specimen date|specimen_date|spec_date)"][1]
+      found <- sort(colnames(x)[colnames(x) %like% "^(specimen date|specimen_date|spec_date)"])[1]
       if (!any(class(pull(x, found)) %in% c("Date", "POSIXct"))) {
         stop(font_red(paste0("ERROR: Found column `", font_bold(found), "` to be used as input for `col_", type,
-                        "`, but this column contains no valid dates. Transform its values to valid dates first.")),
+                             "`, but this column contains no valid dates. Transform its values to valid dates first.")),
              call. = FALSE)
       }
-    } else {
-      for (i in seq_len(ncol(x))) {
-        if (any(class(pull(x, i)) %in% c("Date", "POSIXct"))) {
-          found <- colnames(x)[i]
-          break
-        }
-      }
+    } else if (any(sapply(x, function(x) inherits(x, c("Date", "POSIXct"))))) {
+      found <- sort(colnames(x)[sapply(x, function(x) inherits(x, c("Date", "POSIXct")))])[1]
     }
   }
   # -- patient id
   if (type == "patient_id") {
     if (any(colnames(x) %like% "^(identification |patient|patid)")) {
-      found <- colnames(x)[colnames(x) %like% "^(identification |patient|patid)"][1]
+      found <- sort(colnames(x)[colnames(x) %like% "^(identification |patient|patid)"])[1]
     }
   }
   # -- specimen
   if (type == "specimen") {
     if (any(colnames(x) %like% "(specimen type|spec_type)")) {
-      found <- colnames(x)[colnames(x) %like% "(specimen type|spec_type)"][1]
+      found <- sort(colnames(x)[colnames(x) %like% "(specimen type|spec_type)"])[1]
     } else if (any(colnames(x) %like% "^(specimen)")) {
-      found <- colnames(x)[colnames(x) %like% "^(specimen)"][1]
+      found <- sort(colnames(x)[colnames(x) %like% "^(specimen)"])[1]
     }
   }
   # -- UTI (urinary tract infection)
@@ -164,13 +163,13 @@ search_type_in_df <- function(x, type) {
     if (any(colnames(x) == "uti")) {
       found <- colnames(x)[colnames(x) == "uti"][1]
     } else if (any(colnames(x) %like% "(urine|urinary)")) {
-      found <- colnames(x)[colnames(x) %like% "(urine|urinary)"][1]
+      found <- sort(colnames(x)[colnames(x) %like% "(urine|urinary)"])[1]
     }
     if (!is.null(found)) {
       # this column should contain logicals
       if (!is.logical(x[, found, drop = TRUE])) {
         message(font_red(paste0("NOTE: Column `", font_bold(found), "` found as input for `col_", type,
-                           "`, but this column does not contain 'logical' values (TRUE/FALSE) and was ignored.")))
+                                "`, but this column does not contain 'logical' values (TRUE/FALSE) and was ignored.")))
         found <- NULL
       }
     }
@@ -186,23 +185,69 @@ search_type_in_df <- function(x, type) {
   found
 }
 
-stopifnot_installed_package <- function(package) {
+stop_ifnot_installed <- function(package) {
   # no "utils::installed.packages()" since it requires non-staged install since R 3.6.0
   # https://developer.r-project.org/Blog/public/2019/02/14/staged-install/index.html
-  sapply(package, function(x)
-    tryCatch(get(".packageName", envir = asNamespace(x)),
-             error = function(e) stop("package '", x, "' required but not installed.",
-                                      "\nTry to install it with: install.packages(\"", x, "\")",
-                                      call. = FALSE)))
+  sapply(package, function(pkg)
+    tryCatch(get(".packageName", envir = asNamespace(pkg)),
+             error = function(e) {
+               if (package == "rstudioapi") {
+                 stop("This function only works in RStudio.", call. = FALSE)
+               } else if (pkg != "base") {
+                 stop("package '", pkg, "' required but not installed.",
+                      "\nTry to install it with: install.packages(\"", pkg, "\")",
+                      call. = FALSE)
+               }
+             }))
   return(invisible())
 }
 
-stopifnot_msg <- function(expr, msg) {
-  if (!isTRUE(expr)) {
-    stop(msg, call. = FALSE)
+import_fn <- function(name, pkg) {
+  stop_ifnot_installed(pkg)
+  tryCatch(
+    get(name, envir = asNamespace(pkg)),
+    error = function(e) stop_("an error occurred in import_fn() while using this function", call = FALSE))
+}
+
+stop_ <- function(..., call = TRUE) {
+  msg <- paste0(c(...), collapse = "")
+  if (!isFALSE(call)) {
+    if (isTRUE(call)) {
+      call <- as.character(sys.call(-1)[1])
+    } else {
+      # so you can go back more than 1 call, as used in rsi_calc(), that now throws a reference to e.g. n_rsi()
+      call <- as.character(sys.call(call)[1])
+    }
+    msg <- paste0("in ", call, "(): ", msg)
+  }
+  stop(msg, call. = FALSE)
+}
+
+stop_if <- function(expr, ..., call = TRUE) {
+  if (isTRUE(expr)) {
+    if (isTRUE(call)) {
+      call <- -1
+    }
+    if (!isFALSE(call)) {
+      # since we're calling stop_(), which is another call
+      call <- call - 1
+    }
+    stop_(..., call = call)
   }
 }
 
+stop_ifnot <- function(expr, ..., call = TRUE) {
+  if (!isTRUE(expr)) {
+    if (isTRUE(call)) {
+      call <- -1
+    }
+    if (!isFALSE(call)) {
+      # since we're calling stop_(), which is another call
+      call <- call - 1
+    }
+    stop_(..., call = call)
+  }
+}
 
 "%or%" <- function(x, y) {
   if (is.null(x) | is.null(y)) {
@@ -250,25 +295,62 @@ dataset_UTF8_to_ASCII <- function(df) {
   df
 }
 
-
-# replace crayon::has_color, but now also FALSE on non-interactive mode
 has_colour <- function() {
-  if (Sys.getenv("TERM") == "dumb" | !interactive()) {
+  # this is a base R version of crayon::has_color
+  enabled <- getOption("crayon.enabled")
+  if (!is.null(enabled)) {
+    return(isTRUE(enabled))
+  }
+  rstudio_with_ansi_support <- function(x) {
+    if (Sys.getenv("RSTUDIO", "") == "") {
+      return(FALSE)
+    }
+    if ((cols <- Sys.getenv("RSTUDIO_CONSOLE_COLOR", "")) != "" && !is.na(as.numeric(cols))) {
+      return(TRUE)
+    }
+    tryCatch(get("isAvailable", envir = asNamespace("rstudioapi"))(), error = function(e) return(FALSE)) &&
+      tryCatch(get("hasFun", envir = asNamespace("rstudioapi"))("getConsoleHasColor"), error = function(e) return(FALSE))
+  }
+  if (rstudio_with_ansi_support() && sink.number() == 0) {
+    return(TRUE)
+  }
+  if (!isatty(stdout())) {
     return(FALSE)
   }
   if (tolower(Sys.info()["sysname"]) == "windows") {
-    if (Sys.getenv("ConEmuANSI") == "ON" | Sys.getenv("CMDER_ROOT") != "") {
+    if (Sys.getenv("ConEmuANSI") == "ON") {
       return(TRUE)
-    } else {
-      return(FALSE)
     }
+    if (Sys.getenv("CMDER_ROOT") != "") {
+      return(TRUE)
+    }
+    return(FALSE)
   }
-  "COLORTERM" %in% names(Sys.getenv()) | grepl("^screen|^xterm|^vt100|color|ansi|cygwin|linux",
-                                               Sys.getenv("TERM"), 
-                                               ignore.case = TRUE,
-                                               perl = TRUE)
+  emacs_version <- function() {
+    ver <- Sys.getenv("INSIDE_EMACS")
+    if (ver == "") {
+      return(NA_integer_)
+    }
+    ver <- gsub("'", "", ver)
+    ver <- strsplit(ver, ",", fixed = TRUE)[[1]]
+    ver <- strsplit(ver, ".", fixed = TRUE)[[1]]
+    as.numeric(ver)
+  }
+  if ((Sys.getenv("EMACS") != "" || Sys.getenv("INSIDE_EMACS") != "") &&
+      !is.na(emacs_version()[1]) && emacs_version()[1] >= 23) {
+    return(TRUE)
+  }
+  if ("COLORTERM" %in% names(Sys.getenv())) {
+    return(TRUE)
+  }
+  if (Sys.getenv("TERM") == "dumb") {
+    return(FALSE)
+  }
+  grepl(pattern = "^screen|^xterm|^vt100|color|ansi|cygwin|linux", 
+        x = Sys.getenv("TERM"),
+        ignore.case = TRUE,
+        perl = TRUE)
 }
-
 
 # the crayon colours
 try_colour <- function(..., before, after, collapse = " ") {
@@ -337,13 +419,7 @@ font_stripstyle <- function(x) {
 }
 
 progress_estimated <- function(n = 1, n_min = 0, ...) {
-  if (n >= n_min) {
-    pb <- utils::txtProgressBar(max = n, style = 3)
-    pb$tick <- function() {
-      pb$up(pb$getVal() + 1)
-    }
-    pb
-  } else {
+  if (!interactive() || n < n_min) {
     pb <- list()
     pb$tick <- function() {
       invisible()
@@ -352,10 +428,16 @@ progress_estimated <- function(n = 1, n_min = 0, ...) {
       invisible()
     }
     structure(pb, class = "txtProgressBar")
+  } else if (n >= n_min) {
+    pb <- utils::txtProgressBar(max = n, style = 3)
+    pb$tick <- function() {
+      pb$up(pb$getVal() + 1)
+    }
+    pb
   }
 }
 
-# works exactly like round(), but rounds `round(44.55, 1)` as 44.6 instead of 44.5
+# works exactly like round(), but rounds `round2(44.55, 1)` to 44.6 instead of 44.5
 # and adds decimal zeroes until `digits` is reached when force_zero = TRUE
 round2 <- function(x, digits = 0, force_zero = TRUE) {
   x <- as.double(x)
@@ -413,7 +495,7 @@ percentage <- function(x, digits = NULL, ...) {
     x_formatted[!grepl(pattern = "^[0-9.,e-]+$", x = x)] <- NA_character_
     x_formatted
   }
-
+  
   # the actual working part
   x <- as.double(x)
   if (is.null(digits)) {
