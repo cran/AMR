@@ -1,22 +1,26 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 dots2vars <- function(...) {
@@ -45,7 +49,7 @@ rsi_calc <- function(...,
     dots_df <- as.data.frame(dots_df, stringsAsFactors = FALSE)
   }
   
-  dots <- base::eval(base::substitute(base::alist(...)))
+  dots <- eval(substitute(alist(...)))
   stop_if(length(dots) == 0, "no variables selected", call = -2)
   
   stop_if("also_single_tested" %in% names(dots),
@@ -54,7 +58,7 @@ rsi_calc <- function(...,
   ndots <- length(dots)
   
   if (is.data.frame(dots_df)) {
-    # data.frame passed with other columns, like: example_isolates %>% proportion_S(AMC, GEN)
+    # data.frame passed with other columns, like: example_isolates %pm>% proportion_S(AMC, GEN)
     
     dots <- as.character(dots)
     # remove first element, it's the data.frame
@@ -64,12 +68,12 @@ rsi_calc <- function(...,
       dots <- dots[2:length(dots)]
     }
     if (length(dots) == 0 | all(dots == "df")) {
-      # for complete data.frames, like example_isolates %>% select(AMC, GEN) %>% proportion_S()
+     # for complete data.frames, like example_isolates %pm>% select(AMC, GEN) %pm>% proportion_S()
       # and the old rsi function, which has "df" as name of the first parameter
       x <- dots_df
     } else {
       # get dots that are in column names already, and the ones that will be once evaluated using dots_df or global env
-      # this is to support susceptibility(example_isolates, AMC, dplyr::all_of(some_vector_with_AB_names))
+      # this is to support susceptibility(example_isolates, AMC, any_of(some_vector_with_AB_names))
       dots <- c(dots[dots %in% colnames(dots_df)],
                 eval(parse(text = dots[!dots %in% colnames(dots_df)]), envir = dots_df, enclos = globalenv()))
       dots_not_exist <- dots[!dots %in% colnames(dots_df)]
@@ -77,14 +81,14 @@ rsi_calc <- function(...,
       x <- dots_df[, dots, drop = FALSE]
     }
   } else if (ndots == 1) {
-    # only 1 variable passed (can also be data.frame), like: proportion_S(example_isolates$AMC) and example_isolates$AMC %>% proportion_S()
+    # only 1 variable passed (can also be data.frame), like: proportion_S(example_isolates$AMC) and example_isolates$AMC %pm>% proportion_S()
     x <- dots_df
   } else {
     # multiple variables passed without pipe, like: proportion_S(example_isolates$AMC, example_isolates$GEN)
     x <- NULL
     try(x <- as.data.frame(dots, stringsAsFactors = FALSE), silent = TRUE)
     if (is.null(x)) {
-      # support for example_isolates %>% group_by(hospital_id) %>% summarise(amox = susceptibility(GEN, AMX))
+      # support for example_isolates %pm>% group_by(hospital_id) %pm>% summarise(amox = susceptibility(GEN, AMX))
       x <- as.data.frame(list(...), stringsAsFactors = FALSE)
     }
   }
@@ -118,12 +122,12 @@ rsi_calc <- function(...,
       # no NAs in any column
       y <- apply(X = as.data.frame(lapply(x, as.integer), stringsAsFactors = FALSE),
                  MARGIN = 1,
-                 FUN = base::min)
+                 FUN = min)
       numerator <- sum(as.integer(y) %in% as.integer(ab_result), na.rm = TRUE)
       denominator <- sum(sapply(x_transposed, function(y) !(any(is.na(y)))))
     } else {
       # may contain NAs in any column
-      other_values <- base::setdiff(c(NA, levels(ab_result)), ab_result)
+      other_values <- setdiff(c(NA, levels(ab_result)), ab_result)
       numerator <- sum(sapply(x_transposed, function(y) any(y %in% ab_result, na.rm = TRUE)))
       denominator <- sum(sapply(x_transposed, function(y) !(all(y %in% other_values) & any(is.na(y)))))
     }
@@ -138,7 +142,7 @@ rsi_calc <- function(...,
   }
   
   if (print_warning == TRUE) {
-    warning("Increase speed by transforming to class <rsi> on beforehand: your_data %>% mutate_if(is.rsi.eligible, as.rsi)",
+    warning("Increase speed by transforming to class <rsi> on beforehand: your_data %pm>% mutate_if(is.rsi.eligible, as.rsi)",
             call. = FALSE)
   }
   
@@ -151,9 +155,10 @@ rsi_calc <- function(...,
       data_vars <- paste(" for", data_vars)
     }
     warning("Introducing NA: only ", denominator, " results available", data_vars, " (`minimum` = ", minimum, ").", call. = FALSE)
-    fraction <- NA
+    fraction <- NA_real_
   } else {
     fraction <- numerator / denominator
+    fraction[is.nan(fraction)] <- NA_real_
   }
   
   if (as_percent == TRUE) {
@@ -187,9 +192,9 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
   translate_ab <- get_translate_ab(translate_ab)
   
   # select only groups and antibiotics
-  if (has_groups(data)) {
+  if (inherits(data, "grouped_df")) {
     data_has_groups <- TRUE
-    groups <- setdiff(names(get_groups(data)), ".rows") # get_groups is from poorman.R
+    groups <- setdiff(names(attributes(data)$groups), ".rows")
     data <- data[, c(groups, colnames(data)[sapply(data, is.rsi)]), drop = FALSE]
   } else {
     data_has_groups <- FALSE
@@ -261,13 +266,13 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
     out
   }
   
-  # support dplyr groups
-  apply_group <- function(.data, fn, groups, ...) {
-    grouped <- split(x = .data, f = lapply(groups, function(x, .data) as.factor(.data[, x]), .data))
+  # based on pm_apply_grouped_function
+  apply_group <- function(.data, fn, groups, drop = FALSE, ...) {
+    grouped <- pm_split_into_groups(.data, groups, drop)
     res <- do.call(rbind, unname(lapply(grouped, fn, ...)))
     if (any(groups %in% colnames(res))) {
       class(res) <- c("grouped_data", class(res))
-      attr(res, "groups") <- groups[groups %in% colnames(res)]
+      res <- pm_set_groups(res, groups[groups %in% colnames(res)])
     }
     res
   }
@@ -291,7 +296,7 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
   
   if (data_has_groups) {
     # ordering by the groups and two more: "antibiotic" and "interpretation"
-    out <- ungroup(out[do.call("order", out[, seq_len(length(groups) + 2)]), ])
+   out <-  pm_ungroup(out[do.call("order", out[, seq_len(length(groups) + 2)]), ])
   } else {
     out <- out[order(out$antibiotic, out$interpretation), ]
   }

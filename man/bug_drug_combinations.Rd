@@ -25,7 +25,7 @@ bug_drug_combinations(x, col_mo = NULL, FUN = mo_shortname, ...)
 )
 }
 \arguments{
-\item{x}{data with antibiotic columns, like e.g. \code{AMX} and \code{AMC}}
+\item{x}{data with antibiotic columns, such as \code{amox}, \code{AMX} and \code{AMC}}
 
 \item{col_mo}{column name of the IDs of the microorganisms (see \code{\link[=as.mo]{as.mo()}}), defaults to the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
 
@@ -45,7 +45,7 @@ bug_drug_combinations(x, col_mo = NULL, FUN = mo_shortname, ...)
 
 \item{add_ab_group}{logical to indicate where the group of the antimicrobials must be included as a first column}
 
-\item{remove_intrinsic_resistant}{logical to indicate that rows with 100\% resistance for all tested antimicrobials must be removed from the table}
+\item{remove_intrinsic_resistant}{logical to indicate that rows and columns with 100\% resistance for all tested antimicrobials must be removed from the table}
 
 \item{decimal.mark}{the character to be used to indicate the numeric
     decimal point.}
@@ -55,15 +55,13 @@ bug_drug_combinations(x, col_mo = NULL, FUN = mo_shortname, ...)
     decimal point.}
 }
 \value{
-The function \code{\link[=bug_drug_combinations]{bug_drug_combinations()}} returns a \code{\link{data.frame}} with columns "mo", "ab", "S", "I", "R" and "total".
+The function \code{\link[=bug_drug_combinations]{bug_drug_combinations()}} returns a \link{data.frame} with columns "mo", "ab", "S", "I", "R" and "total".
 }
 \description{
 Determine antimicrobial resistance (AMR) of all bug-drug combinations in your data set where at least 30 (default) isolates are available per species. Use \code{\link[=format]{format()}} on the result to prettify it to a publicable/printable format, see Examples.
 }
 \details{
 The function \code{\link[=format]{format()}} calculates the resistance per bug-drug combination. Use \code{combine_IR = FALSE} (default) to test R vs. S+I and \code{combine_IR = TRUE} to test R+I vs. S.
-
-The language of the output can be overwritten with \code{options(AMR_locale)}, please see \link{translate}.
 }
 \section{Stable lifecycle}{
 
@@ -75,7 +73,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
@@ -85,12 +83,12 @@ x
 format(x, translate_ab = "name (atc)")
 
 # Use FUN to change to transformation of microorganism codes
-x <- bug_drug_combinations(example_isolates, 
-                           FUN = mo_gramstain)
+bug_drug_combinations(example_isolates, 
+                      FUN = mo_gramstain)
                            
-x <- bug_drug_combinations(example_isolates,
-                           FUN = function(x) ifelse(x == "B_ESCHR_COLI",
-                                                    "E. coli",
-                                                    "Others"))
+bug_drug_combinations(example_isolates,
+                      FUN = function(x) ifelse(x == as.mo("E. coli"),
+                                               "E. coli",
+                                               "Others"))
 }
 }

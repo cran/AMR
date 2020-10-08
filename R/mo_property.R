@@ -1,32 +1,36 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
-#' Property of a microorganism
+#' Get properties of a microorganism
 #'
-#' Use these functions to return a specific property of a microorganism. All input values will be evaluated internally with [as.mo()], which makes it possible to use microbial abbreviations, codes and names as input. Please see *Examples*.
+#' Use these functions to return a specific property of a microorganism based on the latest accepted taxonomy. All input values will be evaluated internally with [as.mo()], which makes it possible to use microbial abbreviations, codes and names as input. Please see *Examples*.
 #' @inheritSection lifecycle Stable lifecycle
 #' @param x any (vector of) text that can be coerced to a valid microorganism code with [as.mo()]
 #' @param property one of the column names of the [microorganisms] data set or `"shortname"`
-#' @param language language of the returned text, defaults to system language (see [get_locale()]) and can also be set with `getOption("AMR_locale")`. Use `language = NULL` or `language = ""` to prevent translation.
-#' @param ... other parameters passed on to [as.mo()]
+#' @param language language of the returned text, defaults to system language (see [get_locale()]) and can be overwritten by setting the option `AMR_locale`, e.g. `options(AMR_locale = "de")`, see [translate]. Use `language = NULL` or `language = ""` to prevent translation.
+#' @param ... other parameters passed on to [as.mo()], such as 'allow_uncertain' and 'ignore_pattern'
 #' @param open browse the URL using [utils::browseURL()]
 #' @details All functions will return the most recently known taxonomic property according to the Catalogue of Life, except for [mo_ref()], [mo_authors()] and [mo_year()]. Please refer to this example, knowing that *Escherichia blattae* was renamed to *Shimwellia blattae* in 2010:
 #' - `mo_name("Escherichia blattae")` will return `"Shimwellia blattae"` (with a message about the renaming)
@@ -42,18 +46,20 @@
 #' All output will be [translate]d where possible.
 #'
 #' The function [mo_url()] will return the direct URL to the online database entry, which also shows the scientific reference of the concerned species.
+#' @inheritSection mo_matching_score Matching score for microorganisms
 #' @inheritSection catalogue_of_life Catalogue of Life
 #' @inheritSection as.mo Source
 #' @rdname mo_property
 #' @name mo_property
 #' @return
-#' - An [`integer`] in case of [mo_year()]
-#' - A [`list`] in case of [mo_taxonomy()] and [mo_info()]
-#' - A named [`character`] in case of [mo_url()]
-#' - A [`double`] in case of [mo_snomed()]
-#' - A [`character`] in all other cases
+#' - An [integer] in case of [mo_year()]
+#' - A [list] in case of [mo_taxonomy()] and [mo_info()]
+#' - A named [character] in case of [mo_url()]
+#' - A [double] in case of [mo_snomed()]
+#' - A [character] in all other cases
 #' @export
 #' @seealso [microorganisms]
+#' @inheritSection AMR Reference data publicly available
 #' @inheritSection AMR Read more on our website!
 #' @examples
 #' # taxonomic tree -----------------------------------------------------------
@@ -140,7 +146,7 @@
 #' mo_info("E. coli")
 #' }
 mo_name <- function(x, language = get_locale(), ...) {
-  translate_AMR(mo_validate(x = x, property = "fullname", ...), language = language, only_unknown = FALSE)
+  translate_AMR(mo_validate(x = x, property = "fullname", language = language, ...), language = language, only_unknown = FALSE)
 }
 
 #' @rdname mo_property
@@ -150,7 +156,7 @@ mo_fullname <- mo_name
 #' @rdname mo_property
 #' @export
 mo_shortname <- function(x, language = get_locale(), ...) {
-  x.mo <- as.mo(x, ...)
+  x.mo <- as.mo(x, language = language, ...)
   
   metadata <- get_mo_failures_uncertainties_renamed()
   
@@ -160,13 +166,18 @@ mo_shortname <- function(x, language = get_locale(), ...) {
   }
   
   # get first char of genus and complete species in English
-  shortnames <- paste0(substr(mo_genus(x.mo, language = NULL), 1, 1), ". ", replace_empty(mo_species(x.mo, language = NULL)))
+  genera <- mo_genus(x.mo, language = NULL)
+  shortnames <- paste0(substr(genera, 1, 1), ". ", replace_empty(mo_species(x.mo, language = NULL)))
   
+  # exceptions for where no species is known
+  shortnames[shortnames %like% ".[.] spp[.]"] <- genera[shortnames %like% ".[.] spp[.]"]
   # exceptions for Staphylococci
   shortnames[shortnames == "S. coagulase-negative"] <- "CoNS"
   shortnames[shortnames == "S. coagulase-positive"] <- "CoPS"
   # exceptions for Streptococci: Streptococcus Group A -> GAS
   shortnames[shortnames %like% "S. group [ABCDFGHK]"] <- paste0("G", gsub("S. group ([ABCDFGHK])", "\\1", shortnames[shortnames %like% "S. group [ABCDFGHK]"]), "S")
+  # unknown species etc.
+  shortnames[shortnames %like% "unknown"] <- paste0("(", trimws(gsub("[^a-zA-Z -]", "", shortnames[shortnames %like% "unknown"])), ")")
   
   load_mo_failures_uncertainties_renamed(metadata)
   translate_AMR(shortnames, language = language, only_unknown = FALSE)
@@ -175,49 +186,49 @@ mo_shortname <- function(x, language = get_locale(), ...) {
 #' @rdname mo_property
 #' @export
 mo_subspecies <- function(x, language = get_locale(), ...) {
-  translate_AMR(mo_validate(x = x, property = "subspecies", ...), language = language, only_unknown = TRUE)
+  translate_AMR(mo_validate(x = x, property = "subspecies", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_species <- function(x, language = get_locale(), ...) {
-  translate_AMR(mo_validate(x = x, property = "species", ...), language = language, only_unknown = TRUE)
+  translate_AMR(mo_validate(x = x, property = "species", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_genus <- function(x, language = get_locale(), ...) {
-  translate_AMR(mo_validate(x = x, property = "genus", ...), language = language, only_unknown = TRUE)
+  translate_AMR(mo_validate(x = x, property = "genus", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_family <- function(x, language = get_locale(), ...) {
-  translate_AMR(mo_validate(x = x, property = "family", ...), language = language, only_unknown = TRUE)
+  translate_AMR(mo_validate(x = x, property = "family", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_order <- function(x, language = get_locale(), ...) {
-  translate_AMR(mo_validate(x = x, property = "order", ...), language = language, only_unknown = TRUE)
+  translate_AMR(mo_validate(x = x, property = "order", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_class <- function(x, language = get_locale(), ...) {
-  translate_AMR(mo_validate(x = x, property = "class", ...), language = language, only_unknown = TRUE)
+  translate_AMR(mo_validate(x = x, property = "class", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_phylum <- function(x, language = get_locale(), ...) {
-  translate_AMR(mo_validate(x = x, property = "phylum", ...), language = language, only_unknown = TRUE)
+  translate_AMR(mo_validate(x = x, property = "phylum", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_kingdom <- function(x, language = get_locale(), ...) {
-  translate_AMR(mo_validate(x = x, property = "kingdom", ...), language = language, only_unknown = TRUE)
+  translate_AMR(mo_validate(x = x, property = "kingdom", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
@@ -227,13 +238,13 @@ mo_domain <- mo_kingdom
 #' @rdname mo_property
 #' @export
 mo_type <- function(x, language = get_locale(), ...) {
-  translate_AMR(mo_validate(x = x, property = "kingdom", ...), language = language, only_unknown = FALSE)
+  translate_AMR(mo_validate(x = x, property = "kingdom", language = language, ...), language = language, only_unknown = FALSE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_gramstain <- function(x, language = get_locale(), ...) {
-  x.mo <- as.mo(x, ...)
+  x.mo <- as.mo(x, language = language, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
   
   x.phylum <- mo_phylum(x.mo)
@@ -263,20 +274,20 @@ mo_gramstain <- function(x, language = get_locale(), ...) {
 
 #' @rdname mo_property
 #' @export
-mo_snomed <- function(x, ...) {
-  mo_validate(x = x, property = "snomed", ...)
+mo_snomed <- function(x, language = get_locale(), ...) {
+  mo_validate(x = x, property = "snomed", language = language, ...)
 }
 
 #' @rdname mo_property
 #' @export
-mo_ref <- function(x, ...) {
-  mo_validate(x = x, property = "ref", ...)
+mo_ref <- function(x, language = get_locale(), ...) {
+  mo_validate(x = x, property = "ref", language = language, ...)
 }
 
 #' @rdname mo_property
 #' @export
-mo_authors <- function(x, ...) {
-  x <- mo_validate(x = x, property = "ref", ...)
+mo_authors <- function(x, language = get_locale(), ...) {
+  x <- mo_validate(x = x, property = "ref", language = language, ...)
   # remove last 4 digits and presumably the comma and space that preceed them
   x[!is.na(x)] <- gsub(",? ?[0-9]{4}", "", x[!is.na(x)])
   suppressWarnings(x)
@@ -284,8 +295,8 @@ mo_authors <- function(x, ...) {
 
 #' @rdname mo_property
 #' @export
-mo_year <- function(x, ...) {
-  x <- mo_validate(x = x, property = "ref", ...)
+mo_year <- function(x, language = get_locale(), ...) {
+  x <- mo_validate(x = x, property = "ref", language = language, ...)
   # get last 4 digits
   x[!is.na(x)] <- gsub(".*([0-9]{4})$", "\\1", x[!is.na(x)])
   suppressWarnings(as.integer(x))
@@ -293,17 +304,17 @@ mo_year <- function(x, ...) {
 
 #' @rdname mo_property
 #' @export
-mo_rank <- function(x, ...) {
-  mo_validate(x = x, property = "rank", ...)
+mo_rank <- function(x, language = get_locale(), ...) {
+  mo_validate(x = x, property = "rank", language = language, ...)
 }
 
 #' @rdname mo_property
 #' @export
 mo_taxonomy <- function(x, language = get_locale(),  ...) {
-  x <- as.mo(x, ...)
+  x <- as.mo(x, language = language, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
   
-  result <- base::list(kingdom = mo_kingdom(x, language = language),
+  result <- list(kingdom = mo_kingdom(x, language = language),
                        phylum = mo_phylum(x, language = language),
                        class = mo_class(x, language = language),
                        order = mo_order(x, language = language),
@@ -318,8 +329,8 @@ mo_taxonomy <- function(x, language = get_locale(),  ...) {
 
 #' @rdname mo_property
 #' @export
-mo_synonyms <- function(x, ...) {
-  x <- as.mo(x, ...)
+mo_synonyms <- function(x, language = get_locale(), ...) {
+  x <- as.mo(x, language = language, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
   
   IDs <- mo_name(x = x, language = NULL)
@@ -345,7 +356,7 @@ mo_synonyms <- function(x, ...) {
 #' @rdname mo_property
 #' @export
 mo_info <- function(x, language = get_locale(),  ...) {
-  x <- as.mo(x, ...)
+  x <- as.mo(x, language = language, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
   
   info <- lapply(x, function(y)
@@ -367,13 +378,13 @@ mo_info <- function(x, language = get_locale(),  ...) {
 
 #' @rdname mo_property
 #' @export
-mo_url <- function(x, open = FALSE, ...) {
-  mo <- as.mo(x = x, ... = ...)
+mo_url <- function(x, open = FALSE, language = get_locale(), ...) {
+  mo <- as.mo(x = x, language = language, ... = ...)
   mo_names <- mo_name(mo)
   metadata <- get_mo_failures_uncertainties_renamed()
   
-  df <- data.frame(mo, stringsAsFactors = FALSE) %>%
-    left_join(select(microorganisms, mo, source, species_id), by = "mo")
+  df <- data.frame(mo, stringsAsFactors = FALSE) %pm>%
+   pm_left_join(pm_select(microorganisms, mo, source, species_id), by = "mo")
   df$url <- ifelse(df$source == "CoL",
                    paste0(catalogue_of_life$url_CoL, "details/species/id/", df$species_id, "/"),
                    ifelse(df$source == "DSMZ",
@@ -401,12 +412,17 @@ mo_property <- function(x, property = "fullname", language = get_locale(), ...) 
   stop_ifnot(property %in% colnames(microorganisms),
              "invalid property: '", property, "' - use a column name of the `microorganisms` data set")
   
-  translate_AMR(mo_validate(x = x, property = property, ...), language = language, only_unknown = TRUE)
+  translate_AMR(mo_validate(x = x, property = property, language = language, ...), language = language, only_unknown = TRUE)
 }
 
-mo_validate <- function(x, property, ...) {
+mo_validate <- function(x, property, language, ...) {
   
   check_dataset_integrity()
+  
+  if (tryCatch(all(x[!is.na(x)] %in% MO_lookup$mo) & length(list(...)) == 0, error = function(e) FALSE)) {
+    # special case for mo_* functions where class is already <mo>
+    return(MO_lookup[match(x, MO_lookup$mo), property, drop = TRUE])
+  }
   
   dots <- list(...)
   Becker <- dots$Becker
@@ -428,11 +444,11 @@ mo_validate <- function(x, property, ...) {
       & !Lancefield %in% c(TRUE, "all")) {
     # this will not reset mo_uncertainties and mo_failures
     # because it's already a valid MO
-    x <- exec_as.mo(x, property = property, initial_search = FALSE, ...)
+    x <- exec_as.mo(x, property = property, initial_search = FALSE, language = language, ...)
   } else if (!all(x %in% MO_lookup[, property, drop = TRUE])
              | Becker %in% c(TRUE, "all")
              | Lancefield %in% c(TRUE, "all")) {
-    x <- exec_as.mo(x, property = property, ...)
+    x <- exec_as.mo(x, property = property, language = language, ...)
   }
   
   if (property == "mo") {

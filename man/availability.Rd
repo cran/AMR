@@ -7,18 +7,18 @@
 availability(tbl, width = NULL)
 }
 \arguments{
-\item{tbl}{a \code{\link{data.frame}} or \code{\link{list}}}
+\item{tbl}{a \link{data.frame} or \link{list}}
 
 \item{width}{number of characters to present the visual availability, defaults to filling the width of the console}
 }
 \value{
-\code{\link{data.frame}} with column names of \code{tbl} as row names
+\link{data.frame} with column names of \code{tbl} as row names
 }
 \description{
 Easy check for data availability of all columns in a data set. This makes it easy to get an idea of which antimicrobial combinations can be used for calculation with e.g. \code{\link[=susceptibility]{susceptibility()}} and \code{\link[=resistance]{resistance()}}.
 }
 \details{
-The function returns a \code{\link{data.frame}} with columns \code{"resistant"} and \code{"visual_resistance"}. The values in that columns are calculated with \code{\link[=resistance]{resistance()}}.
+The function returns a \link{data.frame} with columns \code{"resistant"} and \code{"visual_resistance"}. The values in that columns are calculated with \code{\link[=resistance]{resistance()}}.
 }
 \section{Stable lifecycle}{
 
@@ -30,23 +30,16 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
 availability(example_isolates)
 
-\dontrun{
-library(dplyr)
-example_isolates \%>\% availability()
-
-example_isolates \%>\%
-  select_if(is.rsi) \%>\%
-  availability()
-
-example_isolates \%>\%
-  filter(mo == as.mo("E. coli")) \%>\%
-  select_if(is.rsi) \%>\%
-  availability()
+if (require("dplyr")) {
+  example_isolates \%>\%
+    filter(mo == as.mo("E. coli")) \%>\%
+    select_if(is.rsi) \%>\%
+    availability()
 }
 }

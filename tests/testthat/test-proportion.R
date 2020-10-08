@@ -1,22 +1,26 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 context("proportion.R")
@@ -29,8 +33,8 @@ test_that("proportions works", {
   expect_equal(proportion_SI(example_isolates$AMX), susceptibility(example_isolates$AMX))
   
   # AMX resistance in `example_isolates`
-  expect_equal(proportion_R(example_isolates$AMX), 0.5557364, tolerance = 0.0001)
-  expect_equal(proportion_I(example_isolates$AMX), 0.002441009, tolerance = 0.0001)
+  expect_equal(proportion_R(example_isolates$AMX), 0.5955556, tolerance = 0.0001)
+  expect_equal(proportion_I(example_isolates$AMX), 0.002222222, tolerance = 0.0001)
   expect_equal(1 - proportion_R(example_isolates$AMX) - proportion_I(example_isolates$AMX),
                proportion_S(example_isolates$AMX))
   expect_equal(proportion_R(example_isolates$AMX) + proportion_I(example_isolates$AMX),
@@ -93,11 +97,11 @@ test_that("proportions works", {
 
   # check too low amount of isolates
   expect_identical(suppressWarnings(proportion_R(example_isolates$AMX, minimum = nrow(example_isolates) + 1)),
-                   NA)
+                   NA_real_)
   expect_identical(suppressWarnings(proportion_I(example_isolates$AMX, minimum = nrow(example_isolates) + 1)),
-                   NA)
+                   NA_real_)
   expect_identical(suppressWarnings(proportion_S(example_isolates$AMX, minimum = nrow(example_isolates) + 1)),
-                   NA)
+                   NA_real_)
 
   # warning for speed loss
   expect_warning(proportion_R(as.character(example_isolates$GEN)))

@@ -4,9 +4,9 @@
 \name{antibiotics}
 \alias{antibiotics}
 \alias{antivirals}
-\title{Data sets with 558 antimicrobials}
+\title{Data sets with 557 antimicrobials}
 \format{
-\subsection{For the \link{antibiotics} data set: a \code{\link{data.frame}} with 456 observations and 14 variables:}{
+\subsection{For the \link{antibiotics} data set: a \link{data.frame} with 455 observations and 14 variables:}{
 \itemize{
 \item \code{ab}\cr Antibiotic ID as used in this package (like \code{AMC}), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available
 \item \code{atc}\cr ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC, like \code{J01CR02}
@@ -25,7 +25,7 @@
 }
 }
 
-\subsection{For the \link{antivirals} data set: a \code{\link{data.frame}} with 102 observations and 9 variables:}{
+\subsection{For the \link{antivirals} data set: a \link{data.frame} with 102 observations and 9 variables:}{
 \itemize{
 \item \code{atc}\cr ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC
 \item \code{cid}\cr Compound ID as found in PubChem
@@ -75,6 +75,11 @@ Files in R format (with preserved data structure) can be found here:
 }
 }
 }
+\section{Reference data publicly available}{
+
+All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
+}
+
 \section{WHOCC}{
 
 \if{html}{\figure{logo_who.png}{options: height=60px style=margin-bottom:5px} \cr}
@@ -89,10 +94,10 @@ The WHOCC is located in Oslo at the Norwegian Institute of Public Health and fun
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \seealso{
-\link{microorganisms}
+\link{microorganisms}, \link{intrinsic_resistant}
 }
 \keyword{datasets}

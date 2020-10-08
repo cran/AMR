@@ -1,37 +1,45 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' Translate strings from AMR package
 #'
 #' For language-dependent output of AMR functions, like [mo_name()], [mo_gramstain()], [mo_type()] and [ab_name()].
 #' @inheritSection lifecycle Stable lifecycle
-#' @details Strings will be translated to foreign languages if they are defined in a local translation file. Additions to this file can be suggested at our repository. The file can be found here: <https://github.com/msberends/AMR/blob/master/data-raw/translations.tsv>.
+#' @details Strings will be translated to foreign languages if they are defined in a local translation file. Additions to this file can be suggested at our repository. The file can be found here: <https://github.com/msberends/AMR/blob/master/data-raw/translations.tsv>. This file will be read by all functions where a translated output can be desired, like all [mo_property()] functions ([mo_name()], [mo_gramstain()], [mo_type()], etc.) and [ab_property()] functions ([ab_name()], [ab_group()] etc.). 
 #'
-#' Currently supported languages are (besides English): `r paste(sort(gsub(";.*", "", ISOcodes::ISO_639_2[which(ISOcodes::ISO_639_2$Alpha_2 %in% unique(AMR:::translations_file$lang)), "Name"])), collapse = ", ")`. Please note that currently not all these languages have translations available for all antimicrobial agents and colloquial microorganism names. 
+#' Currently supported languages are: `r paste(sort(gsub(";.*", "", ISOcodes::ISO_639_2[which(ISOcodes::ISO_639_2$Alpha_2 %in% LANGUAGES_SUPPORTED), "Name"])), collapse = ", ")`. Please note that currently not all these languages have translations available for all antimicrobial agents and colloquial microorganism names. 
 #'
 #' Please suggest your own translations [by creating a new issue on our repository](https://github.com/msberends/AMR/issues/new?title=Translations).
 #'
-#' This file will be read by all functions where a translated output can be desired, like all [mo_property()] functions ([mo_name()], [mo_gramstain()], [mo_type()], etc.).
-#'
-#' The system language will be used at default, if that language is supported. The system language can be overwritten with `Sys.setenv(AMR_locale = yourlanguage)`.
+#' ## Changing the default language
+#' The system language will be used at default (as returned by `Sys.getenv("LANG")` or, if `LANG` is not set, [Sys.getlocale()]), if that language is supported. But the language to be used can be overwritten in two ways and will be checked in this order:
+#' 
+#'   1. Setting the R option `AMR_locale`, e.g. by running `options(AMR_locale = "de")`
+#'   2. Setting the system variable `LANGUAGE` or `LANG`, e.g. by adding `LANGUAGE="de_DE.utf8"` to your `.Renviron` file in your home directory
+#' 
+#' So if the R option `AMR_locale` is set, the system variables `LANGUAGE` and `LANG` will be ignored.
 #' @inheritSection AMR Read more on our website!
 #' @rdname translate
 #' @name translate
@@ -65,16 +73,34 @@
 #' mo_name("CoNS", language = "pt")
 #' #> "Staphylococcus coagulase negativo (CoNS)"
 get_locale <- function() {
-  if (!is.null(getOption("AMR_locale", default = NULL))) {
-    return(getOption("AMR_locale"))
+  # AMR versions prior to 1.3.0 used the environmental variable:
+  if (!identical("", Sys.getenv("AMR_locale"))) {
+    options(AMR_locale = Sys.getenv("AMR_locale"))
   }
   
-  lang <- Sys.getlocale("LC_COLLATE")
+  if (!is.null(getOption("AMR_locale", default = NULL))) {
+    lang <- getOption("AMR_locale")
+    if (lang %in% LANGUAGES_SUPPORTED) {
+      return(lang)
+    } else {
+      stop_("unsupported language set as option 'AMR_locale': '", lang, "' - use one of: ",
+            paste0("'", LANGUAGES_SUPPORTED, "'", collapse = ", "))
+    }
+  } else {
+    # we now support the LANGUAGE system variable - return it if set
+    if (!identical("", Sys.getenv("LANGUAGE"))) {
+      return(coerce_language_setting(Sys.getenv("LANGUAGE")))
+    }
+    if (!identical("", Sys.getenv("LANG"))) {
+      return(coerce_language_setting(Sys.getenv("LANG")))
+    }
+  }
   
-  # Check the locale settings for a start with one of these languages:
-  
+  coerce_language_setting(Sys.getlocale())
+}
+
+coerce_language_setting <- function(lang) {
   # grepl() with ignore.case = FALSE is faster than %like%
-  
   if (grepl("^(English|en_|EN_)", lang, ignore.case = FALSE)) {
     # as first option to optimise speed
     "en"
@@ -107,10 +133,13 @@ translate_AMR <- function(from, language = get_locale(), only_unknown = FALSE) {
   }
   
   df_trans <- translations_file # internal data file
+  from.bak <- from
+  from_unique <- unique(from)
+  from_unique_translated <- from_unique
   
-  stop_ifnot(language %in% df_trans$lang,
+  stop_ifnot(language %in% LANGUAGES_SUPPORTED,
              "unsupported language: '", language, "' - use one of: ",
-             paste0("'", sort(unique(df_trans$lang)), "'", collapse = ", "),
+             paste0("'", LANGUAGES_SUPPORTED, "'", collapse = ", "),
              call = FALSE)
   
   df_trans <- subset(df_trans, lang == language)
@@ -124,7 +153,7 @@ translate_AMR <- function(from, language = get_locale(), only_unknown = FALSE) {
   df_trans$fixed[is.na(df_trans$fixed)] <- TRUE
   
   # check if text to look for is in one of the patterns
-  any_form_in_patterns <- tryCatch(any(from %like% paste0("(", paste(df_trans$pattern, collapse = "|"), ")")),
+  any_form_in_patterns <- tryCatch(any(from_unique %like% paste0("(", paste(df_trans$pattern, collapse = "|"), ")")),
                                    error = function(e) {
                                      warning("Translation not possible. Please open an issue on GitHub (https://github.com/msberends/AMR/issues).", call. = FALSE)
                                      return(FALSE)
@@ -133,15 +162,16 @@ translate_AMR <- function(from, language = get_locale(), only_unknown = FALSE) {
     return(from)
   }
   
-  for (i in seq_len(nrow(df_trans))) {
-    from <- gsub(x = from,
-                 pattern = df_trans$pattern[i],
-                 replacement = df_trans$replacement[i],
-                 fixed = df_trans$fixed[i],
-                 ignore.case = df_trans$ignore.case[i])
-  }
+  lapply(seq_len(nrow(df_trans)), 
+         function(i) from_unique_translated <<- gsub(pattern = df_trans$pattern[i],
+                                                     replacement = df_trans$replacement[i],
+                                                     x = from_unique_translated,
+                                                     ignore.case = df_trans$ignore.case[i], 
+                                                     fixed = df_trans$fixed[i]))
   
   # force UTF-8 for diacritics
-  base::enc2utf8(from)
-  
+  from_unique_translated <- enc2utf8(from_unique_translated)
+
+  # a kind of left join to get all results back
+  from_unique_translated[match(from.bak, from_unique)]
 }

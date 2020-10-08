@@ -1,22 +1,26 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' Predict antimicrobial resistance
@@ -43,7 +47,7 @@
 #' - `"binomial"` or `"binom"` or `"logit"`: a generalised linear regression model with binomial distribution
 #' - `"loglin"` or `"poisson"`: a generalised log-linear regression model with poisson distribution
 #' - `"lin"` or `"linear"`: a linear regression model
-#' @return A [`data.frame`] with extra class [`resistance_predict`] with columns:
+#' @return A [data.frame] with extra class [`resistance_predict`] with columns:
 #' - `year`
 #' - `value`, the same as `estimated` when `preserve_measurements = FALSE`, and a combination of `observed` and `estimated` otherwise
 #' - `se_min`, the lower bound of the standard error with a minimum of `0` (so the standard error will never go below 0%)
@@ -84,10 +88,8 @@
 #' }
 #'
 #' # create nice plots with ggplot2 yourself
-#' \dontrun{
-#'   library(dplyr)
-#'   library(ggplot2)
-#'
+#' if (require("dplyr") & require("ggplot2")) {
+#' 
 #'   data <- example_isolates %>%
 #'     filter(mo == as.mo("E. coli")) %>%
 #'     resistance_predict(col_ab = "AMX",
@@ -134,7 +136,7 @@ resistance_predict <- function(x,
   dots <- unlist(list(...))
   if (length(dots) != 0) {
     # backwards compatibility with old parameters
-    dots.names <- dots %>% names()
+    dots.names <- dots %pm>% names()
     if ("tbl" %in% dots.names) {
       x <- dots[which(dots.names == "tbl")]
     }
@@ -264,8 +266,8 @@ resistance_predict <- function(x,
                                 observations = df$R + df$S,
                                 observed = df$R / (df$R + df$S),
                                 stringsAsFactors = FALSE)
-  df_prediction <- df_prediction %>%
-    left_join(df_observations, by = "year")
+  df_prediction <- df_prediction %pm>%
+    pm_left_join(df_observations, by = "year")
   df_prediction$estimated <- df_prediction$value
   
   if (preserve_measurements == TRUE) {
@@ -294,7 +296,7 @@ rsi_predict <- resistance_predict
 
 #' @method plot resistance_predict
 #' @export
-#' @importFrom graphics axis arrows points
+#' @importFrom graphics plot axis arrows points
 #' @rdname resistance_predict
 plot.resistance_predict <- function(x, main = paste("Resistance Prediction of", x_name), ...) {
   x_name <- paste0(ab_name(attributes(x)$ab), " (", attributes(x)$ab, ")")
@@ -304,12 +306,7 @@ plot.resistance_predict <- function(x, main = paste("Resistance Prediction of", 
   } else {
     ylab <- "%IR"
   }
-  # get plot() generic; this was moved from the 'graphics' pkg to the 'base' pkg in R 4.0.0
-  if (as.integer(R.Version()$major) >= 4) {
-    plot <- import_fn("plot", "base")
-  } else {
-    plot <- import_fn("plot", "graphics")
-  }
+
   plot(x = x$year,
        y = x$value,
        ylim = c(0, 1),

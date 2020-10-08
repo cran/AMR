@@ -1,64 +1,67 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
-# functions from dplyr, will perhaps become poorman
-distinct <- function(.data, ..., .keep_all = FALSE) {
-  check_is_dataframe(.data)
-  if ("grouped_data" %in% class(.data)) {
-    distinct.grouped_data(.data, ..., .keep_all = .keep_all)
-  } else {
-    distinct.default(.data, ..., .keep_all = .keep_all)
-  }
-}
-distinct.default <- function(.data, ..., .keep_all = FALSE) {
-  names <- rownames(.data)
-  rownames(.data) <- NULL
-  if (length(deparse_dots(...)) == 0) {
-    selected <- .data
-  } else {
-    selected <- select(.data, ...)
-  }
-  rows <- as.integer(rownames(unique(selected)))
-  if (isTRUE(.keep_all)) {
-    res <- .data[rows, , drop = FALSE]
-  } else {
-    res <- selected[rows, , drop = FALSE]
-  }
-  rownames(res) <- names[rows]
-  res
-}
-distinct.grouped_data <- function(.data, ..., .keep_all = FALSE) {
-  apply_grouped_function(.data, "distinct", ..., .keep_all = .keep_all)
-}
-filter_join_worker <- function(x, y, by = NULL, type = c("anti", "semi")) {
-  type <- match.arg(type, choices = c("anti", "semi"), several.ok = FALSE)
+# faster implementation of left_join than using merge() by poorman - we use match():
+pm_left_join <- function(x, y, by = NULL, suffix = c(".x", ".y")) {
   if (is.null(by)) {
-    by <- intersect(names(x), names(y))
-    join_message(by)
+    by <- intersect(names(x), names(y))[1L]
+    if (is.na(by)) {
+      stop_("no common column found for pm_left_join()")
+    }
+    pm_join_message(by)
+  } else if (!is.null(names(by))) {
+    by <- unname(c(names(by), by))
   }
-  rows <- interaction(x[, by]) %in% interaction(y[, by])
-  if (type == "anti") rows <- !rows
-  res <- x[rows, , drop = FALSE]
-  rownames(res) <- NULL
-  res
+  if (length(by) == 1) {
+    by <- rep(by, 2)
+  }
+  
+  int_x <- colnames(x) %in% colnames(y) & colnames(x) != by[1]
+  int_y <- colnames(y) %in% colnames(x) & colnames(y) != by[2]
+  colnames(x)[int_x] <- paste0(colnames(x)[int_x], suffix[1L])
+  colnames(y)[int_y] <- paste0(colnames(y)[int_y], suffix[2L])
+  
+  merged <- cbind(x,
+                  y[match(x[, by[1], drop = TRUE],
+                          y[, by[2], drop = TRUE]),
+                    colnames(y)[!colnames(y) %in% colnames(x) & !colnames(y) == by[2]],
+                    drop = FALSE])
+  
+  rownames(merged) <- NULL
+  merged
+}
+
+quick_case_when <- function(...) {
+  vectors <- list(...)
+  split <- lapply(vectors, function(x) unlist(strsplit(paste(deparse(x), collapse = ""), "~", fixed = TRUE)))
+  for (i in seq_len(length(vectors))) {
+    if (eval(parse(text = split[[i]][1]), envir = parent.frame())) {
+      return(eval(parse(text = split[[i]][2]), envir = parent.frame()))
+    }
+  }
+  return(NA)
 }
 
 # No export, no Rd
@@ -76,6 +79,8 @@ check_dataset_integrity <- function() {
   data_in_pkg <- data(package = "AMR", envir = asNamespace("AMR"))$results[, "Item", drop = TRUE]
   data_in_globalenv <- ls(envir = globalenv())
   overwritten <- data_in_pkg[data_in_pkg %in% data_in_globalenv]
+  # exception for example_isolates
+  overwritten <- overwritten[overwritten != "example_isolates"]
   stop_if(length(overwritten) > 0,
           "the following data set is overwritten by your global environment and prevents the AMR package from working correctly:\n",
           paste0("'", overwritten, "'", collapse = ", "),
@@ -92,13 +97,14 @@ check_dataset_integrity <- function() {
                                "synonyms", "oral_ddd", "oral_units", 
                                "iv_ddd", "iv_units", "loinc") %in% colnames(antibiotics),
                              na.rm = TRUE)
-  }, error = function(e)
-    stop_('please use the command \'library("AMR")\' before using this function, to load the required reference data.', call = FALSE)
-  )
+  }, error = function(e) {
+    # package not yet loaded
+    require("AMR")
+  })
   invisible(TRUE)
 }
 
-search_type_in_df <- function(x, type) {
+search_type_in_df <- function(x, type, info = TRUE) {
   # try to find columns based on type
   found <- NULL
   
@@ -135,7 +141,7 @@ search_type_in_df <- function(x, type) {
     if (any(colnames(x) %like% "^(specimen date|specimen_date|spec_date)")) {
       # WHONET support
       found <- sort(colnames(x)[colnames(x) %like% "^(specimen date|specimen_date|spec_date)"])[1]
-      if (!any(class(pull(x, found)) %in% c("Date", "POSIXct"))) {
+      if (!any(class(pm_pull(x, found)) %in% c("Date", "POSIXct"))) {
         stop(font_red(paste0("ERROR: Found column `", font_bold(found), "` to be used as input for `col_", type,
                              "`, but this column contains no valid dates. Transform its values to valid dates first.")),
              call. = FALSE)
@@ -175,7 +181,7 @@ search_type_in_df <- function(x, type) {
     }
   }
   
-  if (!is.null(found)) {
+  if (!is.null(found) & info == TRUE) {
     msg <- paste0("NOTE: Using column `", font_bold(found), "` as input for `col_", type, "`.")
     if (type %in% c("keyantibiotics", "specimen")) {
       msg <- paste(msg, "Use", font_bold(paste0("col_", type), "= FALSE"), "to prevent this.")
@@ -183,6 +189,12 @@ search_type_in_df <- function(x, type) {
     message(font_blue(msg))
   }
   found
+}
+
+is_possibly_regex <- function(x) {
+  tryCatch(sapply(strsplit(x, ""),
+                  function(y) any(y %in% c("$", "(", ")", "*", "+", "-", ".", "?", "[", "]", "^", "{", "|", "}", "\\"), na.rm = TRUE)),
+           error = function(e) rep(TRUE, length(x)))
 }
 
 stop_ifnot_installed <- function(package) {
@@ -194,7 +206,7 @@ stop_ifnot_installed <- function(package) {
                if (package == "rstudioapi") {
                  stop("This function only works in RStudio.", call. = FALSE)
                } else if (pkg != "base") {
-                 stop("package '", pkg, "' required but not installed.",
+                 stop("This requires the '", pkg, "' package.",
                       "\nTry to install it with: install.packages(\"", pkg, "\")",
                       call. = FALSE)
                }
@@ -202,11 +214,21 @@ stop_ifnot_installed <- function(package) {
   return(invisible())
 }
 
-import_fn <- function(name, pkg) {
-  stop_ifnot_installed(pkg)
+import_fn <- function(name, pkg, error_on_fail = TRUE) {
+  if (isTRUE(error_on_fail)) {
+    stop_ifnot_installed(pkg)
+  }
   tryCatch(
     get(name, envir = asNamespace(pkg)),
-    error = function(e) stop_("an error occurred in import_fn() while using this function", call = FALSE))
+    error = function(e) {
+      if (isTRUE(error_on_fail)) {
+        stop_("function ", name, "() not found in package '", pkg, 
+              "'. Please create an issue at https://github.com/msberends/AMR/issues. Many thanks!", 
+              call = FALSE)
+      } else {
+        return(NULL)
+      }
+    })
 }
 
 stop_ <- function(..., call = TRUE) {
@@ -237,7 +259,7 @@ stop_if <- function(expr, ..., call = TRUE) {
 }
 
 stop_ifnot <- function(expr, ..., call = TRUE) {
-  if (!isTRUE(expr)) {
+  if (isFALSE(expr)) {
     if (isTRUE(call)) {
       call <- -1
     }
@@ -293,6 +315,18 @@ dataset_UTF8_to_ASCII <- function(df) {
     }
   }
   df
+}
+
+create_ab_documentation <- function(ab) {
+  ab_names <- ab_name(ab, language = NULL, tolower = TRUE)
+  ab <- ab[order(ab_names)]
+  ab_names <- ab_names[order(ab_names)]
+  atcs <- ab_atc(ab)
+  atcs[!is.na(atcs)] <- paste0("[", atcs[!is.na(atcs)], "](", ab_url(ab[!is.na(atcs)]), ")")
+  atcs[is.na(atcs)] <- "no ATC code"
+  out <- paste0(ab_names, " (`", ab, "`, ", atcs, ")", collapse = ", ")
+  substr(out, 1, 1) <- toupper(substr(out, 1, 1))
+  out
 }
 
 has_colour <- function() {
@@ -404,6 +438,9 @@ font_red_bg <- function(..., collapse = " ") {
 font_yellow_bg <- function(..., collapse = " ") {
   try_colour(..., before = "\033[43m", after = "\033[49m", collapse = collapse)
 }
+font_na <- function(..., collapse = " ") {
+  font_red(..., collapse = collapse)
+}
 font_bold <- function(..., collapse = " ") {
   try_colour(..., before = "\033[1m", after = "\033[22m", collapse = collapse)
 }
@@ -418,7 +455,7 @@ font_stripstyle <- function(x) {
   gsub("(?:(?:\\x{001b}\\[)|\\x{009b})(?:(?:[0-9]{1,3})?(?:(?:;[0-9]{0,3})*)?[A-M|f-m])|\\x{001b}[A-M]", "", x, perl = TRUE)
 }
 
-progress_estimated <- function(n = 1, n_min = 0, ...) {
+progress_ticker <- function(n = 1, n_min = 0, ...) {
   if (!interactive() || n < n_min) {
     pb <- list()
     pb$tick <- function() {
@@ -435,6 +472,62 @@ progress_estimated <- function(n = 1, n_min = 0, ...) {
     }
     pb
   }
+}
+
+create_pillar_column <- function(x, ...) {
+  new_pillar_shaft_simple <- import_fn("new_pillar_shaft_simple", "pillar", error_on_fail = FALSE)
+  if (!is.null(new_pillar_shaft_simple)) {
+    new_pillar_shaft_simple(x, ...)  
+  } else {
+    # does not exist in package 'pillar' anymore
+    structure(list(x),
+              class = "pillar_shaft_simple",
+              ...)
+  }
+}
+
+# copied from vctrs::s3_register by their permission:
+# https://github.com/r-lib/vctrs/blob/05968ce8e669f73213e3e894b5f4424af4f46316/R/register-s3.R
+s3_register <- function(generic, class, method = NULL) {
+  stopifnot(is.character(generic), length(generic) == 1)
+  stopifnot(is.character(class), length(class) == 1)
+  pieces <- strsplit(generic, "::")[[1]]
+  stopifnot(length(pieces) == 2)
+  package <- pieces[[1]]
+  generic <- pieces[[2]]
+  caller <- parent.frame()
+  get_method_env <- function() {
+    top <- topenv(caller)
+    if (isNamespace(top)) {
+      asNamespace(environmentName(top))
+    }
+    else {
+      caller
+    }
+  }
+  get_method <- function(method, env) {
+    if (is.null(method)) {
+      get(paste0(generic, ".", class), envir = get_method_env())
+    }
+    else {
+      method
+    }
+  }
+  method_fn <- get_method(method)
+  stopifnot(is.function(method_fn))
+  setHook(packageEvent(package, "onLoad"), function(...) {
+    ns <- asNamespace(package)
+    method_fn <- get_method(method)
+    registerS3method(generic, class, method_fn, envir = ns)
+  })
+  if (!isNamespaceLoaded(package)) {
+    return(invisible())
+  }
+  envir <- asNamespace(package)
+  if (exists(generic, envir)) {
+    registerS3method(generic, class, method_fn, envir = envir)
+  }
+  invisible()
 }
 
 # works exactly like round(), but rounds `round2(44.55, 1)` to 44.6 instead of 44.5
@@ -508,7 +601,7 @@ percentage <- function(x, digits = NULL, ...) {
 }
 
 # prevent dependency on package 'backports'
-# these functions were not available in previous versions of R (last checked: R 4.0.0)
+# these functions were not available in previous versions of R (last checked: R 4.0.2)
 # see here for the full list: https://github.com/r-lib/backports
 strrep <- function(x, times) {
   x <- as.character(x)
@@ -536,4 +629,19 @@ isFALSE <- function(x) {
 }
 deparse1 <- function(expr, collapse = " ", width.cutoff = 500L, ...) {
   paste(deparse(expr, width.cutoff, ...), collapse = collapse)
+}
+file.size <- function(...) {
+  file.info(...)$size
+}
+file.mtime <- function(...) {
+  file.info(...)$mtime
+}
+str2lang <- function(s) {
+  stopifnot(length(s) == 1L)
+  ex <- parse(text = s, keep.source = FALSE)
+  stopifnot(length(ex) == 1L)
+  ex[[1L]]
+}
+isNamespaceLoaded <- function(pkg) {
+  pkg %in% loadedNamespaces()
 }

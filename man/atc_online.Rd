@@ -13,7 +13,8 @@ atc_online_property(
   atc_code,
   property,
   administration = "O",
-  url = "https://www.whocc.no/atc_ddd_index/?code=\%s&showdescription=no"
+  url = "https://www.whocc.no/atc_ddd_index/?code=\%s&showdescription=no",
+  url_vet = "https://www.whocc.no/atcvet/atcvet_index/?code=\%s&showdescription=no"
 )
 
 atc_online_groups(atc_code, ...)
@@ -27,14 +28,14 @@ atc_online_ddd(atc_code, ...)
 
 \item{administration}{type of administration when using \code{property = "Adm.R"}, see Details}
 
-\item{url}{url of website of the WHO. The sign \verb{\%s} can be used as a placeholder for ATC codes.}
+\item{url}{url of website of the WHOCC. The sign \verb{\%s} can be used as a placeholder for ATC codes.}
+
+\item{url_vet}{url of website of the WHOCC for veterinary medicine. The sign \verb{\%s} can be used as a placeholder for ATC_vet codes (that all start with "Q").}
 
 \item{...}{parameters to pass on to \code{atc_property}}
 }
 \description{
-Gets data from the WHO to determine properties of an ATC (e.g. an antibiotic) like name, defined daily dose (DDD) or standard unit.
-
-\strong{This function requires an internet connection.}
+Gets data from the WHO to determine properties of an ATC (e.g. an antibiotic), such as the name, defined daily dose (DDD) or standard unit.
 }
 \details{
 Options for parameter \code{administration}:
@@ -62,29 +63,30 @@ Abbreviations of return values when using \code{property = "U"} (unit):
 \item \code{"mmol"} = millimole
 \item \code{"ml"} = milliliter (e.g. eyedrops)
 }
-}
-\section{Questioning lifecycle}{
 
-\if{html}{\figure{lifecycle_questioning.svg}{options: style=margin-bottom:5px} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{questioning}. This function might be no longer be optimal approach, or is it questionable whether this function should be in this \code{AMR} package at all.
+\strong{N.B. This function requires an internet connection and only works if the following packages are installed: \code{curl}, \code{rvest}, \code{xml2}.}
+}
+\section{Stable lifecycle}{
+
+\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
+The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
+
+If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
-\dontrun{
+\donttest{
 # oral DDD (Defined Daily Dose) of amoxicillin
 atc_online_property("J01CA04", "DDD", "O")
+
 # parenteral DDD (Defined Daily Dose) of amoxicillin
 atc_online_property("J01CA04", "DDD", "P")
 
 atc_online_property("J01CA04", property = "groups") # search hierarchical groups of amoxicillin
-# [1] "ANTIINFECTIVES FOR SYSTEMIC USE"
-# [2] "ANTIBACTERIALS FOR SYSTEMIC USE"
-# [3] "BETA-LACTAM ANTIBACTERIALS, PENICILLINS"
-# [4] "Penicillins with extended spectrum"
 }
 }

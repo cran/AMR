@@ -50,7 +50,7 @@ filter_first_weighted_isolate(
 )
 }
 \arguments{
-\item{x}{a \code{\link{data.frame}} containing isolates.}
+\item{x}{a \link{data.frame} containing isolates.}
 
 \item{col_date}{column name of the result date (or date that is was received on the lab), defaults to the first column of with a date class}
 
@@ -94,19 +94,20 @@ Determine first (weighted) isolates of all microorganisms of every patient per e
 }
 \details{
 \strong{WHY THIS IS SO IMPORTANT} \cr
-To conduct an analysis of antimicrobial resistance, you should only include the first isolate of every patient per episode \href{https://www.ncbi.nlm.nih.gov/pubmed/17304462}{(ref)}. If you would not do this, you could easily get an overestimate or underestimate of the resistance of an antibiotic. Imagine that a patient was admitted with an MRSA and that it was found in 5 different blood cultures the following week. The resistance percentage of oxacillin of all \emph{S. aureus} isolates would be overestimated, because you included this MRSA more than once. It would be \href{https://en.wikipedia.org/wiki/Selection_bias}{selection bias}.
+To conduct an analysis of antimicrobial resistance, you should only include the first isolate of every patient per episode \href{https:/pubmed.ncbi.nlm.nih.gov/17304462/}{(ref)}. If you would not do this, you could easily get an overestimate or underestimate of the resistance of an antibiotic. Imagine that a patient was admitted with an MRSA and that it was found in 5 different blood cultures the following week. The resistance percentage of oxacillin of all \emph{S. aureus} isolates would be overestimated, because you included this MRSA more than once. It would be \href{https://en.wikipedia.org/wiki/Selection_bias}{selection bias}.
 
 All isolates with a microbial ID of \code{NA} will be excluded as first isolate.
 
-The functions \code{\link[=filter_first_isolate]{filter_first_isolate()}} and \code{\link[=filter_first_weighted_isolate]{filter_first_weighted_isolate()}} are helper functions to quickly filter on first isolates. The function \code{\link[=filter_first_isolate]{filter_first_isolate()}} is essentially equal to one of:\preformatted{ x \%>\% filter(first_isolate(., ...))
+The functions \code{\link[=filter_first_isolate]{filter_first_isolate()}} and \code{\link[=filter_first_weighted_isolate]{filter_first_weighted_isolate()}} are helper functions to quickly filter on first isolates. The function \code{\link[=filter_first_isolate]{filter_first_isolate()}} is essentially equal to either:\preformatted{  x[first_isolate(x, ...), ]
+  x \%>\% filter(first_isolate(x, ...))
 }
 
-The function \code{\link[=filter_first_weighted_isolate]{filter_first_weighted_isolate()}} is essentially equal to:\preformatted{ x \%>\%
-   mutate(keyab = key_antibiotics(.)) \%>\%
-   mutate(only_weighted_firsts = first_isolate(x,
-                                               col_keyantibiotics = "keyab", ...)) \%>\%
-   filter(only_weighted_firsts == TRUE) \%>\%
-   select(-only_weighted_firsts, -keyab)
+The function \code{\link[=filter_first_weighted_isolate]{filter_first_weighted_isolate()}} is essentially equal to:\preformatted{  x \%>\%
+    mutate(keyab = key_antibiotics(.)) \%>\%
+    mutate(only_weighted_firsts = first_isolate(x,
+                                                col_keyantibiotics = "keyab", ...)) \%>\%
+    filter(only_weighted_firsts == TRUE) \%>\%
+    select(-only_weighted_firsts, -keyab)
 }
 }
 \section{Key antibiotics}{
@@ -132,56 +133,47 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
 # `example_isolates` is a dataset available in the AMR package.
 # See ?example_isolates.
 
-\dontrun{
-library(dplyr)
-# Filter on first isolates:
-example_isolates \%>\%
-  mutate(first_isolate = first_isolate(.)) \%>\%
-  filter(first_isolate == TRUE)
+# basic filtering on first isolates
+example_isolates[first_isolate(example_isolates), ]
 
-# Now let's see if first isolates matter:
-A <- example_isolates \%>\%
-  group_by(hospital_id) \%>\%
-  summarise(count = n_rsi(GEN),            # gentamicin availability
-            resistance = resistance(GEN))  # gentamicin resistance
-
-B <- example_isolates \%>\%
-  filter_first_weighted_isolate() \%>\%      # the 1st isolate filter
-  group_by(hospital_id) \%>\%
-  summarise(count = n_rsi(GEN),            # gentamicin availability
-            resistance = resistance(GEN))  # gentamicin resistance
-
-# Have a look at A and B.
-# B is more reliable because every isolate is counted only once.
-# Gentamicin resistance in hospital D appears to be 3.7\% higher than
-# when you (erroneously) would have used all isolates for analysis.
-
-
-## OTHER EXAMPLES:
-
-# Short-hand versions:
-example_isolates \%>\%
-  filter_first_isolate()
+\donttest{
+if (require("dplyr")) {
+  # Filter on first isolates:
+  example_isolates \%>\%
+    mutate(first_isolate = first_isolate(.)) \%>\%
+    filter(first_isolate == TRUE)
+ 
+  # Short-hand versions:
+  example_isolates \%>\%
+    filter_first_isolate()
+    
+  example_isolates \%>\%
+    filter_first_weighted_isolate()
   
-example_isolates \%>\%
-  filter_first_weighted_isolate()
-
-
-# set key antibiotics to a new variable
-x$keyab <- key_antibiotics(x)
-
-x$first_isolate <- first_isolate(x)
-
-x$first_isolate_weighed <- first_isolate(x, col_keyantibiotics = 'keyab')
-
-x$first_blood_isolate <- first_isolate(x, specimen_group = "Blood")
+  # Now let's see if first isolates matter:
+  A <- example_isolates \%>\%
+    group_by(hospital_id) \%>\%
+    summarise(count = n_rsi(GEN),            # gentamicin availability
+              resistance = resistance(GEN))  # gentamicin resistance
+ 
+  B <- example_isolates \%>\%
+    filter_first_weighted_isolate() \%>\%      # the 1st isolate filter
+    group_by(hospital_id) \%>\%
+    summarise(count = n_rsi(GEN),            # gentamicin availability
+              resistance = resistance(GEN))  # gentamicin resistance
+ 
+  # Have a look at A and B.
+  # B is more reliable because every isolate is counted only once.
+  # Gentamicin resistance in hospital D appears to be 3.7\% higher than
+  # when you (erroneously) would have used all isolates for analysis.
+}
 }
 }
 \seealso{

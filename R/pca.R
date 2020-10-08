@@ -1,22 +1,26 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' Principal Component Analysis (for AMR)
@@ -36,22 +40,24 @@
 #' # `example_isolates` is a dataset available in the AMR package.
 #' # See ?example_isolates.
 #'
-#' \dontrun{
-#' # calculate the resistance per group first
-#' library(dplyr)
-#' resistance_data <- example_isolates %>% 
-#'   group_by(order = mo_order(mo),       # group on anything, like order
-#'            genus = mo_genus(mo)) %>%   #  and genus as we do here
-#'   summarise_if(is.rsi, resistance)     # then get resistance of all drugs
-#'   
-#' # now conduct PCA for certain antimicrobial agents
-#' pca_result <- resistance_data %>%         
-#'   pca(AMC, CXM, CTX, CAZ, GEN, TOB, TMP, SXT) 
-#'   
-#' pca_result
-#' summary(pca_result)
-#' biplot(pca_result)
-#' ggplot_pca(pca_result) # a new and convenient plot function
+#' \donttest{
+#' 
+#' if (require("dplyr")) {
+#'   # calculate the resistance per group first 
+#'   resistance_data <- example_isolates %>% 
+#'     group_by(order = mo_order(mo),       # group on anything, like order
+#'              genus = mo_genus(mo)) %>%   #  and genus as we do here
+#'     summarise_if(is.rsi, resistance)     # then get resistance of all drugs
+#'     
+#'   # now conduct PCA for certain antimicrobial agents
+#'   pca_result <- resistance_data %>%         
+#'     pca(AMC, CXM, CTX, CAZ, GEN, TOB, TMP, SXT) 
+#'     
+#'   pca_result
+#'   summary(pca_result)
+#'   biplot(pca_result)
+#'   ggplot_pca(pca_result) # a new and convenient plot function
+#' }
 #' }
 pca <- function(x,
                 ...,
@@ -78,7 +84,7 @@ pca <- function(x,
                                 error = function(e) stop(e$message, call. = FALSE))
       if (length(new_list[[i]]) == 1) {
         if (is.character(new_list[[i]]) & new_list[[i]] %in% colnames(x)) {
-          # this is to support quoted variables: df %>% pca("mycol1", "mycol2")
+          # this is to support quoted variables: df %pm>% pca("mycol1", "mycol2")
           new_list[[i]] <- x[, new_list[[i]]]
         } else {
           # remove item - it's a parameter like `center`
@@ -102,7 +108,7 @@ pca <- function(x,
     x <- cbind(x.bak[, sapply(x.bak, function(y) !is.numeric(y) & !all(is.na(y))), drop = FALSE], x)
   }
   
-  x <- ungroup(x)  # would otherwise select the grouping vars
+ x <-  pm_ungroup(x)  # would otherwise select the grouping vars
   x <- x[rowSums(is.na(x)) == 0, ] # remove columns containing NAs
   
   pca_data <- x[, which(sapply(x, function(x) is.numeric(x)))]

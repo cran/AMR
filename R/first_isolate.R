@@ -1,29 +1,33 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' Determine first (weighted) isolates
 #'
 #' Determine first (weighted) isolates of all microorganisms of every patient per episode and (if needed) per specimen type.
 #' @inheritSection lifecycle Stable lifecycle
-#' @param x a [`data.frame`] containing isolates.
+#' @param x a [data.frame] containing isolates.
 #' @param col_date column name of the result date (or date that is was received on the lab), defaults to the first column of with a date class
 #' @param col_patient_id column name of the unique IDs of the patients, defaults to the first column that starts with 'patient' or 'patid' (case insensitive)
 #' @param col_mo column name of the IDs of the microorganisms (see [as.mo()]), defaults to the first column of class [`mo`]. Values will be coerced using [as.mo()].
@@ -42,22 +46,23 @@
 #' @param include_unknown logical to determine whether 'unknown' microorganisms should be included too, i.e. microbial code `"UNKNOWN"`, which defaults to `FALSE`. For WHONET users, this means that all records with organism code `"con"` (*contamination*) will be excluded at default. Isolates with a microbial ID of `NA` will always be excluded as first isolate.
 #' @param ... parameters passed on to the [first_isolate()] function
 #' @details **WHY THIS IS SO IMPORTANT** \cr
-#' To conduct an analysis of antimicrobial resistance, you should only include the first isolate of every patient per episode [(ref)](https://www.ncbi.nlm.nih.gov/pubmed/17304462). If you would not do this, you could easily get an overestimate or underestimate of the resistance of an antibiotic. Imagine that a patient was admitted with an MRSA and that it was found in 5 different blood cultures the following week. The resistance percentage of oxacillin of all *S. aureus* isolates would be overestimated, because you included this MRSA more than once. It would be [selection bias](https://en.wikipedia.org/wiki/Selection_bias).
+#' To conduct an analysis of antimicrobial resistance, you should only include the first isolate of every patient per episode [(ref)](https:/pubmed.ncbi.nlm.nih.gov/17304462/). If you would not do this, you could easily get an overestimate or underestimate of the resistance of an antibiotic. Imagine that a patient was admitted with an MRSA and that it was found in 5 different blood cultures the following week. The resistance percentage of oxacillin of all *S. aureus* isolates would be overestimated, because you included this MRSA more than once. It would be [selection bias](https://en.wikipedia.org/wiki/Selection_bias).
 #'
 #' All isolates with a microbial ID of `NA` will be excluded as first isolate.
 #'
-#' The functions [filter_first_isolate()] and [filter_first_weighted_isolate()] are helper functions to quickly filter on first isolates. The function [filter_first_isolate()] is essentially equal to one of:
+#' The functions [filter_first_isolate()] and [filter_first_weighted_isolate()] are helper functions to quickly filter on first isolates. The function [filter_first_isolate()] is essentially equal to either:
 #' ```
-#'  x %>% filter(first_isolate(., ...))
+#'   x[first_isolate(x, ...), ]
+#'   x %>% filter(first_isolate(x, ...))
 #' ```
 #' The function [filter_first_weighted_isolate()] is essentially equal to:
 #' ```
-#'  x %>%
-#'    mutate(keyab = key_antibiotics(.)) %>%
-#'    mutate(only_weighted_firsts = first_isolate(x,
-#'                                                col_keyantibiotics = "keyab", ...)) %>%
-#'    filter(only_weighted_firsts == TRUE) %>%
-#'    select(-only_weighted_firsts, -keyab)
+#'   x %>%
+#'     mutate(keyab = key_antibiotics(.)) %>%
+#'     mutate(only_weighted_firsts = first_isolate(x,
+#'                                                 col_keyantibiotics = "keyab", ...)) %>%
+#'     filter(only_weighted_firsts == TRUE) %>%
+#'     select(-only_weighted_firsts, -keyab)
 #' ```
 #' @section Key antibiotics:
 #' There are two ways to determine whether isolates can be included as first *weighted* isolates which will give generally the same results:
@@ -80,50 +85,41 @@
 #' @examples
 #' # `example_isolates` is a dataset available in the AMR package.
 #' # See ?example_isolates.
-#'
-#' \dontrun{
-#' library(dplyr)
-#' # Filter on first isolates:
-#' example_isolates %>%
-#'   mutate(first_isolate = first_isolate(.)) %>%
-#'   filter(first_isolate == TRUE)
 #' 
-#' # Now let's see if first isolates matter:
-#' A <- example_isolates %>%
-#'   group_by(hospital_id) %>%
-#'   summarise(count = n_rsi(GEN),            # gentamicin availability
-#'             resistance = resistance(GEN))  # gentamicin resistance
-#'
-#' B <- example_isolates %>%
-#'   filter_first_weighted_isolate() %>%      # the 1st isolate filter
-#'   group_by(hospital_id) %>%
-#'   summarise(count = n_rsi(GEN),            # gentamicin availability
-#'             resistance = resistance(GEN))  # gentamicin resistance
-#'
-#' # Have a look at A and B.
-#' # B is more reliable because every isolate is counted only once.
-#' # Gentamicin resistance in hospital D appears to be 3.7% higher than
-#' # when you (erroneously) would have used all isolates for analysis.
-#'
-#'
-#' ## OTHER EXAMPLES:
+#' # basic filtering on first isolates
+#' example_isolates[first_isolate(example_isolates), ]
 #' 
-#' # Short-hand versions:
-#' example_isolates %>%
-#'   filter_first_isolate()
+#' \donttest{
+#' if (require("dplyr")) {
+#'   # Filter on first isolates:
+#'   example_isolates %>%
+#'     mutate(first_isolate = first_isolate(.)) %>%
+#'     filter(first_isolate == TRUE)
+#'  
+#'   # Short-hand versions:
+#'   example_isolates %>%
+#'     filter_first_isolate()
+#'     
+#'   example_isolates %>%
+#'     filter_first_weighted_isolate()
 #'   
-#' example_isolates %>%
-#'   filter_first_weighted_isolate()
-#'
-#'
-#' # set key antibiotics to a new variable
-#' x$keyab <- key_antibiotics(x)
-#'
-#' x$first_isolate <- first_isolate(x)
-#'
-#' x$first_isolate_weighed <- first_isolate(x, col_keyantibiotics = 'keyab')
-#'
-#' x$first_blood_isolate <- first_isolate(x, specimen_group = "Blood")
+#'   # Now let's see if first isolates matter:
+#'   A <- example_isolates %>%
+#'     group_by(hospital_id) %>%
+#'     summarise(count = n_rsi(GEN),            # gentamicin availability
+#'               resistance = resistance(GEN))  # gentamicin resistance
+#'  
+#'   B <- example_isolates %>%
+#'     filter_first_weighted_isolate() %>%      # the 1st isolate filter
+#'     group_by(hospital_id) %>%
+#'     summarise(count = n_rsi(GEN),            # gentamicin availability
+#'               resistance = resistance(GEN))  # gentamicin resistance
+#'  
+#'   # Have a look at A and B.
+#'   # B is more reliable because every isolate is counted only once.
+#'   # Gentamicin resistance in hospital D appears to be 3.7% higher than
+#'   # when you (erroneously) would have used all isolates for analysis.
+#' }
 #' }
 first_isolate <- function(x,
                           col_date = NULL,
@@ -147,7 +143,7 @@ first_isolate <- function(x,
   dots <- unlist(list(...))
   if (length(dots) != 0) {
     # backwards compatibility with old parameters
-    dots.names <- dots %>% names()
+    dots.names <- dots %pm>% names()
     if ("filter_specimen" %in% dots.names) {
       specimen_group <- dots[which(dots.names == "filter_specimen")]
     }
@@ -167,6 +163,7 @@ first_isolate <- function(x,
   if (is.null(col_mo)) {
     col_mo <- search_type_in_df(x = x, type = "mo")
     stop_if(is.null(col_mo), "`col_mo` must be set")
+    stop_ifnot(col_mo %in% colnames(x), "column '", col_mo, "' (`col_mo`) not found")
   }
   
   # -- date
@@ -268,16 +265,16 @@ first_isolate <- function(x,
     row.end <- nrow(x)
   } else {
     # filtering on specimen and only analyse these rows to save time
-    x <- x[order(pull(x, col_specimen),
+    x <- x[order(pm_pull(x, col_specimen),
                  x$newvar_patient_id, 
                  x$newvar_genus_species,
                  x$newvar_date), ]
     rownames(x) <- NULL
     suppressWarnings(
-      row.start <- which(x %>% pull(col_specimen) == specimen_group) %>% min(na.rm = TRUE)
+      row.start <- which(x %pm>% pm_pull(col_specimen) == specimen_group) %pm>% min(na.rm = TRUE)
     )
     suppressWarnings(
-      row.end <- which(x %>% pull(col_specimen) == specimen_group) %>% max(na.rm = TRUE)
+      row.end <- which(x %pm>% pm_pull(col_specimen) == specimen_group) %pm>% max(na.rm = TRUE)
     )
   }
   
@@ -318,8 +315,8 @@ first_isolate <- function(x,
   }
   
   # Analysis of first isolate ----
-  x$other_pat_or_mo <- ifelse(x$newvar_patient_id == lag(x$newvar_patient_id) &
-                                x$newvar_genus_species == lag(x$newvar_genus_species),
+  x$other_pat_or_mo <- ifelse(x$newvar_patient_id == pm_lag(x$newvar_patient_id) &
+                                x$newvar_genus_species == pm_lag(x$newvar_genus_species),
                               FALSE,
                               TRUE)
   x$episode_group <- paste(x$newvar_patient_id, x$newvar_genus_species)
@@ -348,13 +345,13 @@ first_isolate <- function(x,
     type_param <- type
     
     x$other_key_ab <- !key_antibiotics_equal(y = x$newvar_key_ab,
-                                             z = lag(x$newvar_key_ab),
+                                             z = pm_lag(x$newvar_key_ab),
                                              type = type_param,
                                              ignore_I = ignore_I,
                                              points_threshold = points_threshold,
                                              info = info)
     # with key antibiotics
-    x$newvar_first_isolate <- if_else(x$newvar_row_index_sorted >= row.start &
+    x$newvar_first_isolate <- pm_if_else(x$newvar_row_index_sorted >= row.start &
                                         x$newvar_row_index_sorted <= row.end &
                                         x$newvar_genus_species != "" & 
                                         (x$other_pat_or_mo | x$more_than_episode_ago | x$other_key_ab),
@@ -363,7 +360,7 @@ first_isolate <- function(x,
     
   } else {
     # no key antibiotics
-    x$newvar_first_isolate <- if_else(x$newvar_row_index_sorted >= row.start &
+    x$newvar_first_isolate <- pm_if_else(x$newvar_row_index_sorted >= row.start &
                                         x$newvar_row_index_sorted <= row.end &
                                         x$newvar_genus_species != "" & 
                                         (x$other_pat_or_mo | x$more_than_episode_ago),
@@ -411,11 +408,17 @@ first_isolate <- function(x,
   rownames(x) <- NULL
   
   if (info == TRUE) {
-    n_found <- base::sum(x$newvar_first_isolate, na.rm = TRUE)
-    p_found_total <- percentage(n_found / nrow(x[which(!is.na(x$newvar_mo)), , drop = FALSE]))
-    p_found_scope <- percentage(n_found / scope.size)
+    n_found <- sum(x$newvar_first_isolate, na.rm = TRUE)
+    p_found_total <- percentage(n_found / nrow(x[which(!is.na(x$newvar_mo)), , drop = FALSE]), digits = 1)
+    p_found_scope <- percentage(n_found / scope.size, digits = 1)
+    if (!p_found_total %like% "[.]") {
+      p_found_total <- gsub("%", ".0%", p_found_total, fixed = TRUE)
+    }
+    if (!p_found_scope %like% "[.]") {
+      p_found_scope <- gsub("%", ".0%", p_found_scope, fixed = TRUE)
+    }
     # mark up number of found
-    n_found <- base::format(n_found, big.mark = big.mark, decimal.mark = decimal.mark)
+    n_found <- format(n_found, big.mark = big.mark, decimal.mark = decimal.mark)
     if (p_found_total != p_found_scope) {
       msg_txt <- paste0("=> Found ",
                         font_bold(paste0(n_found, " first ", weighted.notice, "isolates")),

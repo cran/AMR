@@ -5,17 +5,17 @@
 \alias{WHONET}
 \title{Data set with 500 isolates - WHONET example}
 \format{
-A \code{\link{data.frame}} with 500 observations and 53 variables:
+A \link{data.frame} with 500 observations and 53 variables:
 \itemize{
 \item \verb{Identification number}\cr ID of the sample
 \item \verb{Specimen number}\cr ID of the specimen
 \item \code{Organism}\cr Name of the microorganism. Before analysis, you should transform this to a valid microbial class, using \code{\link[=as.mo]{as.mo()}}.
 \item \code{Country}\cr Country of origin
 \item \code{Laboratory}\cr Name of laboratory
-\item \verb{Last name}\cr Last name of patient
-\item \verb{First name}\cr Initial of patient
-\item \code{Sex}\cr Gender of patient
-\item \code{Age}\cr Age of patient
+\item \verb{Last name}\cr Fictitious last name of patient
+\item \verb{First name}\cr Fictitious initial of patient
+\item \code{Sex}\cr Fictitious gender of patient
+\item \code{Age}\cr Fictitious age of patient
 \item \verb{Age category}\cr Age group, can also be looked up using \code{\link[=age_groups]{age_groups()}}
 \item \verb{Date of admission}\cr Date of hospital admission
 \item \verb{Specimen date}\cr Date when specimen was received at laboratory
@@ -39,11 +39,16 @@ A \code{\link{data.frame}} with 500 observations and 53 variables:
 WHONET
 }
 \description{
-This example data set has the exact same structure as an export file from WHONET. Such files can be used with this package, as this example data set shows. The data itself was based on our \link{example_isolates} data set.
+This example data set has the exact same structure as an export file from WHONET. Such files can be used with this package, as this example data set shows. The antibiotic results are from our \link{example_isolates} data set. All patient names are created using online surname generators and are only in place for practice purposes.
 }
+\section{Reference data publicly available}{
+
+All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
+}
+
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \keyword{datasets}

@@ -47,7 +47,7 @@ ggplot_rsi_predict(
 )
 }
 \arguments{
-\item{x}{a \code{\link{data.frame}} containing isolates.}
+\item{x}{a \link{data.frame} containing isolates.}
 
 \item{col_ab}{column name of \code{x} containing antimicrobial interpretations (\code{"R"}, \code{"I"} and \code{"S"})}
 
@@ -76,7 +76,7 @@ ggplot_rsi_predict(
 \item{ribbon}{a logical to indicate whether a ribbon should be shown (default) or error bars}
 }
 \value{
-A \code{\link{data.frame}} with extra class \code{\link{resistance_predict}} with columns:
+A \link{data.frame} with extra class \code{\link{resistance_predict}} with columns:
 \itemize{
 \item \code{year}
 \item \code{value}, the same as \code{estimated} when \code{preserve_measurements = FALSE}, and a combination of \code{observed} and \code{estimated} otherwise
@@ -108,7 +108,7 @@ The \link[=lifecycle]{lifecycle} of this function is \strong{maturing}. The unly
 
 \section{Interpretation of R and S/I}{
 
-In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories R and S/I as shown below (\url{http://www.eucast.org/newsiandr/}).
+In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories R and S/I as shown below (\url{https://www.eucast.org/newsiandr/}).
 \itemize{
 \item \strong{R = Resistant}\cr
 A microorganism is categorised as \emph{Resistant} when there is a high likelihood of therapeutic failure even when there is increased exposure. Exposure is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
@@ -123,7 +123,7 @@ This AMR package honours this new insight. Use \code{\link[=susceptibility]{susc
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
@@ -150,9 +150,7 @@ if (require("dplyr")) {
 }
 
 # create nice plots with ggplot2 yourself
-\dontrun{
-  library(dplyr)
-  library(ggplot2)
+if (require("dplyr") & require("ggplot2")) {
 
   data <- example_isolates \%>\%
     filter(mo == as.mo("E. coli")) \%>\%

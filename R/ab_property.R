@@ -1,25 +1,29 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
-#' Property of an antibiotic
+#' Get properties of an antibiotic
 #'
 #' Use these functions to return a specific property of an antibiotic from the [antibiotics] data set. All input values will be evaluated internally with [as.ab()].
 #' @inheritSection lifecycle Stable lifecycle
@@ -38,12 +42,13 @@
 #' @rdname ab_property
 #' @name ab_property
 #' @return 
-#' - An [`integer`] in case of [ab_cid()]
-#' - A named [`list`] in case of [ab_info()] and multiple [ab_synonyms()]/[ab_tradenames()]
-#' - A [`double`] in case of [ab_ddd()]
-#' - A [`character`] in all other cases
+#' - An [integer] in case of [ab_cid()]
+#' - A named [list] in case of [ab_info()] and multiple [ab_synonyms()]/[ab_tradenames()]
+#' - A [double] in case of [ab_ddd()]
+#' - A [character] in all other cases
 #' @export
 #' @seealso [antibiotics]
+#' @inheritSection AMR Reference data publicly available
 #' @inheritSection AMR Read more on our website!
 #' @examples
 #' # all properties:
@@ -171,7 +176,7 @@ ab_ddd <- function(x, administration = "oral", units = FALSE, ...) {
 #' @export
 ab_info <- function(x, language = get_locale(), ...) {
   x <- as.ab(x, ...)
-  base::list(ab = as.character(x),
+  list(ab = as.character(x),
              atc = ab_atc(x),
              cid = ab_cid(x),
              name = ab_name(x, language = language),
@@ -230,9 +235,9 @@ ab_validate <- function(x, property, ...) {
            error = function(e) stop(e$message, call. = FALSE))
   x_bak <- x
   if (!all(x %in% antibiotics[, property])) {
-    x <- data.frame(ab = as.ab(x, ...), stringsAsFactors = FALSE) %>%
-      left_join(antibiotics, by = "ab") %>%
-      pull(property)
+    x <- data.frame(ab = as.ab(x, ...), stringsAsFactors = FALSE) %pm>%
+      pm_left_join(antibiotics, by = "ab") %pm>%
+     pm_pull(property)
   }
   if (property == "ab") {
     return(structure(x, class = property))

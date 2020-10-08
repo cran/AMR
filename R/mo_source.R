@@ -1,22 +1,26 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' User-defined reference data set for microorganisms
@@ -29,11 +33,13 @@
 #' @rdname mo_source
 #' @name mo_source
 #' @aliases set_mo_source get_mo_source
-#' @details The reference file can be a text file seperated with commas (CSV) or tabs or pipes, an Excel file (either 'xls' or 'xlsx' format) or an R object file (extension '.rds'). To use an Excel file, you need to have the `readxl` package installed.
+#' @details The reference file can be a text file separated with commas (CSV) or tabs or pipes, an Excel file (either 'xls' or 'xlsx' format) or an R object file (extension '.rds'). To use an Excel file, you will need to have the `readxl` package installed.
 #'
-#' [set_mo_source()] will check the file for validity: it must be a [`data.frame`], must have a column named `"mo"` which contains values from [`microorganisms$mo`][microorganisms] and must have a reference column with your own defined values. If all tests pass, [set_mo_source()] will read the file into R and export it to `"~/.mo_source.rds"`. This compressed data file will then be used at default for MO determination (function [as.mo()] and consequently all `mo_*` functions like [mo_genus()] and [mo_gramstain()]). The location of the original file will be saved as option with `options(mo_source = path)`. Its timestamp will be saved with `options(mo_source_datetime = ...)`.
-#'
-#' [get_mo_source()] will return the data set by reading `"~/.mo_source.rds"` with [readRDS()]. If the original file has changed (the file defined with `path`), it will call [set_mo_source()] to update the data file automatically.
+#' [set_mo_source()] will check the file for validity: it must be a [data.frame], must have a column named `"mo"` which contains values from [`microorganisms$mo`][microorganisms] and must have a reference column with your own defined values. If all tests pass, [set_mo_source()] will read the file into R and will ask to export it to `"~/.mo_source.rds"`. The CRAN policy disallows packages to write to the file system, although '*exceptions may be allowed in interactive sessions if the package obtains confirmation from the user*'. For this reason, this function only works in interactive sessions so that the user can **specifically confirm and allow** that this file will be created. 
+#' 
+#' The created compressed data file `"~/.mo_source.rds"` will be used at default for MO determination (function [as.mo()] and consequently all `mo_*` functions like [mo_genus()] and [mo_gramstain()]). The location of the original file will be saved as an R option with `options(mo_source = path)`. Its timestamp will be saved with `options(mo_source_datetime = ...)`. 
+#' 
+#' The function [get_mo_source()] will return the data set by reading `"~/.mo_source.rds"` with [readRDS()]. If the original file has changed (by checking the aforementioned options `mo_source` and `mo_source_datetime`), it will call [set_mo_source()] to update the data file automatically if used in an interactive session.
 #'
 #' Reading an Excel file (`.xlsx`) with only one row has a size of 8-9 kB. The compressed file created with [set_mo_source()] will then have a size of 0.1 kB and can be read by [get_mo_source()] in only a couple of microseconds (millionths of a second).
 #' 
@@ -112,6 +118,7 @@ set_mo_source <- function(path) {
   
   file_location <- path.expand("~/mo_source.rds")
   
+  stop_ifnot(interactive(), "This function can only be used in interactive mode, since it must ask for the user's permission to write a file to their home folder.")
   stop_ifnot(length(path) == 1, "`path` must be of length 1")
   
   if (is.null(path) || path %in% c(FALSE, "")) {
@@ -176,6 +183,19 @@ set_mo_source <- function(path) {
     action <- "Updated"
   } else {
     action <- "Created"
+    # only ask when file is created, not when it is updated
+    txt <- paste0("This will write create the new file '", 
+                  file_location, 
+                  "', for which your permission is needed.\n\nDo you agree that this file will be created? ")
+    if ("rsasdtudioapi" %in% rownames(utils::installed.packages())) {
+      showQuestion <- import_fn("showQuestion", "rstudioapi")
+      q_continue <- showQuestion("Create new file in home directory", txt)
+    } else {
+      q_continue <- utils::menu(choices = c("OK", "Cancel"), graphics = FALSE, title = txt)
+    }
+    if (q_continue %in% c(FALSE, 2)) {
+      return(invisible())
+    }
   }
   saveRDS(df, file_location)
   options(mo_source = path)
@@ -208,7 +228,7 @@ get_mo_source <- function() {
     set_mo_source("")
     return(NULL)
   }
-  if (new_time != old_time) {
+  if (interactive() && new_time != old_time) {
     # set updated source
     set_mo_source(getOption("mo_source"))
   }

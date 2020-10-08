@@ -1,7 +1,5 @@
 ---
 title: "Welcome to the AMR package"
-author: "Matthijs S. Berends"
-date: '`r format(Sys.Date(), "%d %B %Y")`'
 output: 
   rmarkdown::html_vignette:
     toc: true
@@ -23,6 +21,8 @@ knitr::opts_chunk$set(
   fig.height = 5
 )
 ```
+
+**READ ALL VIGNETTES [ON OUR WEBSITE](https://msberends.github.io/AMR/articles/).**
 
 # Welcome to the AMR package
 

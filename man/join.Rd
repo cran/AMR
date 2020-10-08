@@ -26,7 +26,7 @@ anti_join_microorganisms(x, by = NULL, ...)
 \arguments{
 \item{x}{existing table to join, or character vector}
 
-\item{by}{a variable to join by - if left empty will search for a column with class \code{\link{mo}} (created with \code{\link[=as.mo]{as.mo()}}) or will be \code{"mo"} if that column name exists in \code{x}, could otherwise be a column name of \code{x} with values that exist in \code{microorganisms$mo} (like \code{by = "bacteria_id"}), or another column in \link{microorganisms} (but then it should be named, like \code{by = c("my_genus_species" = "fullname")})}
+\item{by}{a variable to join by - if left empty will search for a column with class \code{\link{mo}} (created with \code{\link[=as.mo]{as.mo()}}) or will be \code{"mo"} if that column name exists in \code{x}, could otherwise be a column name of \code{x} with values that exist in \code{microorganisms$mo} (like \code{by = "bacteria_id"}), or another column in \link{microorganisms} (but then it should be named, like \code{by = c("bacteria_id" = "fullname")})}
 
 \item{suffix}{if there are non-joined duplicate variables in \code{x} and \code{y}, these suffixes will be added to the output to disambiguate them. Should be a character vector of length 2.}
 
@@ -36,9 +36,9 @@ anti_join_microorganisms(x, by = NULL, ...)
 Join the data set \link{microorganisms} easily to an existing table or character vector.
 }
 \details{
-\strong{Note:} As opposed to the \code{join()} functions of \code{dplyr}, \code{\link{character}} vectors are supported and at default existing columns will get a suffix \code{"2"} and the newly joined columns will not get a suffix.
+\strong{Note:} As opposed to the \code{join()} functions of \code{dplyr}, \link{character} vectors are supported and at default existing columns will get a suffix \code{"2"} and the newly joined columns will not get a suffix.
 
-These functions rely on \code{\link[=merge]{merge()}}, a base R function to do joins.
+If the \code{dplyr} package is installed, their join functions will be used. Otherwise, the much slower \code{\link[=merge]{merge()}} function from base R will be used.
 }
 \section{Stable lifecycle}{
 
@@ -50,25 +50,28 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
 left_join_microorganisms(as.mo("K. pneumoniae"))
 left_join_microorganisms("B_KLBSL_PNE")
 
-\dontrun{
-library(dplyr)
-example_isolates \%>\% left_join_microorganisms()
-
-df <- data.frame(date = seq(from = as.Date("2018-01-01"),
-                            to = as.Date("2018-01-07"),
-                            by = 1),
-                 bacteria = as.mo(c("S. aureus", "MRSA", "MSSA", "STAAUR",
-                                    "E. coli", "E. coli", "E. coli")),
-                 stringsAsFactors = FALSE)
-colnames(df)
-df_joined <- left_join_microorganisms(df, "bacteria")
-colnames(df_joined)
+\donttest{
+if (require("dplyr")) {
+  example_isolates \%>\%
+    left_join_microorganisms() \%>\% 
+    colnames()
+ 
+  df <- data.frame(date = seq(from = as.Date("2018-01-01"),
+                              to = as.Date("2018-01-07"),
+                              by = 1),
+                   bacteria = as.mo(c("S. aureus", "MRSA", "MSSA", "STAAUR",
+                                      "E. coli", "E. coli", "E. coli")),
+                   stringsAsFactors = FALSE)
+  colnames(df)
+  df_joined <- left_join_microorganisms(df, "bacteria")
+  colnames(df_joined)
+}
 }
 }

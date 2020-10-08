@@ -1,22 +1,26 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' Determine bug-drug combinations
@@ -26,18 +30,16 @@
 #' @inheritParams eucast_rules
 #' @param combine_IR logical to indicate whether values R and I should be summed
 #' @param add_ab_group logical to indicate where the group of the antimicrobials must be included as a first column
-#' @param remove_intrinsic_resistant logical to indicate that rows with 100% resistance for all tested antimicrobials must be removed from the table
+#' @param remove_intrinsic_resistant logical to indicate that rows and columns with 100% resistance for all tested antimicrobials must be removed from the table
 #' @param FUN the function to call on the `mo` column to transform the microorganism IDs, defaults to [mo_shortname()] 
 #' @param translate_ab a character of length 1 containing column names of the [antibiotics] data set
 #' @param ... arguments passed on to `FUN`
 #' @inheritParams rsi_df
 #' @inheritParams base::formatC
 #' @details The function [format()] calculates the resistance per bug-drug combination. Use `combine_IR = FALSE` (default) to test R vs. S+I and `combine_IR = TRUE` to test R+I vs. S. 
-#' 
-#' The language of the output can be overwritten with `options(AMR_locale)`, please see [translate].
 #' @export
 #' @rdname bug_drug_combinations
-#' @return The function [bug_drug_combinations()] returns a [`data.frame`] with columns "mo", "ab", "S", "I", "R" and "total".
+#' @return The function [bug_drug_combinations()] returns a [data.frame] with columns "mo", "ab", "S", "I", "R" and "total".
 #' @source \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 4th Edition}, 2014, *Clinical and Laboratory Standards Institute (CLSI)*. <https://clsi.org/standards/products/microbiology/documents/m39/>.
 #' @inheritSection AMR Read more on our website!
 #' @examples 
@@ -47,13 +49,13 @@
 #' format(x, translate_ab = "name (atc)")
 #' 
 #' # Use FUN to change to transformation of microorganism codes
-#' x <- bug_drug_combinations(example_isolates, 
-#'                            FUN = mo_gramstain)
+#' bug_drug_combinations(example_isolates, 
+#'                       FUN = mo_gramstain)
 #'                            
-#' x <- bug_drug_combinations(example_isolates,
-#'                            FUN = function(x) ifelse(x == "B_ESCHR_COLI",
-#'                                                     "E. coli",
-#'                                                     "Others"))
+#' bug_drug_combinations(example_isolates,
+#'                       FUN = function(x) ifelse(x == as.mo("E. coli"),
+#'                                                "E. coli",
+#'                                                "Others"))
 #' }
 bug_drug_combinations <- function(x, 
                                   col_mo = NULL, 
@@ -71,7 +73,7 @@ bug_drug_combinations <- function(x,
   
   x_class <- class(x)
   x <- as.data.frame(x, stringsAsFactors = FALSE)
-  x[, col_mo] <- FUN(x[, col_mo, drop = TRUE])
+  x[, col_mo] <- FUN(x[, col_mo, drop = TRUE], ...)
   x <- x[, c(col_mo, names(which(sapply(x, is.rsi)))), drop = FALSE]
   
   unique_mo <- sort(unique(x[, col_mo, drop = TRUE]))
@@ -162,55 +164,63 @@ format.bug_drug_combinations <- function(x,
     .data
   }
   
-  y <- x %>%
+  y <- x %pm>%
     create_var(ab = as.ab(x$ab),
-               ab_txt = give_ab_name(ab = x$ab, format = translate_ab, language = language)) %>%
-    group_by(ab, ab_txt, mo) %>% 
-    summarise(isolates = sum(isolates, na.rm = TRUE),
-              total = sum(total, na.rm = TRUE)) %>% 
-    ungroup()
+               ab_txt = give_ab_name(ab = x$ab, format = translate_ab, language = language)) %pm>%
+    pm_group_by(ab, ab_txt, mo) %pm>% 
+    pm_summarise(isolates = sum(isolates, na.rm = TRUE),
+              total = sum(total, na.rm = TRUE)) %pm>% 
+    pm_ungroup()
   
-  y <- y %>% 
+  y <- y %pm>% 
     create_var(txt = paste0(percentage(y$isolates / y$total, decimal.mark = decimal.mark, big.mark = big.mark), 
                             " (", trimws(format(y$isolates, big.mark = big.mark)), "/",
-                            trimws(format(y$total, big.mark = big.mark)), ")")) %>% 
-    select(ab, ab_txt, mo, txt) %>%
-    arrange(mo)
+                            trimws(format(y$total, big.mark = big.mark)), ")")) %pm>% 
+    pm_select(ab, ab_txt, mo, txt) %pm>%
+    pm_arrange(mo)
   
   # replace tidyr::pivot_wider() from here
   for (i in unique(y$mo)) {
     mo_group <- y[which(y$mo == i), c("ab", "txt")]
     colnames(mo_group) <- c("ab", i)
     rownames(mo_group) <- NULL
-    y <- y %>% 
-      left_join(mo_group, by = "ab")
+    y <- y %pm>% 
+      pm_left_join(mo_group, by = "ab")
   }
-  y <- y %>% 
-    distinct(ab, .keep_all = TRUE) %>% 
-    select(-mo, -txt) %>% 
+  y <- y %pm>% 
+    pm_distinct(ab, .keep_all = TRUE) %pm>% 
+    pm_select(-mo, -txt) %pm>% 
     # replace tidyr::pivot_wider() until here
     remove_NAs()
-  
+
   select_ab_vars <- function(.data) {
     .data[, c("ab_group", "ab_txt", colnames(.data)[!colnames(.data) %in% c("ab_group", "ab_txt", "ab")])]
   }
   
-  y <- y %>% 
-    create_var(ab_group = ab_group(y$ab, language = language)) %>% 
-    select_ab_vars() %>% 
-    arrange(ab_group, ab_txt)
-  y <- y %>% 
-    create_var(ab_group = ifelse(y$ab_group != lag(y$ab_group) | is.na(lag(y$ab_group)), y$ab_group, ""))
+  y <- y %pm>% 
+    create_var(ab_group = ab_group(y$ab, language = language)) %pm>% 
+    select_ab_vars() %pm>% 
+    pm_arrange(ab_group, ab_txt)
+  y <- y %pm>% 
+    create_var(ab_group = ifelse(y$ab_group != pm_lag(y$ab_group) | is.na(pm_lag(y$ab_group)), y$ab_group, ""))
   
   if (add_ab_group == FALSE) {
-    y <- y %>% 
-      select(-ab_group) %>%
-      rename("Drug" = ab_txt)
-    colnames(y)[1] <- translate_AMR(colnames(y)[1], language = get_locale(), only_unknown = FALSE)
+    y <- y %pm>% 
+      pm_select(-ab_group) %pm>%
+      pm_rename("Drug" = ab_txt)
+    colnames(y)[1] <- translate_AMR(colnames(y)[1], language, only_unknown = FALSE)
   } else {
-    y <- y %>% rename("Group" = ab_group,
-                      "Drug" = ab_txt)
-    colnames(y)[1:2] <- translate_AMR(colnames(y)[1:2], language = get_locale(), only_unknown = FALSE)
+    y <- y %pm>% 
+      pm_rename("Group" = ab_group,
+                "Drug" = ab_txt)
+  }
+  
+  if (!is.null(language)) {
+    colnames(y) <- translate_AMR(colnames(y), language, only_unknown = FALSE)
+  }
+  
+  if (remove_intrinsic_resistant == TRUE) {
+    y <- y[, !sapply(y, function(col) all(col %like% "100", na.rm = TRUE) & !any(is.na(col))), drop = FALSE]
   }
   
   rownames(y) <- NULL

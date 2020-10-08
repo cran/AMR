@@ -1,29 +1,33 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' AMR plots with `ggplot2`
 #'
 #' Use these functions to create bar plots for antimicrobial resistance analysis. All functions rely on [ggplot2][ggplot2::ggplot()] functions.
 #' @inheritSection lifecycle Maturing lifecycle
-#' @param data a [`data.frame`] with column(s) of class [`rsi`] (see [as.rsi()])
+#' @param data a [data.frame] with column(s) of class [`rsi`] (see [as.rsi()])
 #' @param position position adjustment of bars, either `"fill"`, `"stack"` or `"dodge"`
 #' @param x variable to show on x axis, either `"antibiotic"` (default) or `"interpretation"` or a grouping variable
 #' @param fill variable to categorise using the plots legend, either `"antibiotic"` (default) or `"interpretation"` or a grouping variable
@@ -102,14 +106,14 @@
 #'   
 #' }
 #'   
-#' \dontrun{
+#' \donttest{
 #' 
 #' # resistance of ciprofloxacine per age group
 #' example_isolates %>%
 #'   mutate(first_isolate = first_isolate(.)) %>%
 #'   filter(first_isolate == TRUE,
 #'          mo == as.mo("E. coli")) %>%
-#'   # `age_group` is also a function of this package:
+#'   # `age_groups` is also a function of this AMR package:
 #'   group_by(age_group = age_groups(age)) %>%
 #'   select(age_group,
 #'          CIP) %>%
@@ -118,7 +122,8 @@
 #' # for colourblind mode, use divergent colours from the viridis package:
 #' example_isolates %>%
 #'   select(AMX, NIT, FOS, TMP, CIP) %>%
-#'   ggplot_rsi() + scale_fill_viridis_d()
+#'   ggplot_rsi() + 
+#'   scale_fill_viridis_d()
 #' # a shorter version which also adjusts data label colours:
 #' example_isolates %>%
 #'   select(AMX, NIT, FOS, TMP, CIP) %>%
@@ -147,6 +152,7 @@ ggplot_rsi <- function(data,
                        translate_ab = "name",
                        combine_SI = TRUE,
                        combine_IR = FALSE,
+                       minimum = 30,
                        language = get_locale(),
                        nrow = NULL,
                        colours = c(S = "#61a8ff",
@@ -194,6 +200,7 @@ ggplot_rsi <- function(data,
   
   p <- ggplot2::ggplot(data = data) +
     geom_rsi(position = position, x = x, fill = fill, translate_ab = translate_ab,
+             minimum = minimum, language = language,
              combine_SI = combine_SI, combine_IR = combine_IR, ...) +
     theme_rsi()
   
@@ -215,6 +222,8 @@ ggplot_rsi <- function(data,
     p <- p + labels_rsi_count(position = position,
                               x = x,
                               translate_ab = translate_ab,
+                              minimum = minimum,
+                              language = language,
                               combine_SI = combine_SI,
                               combine_IR = combine_IR,
                               datalabels.size = datalabels.size,
@@ -240,13 +249,14 @@ geom_rsi <- function(position = NULL,
                      x = c("antibiotic", "interpretation"),
                      fill = "interpretation",
                      translate_ab = "name",
+                     minimum = 30,
                      language = get_locale(),
                      combine_SI = TRUE,
                      combine_IR = FALSE,
                      ...)  {
   
   stop_ifnot_installed("ggplot2")
-  stop_if(is.data.frame(position), "`position` is invalid. Did you accidentally use '%>%' instead of '+'?")
+  stop_if(is.data.frame(position), "`position` is invalid. Did you accidentally use '%pm>%' instead of '+'?")
   
   y <- "value"
   if (missing(position) | is.null(position)) {
@@ -280,6 +290,7 @@ geom_rsi <- function(position = NULL,
                    rsi_df(data = x,
                           translate_ab = translate_ab,
                           language = language,
+                          minimum = minimum,
                           combine_SI = combine_SI,
                           combine_IR = combine_IR)
                  })
@@ -365,6 +376,8 @@ theme_rsi <- function() {
 labels_rsi_count <- function(position = NULL,
                              x = "antibiotic",
                              translate_ab = "name",
+                             minimum = 30,
+                             language = get_locale(),
                              combine_SI = TRUE,
                              combine_IR = FALSE,
                              datalabels.size = 3,
@@ -389,12 +402,14 @@ labels_rsi_count <- function(position = NULL,
                        transformed <- rsi_df(data = x,
                                              translate_ab = translate_ab,
                                              combine_SI = combine_SI,
-                                             combine_IR = combine_IR)
+                                             combine_IR = combine_IR,
+                                             minimum = minimum,
+                                             language = language)
                        transformed$gr <- transformed[, x_name, drop = TRUE]
-                       transformed %>% 
-                         group_by(gr) %>% 
-                         mutate(lbl = paste0("n=", isolates)) %>% 
-                         ungroup() %>% 
-                         select(-gr)
+                       transformed %pm>% 
+                         pm_group_by(gr) %pm>% 
+                         pm_mutate(lbl = paste0("n=", isolates)) %pm>% 
+                         pm_ungroup() %pm>% 
+                         pm_select(-gr)
                      })
 }

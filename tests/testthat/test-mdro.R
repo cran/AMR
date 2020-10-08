@@ -1,22 +1,26 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 context("mdro.R")
@@ -31,14 +35,16 @@ test_that("mdro works", {
   expect_error(mdro(example_isolates, col_mo = "invalid", info = TRUE))
 
   outcome <- suppressWarnings(mdro(example_isolates))
+  outcome <- mdro(example_isolates, "eucast3.1", info = TRUE)
   outcome <- eucast_exceptional_phenotypes(example_isolates, info = TRUE)
   # check class
-  expect_equal(outcome %>% class(), c("ordered", "factor"))
+  expect_equal(class(outcome), c("ordered", "factor"))
 
   outcome <- mdro(example_isolates, "nl", info = TRUE)
   # check class
-  expect_equal(outcome %>% class(), c("ordered", "factor"))
+  expect_equal(class(outcome), c("ordered", "factor"))
 
+  library(dplyr)
   # example_isolates should have these finding using Dutch guidelines
   expect_equal(outcome %>% cleaner::freq() %>% pull(count),
                c(1969, 25, 6)) # 1969 neg, 25 unconfirmed, 6 pos

@@ -1,57 +1,54 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' Check availability of columns
 #'
 #' Easy check for data availability of all columns in a data set. This makes it easy to get an idea of which antimicrobial combinations can be used for calculation with e.g. [susceptibility()] and [resistance()].
 #' @inheritSection lifecycle Stable lifecycle
-#' @param tbl a [`data.frame`] or [`list`]
+#' @param tbl a [data.frame] or [list]
 #' @param width number of characters to present the visual availability, defaults to filling the width of the console
-#' @details The function returns a [`data.frame`] with columns `"resistant"` and `"visual_resistance"`. The values in that columns are calculated with [resistance()].
-#' @return [`data.frame`] with column names of `tbl` as row names
+#' @details The function returns a [data.frame] with columns `"resistant"` and `"visual_resistance"`. The values in that columns are calculated with [resistance()].
+#' @return [data.frame] with column names of `tbl` as row names
 #' @inheritSection AMR Read more on our website!
 #' @export
 #' @examples
 #' availability(example_isolates)
 #'
-#' \dontrun{
-#' library(dplyr)
-#' example_isolates %>% availability()
-#'
-#' example_isolates %>%
-#'   select_if(is.rsi) %>%
-#'   availability()
-#'
-#' example_isolates %>%
-#'   filter(mo == as.mo("E. coli")) %>%
-#'   select_if(is.rsi) %>%
-#'   availability()
+#' if (require("dplyr")) {
+#'   example_isolates %>%
+#'     filter(mo == as.mo("E. coli")) %>%
+#'     select_if(is.rsi) %>%
+#'     availability()
 #' }
 availability <- function(tbl, width = NULL) {
   stop_ifnot(is.data.frame(tbl), "`tbl` must be a data.frame")
-  x <- base::sapply(tbl, function(x) {
-    1 - base::sum(base::is.na(x)) / base::length(x) 
+  x <- sapply(tbl, function(x) {
+    1 - sum(is.na(x)) / length(x) 
   })
-  n <- base::sapply(tbl, function(x) base::length(x[!base::is.na(x)]))
-  R <- base::sapply(tbl, function(x) base::ifelse(is.rsi(x), resistance(x, minimum = 0), NA))
+  n <- sapply(tbl, function(x) length(x[!is.na(x)]))
+  R <- sapply(tbl, function(x) ifelse(is.rsi(x), resistance(x, minimum = 0), NA))
   R_print <- character(length(R))
   R_print[!is.na(R)] <- percentage(R[!is.na(R)])
   R_print[is.na(R)] <- ""

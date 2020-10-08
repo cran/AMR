@@ -11,15 +11,21 @@ get_locale()
 For language-dependent output of AMR functions, like \code{\link[=mo_name]{mo_name()}}, \code{\link[=mo_gramstain]{mo_gramstain()}}, \code{\link[=mo_type]{mo_type()}} and \code{\link[=ab_name]{ab_name()}}.
 }
 \details{
-Strings will be translated to foreign languages if they are defined in a local translation file. Additions to this file can be suggested at our repository. The file can be found here: \url{https://github.com/msberends/AMR/blob/master/data-raw/translations.tsv}.
+Strings will be translated to foreign languages if they are defined in a local translation file. Additions to this file can be suggested at our repository. The file can be found here: \url{https://github.com/msberends/AMR/blob/master/data-raw/translations.tsv}. This file will be read by all functions where a translated output can be desired, like all \code{\link[=mo_property]{mo_property()}} functions (\code{\link[=mo_name]{mo_name()}}, \code{\link[=mo_gramstain]{mo_gramstain()}}, \code{\link[=mo_type]{mo_type()}}, etc.) and \code{\link[=ab_property]{ab_property()}} functions (\code{\link[=ab_name]{ab_name()}}, \code{\link[=ab_group]{ab_group()}} etc.).
 
-Currently supported languages are (besides English): Dutch, French, German, Italian, Portuguese, Spanish. Please note that currently not all these languages have translations available for all antimicrobial agents and colloquial microorganism names.
+Currently supported languages are: Dutch, English, French, German, Italian, Portuguese, Spanish. Please note that currently not all these languages have translations available for all antimicrobial agents and colloquial microorganism names.
 
 Please suggest your own translations \href{https://github.com/msberends/AMR/issues/new?title=Translations}{by creating a new issue on our repository}.
+\subsection{Changing the default language}{
 
-This file will be read by all functions where a translated output can be desired, like all \code{\link[=mo_property]{mo_property()}} functions (\code{\link[=mo_name]{mo_name()}}, \code{\link[=mo_gramstain]{mo_gramstain()}}, \code{\link[=mo_type]{mo_type()}}, etc.).
+The system language will be used at default (as returned by \code{Sys.getenv("LANG")} or, if \code{LANG} is not set, \code{\link[=Sys.getlocale]{Sys.getlocale()}}), if that language is supported. But the language to be used can be overwritten in two ways and will be checked in this order:
+\enumerate{
+\item Setting the R option \code{AMR_locale}, e.g. by running \code{options(AMR_locale = "de")}
+\item Setting the system variable \code{LANGUAGE} or \code{LANG}, e.g. by adding \code{LANGUAGE="de_DE.utf8"} to your \code{.Renviron} file in your home directory
+}
 
-The system language will be used at default, if that language is supported. The system language can be overwritten with \code{Sys.setenv(AMR_locale = yourlanguage)}.
+So if the R option \code{AMR_locale} is set, the system variables \code{LANGUAGE} and \code{LANG} will be ignored.
+}
 }
 \section{Stable lifecycle}{
 
@@ -31,7 +37,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{

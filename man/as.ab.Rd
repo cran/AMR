@@ -4,9 +4,9 @@
 \alias{as.ab}
 \alias{ab}
 \alias{is.ab}
-\title{Transform to antibiotic ID}
+\title{Transform input to an antibiotic ID}
 \usage{
-as.ab(x, flag_multiple_results = TRUE, ...)
+as.ab(x, flag_multiple_results = TRUE, info = TRUE, ...)
 
 is.ab(x)
 }
@@ -15,10 +15,12 @@ is.ab(x)
 
 \item{flag_multiple_results}{logical to indicate whether a note should be printed to the console that probably more than one antibiotic code or name can be retrieved from a single input value.}
 
+\item{info}{logical to indicate whether a progress bar should be printed}
+
 \item{...}{arguments passed on to internal functions}
 }
 \value{
-Character (vector) with class \code{\link{ab}}. Unknown values will return \code{NA}.
+A \link{character} \link{vector} with additional class \code{\link{ab}}
 }
 \description{
 Use this function to determine the antibiotic code of one or more antibiotics. The data set \link{antibiotics} will be searched for abbreviations, official names and synonyms (brand names).
@@ -45,10 +47,12 @@ WHONET 2019 software: \url{http://www.whonet.org/software.html}
 European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}
 }
 
-\section{Maturing lifecycle}{
+\section{Stable lifecycle}{
 
-\if{html}{\figure{lifecycle_maturing.svg}{options: style=margin-bottom:5px} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. Since this function needs wider usage and more extensive testing, you are very welcome \href{https://github.com/msberends/AMR/issues}{to suggest changes at our repository} or \link[=AMR]{write us an email (see section 'Contact Us')}.
+\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
+The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
+
+If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{WHOCC}{
@@ -63,9 +67,14 @@ The WHOCC is located in Oslo at the Norwegian Institute of Public Health and fun
 \strong{NOTE: The WHOCC copyright does not allow use for commercial purposes, unlike any other info from this package.} See \url{https://www.whocc.no/copyright_disclaimer/.}
 }
 
+\section{Reference data publicly available}{
+
+All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
+}
+
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
@@ -94,7 +103,7 @@ ab_name("eryt")       # "Erythromycin"
 }
 \seealso{
 \itemize{
-\item \link{antibiotics} for the dataframe that is being used to determine ATCs
+\item \link{antibiotics} for the \link{data.frame} that is being used to determine ATCs
 \item \code{\link[=ab_from_text]{ab_from_text()}} for a function to retrieve antimicrobial drugs from clinical text (from health care records)
 }
 }

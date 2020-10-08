@@ -1,34 +1,37 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' Get ATC properties from WHOCC website
 #'
-#' @inheritSection lifecycle Questioning lifecycle
-#' @description Gets data from the WHO to determine properties of an ATC (e.g. an antibiotic) like name, defined daily dose (DDD) or standard unit.
-#' 
-#' **This function requires an internet connection.**
+#' Gets data from the WHO to determine properties of an ATC (e.g. an antibiotic), such as the name, defined daily dose (DDD) or standard unit.
+#' @inheritSection lifecycle Stable lifecycle
 #' @param atc_code a character or character vector with ATC code(s) of antibiotic(s)
 #' @param property property of an ATC code. Valid values are `"ATC"`, `"Name"`, `"DDD"`, `"U"` (`"unit"`), `"Adm.R"`, `"Note"` and `groups`. For this last option, all hierarchical groups of an ATC code will be returned, see Examples.
 #' @param administration type of administration when using `property = "Adm.R"`, see Details
-#' @param url url of website of the WHO. The sign `%s` can be used as a placeholder for ATC codes.
+#' @param url url of website of the WHOCC. The sign `%s` can be used as a placeholder for ATC codes.
+#' @param url_vet url of website of the WHOCC for veterinary medicine. The sign `%s` can be used as a placeholder for ATC_vet codes (that all start with "Q").
 #' @param ... parameters to pass on to `atc_property`
 #' @details
 #' Options for parameter `administration`:
@@ -54,27 +57,27 @@
 #' - `"MU"` = million units
 #' - `"mmol"` = millimole
 #' - `"ml"` = milliliter (e.g. eyedrops)
+#' 
+#' **N.B. This function requires an internet connection and only works if the following packages are installed: `curl`, `rvest`, `xml2`.**
 #' @export
 #' @rdname atc_online
 #' @inheritSection AMR Read more on our website!
 #' @source <https://www.whocc.no/atc_ddd_alterations__cumulative/ddd_alterations/abbrevations/>
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # oral DDD (Defined Daily Dose) of amoxicillin
 #' atc_online_property("J01CA04", "DDD", "O")
+#' 
 #' # parenteral DDD (Defined Daily Dose) of amoxicillin
 #' atc_online_property("J01CA04", "DDD", "P")
 #'
 #' atc_online_property("J01CA04", property = "groups") # search hierarchical groups of amoxicillin
-#' # [1] "ANTIINFECTIVES FOR SYSTEMIC USE"
-#' # [2] "ANTIBACTERIALS FOR SYSTEMIC USE"
-#' # [3] "BETA-LACTAM ANTIBACTERIALS, PENICILLINS"
-#' # [4] "Penicillins with extended spectrum"
 #' }
 atc_online_property <- function(atc_code,
                                 property,
                                 administration = "O",
-                                url = "https://www.whocc.no/atc_ddd_index/?code=%s&showdescription=no") {
+                                url = "https://www.whocc.no/atc_ddd_index/?code=%s&showdescription=no",
+                                url_vet = "https://www.whocc.no/atcvet/atcvet_index/?code=%s&showdescription=no") {
   
   has_internet <- import_fn("has_internet", "curl")
   html_attr <- import_fn("html_attr", "rvest")
@@ -92,7 +95,7 @@ atc_online_property <- function(atc_code,
   }
   
   if (!has_internet()) {
-    message("There appears to be no internet connection.")
+    message("There appears to be no internet connection, returning NA.")
     return(rep(NA, length(atc_code)))
   }
   
@@ -122,25 +125,31 @@ atc_online_property <- function(atc_code,
     returnvalue <- rep(NA_character_, length(atc_code))
   }
   
-  progress <- progress_estimated(n = length(atc_code), 3)
+  progress <- progress_ticker(n = length(atc_code), 3)
   on.exit(close(progress))
   
   for (i in seq_len(length(atc_code))) {
     
     progress$tick()
-    
-    atc_url <- sub("%s", atc_code[i], url, fixed = TRUE)
+
+    if (atc_code[i] %like% "^Q") {
+      # veterinary drugs, ATC_vet codes start with a "Q"
+      atc_url <- url_vet
+    } else {
+      atc_url <- url
+    }
+    atc_url <- sub("%s", atc_code[i], atc_url, fixed = TRUE)
     
     if (property == "groups") {
-      tbl <- read_html(atc_url) %>%
-        html_node("#content") %>%
-        html_children() %>%
+      tbl <- read_html(atc_url) %pm>%
+        html_node("#content") %pm>%
+        html_children() %pm>%
         html_node("a")
       
       # get URLS of items
-      hrefs <- tbl %>% html_attr("href")
+      hrefs <- tbl %pm>% html_attr("href")
       # get text of items
-      texts <- tbl %>% html_text()
+      texts <- tbl %pm>% html_text()
       # select only text items where URL like "code="
       texts <- texts[grepl("?code=", tolower(hrefs), fixed = TRUE)]
       # last one is antibiotics, skip it
@@ -148,9 +157,9 @@ atc_online_property <- function(atc_code,
       returnvalue <- c(list(texts), returnvalue)
       
     } else {
-      tbl <- read_html(atc_url) %>%
-        html_nodes("table") %>%
-        html_table(header = TRUE) %>%
+      tbl <- read_html(atc_url) %pm>%
+        html_nodes("table") %pm>%
+        html_table(header = TRUE) %pm>%
         as.data.frame(stringsAsFactors = FALSE)
       
       # case insensitive column names

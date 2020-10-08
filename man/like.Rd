@@ -18,7 +18,7 @@ x \%like_case\% pattern
 \arguments{
 \item{x}{a character vector where matches are sought, or an object which can be coerced by \code{\link[=as.character]{as.character()}} to a character vector.}
 
-\item{pattern}{a character string containing a regular expression (or \code{\link{character}} string for \code{fixed = TRUE}) to be matched in the given character vector. Coerced by \code{\link[=as.character]{as.character()}} to a character string if possible.  If a \code{\link{character}} vector of length 2 or more is supplied, the first element is used with a warning.}
+\item{pattern}{a character string containing a regular expression (or \link{character} string for \code{fixed = TRUE}) to be matched in the given character vector. Coerced by \code{\link[=as.character]{as.character()}} to a character string if possible.  If a \link{character} vector of length 2 or more is supplied, the first element is used with a warning.}
 
 \item{ignore.case}{if \code{FALSE}, the pattern matching is \emph{case sensitive} and if \code{TRUE}, case is ignored during matching.}
 }
@@ -31,7 +31,7 @@ Convenient wrapper around \code{\link[=grep]{grep()}} to match a pattern: \code{
 \details{
 The \verb{\%like\%} function:
 \itemize{
-\item Is case insensitive (use \verb{\%like_case\%} for case-sensitive matching)
+\item Is case-insensitive (use \verb{\%like_case\%} for case-sensitive matching)
 \item Supports multiple patterns
 \item Checks if \code{pattern} is a regular expression and sets \code{fixed = TRUE} if not, to greatly improve speed
 \item Tries again with \code{perl = TRUE} if regex fails
@@ -49,7 +49,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
@@ -68,12 +68,13 @@ a \%like\% b
 #> TRUE TRUE TRUE
 
 # get isolates whose name start with 'Ent' or 'ent'
-\dontrun{
-library(dplyr)
-example_isolates \%>\%
-  filter(mo_name(mo) \%like\% "^ent")
+\donttest{
+if (require("dplyr")) {
+  example_isolates \%>\%
+    filter(mo_name(mo) \%like\% "^ent")
+}
 }
 }
 \seealso{
-\code{\link[base:grep]{base::grep()}}
+\code{\link[=grep]{grep()}}
 }

@@ -21,6 +21,7 @@ ggplot_rsi(
   translate_ab = "name",
   combine_SI = TRUE,
   combine_IR = FALSE,
+  minimum = 30,
   language = get_locale(),
   nrow = NULL,
   colours = c(S = "#61a8ff", SI = "#61a8ff", I = "#61f7ff", IR = "#ff6961", R =
@@ -41,6 +42,7 @@ geom_rsi(
   x = c("antibiotic", "interpretation"),
   fill = "interpretation",
   translate_ab = "name",
+  minimum = 30,
   language = get_locale(),
   combine_SI = TRUE,
   combine_IR = FALSE,
@@ -62,6 +64,8 @@ labels_rsi_count(
   position = NULL,
   x = "antibiotic",
   translate_ab = "name",
+  minimum = 30,
+  language = get_locale(),
   combine_SI = TRUE,
   combine_IR = FALSE,
   datalabels.size = 3,
@@ -69,7 +73,7 @@ labels_rsi_count(
 )
 }
 \arguments{
-\item{data}{a \code{\link{data.frame}} with column(s) of class \code{\link{rsi}} (see \code{\link[=as.rsi]{as.rsi()}})}
+\item{data}{a \link{data.frame} with column(s) of class \code{\link{rsi}} (see \code{\link[=as.rsi]{as.rsi()}})}
 
 \item{position}{position adjustment of bars, either \code{"fill"}, \code{"stack"} or \code{"dodge"}}
 
@@ -88,6 +92,8 @@ labels_rsi_count(
 \item{combine_SI}{a logical to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant). This used to be the parameter \code{combine_IR}, but this now follows the redefinition by EUCAST about the interpretion of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. Default is \code{TRUE}.}
 
 \item{combine_IR}{a logical to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. I+R (susceptible vs. non-susceptible). This is outdated, see parameter \code{combine_SI}.}
+
+\item{minimum}{the minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see Source.}
 
 \item{language}{language of the returned text, defaults to system language (see \code{\link[=get_locale]{get_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
@@ -143,7 +149,7 @@ The \link[=lifecycle]{lifecycle} of this function is \strong{maturing}. The unly
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
@@ -187,14 +193,14 @@ if (require("ggplot2") & require("dplyr")) {
   
 }
   
-\dontrun{
+\donttest{
 
 # resistance of ciprofloxacine per age group
 example_isolates \%>\%
   mutate(first_isolate = first_isolate(.)) \%>\%
   filter(first_isolate == TRUE,
          mo == as.mo("E. coli")) \%>\%
-  # `age_group` is also a function of this package:
+  # `age_groups` is also a function of this AMR package:
   group_by(age_group = age_groups(age)) \%>\%
   select(age_group,
          CIP) \%>\%
@@ -203,7 +209,8 @@ example_isolates \%>\%
 # for colourblind mode, use divergent colours from the viridis package:
 example_isolates \%>\%
   select(AMX, NIT, FOS, TMP, CIP) \%>\%
-  ggplot_rsi() + scale_fill_viridis_d()
+  ggplot_rsi() + 
+  scale_fill_viridis_d()
 # a shorter version which also adjusts data label colours:
 example_isolates \%>\%
   select(AMX, NIT, FOS, TMP, CIP) \%>\%

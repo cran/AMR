@@ -60,7 +60,7 @@ rsi_df(
 
 \item{only_all_tested}{(for combination therapies, i.e. using more than one variable for \code{...}): a logical to indicate that isolates must be tested for all antibiotics, see section \emph{Combination therapy} below}
 
-\item{data}{a \code{\link{data.frame}} containing columns with class \code{\link{rsi}} (see \code{\link[=as.rsi]{as.rsi()}})}
+\item{data}{a \link{data.frame} containing columns with class \code{\link{rsi}} (see \code{\link[=as.rsi]{as.rsi()}})}
 
 \item{translate_ab}{a column name of the \link{antibiotics} data set to translate the antibiotic abbreviations to, using \code{\link[=ab_property]{ab_property()}}. Use a value}
 
@@ -71,7 +71,7 @@ rsi_df(
 \item{combine_IR}{a logical to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. I+R (susceptible vs. non-susceptible). This is outdated, see parameter \code{combine_SI}.}
 }
 \value{
-A \code{\link{double}} or, when \code{as_percent = TRUE}, a \code{\link{character}}.
+A \link{double} or, when \code{as_percent = TRUE}, a \link{character}.
 }
 \description{
 These functions can be used to calculate the (co-)resistance or susceptibility of microbial isolates (i.e. percentage of S, SI, I, IR or R). All functions support quasiquotation with pipes, can be used in \code{summarise()} from the \code{dplyr} package and also support grouped variables, please see \emph{Examples}.
@@ -89,7 +89,7 @@ The function \code{\link[=proportion_df]{proportion_df()}} takes any variable fr
 }
 \section{Combination therapy}{
 
-When using more than one variable for \code{...} (= combination therapy)), use \code{only_all_tested} to only count isolates that are tested for all antibiotics/variables that you test them for. See this example for two antibiotics, Drug A and Drug B, about how \code{\link[=susceptibility]{susceptibility()}} works to calculate the \%SI:\preformatted{--------------------------------------------------------------------
+When using more than one variable for \code{...} (= combination therapy), use \code{only_all_tested} to only count isolates that are tested for all antibiotics/variables that you test them for. See this example for two antibiotics, Drug A and Drug B, about how \code{\link[=susceptibility]{susceptibility()}} works to calculate the \%SI:\preformatted{--------------------------------------------------------------------
                     only_all_tested = FALSE  only_all_tested = TRUE
                     -----------------------  -----------------------
  Drug A    Drug B   include as  include as   include as  include as
@@ -128,7 +128,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Interpretation of R and S/I}{
 
-In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories R and S/I as shown below (\url{http://www.eucast.org/newsiandr/}).
+In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories R and S/I as shown below (\url{https://www.eucast.org/newsiandr/}).
 \itemize{
 \item \strong{R = Resistant}\cr
 A microorganism is categorised as \emph{Resistant} when there is a high likelihood of therapeutic failure even when there is increased exposure. Exposure is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
@@ -143,7 +143,7 @@ This AMR package honours this new insight. Use \code{\link[=susceptibility]{susc
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
@@ -217,15 +217,6 @@ if (require("dplyr")) {
     select(hospital_id, AMX, CIP) \%>\%
     group_by(hospital_id) \%>\%
     proportion_df(translate = FALSE)
-}
-
-\dontrun{  
-  # calculate current empiric combination therapy of Helicobacter gastritis:
-  my_table \%>\%
-    filter(first_isolate == TRUE,
-           genus == "Helicobacter") \%>\%
-    summarise(p = susceptibility(AMX, MTR),  # amoxicillin with metronidazole
-              n = count_all(AMX, MTR))
 }
 }
 \seealso{

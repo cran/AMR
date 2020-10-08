@@ -1,22 +1,26 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' Filter isolates on result in antimicrobial class
@@ -33,40 +37,43 @@
 #' @seealso [antibiotic_class_selectors()] for the `select()` equivalent.
 #' @export
 #' @examples
-#' \dontrun{
-#' library(dplyr)
-#'
-#' # filter on isolates that have any result for any aminoglycoside
-#' example_isolates %>% filter_ab_class("aminoglycoside")
-#' example_isolates %>% filter_aminoglycosides()
-#'
-#' # this is essentially the same as (but without determination of column names):
-#' example_isolates %>%
-#'   filter_at(.vars = vars(c("GEN", "TOB", "AMK", "KAN")),
-#'             .vars_predicate = any_vars(. %in% c("S", "I", "R")))
-#'
-#'
-#' # filter on isolates that show resistance to ANY aminoglycoside
-#' example_isolates %>% filter_aminoglycosides("R", "any")
-#'
-#' # filter on isolates that show resistance to ALL aminoglycosides
-#' example_isolates %>% filter_aminoglycosides("R", "all")
-#'
-#' # filter on isolates that show resistance to
-#' # any aminoglycoside and any fluoroquinolone
-#' example_isolates %>%
-#'   filter_aminoglycosides("R") %>%
-#'   filter_fluoroquinolones("R")
-#'
-#' # filter on isolates that show resistance to
-#' # all aminoglycosides and all fluoroquinolones
-#' example_isolates %>%
-#'   filter_aminoglycosides("R", "all") %>%
-#'   filter_fluoroquinolones("R", "all")
+#' filter_aminoglycosides(example_isolates)
 #' 
-#' # with dplyr 1.0.0 and higher (that adds 'across()'), this is equal:
-#' example_isolates %>% filter_carbapenems("R", "all")
-#' example_isolates %>% filter(across(carbapenems(), ~. == "R"))
+#' \donttest{
+#' if (require("dplyr")) {
+#'
+#'   # filter on isolates that have any result for any aminoglycoside
+#'   example_isolates %>% filter_aminoglycosides()
+#'   example_isolates %>% filter_ab_class("aminoglycoside")
+#' 
+#'   # this is essentially the same as (but without determination of column names):
+#'   example_isolates %>%
+#'     filter_at(.vars = vars(c("GEN", "TOB", "AMK", "KAN")),
+#'               .vars_predicate = any_vars(. %in% c("S", "I", "R")))
+#'
+#'
+#'   # filter on isolates that show resistance to ANY aminoglycoside
+#'   example_isolates %>% filter_aminoglycosides("R", "any")
+#'  
+#'   # filter on isolates that show resistance to ALL aminoglycosides
+#'   example_isolates %>% filter_aminoglycosides("R", "all")
+#'  
+#'   # filter on isolates that show resistance to
+#'   # any aminoglycoside and any fluoroquinolone
+#'   example_isolates %>%
+#'     filter_aminoglycosides("R") %>%
+#'     filter_fluoroquinolones("R")
+#'  
+#'   # filter on isolates that show resistance to
+#'   # all aminoglycosides and all fluoroquinolones
+#'   example_isolates %>%
+#'     filter_aminoglycosides("R", "all") %>%
+#'     filter_fluoroquinolones("R", "all")
+#'   
+#'   # with dplyr 1.0.0 and higher (that adds 'across()'), this is equal:
+#'   example_isolates %>% filter_carbapenems("R", "all")
+#'   example_isolates %>% filter(across(carbapenems(), ~. == "R"))
+#' }
 #' }
 filter_ab_class <- function(x,
                             ab_class,
@@ -93,7 +100,7 @@ filter_ab_class <- function(x,
   stop_ifnot(all(scope %in% c("any", "all")), "`scope` must be one of: 'any', 'all'")
   
   # get all columns in data with names that resemble antibiotics
-  ab_in_data <- suppressMessages(get_column_abx(x))
+  ab_in_data <- get_column_abx(x, info = FALSE)
   if (length(ab_in_data) == 0) {
     message(font_blue("NOTE: no columns with class <rsi> found (see ?as.rsi), data left unchanged."))
     return(x.bak)
@@ -336,14 +343,14 @@ find_ab_group <- function(ab_class) {
                          "macrolide",
                          "tetracycline"),
          paste0(ab_class, "s"),
-         antibiotics %>%
+         antibiotics %pm>%
            subset(group %like% ab_class | 
                     atc_group1 %like% ab_class | 
-                    atc_group2 %like% ab_class) %>%
-           pull(group) %>%
-           unique() %>%
-           tolower() %>%
-           sort() %>% 
+                    atc_group2 %like% ab_class) %pm>%
+          pm_pull(group) %pm>%
+           unique() %pm>%
+           tolower() %pm>%
+           sort() %pm>% 
            paste(collapse = "/")
   )
 }

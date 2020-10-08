@@ -15,7 +15,7 @@
 \alias{ab_ddd}
 \alias{ab_info}
 \alias{ab_url}
-\title{Property of an antibiotic}
+\title{Get properties of an antibiotic}
 \usage{
 ab_name(x, language = get_locale(), tolower = FALSE, ...)
 
@@ -62,10 +62,10 @@ ab_property(x, property = "name", language = get_locale(), ...)
 }
 \value{
 \itemize{
-\item An \code{\link{integer}} in case of \code{\link[=ab_cid]{ab_cid()}}
-\item A named \code{\link{list}} in case of \code{\link[=ab_info]{ab_info()}} and multiple \code{\link[=ab_synonyms]{ab_synonyms()}}/\code{\link[=ab_tradenames]{ab_tradenames()}}
-\item A \code{\link{double}} in case of \code{\link[=ab_ddd]{ab_ddd()}}
-\item A \code{\link{character}} in all other cases
+\item An \link{integer} in case of \code{\link[=ab_cid]{ab_cid()}}
+\item A named \link{list} in case of \code{\link[=ab_info]{ab_info()}} and multiple \code{\link[=ab_synonyms]{ab_synonyms()}}/\code{\link[=ab_tradenames]{ab_tradenames()}}
+\item A \link{double} in case of \code{\link[=ab_ddd]{ab_ddd()}}
+\item A \link{character} in all other cases
 }
 }
 \description{
@@ -93,9 +93,14 @@ WHONET 2019 software: \url{http://www.whonet.org/software.html}
 European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}
 }
 
+\section{Reference data publicly available}{
+
+All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
+}
+
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{

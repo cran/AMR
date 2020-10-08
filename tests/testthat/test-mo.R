@@ -1,22 +1,26 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 context("mo.R")
@@ -25,7 +29,7 @@ test_that("as.mo works", {
   
   skip_on_cran()
   
-  library(dplyr)
+  library(dplyr, warn.conflicts = FALSE)
  
   MOs <- microorganisms %>% filter(!is.na(mo), nchar(mo) > 3)
   expect_identical(as.character(MOs$mo), as.character(as.mo(MOs$mo)))
@@ -201,12 +205,12 @@ test_that("as.mo works", {
   print(mo_renamed())
   
   # check uncertain names
-  expect_equal(suppressWarnings(as.character(as.mo("staaur extratest", allow_uncertain = TRUE))), "B_STPHY_AURS")
+  expect_equal(suppressMessages(as.character(as.mo("staaur extratest", allow_uncertain = TRUE))), "B_STPHY_AURS")
   expect_equal(suppressWarnings(as.character(as.mo("staaur extratest", allow_uncertain = FALSE))), "UNKNOWN")
-  expect_warning(as.mo("esco extra_text", allow_uncertain = TRUE))
-  expect_equal(suppressWarnings(as.character(as.mo("unexisting aureus", allow_uncertain = 3))), "B_STPHY_AURS")
-  expect_equal(suppressWarnings(as.character(as.mo("unexisting staphy", allow_uncertain = 3))), "B_STPHY")
-  expect_equal(suppressWarnings(as.character(as.mo("Staphylococcus aureus unexisting", allow_uncertain = 3))), "B_STPHY_AURS")
+  expect_message(as.mo("e coli extra_text", allow_uncertain = TRUE))
+  expect_equal(suppressMessages(as.character(as.mo("unexisting aureus", allow_uncertain = 3))), "B_STPHY_AURS")
+  expect_equal(suppressMessages(as.character(as.mo("unexisting staphy", allow_uncertain = 3))), "B_STPHY_COPS")
+  expect_equal(suppressMessages(as.character(as.mo("Staphylococcus aureus unexisting", allow_uncertain = 3))), "B_STPHY_AURS_ANRB")
   
   # predefined reference_df
   expect_equal(as.character(as.mo("TestingOwnID",
@@ -228,15 +232,15 @@ test_that("as.mo works", {
     c("B_PROTS_MRBL", "B_BCLLS_CERS", "B_ESCHR_COLI"))
   
   # hard to find
-  expect_equal(as.character(suppressWarnings(as.mo(
+  expect_equal(as.character(suppressMessages(as.mo(
     c("Microbacterium paraoxidans",
       "Streptococcus suis (bovis gr)",
       "Raoultella (here some text) terrigena")))),
     c("B_MCRBC_PRXY", "B_STRPT_SUIS", "B_RLTLL_TRRG"))
   expect_output(print(mo_uncertainties()))
-  
+
   # Salmonella (City) are all actually Salmonella enterica spp (City)
-  expect_equal(suppressWarnings(mo_name(c("Salmonella Goettingen", "Salmonella Typhimurium", "Salmonella Group A"))),
+  expect_equal(suppressMessages(mo_name(c("Salmonella Goettingen", "Salmonella Typhimurium", "Salmonella Group A"))),
                c("Salmonella enterica", "Salmonella enterica", "Salmonella"))
   
   # no virusses

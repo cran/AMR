@@ -1,22 +1,26 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' Key antibiotics for first *weighted* isolates
@@ -72,33 +76,35 @@
 #' @examples
 #' # `example_isolates` is a dataset available in the AMR package.
 #' # See ?example_isolates.
-#'
-#' \dontrun{
-#' library(dplyr)
-#' # set key antibiotics to a new variable
-#' my_patients <- example_isolates %>%
-#'   mutate(keyab = key_antibiotics(.)) %>%
-#'   mutate(
-#'     # now calculate first isolates
-#'     first_regular = first_isolate(., col_keyantibiotics = FALSE),
-#'     # and first WEIGHTED isolates
-#'     first_weighted = first_isolate(., col_keyantibiotics = "keyab")
-#'   )
-#'
-#' # Check the difference, in this data set it results in 7% more isolates:
-#' sum(my_patients$first_regular, na.rm = TRUE)
-#' sum(my_patients$first_weighted, na.rm = TRUE)
-#' }
-#'
+#' 
 #' # output of the `key_antibiotics` function could be like this:
 #' strainA <- "SSSRR.S.R..S"
 #' strainB <- "SSSIRSSSRSSS"
 #'
+#' # can those strings can be compared with:
 #' key_antibiotics_equal(strainA, strainB)
 #' # TRUE, because I is ignored (as well as missing values)
 #'
 #' key_antibiotics_equal(strainA, strainB, ignore_I = FALSE)
 #' # FALSE, because I is not ignored and so the 4th value differs
+#'
+#' \donttest{
+#' if (require("dplyr")) {
+#'   # set key antibiotics to a new variable
+#'   my_patients <- example_isolates %>%
+#'     mutate(keyab = key_antibiotics(.)) %>%
+#'     mutate(
+#'       # now calculate first isolates
+#'       first_regular = first_isolate(., col_keyantibiotics = FALSE),
+#'       # and first WEIGHTED isolates
+#'       first_weighted = first_isolate(., col_keyantibiotics = "keyab")
+#'     )
+#'  
+#'   # Check the difference, in this data set it results in 7% more isolates:
+#'   sum(my_patients$first_regular, na.rm = TRUE)
+#'   sum(my_patients$first_weighted, na.rm = TRUE)
+#' }
+#' }
 key_antibiotics <- function(x,
                             col_mo = NULL,
                             universal_1 = guess_ab_col(x, "amoxicillin"),
@@ -125,7 +131,7 @@ key_antibiotics <- function(x,
   dots <- unlist(list(...))
   if (length(dots) != 0) {
     # backwards compatibility with old parameters
-    dots.names <- dots %>% names()
+    dots.names <- dots %pm>% names()
     if ("info" %in% dots.names) {
       warnings <- dots[which(dots.names == "info")]
     }
@@ -162,7 +168,7 @@ key_antibiotics <- function(x,
     if (!all(col.list %in% colnames(x))) {
       if (warnings == TRUE) {
         warning("Some columns do not exist and will be ignored: ",
-                col.list.bak[!(col.list %in% colnames(x))] %>% toString(),
+                col.list.bak[!(col.list %in% colnames(x))] %pm>% toString(),
                 ".\nTHIS MAY STRONGLY INFLUENCE THE OUTCOME.",
                 immediate. = TRUE,
                 call. = FALSE)
@@ -218,7 +224,7 @@ key_antibiotics <- function(x,
   x$key_ab <- NA_character_
   
   # Gram +
-  x$key_ab <- if_else(x$gramstain == "Gram-positive",
+  x$key_ab <- pm_if_else(x$gramstain == "Gram-positive",
                       tryCatch(apply(X = x[, gram_positive],
                                      MARGIN = 1,
                                      FUN = function(x) paste(x, collapse = "")),
@@ -226,7 +232,7 @@ key_antibiotics <- function(x,
                       x$key_ab)
   
   # Gram -
-  x$key_ab <- if_else(x$gramstain == "Gram-negative",
+  x$key_ab <- pm_if_else(x$gramstain == "Gram-negative",
                       tryCatch(apply(X = x[, gram_negative],
                                      MARGIN = 1,
                                      FUN = function(x) paste(x, collapse = "")),
@@ -236,7 +242,7 @@ key_antibiotics <- function(x,
   # format
   key_abs <- toupper(gsub("[^SIR]", ".", gsub("(NA|NULL)", ".", x$key_ab)))
   
-  if (n_distinct(key_abs) == 1) {
+  if (pm_n_distinct(key_abs) == 1) {
     warning("No distinct key antibiotics determined.", call. = FALSE)
   }
   
@@ -266,7 +272,7 @@ key_antibiotics_equal <- function(y,
   result <- logical(length(x))
   
   if (info_needed == TRUE) {
-    p <- progress_estimated(length(x))
+    p <- progress_ticker(length(x))
     on.exit(close(p))
   }
   
@@ -315,10 +321,10 @@ key_antibiotics_equal <- function(y,
         # - S|R <-> R|S is 1 point
         # use the levels of as.rsi (S = 1, I = 2, R = 3)
         
-        suppressWarnings(x_split <- x_split %>% as.rsi() %>% as.double())
-        suppressWarnings(y_split <- y_split %>% as.rsi() %>% as.double())
+        suppressWarnings(x_split <- x_split %pm>% as.rsi() %pm>% as.double())
+        suppressWarnings(y_split <- y_split %pm>% as.rsi() %pm>% as.double())
         
-        points <- (x_split - y_split) %>% abs() %>% sum(na.rm = TRUE) / 2
+        points <- (x_split - y_split) %pm>% abs() %pm>% sum(na.rm = TRUE) / 2
         result[i] <- points >= points_threshold
         
       } else {

@@ -1,38 +1,43 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' Antibiotic class selectors
 #' 
-#' Use these selection helpers inside any function that allows [Tidyverse selections](https://tidyselect.r-lib.org/reference/language.html), like `dplyr::select()` or `tidyr::pivot_longer()`. They help to select the columns of antibiotics that are of a specific antibiotic class, without the need to define the columns or antibiotic abbreviations.
+#' Use these selection helpers inside any function that allows [Tidyverse selection helpers](https://tidyselect.r-lib.org/reference/language.html), like `dplyr::select()` or `tidyr::pivot_longer()`. They help to select the columns of antibiotics that are of a specific antibiotic class, without the need to define the columns or antibiotic abbreviations.
 #' @inheritParams filter_ab_class 
-#' @details All columns will be searched for known antibiotic names, abbreviations, brand names and codes (ATC, EARS-Net, WHO, etc.). This means that a selector like e.g. [aminoglycosides()] will pick up column names like 'gen', 'genta', 'J01GB03', 'tobra', 'Tobracin', etc.
+#' @details All columns will be searched for known antibiotic names, abbreviations, brand names and codes (ATC, EARS-Net, WHO, etc.) in the [antibiotics] data set. This means that a selector like e.g. [aminoglycosides()] will pick up column names like 'gen', 'genta', 'J01GB03', 'tobra', 'Tobracin', etc.
 #' 
-#' These functions only work if the `tidyselect` package is installed, that comes with the `dplyr` package. An error will be thrown if `tidyselect` package is not installed, or if the functions are used outside a function that allows Tidyverse selections like `select()` or `pivot_longer()`.
+#' **N.B. These functions only work if the `tidyselect` package is installed**, that comes with the `dplyr` package. An error will be thrown if the `tidyselect` package is not installed, or if the functions are used outside a function that allows Tidyverse selections like `select()` or `pivot_longer()`.
 #' @rdname antibiotic_class_selectors
 #' @seealso [filter_ab_class()] for the `filter()` equivalent.
 #' @name antibiotic_class_selectors
 #' @export
+#' @inheritSection AMR Reference data publicly available
+#' @inheritSection AMR Read more on our website!
 #' @examples 
-#' \dontrun{
-#'   library(dplyr)
+#' if (require("dplyr")) {
 #' 
 #'   # this will select columns 'IPM' (imipenem) and 'MEM' (meropenem):
 #'   example_isolates %>% 
@@ -55,9 +60,9 @@
 #'     format()
 #'     
 #'     
-#'   data.frame(irrelevant = "value",
+#'   data.frame(some_column = "some_value",
 #'              J01CA01 = "S") %>%   # ATC code of ampicillin
-#'     select(penicillins())         # so the 'J01CA01' column is selected
+#'     select(penicillins())         # only the 'J01CA01' column will be selected
 #'
 #' }
 ab_class <- function(ab_class) {
@@ -147,7 +152,7 @@ ab_selector <- function(ab_class, function_name) {
   vars_vct <- peek_vars_tidyselect(fn = function_name)
   vars_df <- data.frame(as.list(vars_vct))[0, , drop = FALSE]
   colnames(vars_df) <- vars_vct
-  ab_in_data <- suppressMessages(get_column_abx(vars_df))
+  ab_in_data <- get_column_abx(vars_df, info = FALSE)
   
   if (length(ab_in_data) == 0) {
     message(font_blue("NOTE: no antimicrobial agents found."))

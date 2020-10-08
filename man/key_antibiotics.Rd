@@ -129,39 +129,41 @@ A difference from I to S|R (or vice versa) means 0.5 points, a difference from S
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
 # `example_isolates` is a dataset available in the AMR package.
 # See ?example_isolates.
 
-\dontrun{
-library(dplyr)
-# set key antibiotics to a new variable
-my_patients <- example_isolates \%>\%
-  mutate(keyab = key_antibiotics(.)) \%>\%
-  mutate(
-    # now calculate first isolates
-    first_regular = first_isolate(., col_keyantibiotics = FALSE),
-    # and first WEIGHTED isolates
-    first_weighted = first_isolate(., col_keyantibiotics = "keyab")
-  )
-
-# Check the difference, in this data set it results in 7\% more isolates:
-sum(my_patients$first_regular, na.rm = TRUE)
-sum(my_patients$first_weighted, na.rm = TRUE)
-}
-
 # output of the `key_antibiotics` function could be like this:
 strainA <- "SSSRR.S.R..S"
 strainB <- "SSSIRSSSRSSS"
 
+# can those strings can be compared with:
 key_antibiotics_equal(strainA, strainB)
 # TRUE, because I is ignored (as well as missing values)
 
 key_antibiotics_equal(strainA, strainB, ignore_I = FALSE)
 # FALSE, because I is not ignored and so the 4th value differs
+
+\donttest{
+if (require("dplyr")) {
+  # set key antibiotics to a new variable
+  my_patients <- example_isolates \%>\%
+    mutate(keyab = key_antibiotics(.)) \%>\%
+    mutate(
+      # now calculate first isolates
+      first_regular = first_isolate(., col_keyantibiotics = FALSE),
+      # and first WEIGHTED isolates
+      first_weighted = first_isolate(., col_keyantibiotics = "keyab")
+    )
+ 
+  # Check the difference, in this data set it results in 7\% more isolates:
+  sum(my_patients$first_regular, na.rm = TRUE)
+  sum(my_patients$first_weighted, na.rm = TRUE)
+}
+}
 }
 \seealso{
 \code{\link[=first_isolate]{first_isolate()}}

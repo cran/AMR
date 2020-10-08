@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Data sets for download / own use</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Data sets for download / own use</h1>
+
+
+
+<p>All reference data (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this <code>AMR</code> package are reliable, up-to-date and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply tab separated files that are machine-readable and suitable for input in any software program, such as laboratory information systems.</p>
+<p>On this page, we explain how to download them and how the structure of the data sets look like.</p>
+<p class="dataset-within-r">
+If you are reading this page from within R, please <a href="https://msberends.github.io/AMR/articles/datasets.html">visit our website</a>, which is automatically updated with every code change.
+</p>
+<div id="microorganisms-currently-accepted-names" class="section level2">
+<h2>Microorganisms (currently accepted names)</h2>
+<p>A data set with 67,151 rows and 16 columns, containing the following column names:<br />
+<em>‘mo’, ‘fullname’, ‘kingdom’, ‘phylum’, ‘class’, ‘order’, ‘family’, ‘genus’, ‘species’, ‘subspecies’, ‘rank’, ‘ref’, ‘species_id’, ‘source’, ‘prevalence’, ‘snomed’</em>.</p>
+<p>This data set is in R available as <code>microorganisms</code>, after you load the <code>AMR</code> package.</p>
+<p>It was last updated on 3 September 2020 20:59:45 CEST. Find more info about the structure of this data set <a href="https://msberends.github.io/AMR/reference/microorganisms.html">here</a>.</p>
+<p><strong>Direct download links:</strong></p>
+<ul>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/microorganisms.rds">R file</a> (2.7 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/microorganisms.xlsx">Excel file</a> (6.1 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/microorganisms.txt">plain text file</a> (13.3 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/microorganisms.sas">SAS file</a> (26.2 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/microorganisms.sav">SPSS file</a> (28.2 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/microorganisms.dta">Stata file</a> (25.2 MB)</li>
+</ul>
+<div id="source" class="section level3">
+<h3>Source</h3>
+<p>Our full taxonomy of microorganisms is based on the authoritative and comprehensive:</p>
+<ul>
+<li><a href="http://www.catalogueoflife.org">Catalogue of Life</a> (included version: 2019)</li>
+<li><a href="https://lpsn.dsmz.de">List of Prokaryotic names with Standing in Nomenclature</a> (LPSN, included version: May 2020)</li>
+</ul>
+</div>
+<div id="example-content" class="section level3">
+<h3>Example content</h3>
+<p>Included (sub)species per taxonomic kingdom:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">Kingdom</th>
+<th align="center">Number of (sub)species</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">(unknown kingdom)</td>
+<td align="center">1</td>
+</tr>
+<tr class="even">
+<td align="center">Animalia</td>
+<td align="center">2,153</td>
+</tr>
+<tr class="odd">
+<td align="center">Archaea</td>
+<td align="center">697</td>
+</tr>
+<tr class="even">
+<td align="center">Bacteria</td>
+<td align="center">19,244</td>
+</tr>
+<tr class="odd">
+<td align="center">Chromista</td>
+<td align="center">32,164</td>
+</tr>
+<tr class="even">
+<td align="center">Fungi</td>
+<td align="center">9,582</td>
+</tr>
+</tbody>
+</table>
+<p>Example rows when filtering on genus <em>Escherichia</em>:</p>
+<table>
+<colgroup>
+<col width="5%"></col>
+<col width="9%"></col>
+<col width="3%"></col>
+<col width="6%"></col>
+<col width="8%"></col>
+<col width="6%"></col>
+<col width="7%"></col>
+<col width="5%"></col>
+<col width="4%"></col>
+<col width="4%"></col>
+<col width="3%"></col>
+<col width="9%"></col>
+<col width="13%"></col>
+<col width="3%"></col>
+<col width="4%"></col>
+<col width="4%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">mo</th>
+<th align="center">fullname</th>
+<th align="center">kingdom</th>
+<th align="center">phylum</th>
+<th align="center">class</th>
+<th align="center">order</th>
+<th align="center">family</th>
+<th align="center">genus</th>
+<th align="center">species</th>
+<th align="center">subspecies</th>
+<th align="center">rank</th>
+<th align="center">ref</th>
+<th align="center">species_id</th>
+<th align="center">source</th>
+<th align="center">prevalence</th>
+<th align="center">snomed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">B_ESCHR</td>
+<td align="center">Escherichia</td>
+<td align="center">Bacteria</td>
+<td align="center">Proteobacteria</td>
+<td align="center">Gammaproteobacteria</td>
+<td align="center">Enterobacterales</td>
+<td align="center">Enterobacteriaceae</td>
+<td align="center">Escherichia</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">genus</td>
+<td align="center"></td>
+<td align="center">bc4fdde6867d5ecfc728000b0bfb49a3</td>
+<td align="center">CoL</td>
+<td align="center">1</td>
+<td align="center">64735005</td>
+</tr>
+<tr class="even">
+<td align="center">B_ESCHR_ALBR</td>
+<td align="center">Escherichia albertii</td>
+<td align="center">Bacteria</td>
+<td align="center">Proteobacteria</td>
+<td align="center">Gammaproteobacteria</td>
+<td align="center">Enterobacterales</td>
+<td align="center">Enterobacteriaceae</td>
+<td align="center">Escherichia</td>
+<td align="center">albertii</td>
+<td align="center"></td>
+<td align="center">species</td>
+<td align="center">Huys et al., 2003</td>
+<td align="center">36618b1ed3b8b7e5a61f40eb9386e63c</td>
+<td align="center">CoL</td>
+<td align="center">1</td>
+<td align="center">419388003</td>
+</tr>
+<tr class="odd">
+<td align="center">B_ESCHR_COLI</td>
+<td align="center">Escherichia coli</td>
+<td align="center">Bacteria</td>
+<td align="center">Proteobacteria</td>
+<td align="center">Gammaproteobacteria</td>
+<td align="center">Enterobacterales</td>
+<td align="center">Enterobacteriaceae</td>
+<td align="center">Escherichia</td>
+<td align="center">coli</td>
+<td align="center"></td>
+<td align="center">species</td>
+<td align="center">Castellani et al., 1919</td>
+<td align="center">3254b3db31bf16fdde669ac57bf8c4fe</td>
+<td align="center">CoL</td>
+<td align="center">1</td>
+<td align="center">112283007</td>
+</tr>
+<tr class="even">
+<td align="center">B_ESCHR_FRGS</td>
+<td align="center">Escherichia fergusonii</td>
+<td align="center">Bacteria</td>
+<td align="center">Proteobacteria</td>
+<td align="center">Gammaproteobacteria</td>
+<td align="center">Enterobacterales</td>
+<td align="center">Enterobacteriaceae</td>
+<td align="center">Escherichia</td>
+<td align="center">fergusonii</td>
+<td align="center"></td>
+<td align="center">species</td>
+<td align="center">Farmer et al., 1985</td>
+<td align="center">82d98b10c456ce5f4c8c515f4e1567e2</td>
+<td align="center">CoL</td>
+<td align="center">1</td>
+<td align="center">72461005</td>
+</tr>
+<tr class="odd">
+<td align="center">B_ESCHR_HRMN</td>
+<td align="center">Escherichia hermannii</td>
+<td align="center">Bacteria</td>
+<td align="center">Proteobacteria</td>
+<td align="center">Gammaproteobacteria</td>
+<td align="center">Enterobacterales</td>
+<td align="center">Enterobacteriaceae</td>
+<td align="center">Escherichia</td>
+<td align="center">hermannii</td>
+<td align="center"></td>
+<td align="center">species</td>
+<td align="center">Brenner et al., 1983</td>
+<td align="center">b16086aee36e3b46b565510083ab4b65</td>
+<td align="center">CoL</td>
+<td align="center">1</td>
+<td align="center">85786000</td>
+</tr>
+<tr class="even">
+<td align="center">B_ESCHR_MRMT</td>
+<td align="center">Escherichia marmotae</td>
+<td align="center">Bacteria</td>
+<td align="center">Proteobacteria</td>
+<td align="center">Gammaproteobacteria</td>
+<td align="center">Enterobacterales</td>
+<td align="center">Enterobacteriaceae</td>
+<td align="center">Escherichia</td>
+<td align="center">marmotae</td>
+<td align="center"></td>
+<td align="center">species</td>
+<td align="center">Liu et al., 2015</td>
+<td align="center">792928</td>
+<td align="center">DSMZ</td>
+<td align="center">1</td>
+<td align="center"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="microorganisms-previously-accepted-names" class="section level2">
+<h2>Microorganisms (previously accepted names)</h2>
+<p>A data set with 12,708 rows and 4 columns, containing the following column names:<br />
+<em>‘fullname’, ‘fullname_new’, ‘ref’, ‘prevalence’</em>.</p>
+<p><strong>Note:</strong> remember that the ‘ref’ columns contains the scientific reference to the old taxonomic entries, i.e. of column <em>‘fullname’</em>. For the scientific reference of the new names, i.e. of column <em>‘fullname_new’</em>, see the <code>microorganisms</code> data set.</p>
+<p>This data set is in R available as <code>microorganisms.old</code>, after you load the <code>AMR</code> package.</p>
+<p>It was last updated on 28 May 2020 11:17:56 CEST. Find more info about the structure of this data set <a href="https://msberends.github.io/AMR/reference/microorganisms.old.html">here</a>.</p>
+<p><strong>Direct download links:</strong></p>
+<ul>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/microorganisms.old.rds">R file</a> (0.3 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/microorganisms.old.xlsx">Excel file</a> (0.4 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/microorganisms.old.txt">plain text file</a> (0.8 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/microorganisms.old.sas">SAS file</a> (1.9 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/microorganisms.old.sav">SPSS file</a> (1.9 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/microorganisms.old.dta">Stata file</a> (1.8 MB)</li>
+</ul>
+<div id="source-1" class="section level3">
+<h3>Source</h3>
+<p>This data set contains old, previously accepted taxonomic names. The data sources are the same as the <code>microorganisms</code> data set:</p>
+<ul>
+<li><a href="http://www.catalogueoflife.org">Catalogue of Life</a> (included version: 2019)</li>
+<li><a href="https://lpsn.dsmz.de">List of Prokaryotic names with Standing in Nomenclature</a> (LPSN, included version: May 2020)</li>
+</ul>
+</div>
+<div id="example-content-1" class="section level3">
+<h3>Example content</h3>
+<p>Example rows when filtering on <em>Escherichia</em>:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">fullname</th>
+<th align="center">fullname_new</th>
+<th align="center">ref</th>
+<th align="center">prevalence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">Escherichia adecarboxylata</td>
+<td align="center">Leclercia adecarboxylata</td>
+<td align="center">Leclerc, 1962</td>
+<td align="center">1</td>
+</tr>
+<tr class="even">
+<td align="center">Escherichia blattae</td>
+<td align="center">Shimwellia blattae</td>
+<td align="center">Burgess et al., 1973</td>
+<td align="center">1</td>
+</tr>
+<tr class="odd">
+<td align="center">Escherichia vulneris</td>
+<td align="center">Pseudescherichia vulneris</td>
+<td align="center">Brenner et al., 1983</td>
+<td align="center">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="antibiotic-agents" class="section level2">
+<h2>Antibiotic agents</h2>
+<p>A data set with 455 rows and 14 columns, containing the following column names:<br />
+<em>‘ab’, ‘atc’, ‘cid’, ‘name’, ‘group’, ‘atc_group1’, ‘atc_group2’, ‘abbreviations’, ‘synonyms’, ‘oral_ddd’, ‘oral_units’, ‘iv_ddd’, ‘iv_units’, ‘loinc’</em>.</p>
+<p>This data set is in R available as <code>antibiotics</code>, after you load the <code>AMR</code> package.</p>
+<p>It was last updated on 24 September 2020 00:50:35 CEST. Find more info about the structure of this data set <a href="https://msberends.github.io/AMR/reference/antibiotics.html">here</a>.</p>
+<p><strong>Direct download links:</strong></p>
+<ul>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/antibiotics.rds">R file</a> (31 kB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/antibiotics.xlsx">Excel file</a> (65 kB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/antibiotics.txt">plain text file</a> (0.1 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/antibiotics.sas">SAS file</a> (1.8 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/antibiotics.sav">SPSS file</a> (1.3 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/antibiotics.dta">Stata file</a> (0.3 MB)</li>
+</ul>
+<div id="source-2" class="section level3">
+<h3>Source</h3>
+<p>This data set contains all EARS-Net and ATC codes gathered from WHO and WHONET, and all compound IDs from PubChem. It also contains all brand names (synonyms) as found on PubChem and Defined Daily Doses (DDDs) for oral and parenteral administration.</p>
+<ul>
+<li><a href="https://www.whocc.no/atc_ddd_index/">ATC/DDD index from WHO Collaborating Centre for Drug Statistics Methodology</a> (note: this may not be used for commercial purposes, but is frelly available from the WHO CC website for personal use)</li>
+<li><a href="https://pubchem.ncbi.nlm.nih.gov">PubChem by the US National Library of Medicine</a></li>
+<li><a href="https://whonet.org">WHONET software 2019</a></li>
+</ul>
+</div>
+<div id="example-content-2" class="section level3">
+<h3>Example content</h3>
+<table style="width:100%;">
+<colgroup>
+<col width="1%"></col>
+<col width="2%"></col>
+<col width="3%"></col>
+<col width="9%"></col>
+<col width="8%"></col>
+<col width="14%"></col>
+<col width="19%"></col>
+<col width="6%"></col>
+<col width="11%"></col>
+<col width="3%"></col>
+<col width="3%"></col>
+<col width="2%"></col>
+<col width="3%"></col>
+<col width="10%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">ab</th>
+<th align="center">atc</th>
+<th align="center">cid</th>
+<th align="center">name</th>
+<th align="center">group</th>
+<th align="center">atc_group1</th>
+<th align="center">atc_group2</th>
+<th align="center">abbreviations</th>
+<th align="center">synonyms</th>
+<th align="center">oral_ddd</th>
+<th align="center">oral_units</th>
+<th align="center">iv_ddd</th>
+<th align="center">iv_units</th>
+<th align="center">loinc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">AMK</td>
+<td align="center">J01GB06</td>
+<td align="center">37768</td>
+<td align="center">Amikacin</td>
+<td align="center">Aminoglycosides</td>
+<td align="center">Aminoglycoside antibacterials</td>
+<td align="center">Other aminoglycosides</td>
+<td align="center">ak, ami, amik, …</td>
+<td align="center">amicacin, amikacillin, amikacin, …</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">1.0</td>
+<td align="center">g</td>
+<td align="center">13546-7, 15098-7, 17798-0, …</td>
+</tr>
+<tr class="even">
+<td align="center">AMX</td>
+<td align="center">J01CA04</td>
+<td align="center">33613</td>
+<td align="center">Amoxicillin</td>
+<td align="center">Beta-lactams/penicillins</td>
+<td align="center">Beta-lactam antibacterials, penicillins</td>
+<td align="center">Penicillins with extended spectrum</td>
+<td align="center">ac, amox, amx</td>
+<td align="center">actimoxi, amoclen, amolin, …</td>
+<td align="center">1.5</td>
+<td align="center">g</td>
+<td align="center">3.0</td>
+<td align="center">g</td>
+<td align="center">16365-9, 25274-2, 3344-9, …</td>
+</tr>
+<tr class="odd">
+<td align="center">AMC</td>
+<td align="center">J01CR02</td>
+<td align="center">23665637</td>
+<td align="center">Amoxicillin/clavulanic acid</td>
+<td align="center">Beta-lactams/penicillins</td>
+<td align="center">Beta-lactam antibacterials, penicillins</td>
+<td align="center">Combinations of penicillins, incl. beta-lactamase inhibitors</td>
+<td align="center">a/c, amcl, aml, …</td>
+<td align="center">amocla, amoclan, amoclav, …</td>
+<td align="center">1.5</td>
+<td align="center">g</td>
+<td align="center">3.0</td>
+<td align="center">g</td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="center">AMP</td>
+<td align="center">J01CA01</td>
+<td align="center">6249</td>
+<td align="center">Ampicillin</td>
+<td align="center">Beta-lactams/penicillins</td>
+<td align="center">Beta-lactam antibacterials, penicillins</td>
+<td align="center">Penicillins with extended spectrum</td>
+<td align="center">am, amp, ampi</td>
+<td align="center">acillin, adobacillin, amblosin, …</td>
+<td align="center">2.0</td>
+<td align="center">g</td>
+<td align="center">6.0</td>
+<td align="center">g</td>
+<td align="center">21066-6, 3355-5, 33562-0, …</td>
+</tr>
+<tr class="odd">
+<td align="center">AZM</td>
+<td align="center">J01FA10</td>
+<td align="center">447043</td>
+<td align="center">Azithromycin</td>
+<td align="center">Macrolides/lincosamides</td>
+<td align="center">Macrolides, lincosamides and streptogramins</td>
+<td align="center">Macrolides</td>
+<td align="center">az, azi, azit, …</td>
+<td align="center">aritromicina, azasite, azenil, …</td>
+<td align="center">0.3</td>
+<td align="center">g</td>
+<td align="center">0.5</td>
+<td align="center">g</td>
+<td align="center">16420-2, 25233-8</td>
+</tr>
+<tr class="even">
+<td align="center">CZO</td>
+<td align="center">J01DB04</td>
+<td align="center">33255</td>
+<td align="center">Cefazolin</td>
+<td align="center">Cephalosporins (1st gen.)</td>
+<td align="center">Other beta-lactam antibacterials</td>
+<td align="center">First-generation cephalosporins</td>
+<td align="center">cfz, cfzl, cz, …</td>
+<td align="center">atirin, cefamezin, cefamezine, …</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">3.0</td>
+<td align="center">g</td>
+<td align="center">16566-2, 25235-3, 3442-1, …</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="antiviral-agents" class="section level2">
+<h2>Antiviral agents</h2>
+<p>A data set with 102 rows and 9 columns, containing the following column names:<br />
+<em>‘atc’, ‘cid’, ‘name’, ‘atc_group’, ‘synonyms’, ‘oral_ddd’, ‘oral_units’, ‘iv_ddd’, ‘iv_units’</em>.</p>
+<p>This data set is in R available as <code>antivirals</code>, after you load the <code>AMR</code> package.</p>
+<p>It was last updated on 29 August 2020 21:53:07 CEST. Find more info about the structure of this data set <a href="https://msberends.github.io/AMR/reference/antibiotics.html">here</a>.</p>
+<p><strong>Direct download links:</strong></p>
+<ul>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/antivirals.rds">R file</a> (5 kB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/antivirals.xlsx">Excel file</a> (14 kB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/antivirals.txt">plain text file</a> (16 kB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/antivirals.sas">SAS file</a> (80 kB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/antivirals.sav">SPSS file</a> (68 kB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/antivirals.dta">Stata file</a> (67 kB)</li>
+</ul>
+<div id="source-3" class="section level3">
+<h3>Source</h3>
+<p>This data set contains all ATC codes gathered from WHO and all compound IDs from PubChem. It also contains all brand names (synonyms) as found on PubChem and Defined Daily Doses (DDDs) for oral and parenteral administration.</p>
+<ul>
+<li><a href="https://www.whocc.no/atc_ddd_index/">ATC/DDD index from WHO Collaborating Centre for Drug Statistics Methodology</a> (note: this may not be used for commercial purposes, but is frelly available from the WHO CC website for personal use)</li>
+<li><a href="https://pubchem.ncbi.nlm.nih.gov">PubChem by the US National Library of Medicine</a></li>
+</ul>
+</div>
+<div id="example-content-3" class="section level3">
+<h3>Example content</h3>
+<table>
+<colgroup>
+<col width="4%"></col>
+<col width="5%"></col>
+<col width="9%"></col>
+<col width="32%"></col>
+<col width="30%"></col>
+<col width="4%"></col>
+<col width="5%"></col>
+<col width="3%"></col>
+<col width="4%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">atc</th>
+<th align="center">cid</th>
+<th align="center">name</th>
+<th align="center">atc_group</th>
+<th align="center">synonyms</th>
+<th align="center">oral_ddd</th>
+<th align="center">oral_units</th>
+<th align="center">iv_ddd</th>
+<th align="center">iv_units</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">J05AF06</td>
+<td align="center">441300</td>
+<td align="center">Abacavir</td>
+<td align="center">Nucleoside and nucleotide reverse transcriptase inhibitors</td>
+<td align="center">Abacavir, Abacavir sulfate, Ziagen</td>
+<td align="center">0.6</td>
+<td align="center">g</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="center">J05AB01</td>
+<td align="center">135398513</td>
+<td align="center">Aciclovir</td>
+<td align="center">Nucleosides and nucleotides excl. reverse transcriptase inhibitors</td>
+<td align="center">Acicloftal, Aciclovier, Aciclovir, …</td>
+<td align="center">4.0</td>
+<td align="center">g</td>
+<td align="center">4</td>
+<td align="center">g</td>
+</tr>
+<tr class="odd">
+<td align="center">J05AF08</td>
+<td align="center">60871</td>
+<td align="center">Adefovir dipivoxil</td>
+<td align="center">Nucleoside and nucleotide reverse transcriptase inhibitors</td>
+<td align="center">Adefovir di ester, Adefovir dipivoxil, Adefovir Dipivoxil, …</td>
+<td align="center">10.0</td>
+<td align="center">mg</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="center">J05AE05</td>
+<td align="center">65016</td>
+<td align="center">Amprenavir</td>
+<td align="center">Protease inhibitors</td>
+<td align="center">Agenerase, Amprenavir, Amprenavirum, …</td>
+<td align="center">1.2</td>
+<td align="center">g</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="odd">
+<td align="center">J05AP06</td>
+<td align="center">16076883</td>
+<td align="center">Asunaprevir</td>
+<td align="center">Antivirals for treatment of HCV infections</td>
+<td align="center">Asunaprevir, Sunvepra</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr class="even">
+<td align="center">J05AE08</td>
+<td align="center">148192</td>
+<td align="center">Atazanavir</td>
+<td align="center">Protease inhibitors</td>
+<td align="center">Atazanavir, Atazanavir Base, Latazanavir, …</td>
+<td align="center">0.3</td>
+<td align="center">g</td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="intrinsic-bacterial-resistance" class="section level2">
+<h2>Intrinsic bacterial resistance</h2>
+<p>A data set with 93,892 rows and 2 columns, containing the following column names:<br />
+<em>‘microorganism’, ‘antibiotic’</em>.</p>
+<p>This data set is in R available as <code>intrinsic_resistant</code>, after you load the <code>AMR</code> package.</p>
+<p>It was last updated on 24 September 2020 00:50:35 CEST. Find more info about the structure of this data set <a href="https://msberends.github.io/AMR/reference/intrinsic_resistant.html">here</a>.</p>
+<p><strong>Direct download links:</strong></p>
+<ul>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/intrinsic_resistant.rds">R file</a> (67 kB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/intrinsic_resistant.xlsx">Excel file</a> (0.9 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/intrinsic_resistant.txt">plain text file</a> (3.5 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/intrinsic_resistant.sas">SAS file</a> (7.1 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/intrinsic_resistant.sav">SPSS file</a> (7.9 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/intrinsic_resistant.dta">Stata file</a> (7 MB)</li>
+</ul>
+<div id="source-4" class="section level3">
+<h3>Source</h3>
+<p>This data set contains all defined intrinsic resistance by EUCAST of all bug-drug combinations, and is based on ‘EUCAST Expert Rules / EUCAST Intrinsic Resistance and Unusual Phenotypes’, v3.2 from 2020.</p>
+</div>
+<div id="example-content-4" class="section level3">
+<h3>Example content</h3>
+<p>Example rows when filtering on <em>Enterobacter cloacae</em>:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">microorganism</th>
+<th align="center">antibiotic</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Amoxicillin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Amoxicillin/clavulanic acid</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Ampicillin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Ampicillin/sulbactam</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Avoparcin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Azithromycin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Cefadroxil</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Cefazolin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Cefoxitin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Cephalexin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Cephalothin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Clarithromycin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Clindamycin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Cycloserine</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Dalbavancin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Dirithromycin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Erythromycin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Flurithromycin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Fusidic acid</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Josamycin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Lincomycin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Linezolid</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Midecamycin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Miocamycin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Norvancomycin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Oleandomycin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Oritavancin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Benzylpenicillin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Pirlimycin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Pristinamycin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Quinupristin/dalfopristin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Ramoplanin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Rifampicin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Rokitamycin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Roxithromycin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Spiramycin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Tedizolid</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Teicoplanin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Teicoplanin-macromethod</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Telavancin</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Telithromycin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Thiacetazone</td>
+</tr>
+<tr class="odd">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Troleandomycin</td>
+</tr>
+<tr class="even">
+<td align="center">Enterobacter cloacae</td>
+<td align="center">Vancomycin</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="interpretation-from-mic-values-disk-diameters-to-rsi" class="section level2">
+<h2>Interpretation from MIC values / disk diameters to R/SI</h2>
+<p>A data set with 18,650 rows and 10 columns, containing the following column names:<br />
+<em>‘guideline’, ‘method’, ‘site’, ‘mo’, ‘ab’, ‘ref_tbl’, ‘disk_dose’, ‘breakpoint_S’, ‘breakpoint_R’, ‘uti’</em>.</p>
+<p>This data set is in R available as <code>rsi_translation</code>, after you load the <code>AMR</code> package.</p>
+<p>It was last updated on 29 July 2020 13:12:34 CEST. Find more info about the structure of this data set <a href="https://msberends.github.io/AMR/reference/rsi_translation.html">here</a>.</p>
+<p><strong>Direct download links:</strong></p>
+<ul>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/rsi_translation.rds">R file</a> (32 kB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/rsi_translation.xlsx">Excel file</a> (0.6 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/rsi_translation.txt">plain text file</a> (1.5 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/rsi_translation.sas">SAS file</a> (3.2 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/rsi_translation.sav">SPSS file</a> (3.4 MB)<br />
+</li>
+<li>Download as <a href="https://github.com/msberends/AMR/raw/master/data-raw/../data-raw/rsi_translation.dta">Stata file</a> (3 MB)</li>
+</ul>
+<div id="source-5" class="section level3">
+<h3>Source</h3>
+<p>This data set contains interpretation rules for MIC values and disk diffusion diameters. Included guidelines are CLSI (2010-2019) and EUCAST (2011-2020).</p>
+</div>
+<div id="example-content-5" class="section level3">
+<h3>Example content</h3>
+<table>
+<colgroup>
+<col width="8%"></col>
+<col width="5%"></col>
+<col width="4%"></col>
+<col width="12%"></col>
+<col width="20%"></col>
+<col width="17%"></col>
+<col width="7%"></col>
+<col width="9%"></col>
+<col width="9%"></col>
+<col width="4%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">guideline</th>
+<th align="center">method</th>
+<th align="center">site</th>
+<th align="center">mo</th>
+<th align="center">ab</th>
+<th align="center">ref_tbl</th>
+<th align="center">disk_dose</th>
+<th align="center">breakpoint_S</th>
+<th align="center">breakpoint_R</th>
+<th align="center">uti</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">EUCAST 2020</td>
+<td align="center">DISK</td>
+<td align="center"></td>
+<td align="center">Enterobacterales</td>
+<td align="center">Amoxicillin/clavulanic acid</td>
+<td align="center">Enterobacterales</td>
+<td align="center">20-10ug</td>
+<td align="center">19</td>
+<td align="center">19</td>
+<td align="center">FALSE</td>
+</tr>
+<tr class="even">
+<td align="center">EUCAST 2020</td>
+<td align="center">DISK</td>
+<td align="center">UTI</td>
+<td align="center">Enterobacterales</td>
+<td align="center">Amoxicillin/clavulanic acid</td>
+<td align="center">Enterobacterales</td>
+<td align="center">20-10ug</td>
+<td align="center">16</td>
+<td align="center">16</td>
+<td align="center">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="center">EUCAST 2020</td>
+<td align="center">MIC</td>
+<td align="center"></td>
+<td align="center">Enterobacterales</td>
+<td align="center">Amoxicillin/clavulanic acid</td>
+<td align="center">Enterobacterales</td>
+<td align="center"></td>
+<td align="center">8</td>
+<td align="center">8</td>
+<td align="center">FALSE</td>
+</tr>
+<tr class="even">
+<td align="center">EUCAST 2020</td>
+<td align="center">MIC</td>
+<td align="center">UTI</td>
+<td align="center">Enterobacterales</td>
+<td align="center">Amoxicillin/clavulanic acid</td>
+<td align="center">Enterobacterales</td>
+<td align="center"></td>
+<td align="center">32</td>
+<td align="center">32</td>
+<td align="center">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="center">EUCAST 2020</td>
+<td align="center">MIC</td>
+<td align="center"></td>
+<td align="center">Actinomyces</td>
+<td align="center">Amoxicillin/clavulanic acid</td>
+<td align="center">Anaerobes, Grampositive</td>
+<td align="center"></td>
+<td align="center">4</td>
+<td align="center">8</td>
+<td align="center">FALSE</td>
+</tr>
+<tr class="even">
+<td align="center">EUCAST 2020</td>
+<td align="center">MIC</td>
+<td align="center"></td>
+<td align="center">Bacteroides</td>
+<td align="center">Amoxicillin/clavulanic acid</td>
+<td align="center">Anaerobes, Gramnegative</td>
+<td align="center"></td>
+<td align="center">4</td>
+<td align="center">8</td>
+<td align="center">FALSE</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

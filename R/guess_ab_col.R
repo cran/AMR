@@ -1,29 +1,33 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' Guess antibiotic column
 #'
 #' This tries to find a column name in a data set based on information from the [antibiotics] data set. Also supports WHONET abbreviations.
-#' @inheritSection lifecycle Maturing lifecycle
-#' @param x a [`data.frame`]
+#' @inheritSection lifecycle Stable lifecycle
+#' @param x a [data.frame]
 #' @param search_string a text to search `x` for, will be checked with [as.ab()] if this value is not a column in `x`
 #' @param verbose a logical to indicate whether additional info should be printed
 #' @details You can look for an antibiotic (trade) name or abbreviation and it will search `x` and the [antibiotics] data set for any column containing a name or code of that antibiotic. **Longer columns names take precendence over shorter column names.**
@@ -82,7 +86,7 @@ guess_ab_col <- function(x = NULL, search_string = NULL, verbose = FALSE) {
       
     } else {
       # sort colnames on length - longest first
-      cols <- colnames(x[, x %>% colnames() %>% nchar() %>% order() %>% rev()])
+      cols <- colnames(x[, x %pm>% colnames() %pm>% nchar() %pm>% order() %pm>% rev()])
       df_trans <- data.frame(cols = cols,
                              abs = suppressWarnings(as.ab(cols)),
                              stringsAsFactors = FALSE)
@@ -110,16 +114,21 @@ get_column_abx <- function(x,
                            soft_dependencies = NULL,
                            hard_dependencies = NULL,
                            verbose = FALSE,
+                           info = TRUE,
                            ...) {
   
-  message(font_blue("NOTE: Auto-guessing columns suitable for analysis"), appendLF = FALSE)
+  if (info == TRUE) {
+    message(font_blue("NOTE: Auto-guessing columns suitable for analysis"), appendLF = FALSE)
+  }
   
   x <- as.data.frame(x, stringsAsFactors = FALSE)
   if (NROW(x) > 10000) {
     # only test maximum of 10,000 values per column
-    message(font_blue(paste0(" (using only ", font_bold("the first 10,000 rows"), ")...")), appendLF = FALSE)
+    if (info == TRUE) {
+      message(font_blue(paste0(" (using only ", font_bold("the first 10,000 rows"), ")...")), appendLF = FALSE)
+    }
     x <- x[1:10000, , drop = FALSE]
-  } else {
+  } else if (info == TRUE) {
     message(font_blue("..."), appendLF = FALSE)
   }
   x_bak <- x
@@ -130,8 +139,8 @@ get_column_abx <- function(x,
   vectr_antibiotics <- vectr_antibiotics[!is.na(vectr_antibiotics) & nchar(vectr_antibiotics) >= 3]
   x_columns <- sapply(colnames(x), function(col, df = x_bak) {
     if (toupper(col) %in% vectr_antibiotics | 
-        is.rsi(as.data.frame(df)[, col]) |
-        is.rsi.eligible(as.data.frame(df)[, col], threshold = 0.5)) {
+        is.rsi(as.data.frame(df)[, col, drop = TRUE]) |
+        is.rsi.eligible(as.data.frame(df)[, col, drop = TRUE], threshold = 0.5)) {
       return(col)
     } else {
       return(NA_character_)
@@ -141,16 +150,16 @@ get_column_abx <- function(x,
   x <- x[, x_columns, drop = FALSE] # without drop = TRUE, x will become a vector when x_columns is length 1
   
   df_trans <- data.frame(colnames = colnames(x),
-                         abcode = suppressWarnings(as.ab(colnames(x))))
-  df_trans <- df_trans[!is.na(df_trans$abcode), ]
+                         abcode = suppressWarnings(as.ab(colnames(x), info = FALSE)))
+  df_trans <- df_trans[!is.na(df_trans$abcode), , drop = FALSE]
   x <- as.character(df_trans$colnames)
   names(x) <- df_trans$abcode
   
   # add from self-defined dots (...):
-  # such as get_column_abx(example_isolates %>% rename(thisone = AMX), amox = "thisone")
+  # such as get_column_abx(example_isolates %pm>% rename(thisone = AMX), amox = "thisone")
   dots <- list(...)
   if (length(dots) > 0) {
-    newnames <- suppressWarnings(as.ab(names(dots)))
+    newnames <- suppressWarnings(as.ab(names(dots), info = FALSE))
     if (any(is.na(newnames))) {
       warning("Invalid antibiotic reference(s): ", toString(names(dots)[is.na(newnames)]),
               call. = FALSE, immediate. = TRUE)
@@ -166,26 +175,30 @@ get_column_abx <- function(x,
   }
   
   if (length(x) == 0) {
-    message(font_blue("No columns found."))
+    if (info == TRUE) {
+      message(font_blue("No columns found."))
+    }
     return(x)
   }
   
   # sort on name
   x <- x[order(names(x), x)]
-  duplicates <- c(x[base::duplicated(x)], x[base::duplicated(names(x))]) 
+  duplicates <- c(x[duplicated(x)], x[duplicated(names(x))]) 
   duplicates <- duplicates[unique(names(duplicates))]
   x <- c(x[!names(x) %in% names(duplicates)], duplicates)
   x <- x[order(names(x), x)]
   
   # succeeded with auto-guessing
-  message(font_blue("OK."))
+  if (info == TRUE) {
+    message(font_blue("OK."))
+  }
   
   for (i in seq_len(length(x))) {
-    if (verbose == TRUE & !names(x[i]) %in% names(duplicates)) {
+    if (info == TRUE & verbose == TRUE & !names(x[i]) %in% names(duplicates)) {
       message(font_blue(paste0("NOTE: Using column `", font_bold(x[i]), "` as input for `", names(x)[i],
                                "` (", ab_name(names(x)[i], tolower = TRUE, language = NULL), ").")))
     }
-    if (names(x[i]) %in% names(duplicates)) {
+    if (info == TRUE & names(x[i]) %in% names(duplicates)) {
       warning(font_red(paste0("Using column `", font_bold(x[i]), "` as input for `", names(x)[i],
                               "` (", ab_name(names(x)[i], tolower = TRUE, language = NULL),
                               "), although it was matched for multiple antibiotics or columns.")), 
@@ -206,14 +219,19 @@ get_column_abx <- function(x,
   }
   if (!is.null(soft_dependencies)) {
     soft_dependencies <- unique(soft_dependencies)
-    if (!all(soft_dependencies %in% names(x))) {
+    if (info == TRUE & !all(soft_dependencies %in% names(x))) {
       # missing a soft dependency may lower the reliability
       missing <- soft_dependencies[!soft_dependencies %in% names(x)]
-      missing_txt <- paste(paste0(ab_name(missing, tolower = TRUE, language = NULL), 
-                                  " (", font_bold(missing, collapse = NULL), ")"), 
+      missing_msg <- paste(paste0(ab_name(missing, tolower = TRUE, language = NULL), 
+                                  " (", missing, ")"), 
                            collapse = ", ")
-      message(font_blue("NOTE: Reliability would be improved if these antimicrobial results would be available too:",
-                        missing_txt))
+      missing_msg <- paste("NOTE: Reliability would be improved if these antimicrobial results would be available too:",
+                           missing_msg)
+      wrapped <- strwrap(missing_msg,
+                         width = 0.95 * getOption("width"),
+                         exdent = 6)
+      wrapped <- gsub("\\((.*?)\\)", paste0("(", font_bold("\\1"), ")"), wrapped) # add bold abbreviations
+      message(font_blue(wrapped, collapse = "\n"))
     }
   }
   x

@@ -1,22 +1,26 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' Calculate microbial resistance
@@ -29,7 +33,7 @@
 #' @param minimum the minimum allowed number of available (tested) isolates. Any isolate count lower than `minimum` will return `NA` with a warning. The default number of `30` isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see Source.
 #' @param as_percent a logical to indicate whether the output must be returned as a hundred fold with % sign (a character). A value of `0.123456` will then be returned as `"12.3%"`.
 #' @param only_all_tested (for combination therapies, i.e. using more than one variable for `...`): a logical to indicate that isolates must be tested for all antibiotics, see section *Combination therapy* below
-#' @param data a [`data.frame`] containing columns with class [`rsi`] (see [as.rsi()])
+#' @param data a [data.frame] containing columns with class [`rsi`] (see [as.rsi()])
 #' @param translate_ab a column name of the [antibiotics] data set to translate the antibiotic abbreviations to, using [ab_property()]. Use a value 
 #' @inheritParams ab_property
 #' @param combine_SI a logical to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant). This used to be the parameter `combine_IR`, but this now follows the redefinition by EUCAST about the interpretion of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. Default is `TRUE`.
@@ -44,7 +48,7 @@
 #'
 #' The function [proportion_df()] takes any variable from `data` that has an [`rsi`] class (created with [as.rsi()]) and calculates the proportions R, I and S. It also supports grouped variables. The function [rsi_df()] works exactly like [proportion_df()], but adds the number of isolates.
 #' @section Combination therapy:
-#' When using more than one variable for `...` (= combination therapy)), use `only_all_tested` to only count isolates that are tested for all antibiotics/variables that you test them for. See this example for two antibiotics, Drug A and Drug B, about how [susceptibility()] works to calculate the %SI:
+#' When using more than one variable for `...` (= combination therapy), use `only_all_tested` to only count isolates that are tested for all antibiotics/variables that you test them for. See this example for two antibiotics, Drug A and Drug B, about how [susceptibility()] works to calculate the %SI:
 #'
 #' ```
 #' --------------------------------------------------------------------
@@ -79,7 +83,7 @@
 #' Using `only_all_tested` has no impact when only using one antibiotic as input.
 #' @source **M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 4th Edition**, 2014, *Clinical and Laboratory Standards Institute (CLSI)*. <https://clsi.org/standards/products/microbiology/documents/m39/>.
 #' @seealso [AMR::count()] to count resistant and susceptible isolates.
-#' @return A [`double`] or, when `as_percent = TRUE`, a [`character`].
+#' @return A [double] or, when `as_percent = TRUE`, a [character].
 #' @rdname proportion
 #' @aliases portion
 #' @name proportion
@@ -156,15 +160,6 @@
 #'     select(hospital_id, AMX, CIP) %>%
 #'     group_by(hospital_id) %>%
 #'     proportion_df(translate = FALSE)
-#' }
-#' 
-#' \dontrun{  
-#'   # calculate current empiric combination therapy of Helicobacter gastritis:
-#'   my_table %>%
-#'     filter(first_isolate == TRUE,
-#'            genus == "Helicobacter") %>%
-#'     summarise(p = susceptibility(AMX, MTR),  # amoxicillin with metronidazole
-#'               n = count_all(AMX, MTR))
 #' }
 resistance <- function(...,
                        minimum = 30,

@@ -1,22 +1,26 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
 #' The Catalogue of Life
@@ -80,7 +84,7 @@ NULL
 #' This function returns information about the included data from the Catalogue of Life.
 #' @seealso [microorganisms]
 #' @details For DSMZ, see [microorganisms].
-#' @return a [`list`], which prints in pretty format
+#' @return a [list], which prints in pretty format
 #' @inheritSection catalogue_of_life Catalogue of Life
 #' @inheritSection AMR Read more on our website!
 #' @export
@@ -92,12 +96,12 @@ catalogue_of_life_version <- function() {
   lst <- list(catalogue_of_life =
                 list(version = gsub("{year}", catalogue_of_life$year, catalogue_of_life$version, fixed = TRUE),
                      url = gsub("{year}", catalogue_of_life$year, catalogue_of_life$url_CoL, fixed = TRUE),
-                     n = nrow(filter(microorganisms, source == "CoL"))),
+                     n = nrow(pm_filter(microorganisms, source == "CoL"))),
               deutsche_sammlung_von_mikroorganismen_und_zellkulturen =
                 list(version = "Prokaryotic Nomenclature Up-to-Date from DSMZ",
                      url = catalogue_of_life$url_DSMZ,
                      yearmonth = catalogue_of_life$yearmonth_DSMZ,
-                     n = nrow(filter(microorganisms, source == "DSMZ"))),
+                     n = nrow(pm_filter(microorganisms, source == "DSMZ"))),
               total_included =
                 list(
                   n_total_species = nrow(microorganisms),

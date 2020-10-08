@@ -1,5 +1,78 @@
-# AMR 1.3.0
+# AMR 1.4.0
 
+
+Note: some changes in this version were suggested by anonymous reviewers from the journal we submitted our manuscipt about this package to. We are those reviewers very grateful for going through our code so thoroughly!
+
+### New
+* Support for 'EUCAST Expert Rules' / 'EUCAST Intrinsic Resistance and Unusual Phenotypes' version 3.2 of May 2020. With this addition to the previously implemented version 3.1 of 2016, the `eucast_rules()` function can now correct for more than 180 different antibiotics and the `mdro()` function can determine multidrug resistance based on more than 150 different antibiotics. All previously implemented versions of the EUCAST rules are now maintained and kept available in this package. The `eucast_rules()` function consequently gained the parameters `version_breakpoints` (at the moment defaults to v10.0, 2020) and `version_expertrules` (at the moment defaults to v3.2, 2020). The `example_isolates` data set now also reflects the change from v3.1 to v3.2. The `mdro()` function now accepts `guideline == "EUCAST3.1"` and `guideline == "EUCAST3.2"`.
+* A new vignette and website page with info about all our public and freely available data sets, that can be downloaded as flat files or in formats for use in R, SPSS, SAS, Stata and Excel: https://msberends.github.io/AMR/articles/datasets.html
+* Data set `intrinsic_resistant`. This data set contains all bug-drug combinations where the 'bug' is intrinsic resistant to the 'drug' according to the latest EUCAST insights. It contains just two columns: `microorganism` and `antibiotic`.
+
+  Curious about which enterococci are actually intrinsic resistant to vancomycin?
+  ```r
+  library(AMR)
+  library(dplyr)
+  intrinsic_resistant %>%
+    filter(antibiotic == "Vancomycin", microorganism %like% "Enterococcus") %>% 
+    pull(microorganism)
+  #> [1] "Enterococcus casseliflavus" "Enterococcus gallinarum"   
+  ```
+* Support for veterinary ATC codes
+* Support for skimming classes `<rsi>`, `<mic>`, `<disk>` and `<mo>` with the `skimr` package 
+
+### Changed
+* Although advertised that this package should work under R 3.0.0, we still had a dependency on R 3.6.0. This is fixed, meaning that our package should now work under R 3.0.0.
+* Improvements for `as.rsi()`:
+  * Support for using `dplyr`'s `across()` to interpret MIC values or disk zone diameters, which also automatically determines the column with microorganism names or codes.
+    ```r
+    # until dplyr 1.0.0
+    your_data %>% mutate_if(is.mic, as.rsi)
+    your_data %>% mutate_if(is.disk, as.rsi)
+  
+    # since dplyr 1.0.0
+    your_data %>% mutate(across(where(is.mic), as.rsi))
+    your_data %>% mutate(across(where(is.disk), as.rsi))
+    ```
+  * Cleaning columns in a data.frame now allows you to specify those columns with tidy selection, e.g. `as.rsi(df, col1:col9)`
+  * Big speed improvement for interpreting MIC values and disk zone diameters. When interpreting 5,000 MIC values of two antibiotics (10,000 values in total), our benchmarks showed a total run time going from 80.7-85.1 seconds to 1.8-2.0 seconds.
+  * Added parameter 'add_intrinsic_resistance' (defaults to `FALSE`), that considers intrinsic resistance according to EUCAST
+  * Fixed a bug where in EUCAST rules the breakpoint for R would be interpreted as ">=" while this should have been "<"
+* Added intelligent data cleaning to `as.disk()`, so numbers can also be extracted from text and decimal numbers will always be rounded up:
+  ```r
+  as.disk(c("disk zone: 23.4 mm", 23.4))
+  #> Class <disk>
+  #> [1] 24 24
+  ```
+* Improvements for `as.mo()`:
+  * A completely new matching score for ambiguous user input, using `mo_matching_score()`. Any user input value that could mean more than one taxonomic entry is now considered 'uncertain'. Instead of a warning, a message will be thrown and the accompanying `mo_uncertainties()` has been changed completely; it now prints all possible candidates with their matching score.
+  * Big speed improvement for already valid microorganism ID. This also means an significant speed improvement for using `mo_*` functions like `mo_name()` on microoganism IDs.
+  * Added parameter `ignore_pattern` to `as.mo()` which can also be given to `mo_*` functions like `mo_name()`, to exclude known non-relevant input from analysing. This can also be set with the option `AMR_ignore_pattern`.
+* `get_locale()` now uses at default `Sys.getenv("LANG")` or, if `LANG` is not set, `Sys.getlocale()`. This can be overwritten by setting the option `AMR_locale`.
+* Big speed improvement for `eucast_rules()`
+* Overall speed improvement by tweaking joining functions
+* Function `mo_shortname()` now returns the genus for input where the species is unknown
+* BORSA is now recognised as an abbreviation for *Staphylococcus aureus*, meaning that e.g. `mo_genus("BORSA")` will return "Staphylococcus"
+* Added a feature from AMR 1.1.0 and earlier again, but now without other package dependencies: `tibble` printing support for classes `<rsi>`, `<mic>`, `<disk>`, `<ab>` and `<mo>`. When using `tibble`s containing antimicrobial columns (class `<rsi>`), "S" will print in green, "I" will print in yellow and "R" will print in red. Microbial IDs (class `<mo>`) will emphasise on the genus and species, not on the kingdom.
+* Names of antiviral agents in data set `antivirals` now have a starting capital letter, like it is the case in the `antibiotics` data set
+* Updated the documentation of the `WHONET` data set to clarify that all patient names are fictitious
+* Small `as.ab()` algorithm improvements
+* Fix for combining MIC values with raw numbers, i.e. `c(as.mic(2), 2)` previously failed but now returns a valid MIC class
+* `ggplot_rsi()` and `geom_rsi()` gained parameters `minimum` and `language`, to influence the internal use of `rsi_df()`
+* Changes in the `antibiotics` data set:
+  * Updated oral and parental DDDs from the WHOCC
+  * Added abbreviation "piptazo" to 'Piperacillin/tazobactam' (TZP)
+  * 'Penicillin G' (for intravenous use) is now named 'Benzylpenicillin' (code `PEN`)
+  * 'Penicillin V' (for oral use, code `PNV`) was removed, since its actual entry 'Phenoxymethylpenicillin' (code `PHN`) already existed
+  * The group name (`antibiotics$group`) of 'Linezolid' (`LNZ`), 'Cycloserine' (`CYC`), 'Tedizolid' (`TZD`) and 'Thiacetazone' (`THA`) is now "Oxazolidinones" instead of "Other antibacterials"
+* Added support for using `unique()` on classes `<rsi>`, `<mic>`, `<disk>`, `<ab>` and `<mo>`
+* Added parameter `excess` to the `kurtosis()` function (defaults to `FALSE`), to return the *excess kurtosis*, defined as the kurtosis minus three.
+
+### Other
+* Removed functions `portion_R()`, `portion_S()` and `portion_I()` that were deprecated since version 0.9.0 (November 2019) and were replaced with `proportion_R()`, `proportion_S()` and `proportion_I()`
+* Removed unnecessary references to the `base` package
+* Added packages that could be useful for some functions to the `Suggests` field of the `DESCRIPTION` file
+
+# AMR 1.3.0
 
 ### New
 * Function `ab_from_text()` to retrieve antimicrobial drug names, doses and forms of administration from clinical texts in e.g. health care records, which also corrects for misspelling since it uses `as.ab()` internally
@@ -61,8 +134,8 @@
   
   Negative effects of this change are:
   * Function `freq()` that was borrowed from the `cleaner` package was removed. Use `cleaner::freq()`, or run `library("cleaner")` before you use `freq()`.
-  * Printing values of class `mo` or `rsi` in a tibble will no longer be in colour and printing `rsi` in a tibble will show the class `<ord>`, not `<rsi>` anymore. This is purely a visual effect.
-  * All functions from the `mo_*` family (like `mo_name()` and `mo_gramstain()`) are noticeably slower when running on hundreds of thousands of rows.
+  * ~~Printing values of class `mo` or `rsi` in a tibble will no longer be in colour and printing `rsi` in a tibble will show the class `<ord>`, not `<rsi>` anymore. This is purely a visual effect.~~
+  * ~~All functions from the `mo_*` family (like `mo_name()` and `mo_gramstain()`) are noticeably slower when running on hundreds of thousands of rows.~~
   * For developers: classes `mo` and `ab` now both also inherit class `character`, to support any data transformation. This change invalidates code that checks for class length == 1.
 
 ### Changed
@@ -133,7 +206,7 @@
 This software is now out of beta and considered stable. Nonetheless, this package will be developed continually.
 
 ### New
-* Support for the newest [EUCAST Clinical Breakpoint Tables v.10.0](http://www.eucast.org/clinical_breakpoints/), valid from 1 January 2020. This affects translation of MIC and disk zones using `as.rsi()` and inferred resistance and susceptibility using `eucast_rules()`.
+* Support for the newest [EUCAST Clinical Breakpoint Tables v.10.0](https://www.eucast.org/clinical_breakpoints/), valid from 1 January 2020. This affects translation of MIC and disk zones using `as.rsi()` and inferred resistance and susceptibility using `eucast_rules()`.
 * The repository of this package now contains a clean version of the EUCAST and CLSI guidelines from 2011-2020 to translate MIC and disk diffusion values to R/SI: <https://github.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt>. This **allows for machine reading these guidelines**, which is almost impossible with the Excel and PDF files distributed by EUCAST and CLSI. This file used to process the EUCAST Clinical Breakpoints Excel file [can be found here](https://github.com/msberends/AMR/blob/master/data-raw/read_EUCAST.R).
 * Support for LOINC and SNOMED codes
   * Support for LOINC codes in the `antibiotics` data set. Use `ab_loinc()` to retrieve LOINC codes, or use a LOINC code for input in any `ab_*` function:
@@ -179,7 +252,7 @@ This software is now out of beta and considered stable. Nonetheless, this packag
 # AMR 0.9.0
 
 ### Breaking
-* Adopted Adeolu *et al.* (2016), [PMID 27620848](https://www.ncbi.nlm.nih.gov/pubmed/27620848) for the `microorganisms` data set, which means that the new order Enterobacterales now consists of a part of the existing family Enterobacteriaceae, but that this family has been split into other families as well (like *Morganellaceae* and *Yersiniaceae*). Although published in 2016, this information is not yet in the Catalogue of Life version of 2019. All MDRO determinations with `mdro()` will now use the Enterobacterales order for all guidelines before 2016 that were dependent on the Enterobacteriaceae family.
+* Adopted Adeolu *et al.* (2016), [PMID 27620848](https:/pubmed.ncbi.nlm.nih.gov/27620848/) for the `microorganisms` data set, which means that the new order Enterobacterales now consists of a part of the existing family Enterobacteriaceae, but that this family has been split into other families as well (like *Morganellaceae* and *Yersiniaceae*). Although published in 2016, this information is not yet in the Catalogue of Life version of 2019. All MDRO determinations with `mdro()` will now use the Enterobacterales order for all guidelines before 2016 that were dependent on the Enterobacteriaceae family.
   * If you were dependent on the old Enterobacteriaceae family e.g. by using in your code:
     ```r
     if (mo_family(somebugs) == "Enterobacteriaceae") ...
@@ -518,7 +591,7 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
   * Due to this change, some `mo` codes changed (e.g. *Streptococcus* changed from `B_STRPTC` to `B_STRPT`). A translation table is  used internally to support older microorganism IDs, so users will not notice this difference.
   * New function `mo_rank()` for the taxonomic rank (genus, species, infraspecies, etc.)
   * New function `mo_url()` to get the direct URL of a species from the Catalogue of Life
-* Support for data from [WHONET](https://whonet.org/) and [EARS-Net](https://ecdc.europa.eu/en/about-us/partnerships-and-networks/disease-and-laboratory-networks/ears-net) (European Antimicrobial Resistance Surveillance Network):
+* Support for data from [WHONET](https://whonet.org/) and [EARS-Net](https://www.ecdc.europa.eu/en/about-us/partnerships-and-networks/disease-and-laboratory-networks/ears-net) (European Antimicrobial Resistance Surveillance Network):
   * Exported files from WHONET can be read and used in this package. For functions like `first_isolate()` and `eucast_rules()`, all parameters will be filled in automatically.
   * This package now knows all antibiotic abbrevations by EARS-Net (which are also being used by WHONET) - the `antibiotics` data set now contains a column `ears_net`.
   * The function `as.mo()` now knows all WHONET species abbreviations too, because almost 2,000 microbial abbreviations were added to the `microorganisms.codes` data set.
@@ -587,7 +660,7 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
 
 #### Changed
 * Function `eucast_rules()`:
-  * Updated EUCAST Clinical breakpoints to [version 9.0 of 1 January 2019](http://www.eucast.org/clinical_breakpoints/), the data set `septic_patients` now reflects these changes
+  * Updated EUCAST Clinical breakpoints to [version 9.0 of 1 January 2019](https://www.eucast.org/clinical_breakpoints/), the data set `septic_patients` now reflects these changes
   * Fixed a critical bug where some rules that depend on previous applied rules would not be applied adequately
   * Emphasised in manual that penicillin is meant as benzylpenicillin (ATC [J01CE01](https://www.whocc.no/atc_ddd_index/?code=J01CE01))
   * New info is returned when running this function, stating exactly what has been changed or added. Use `eucast_rules(..., verbose = TRUE)` to get a data set with all changed per bug and drug combination.
@@ -703,7 +776,7 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
 * Functions `MDRO`, `BRMO`, `MRGN` and `EUCAST_exceptional_phenotypes` were renamed to `mdro`, `brmo`, `mrgn` and `eucast_exceptional_phenotypes`
 * `EUCAST_rules` was renamed to `eucast_rules`, the old function still exists as a deprecated function
 * Big changes to the `eucast_rules` function:
-  * Now also applies rules from the EUCAST 'Breakpoint tables for bacteria', version 8.1, 2018, http://www.eucast.org/clinical_breakpoints/ (see Source of the function)
+  * Now also applies rules from the EUCAST 'Breakpoint tables for bacteria', version 8.1, 2018, https://www.eucast.org/clinical_breakpoints/ (see Source of the function)
   * New parameter `rules` to specify which rules should be applied (expert rules, breakpoints, others or all)
   * New parameter `verbose` which can be set to `TRUE` to get very specific messages about which columns and rows were affected
   * Better error handling when rules cannot be applied (i.e. new values could not be inserted)
@@ -963,7 +1036,7 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
 * Function `guess_atc` to **determine the ATC** of an antibiotic based on name, trade name, or known abbreviations
 * Function `freq` to create **frequency tables**, with additional info in a header
 * Function `MDRO` to **determine Multi Drug Resistant Organisms (MDRO)** with support for country-specific guidelines.
-  * [Exceptional resistances defined by EUCAST](http://www.eucast.org/expert_rules_and_intrinsic_resistance) are also supported instead of countries alone
+  * [Exceptional resistances defined by EUCAST](https://www.eucast.org/expert_rules_and_intrinsic_resistance/) are also supported instead of countries alone
   * Functions `BRMO` and `MRGN` are wrappers for Dutch and German guidelines, respectively
 * New algorithm to determine weighted isolates, can now be `"points"` or `"keyantibiotics"`, see `?first_isolate`
 * New print format for `tibble`s and `data.table`s

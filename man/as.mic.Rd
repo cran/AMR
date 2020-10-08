@@ -4,7 +4,7 @@
 \alias{as.mic}
 \alias{mic}
 \alias{is.mic}
-\title{Class 'mic'}
+\title{Transform input to minimum inhibitory concentrations (MIC)}
 \usage{
 as.mic(x, na.rm = FALSE)
 
@@ -16,10 +16,10 @@ is.mic(x)
 \item{na.rm}{a logical indicating whether missing values should be removed}
 }
 \value{
-Ordered \code{\link{factor}} with new class \code{\link{mic}}
+Ordered \link{factor} with additional class \code{\link{mic}}
 }
 \description{
-This transforms a vector to a new class \code{\link{mic}}, which is an ordered \code{\link{factor}} with valid MIC values as levels. Invalid MIC values will be translated as \code{NA} with a warning.
+This transforms a vector to a new class \code{\link{mic}}, which is an ordered \link{factor} with valid minimum inhibitory concentrations (MIC) as levels. Invalid MIC values will be translated as \code{NA} with a warning.
 }
 \details{
 To interpret MIC values as RSI values, use \code{\link[=as.rsi]{as.rsi()}} on MIC values. It supports guidelines from EUCAST and CLSI.
@@ -34,7 +34,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{

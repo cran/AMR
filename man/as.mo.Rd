@@ -7,7 +7,7 @@
 \alias{mo_failures}
 \alias{mo_uncertainties}
 \alias{mo_renamed}
-\title{Transform to microorganism ID}
+\title{Transform input to a microorganism ID}
 \usage{
 as.mo(
   x,
@@ -15,6 +15,8 @@ as.mo(
   Lancefield = FALSE,
   allow_uncertain = TRUE,
   reference_df = get_mo_source(),
+  ignore_pattern = getOption("AMR_ignore_pattern"),
+  language = get_locale(),
   ...
 )
 
@@ -27,7 +29,7 @@ mo_uncertainties()
 mo_renamed()
 }
 \arguments{
-\item{x}{a character vector or a \code{\link{data.frame}} with one or two columns}
+\item{x}{a character vector or a \link{data.frame} with one or two columns}
 
 \item{Becker}{a logical to indicate whether \emph{Staphylococci} should be categorised into coagulase-negative \emph{Staphylococci} ("CoNS") and coagulase-positive \emph{Staphylococci} ("CoPS") instead of their own species, according to Karsten Becker \emph{et al.} (1,2). Note that this does not include species that were newly named after these publications, like \emph{S. caeli}.
 
@@ -39,12 +41,16 @@ This excludes \emph{Enterococci} at default (who are in group D), use \code{Lanc
 
 \item{allow_uncertain}{a number between \code{0} (or \code{"none"}) and \code{3} (or \code{"all"}), or \code{TRUE} (= \code{2}) or \code{FALSE} (= \code{0}) to indicate whether the input should be checked for less probable results, please see \emph{Details}}
 
-\item{reference_df}{a \code{\link{data.frame}} to be used for extra reference when translating \code{x} to a valid \code{\link{mo}}. See \code{\link[=set_mo_source]{set_mo_source()}} and \code{\link[=get_mo_source]{get_mo_source()}} to automate the usage of your own codes (e.g. used in your analysis or organisation).}
+\item{reference_df}{a \link{data.frame} to be used for extra reference when translating \code{x} to a valid \code{\link{mo}}. See \code{\link[=set_mo_source]{set_mo_source()}} and \code{\link[=get_mo_source]{get_mo_source()}} to automate the usage of your own codes (e.g. used in your analysis or organisation).}
+
+\item{ignore_pattern}{a regular expression (case-insensitive) of which all matches in \code{x} must return \code{NA}. This can be convenient to exclude known non-relevant input and can also be set with the option \code{AMR_ignore_pattern}, e.g. \code{options(AMR_ignore_pattern = "(not reported|contaminated flora)")}.}
+
+\item{language}{language to translate text like "no growth", which defaults to the system language (see \code{\link[=get_locale]{get_locale()}})}
 
 \item{...}{other parameters passed on to functions}
 }
 \value{
-A \code{\link{character}} \code{\link{vector}} with additional class \code{\link{mo}}
+A \link{character} \link{vector} with additional class \code{\link{mo}}
 }
 \description{
 Use this function to determine a valid microorganism ID (\code{\link{mo}}). Determination is done using intelligent rules and the complete taxonomic kingdoms Bacteria, Chromista, Protozoa, Archaea and most microbial species from the kingdom Fungi (see Source). The input can be almost anything: a full name (like \code{"Staphylococcus aureus"}), an abbreviated name (like \code{"S. aureus"}), an abbreviation known in the field (like \code{"MRSA"}), or just a genus. Please see \emph{Examples}.
@@ -52,17 +58,17 @@ Use this function to determine a valid microorganism ID (\code{\link{mo}}). Dete
 \details{
 \subsection{General info}{
 
-A microorganism ID from this package (class: \code{\link{mo}}) typically looks like these examples:\preformatted{  Code               Full name
+A microorganism ID from this package (class: \code{\link{mo}}) is human readable and typically looks like these examples:\preformatted{  Code               Full name
   ---------------    --------------------------------------
   B_KLBSL            Klebsiella
   B_KLBSL_PNMN       Klebsiella pneumoniae
   B_KLBSL_PNMN_RHNS  Klebsiella pneumoniae rhinoscleromatis
   |   |    |    |
   |   |    |    |
-  |   |    |     ---> subspecies, a 4-5 letter acronym
-  |   |     ----> species, a 4-5 letter acronym
-  |    ----> genus, a 5-7 letter acronym
-   ----> taxonomic kingdom: A (Archaea), AN (Animalia), B (Bacteria),
+  |   |    |    \\---> subspecies, a 4-5 letter acronym
+  |   |    \\----> species, a 4-5 letter acronym
+  |   \\----> genus, a 5-7 letter acronym
+  \\----> taxonomic kingdom: A (Archaea), AN (Animalia), B (Bacteria),
                             C (Chromista), F (Fungi), P (Protozoa)
 }
 
@@ -103,21 +109,15 @@ With the default setting (\code{allow_uncertain = TRUE}, level 2), below example
 
 There are three helper functions that can be run after using the \code{\link[=as.mo]{as.mo()}} function:
 \itemize{
-\item Use \code{\link[=mo_uncertainties]{mo_uncertainties()}} to get a \code{\link{data.frame}} with all values that were coerced to a valid value, but with uncertainty. The output contains a score, that is calculated as \eqn{(n - 0.5 * L) / n}, where \emph{n} is the number of characters of the full taxonomic name of the microorganism, and \emph{L} is the \href{https://en.wikipedia.org/wiki/Levenshtein_distance}{Levenshtein distance} between that full name and the user input.
-\item Use \code{\link[=mo_failures]{mo_failures()}} to get a \code{\link{character}} \code{\link{vector}} with all values that could not be coerced to a valid value.
-\item Use \code{\link[=mo_renamed]{mo_renamed()}} to get a \code{\link{data.frame}} with all values that could be coerced based on old, previously accepted taxonomic names.
+\item Use \code{\link[=mo_uncertainties]{mo_uncertainties()}} to get a \link{data.frame} that prints in a pretty format with all taxonomic names that were guessed. The output contains the matching score for all matches (see \emph{Background on matching score}).
+\item Use \code{\link[=mo_failures]{mo_failures()}} to get a \link{character} \link{vector} with all values that could not be coerced to a valid value.
+\item Use \code{\link[=mo_renamed]{mo_renamed()}} to get a \link{data.frame} with all values that could be coerced based on old, previously accepted taxonomic names.
 }
 }
 
 \subsection{Microbial prevalence of pathogens in humans}{
 
-The intelligent rules consider the prevalence of microorganisms in humans grouped into three groups, which is available as the \code{prevalence} columns in the \link{microorganisms} and \link{microorganisms.old} data sets. The grouping into prevalence groups is based on experience from several microbiological laboratories in the Netherlands in conjunction with international reports on pathogen prevalence.
-
-Group 1 (most prevalent microorganisms) consists of all microorganisms where the taxonomic class is Gammaproteobacteria or where the taxonomic genus is  \emph{Enterococcus}, \emph{Staphylococcus} or \emph{Streptococcus}. This group consequently contains all common Gram-negative bacteria, such as \emph{Klebsiella}, \emph{Pseudomonas} and \emph{Legionella}.
-
-Group 2 consists of all microorganisms where the taxonomic phylum is Proteobacteria, Firmicutes, Actinobacteria or Sarcomastigophora, or where the taxonomic genus is \emph{Aspergillus}, \emph{Bacteroides}, \emph{Candida}, \emph{Capnocytophaga}, \emph{Chryseobacterium}, \emph{Cryptococcus}, \emph{Elisabethkingia}, \emph{Flavobacterium}, \emph{Fusobacterium}, \emph{Giardia}, \emph{Leptotrichia}, \emph{Mycoplasma}, \emph{Prevotella}, \emph{Rhodotorula}, \emph{Treponema}, \emph{Trichophyton} or \emph{Ureaplasma}. This group consequently contains all less common and rare human pathogens.
-
-Group 3 (least prevalent microorganisms) consists of all other microorganisms. This group contains microorganisms most probably not found in humans.
+The intelligent rules consider the prevalence of microorganisms in humans grouped into three groups, which is available as the \code{prevalence} columns in the \link{microorganisms} and \link{microorganisms.old} data sets. The grouping into human pathogenic prevalence is explained in the section \emph{Matching score for microorganisms} below.
 }
 }
 \section{Source}{
@@ -138,6 +138,27 @@ The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stabl
 If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
+\section{Matching score for microorganisms}{
+
+With ambiguous user input in \code{\link[=as.mo]{as.mo()}} and all the \code{\link[=mo_property]{mo_*}} functions, the returned results are chosen based on their matching score using \code{\link[=mo_matching_score]{mo_matching_score()}}. This matching score \eqn{m}, is calculated as:
+
+\deqn{m_{(x, n)} = \frac{l_{n} - 0.5 \cdot \min \begin{cases}l_{n} \\ \textrm{lev}(x, n)\end{cases}}{l_{n} \cdot p_{n} \cdot k_{n}}}{m(x, n) = ( l_n * min(l_n, lev(x, n) ) ) / ( l_n * p_n * k_n )}
+
+where:
+\itemize{
+\item \eqn{x} is the user input;
+\item \eqn{n} is a taxonomic name (genus, species, and subspecies);
+\item \eqn{l_n}{l_n} is the length of \eqn{n};
+\item lev is the \href{https://en.wikipedia.org/wiki/Levenshtein_distance}{Levenshtein distance function}, which counts any insertion, deletion and substitution as 1 that is needed to change \eqn{x} into \eqn{n};
+\item \eqn{p_n}{p_n} is the human pathogenic prevalence group of \eqn{n}, as described below;
+\item \eqn{k_n}{p_n} is the taxonomic kingdom of \eqn{n}, set as Bacteria = 1, Fungi = 2, Protozoa = 3, Archaea = 4, others = 5.
+}
+
+The grouping into human pathogenic prevalence (\eqn{p}) is based on experience from several microbiological laboratories in the Netherlands in conjunction with international reports on pathogen prevalence. \strong{Group 1} (most prevalent microorganisms) consists of all microorganisms where the taxonomic class is Gammaproteobacteria or where the taxonomic genus is \emph{Enterococcus}, \emph{Staphylococcus} or \emph{Streptococcus}. This group consequently contains all common Gram-negative bacteria, such as \emph{Pseudomonas} and \emph{Legionella} and all species within the order Enterobacterales. \strong{Group 2} consists of all microorganisms where the taxonomic phylum is Proteobacteria, Firmicutes, Actinobacteria or Sarcomastigophora, or where the taxonomic genus is \emph{Absidia}, \emph{Acremonium}, \emph{Actinotignum}, \emph{Alternaria}, \emph{Anaerosalibacter}, \emph{Apophysomyces}, \emph{Arachnia}, \emph{Aspergillus}, \emph{Aureobacterium}, \emph{Aureobasidium}, \emph{Bacteroides}, \emph{Basidiobolus}, \emph{Beauveria}, \emph{Blastocystis}, \emph{Branhamella}, \emph{Calymmatobacterium}, \emph{Candida}, \emph{Capnocytophaga}, \emph{Catabacter}, \emph{Chaetomium}, \emph{Chryseobacterium}, \emph{Chryseomonas}, \emph{Chrysonilia}, \emph{Cladophialophora}, \emph{Cladosporium}, \emph{Conidiobolus}, \emph{Cryptococcus}, \emph{Curvularia}, \emph{Exophiala}, \emph{Exserohilum}, \emph{Flavobacterium}, \emph{Fonsecaea}, \emph{Fusarium}, \emph{Fusobacterium}, \emph{Hendersonula}, \emph{Hypomyces}, \emph{Koserella}, \emph{Lelliottia}, \emph{Leptosphaeria}, \emph{Leptotrichia}, \emph{Malassezia}, \emph{Malbranchea}, \emph{Mortierella}, \emph{Mucor}, \emph{Mycocentrospora}, \emph{Mycoplasma}, \emph{Nectria}, \emph{Ochroconis}, \emph{Oidiodendron}, \emph{Phoma}, \emph{Piedraia}, \emph{Pithomyces}, \emph{Pityrosporum}, \emph{Prevotella},\\\emph{Pseudallescheria}, \emph{Rhizomucor}, \emph{Rhizopus}, \emph{Rhodotorula}, \emph{Scolecobasidium}, \emph{Scopulariopsis}, \emph{Scytalidium},\emph{Sporobolomyces}, \emph{Stachybotrys}, \emph{Stomatococcus}, \emph{Treponema}, \emph{Trichoderma}, \emph{Trichophyton}, \emph{Trichosporon}, \emph{Tritirachium} or \emph{Ureaplasma}. \strong{Group 3} consists of all other microorganisms.
+
+All matches are sorted descending on their matching score and for all user input values, the top match will be returned. This will lead to the effect that e.g., \code{"E. coli"} will return the microbial ID of \emph{Escherichia coli} (\eqn{m = 0.688}, a highly prevalent microorganism found in humans) and not \emph{Entamoeba coli} (\eqn{m = 0.079}, a less prevalent microorganism in humans), although the latter would alphabetically come first.
+}
+
 \section{Catalogue of Life}{
 
 \if{html}{\figure{logo_col.png}{options: height=40px style=margin-bottom:5px} \cr}
@@ -146,9 +167,14 @@ This package contains the complete taxonomic tree of almost all microorganisms (
 \link[=catalogue_of_life]{Click here} for more information about the included taxa. Check which version of the Catalogue of Life was included in this package with \code{\link[=catalogue_of_life_version]{catalogue_of_life_version()}}.
 }
 
+\section{Reference data publicly available}{
+
+All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
+}
+
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
@@ -187,28 +213,10 @@ as.mo("S. pyogenes", Lancefield = TRUE) # will not remain species: B_STRPT_GRPA
 # All mo_* functions use as.mo() internally too (see ?mo_property):
 mo_genus("E. coli")           # returns "Escherichia"
 mo_gramstain("E. coli")       # returns "Gram negative"
-
-}
-\dontrun{
-df$mo <- as.mo(df$microorganism_name)
-
-# the select function of the Tidyverse is also supported:
-library(dplyr)
-df$mo <- df \%>\%
-  select(microorganism_name) \%>\%
-  as.mo()
-
-# and can even contain 2 columns, which is convenient for genus/species combinations:
-df$mo <- df \%>\%
-  select(genus, species) \%>\%
-  as.mo()
-# although this works easier and does the same:
-df <- df \%>\%
-  mutate(mo = as.mo(paste(genus, species)))
 }
 }
 \seealso{
-\link{microorganisms} for the \code{\link{data.frame}} that is being used to determine ID's.
+\link{microorganisms} for the \link{data.frame} that is being used to determine ID's.
 
 The \code{\link[=mo_property]{mo_property()}} functions (like \code{\link[=mo_genus]{mo_genus()}}, \code{\link[=mo_gramstain]{mo_gramstain()}}) to get properties based on the returned code.
 }

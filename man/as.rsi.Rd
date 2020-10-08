@@ -8,7 +8,7 @@
 \alias{as.rsi.mic}
 \alias{as.rsi.disk}
 \alias{as.rsi.data.frame}
-\title{Class 'rsi'}
+\title{Interpret MIC and disk values, or clean raw R/SI data}
 \usage{
 as.rsi(x, ...)
 
@@ -18,40 +18,43 @@ is.rsi.eligible(x, threshold = 0.05)
 
 \method{as.rsi}{mic}(
   x,
-  mo,
+  mo = NULL,
   ab = deparse(substitute(x)),
   guideline = "EUCAST",
   uti = FALSE,
   conserve_capped_values = FALSE,
+  add_intrinsic_resistance = FALSE,
   ...
 )
 
 \method{as.rsi}{disk}(
   x,
-  mo,
+  mo = NULL,
   ab = deparse(substitute(x)),
   guideline = "EUCAST",
   uti = FALSE,
+  add_intrinsic_resistance = FALSE,
   ...
 )
 
 \method{as.rsi}{data.frame}(
   x,
+  ...,
   col_mo = NULL,
   guideline = "EUCAST",
   uti = NULL,
   conserve_capped_values = FALSE,
-  ...
+  add_intrinsic_resistance = FALSE
 )
 }
 \arguments{
 \item{x}{vector of values (for class \code{\link{mic}}: an MIC value in mg/L, for class \code{\link{disk}}: a disk diffusion radius in millimetres)}
 
-\item{...}{parameters passed on to methods}
+\item{...}{for using on a \link{data.frame}: names of columns to apply \code{\link[=as.rsi]{as.rsi()}} on (supports tidy selection like \code{AMX:VAN}). Otherwise: parameters passed on to methods.}
 
 \item{threshold}{maximum fraction of invalid antimicrobial interpretations of \code{x}, please see \emph{Examples}}
 
-\item{mo}{any (vector of) text that can be coerced to a valid microorganism code with \code{\link[=as.mo]{as.mo()}}}
+\item{mo}{any (vector of) text that can be coerced to a valid microorganism code with \code{\link[=as.mo]{as.mo()}}, will be determined automatically if the \code{dplyr} package is installed}
 
 \item{ab}{any (vector of) text that can be coerced to a valid antimicrobial code with \code{\link[=as.ab]{as.ab()}}}
 
@@ -61,30 +64,65 @@ is.rsi.eligible(x, threshold = 0.05)
 
 \item{conserve_capped_values}{a logical to indicate that MIC values starting with \code{">"} (but not \code{">="}) must always return "R" , and that MIC values starting with \code{"<"} (but not \code{"<="}) must always return "S"}
 
+\item{add_intrinsic_resistance}{\emph{(only useful when using a EUCAST guideline)} a logical to indicate whether intrinsic antibiotic resistance must also be considered for applicable bug-drug combinations, meaning that e.g. ampicillin will always return "R" in \emph{Klebsiella} species. Determination is based on the \link{intrinsic_resistant} data set, that itself is based on 'EUCAST Expert Rules, Intrinsic Resistance and Exceptional Phenotypes', version list(version_txt = "v3.1", year = 2016, title = "EUCAST Expert Rules, Intrinsic Resistance and Exceptional Phenotypes")
+list(version_txt = "v3.2", year = 2020, title = "EUCAST Expert Rules / EUCAST Intrinsic Resistance and Unusual Phenotypes").}
+
 \item{col_mo}{column name of the IDs of the microorganisms (see \code{\link[=as.mo]{as.mo()}}), defaults to the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
 }
 \value{
-Ordered factor with new class \code{\link{rsi}}
+Ordered \link{factor} with new class \code{\link{rsi}}
 }
 \description{
-Interpret minimum inhibitory concentration (MIC) values and disk diffusion diameters according to EUCAST or CLSI, or clean up existing R/SI values. This transforms the input to a new class \code{\link{rsi}}, which is an ordered factor with levels \verb{S < I < R}. Invalid antimicrobial interpretations will be translated as \code{NA} with a warning.
+Interpret minimum inhibitory concentration (MIC) values and disk diffusion diameters according to EUCAST or CLSI, or clean up existing R/SI values. This transforms the input to a new class \code{\link{rsi}}, which is an ordered factor with levels \verb{S < I < R}. Values that cannot be interpreted will be returned as \code{NA} with a warning.
 }
 \details{
-When using \code{\link[=as.rsi]{as.rsi()}} on untransformed data, the data will be cleaned to only contain values S, I and R. When using the function on data with class \code{\link{mic}} (using \code{\link[=as.mic]{as.mic()}}) or class \code{\link{disk}} (using \code{\link[=as.disk]{as.disk()}}), the data will be interpreted based on the guideline set with the \code{guideline} parameter.
+\subsection{How it works}{
 
-Supported guidelines to be used as input for the \code{guideline} parameter are: "CLSI 2010", "CLSI 2011", "CLSI 2012", "CLSI 2013", "CLSI 2014", "CLSI 2015", "CLSI 2016", "CLSI 2017", "CLSI 2018", "CLSI 2019", "EUCAST 2011", "EUCAST 2012", "EUCAST 2013", "EUCAST 2014", "EUCAST 2015", "EUCAST 2016", "EUCAST 2017", "EUCAST 2018", "EUCAST 2019", "EUCAST 2020". Simply using \code{"CLSI"} or \code{"EUCAST"} for input will automatically select the latest version of that guideline.
+The \code{\link[=as.rsi]{as.rsi()}} function works in four ways:
+\enumerate{
+\item For \strong{cleaning raw / untransformed data}. The data will be cleaned to only contain values S, I and R and will try its best to determine this with some intelligence. For example, mixed values with R/SI interpretations and MIC values such as \code{"<0.25; S"} will be coerced to \code{"S"}. Combined interpretations for multiple test methods (as seen in laboratory records) such as \code{"S; S"} will be coerced to \code{"S"}, but a value like \code{"S; I"} will return \code{NA} with a warning that the input is unclear.
+\item For \strong{interpreting minimum inhibitory concentration (MIC) values} according to EUCAST or CLSI. You must clean your MIC values first using \code{\link[=as.mic]{as.mic()}}, that also gives your columns the new data class \code{\link{mic}}. Also, be sure to have a column with microorganism names or codes. It will be found automatically, but can be set manually using the \code{mo} parameter.
+\itemize{
+\item Using \code{dplyr}, R/SI interpretation can be done very easily with either:\preformatted{your_data \%>\% mutate_if(is.mic, as.rsi)             # until dplyr 1.0.0
+your_data \%>\% mutate(across(where(is.mic), as.rsi)) # since dplyr 1.0.0
+}
+\item Operators like "<=" will be stripped before interpretation. When using \code{conserve_capped_values = TRUE}, an MIC value of e.g. ">2" will always return "R", even if the breakpoint according to the chosen guideline is ">=4". This is to prevent that capped values from raw laboratory data would not be treated conservatively. The default behaviour (\code{conserve_capped_values = FALSE}) considers ">2" to be lower than ">=4" and might in this case return "S" or "I".
+}
+\item For \strong{interpreting disk diffusion diameters} according to EUCAST or CLSI. You must clean your disk zones first using \code{\link[=as.disk]{as.disk()}}, that also gives your columns the new data class \code{\link{disk}}. Also, be sure to have a column with microorganism names or codes. It will be found automatically, but can be set manually using the \code{mo} parameter.
+\itemize{
+\item Using \code{dplyr}, R/SI interpretation can be done very easily with either:\preformatted{your_data \%>\% mutate_if(is.disk, as.rsi)             # until dplyr 1.0.0
+your_data \%>\% mutate(across(where(is.disk), as.rsi)) # since dplyr 1.0.0
+}
+}
+\item For \strong{interpreting a complete data set}, with automatic determination of MIC values, disk diffusion diameters, microorganism names or codes, and antimicrobial test results. This is done very simply by running \code{as.rsi(data)}.
+}
+}
 
-When using \code{conserve_capped_values = TRUE}, an MIC value of e.g. ">2" will always return "R", even if the breakpoint according to the chosen guideline is ">=4". This is to prevent that capped values from raw laboratory data would not be treated conservatively. The default behaviour (\code{conserve_capped_values = FALSE}) considers ">2" to be lower than ">=4" and will in this case return "S" or "I".
+\subsection{Supported guidelines}{
+
+For interpreting MIC values as well as disk diffusion diameters, supported guidelines to be used as input for the \code{guideline} parameter are: "CLSI 2010", "CLSI 2011", "CLSI 2012", "CLSI 2013", "CLSI 2014", "CLSI 2015", "CLSI 2016", "CLSI 2017", "CLSI 2018", "CLSI 2019", "EUCAST 2011", "EUCAST 2012", "EUCAST 2013", "EUCAST 2014", "EUCAST 2015", "EUCAST 2016", "EUCAST 2017", "EUCAST 2018", "EUCAST 2019", "EUCAST 2020".
+
+Simply using \code{"CLSI"} or \code{"EUCAST"} as input will automatically select the latest version of that guideline.
+}
+
+\subsection{After interpretation}{
+
+After using \code{\link[=as.rsi]{as.rsi()}}, you can use the \code{\link[=eucast_rules]{eucast_rules()}} defined by EUCAST to (1) apply inferred susceptibility and resistance based on results of other antimicrobials and (2) apply intrinsic resistance based on taxonomic properties of a microorganism.
+}
+
+\subsection{Machine readable interpretation guidelines}{
 
 The repository of this package \href{https://github.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt}{contains a machine readable version} of all guidelines. This is a CSV file consisting of 18,650 rows and 10 columns. This file is machine readable, since it contains one row for every unique combination of the test method (MIC or disk diffusion), the antimicrobial agent and the microorganism. \strong{This allows for easy implementation of these rules in laboratory information systems (LIS)}. Note that it only contains interpretation guidelines for humans - interpretation guidelines from CLSI for animals were removed.
+}
 
-After using \code{\link[=as.rsi]{as.rsi()}}, you can use \code{\link[=eucast_rules]{eucast_rules()}} to (1) apply inferred susceptibility and resistance based on results of other antimicrobials and (2) apply intrinsic resistance based on taxonomic properties of a microorganism.
+\subsection{Other}{
 
 The function \code{\link[=is.rsi.eligible]{is.rsi.eligible()}} returns \code{TRUE} when a columns contains at most 5\% invalid antimicrobial interpretations (not S and/or I and/or R), and \code{FALSE} otherwise. The threshold of 5\% can be set with the \code{threshold} parameter.
 }
+}
 \section{Interpretation of R and S/I}{
 
-In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories R and S/I as shown below (\url{http://www.eucast.org/newsiandr/}).
+In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories R and S/I as shown below (\url{https://www.eucast.org/newsiandr/}).
 \itemize{
 \item \strong{R = Resistant}\cr
 A microorganism is categorised as \emph{Resistant} when there is a high likelihood of therapeutic failure even when there is increased exposure. Exposure is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
@@ -105,13 +143,23 @@ The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stabl
 If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
+\section{Reference data publicly available}{
+
+All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
+}
+
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
 summary(example_isolates) # see all R/SI results at a glance
+
+if (require("skimr")) {
+  # support for skim() too:
+  skim(example_isolates)
+}
 
 # For INTERPRETING disk diffusion and MIC values -----------------------
        
@@ -124,31 +172,6 @@ df <- data.frame(microorganism = "E. coli",
                  NIT = as.mic(32))
 as.rsi(df)
 
-\dontrun{
-
-# the dplyr way
-library(dplyr)
-df \%>\%
-  mutate_at(vars(AMP:TOB), as.rsi, mo = "E. coli")
-  
-df \%>\%
-  mutate_at(vars(AMP:TOB), as.rsi, mo = .$microorganism)
-  
-# to include information about urinary tract infections (UTI)
-data.frame(mo = "E. coli",
-           NIT = c("<= 2", 32),
-           from_the_bladder = c(TRUE, FALSE)) \%>\%
-  as.rsi(uti = "from_the_bladder")
-  
-data.frame(mo = "E. coli",
-           NIT = c("<= 2", 32),
-           specimen = c("urine", "blood")) \%>\%
-  as.rsi() # automatically determines urine isolates
-
-df \%>\%
-  mutate_at(vars(AMP:NIT), as.rsi, mo = "E. coli", uti = TRUE)  
-}
-
 # for single values
 as.rsi(x = as.mic(2),
        mo = as.mo("S. pneumoniae"),
@@ -160,35 +183,60 @@ as.rsi(x = as.disk(18),
        ab = "ampicillin",  # and `ab` with as.ab()
        guideline = "EUCAST")
 
+\donttest{
+# the dplyr way
+if (require("dplyr")) {
+  df \%>\% mutate_if(is.mic, as.rsi)
+  df \%>\% mutate_if(function(x) is.mic(x) | is.disk(x), as.rsi)
+  df \%>\% mutate(across(where(is.mic), as.rsi))
+  df \%>\% mutate_at(vars(AMP:TOB), as.rsi)
+  df \%>\% mutate(across(AMP:TOB, as.rsi))
+ 
+  df \%>\%
+    mutate_at(vars(AMP:TOB), as.rsi, mo = "E. coli")
+    
+  # to include information about urinary tract infections (UTI)
+  data.frame(mo = "E. coli",
+             NIT = c("<= 2", 32),
+             from_the_bladder = c(TRUE, FALSE)) \%>\%
+    as.rsi(uti = "from_the_bladder")
+    
+  data.frame(mo = "E. coli",
+             NIT = c("<= 2", 32),
+             specimen = c("urine", "blood")) \%>\%
+    as.rsi() # automatically determines urine isolates
+  
+  df \%>\%
+    mutate_at(vars(AMP:NIT), as.rsi, mo = "E. coli", uti = TRUE)  
+}
 
 # For CLEANING existing R/SI values ------------------------------------
 
 as.rsi(c("S", "I", "R", "A", "B", "C"))
 as.rsi("<= 0.002; S") # will return "S"
-
 rsi_data <- as.rsi(c(rep("S", 474), rep("I", 36), rep("R", 370)))
 is.rsi(rsi_data)
 plot(rsi_data)    # for percentages
 barplot(rsi_data) # for frequencies
 
-\dontrun{
-library(dplyr)
-example_isolates \%>\%
-  mutate_at(vars(PEN:RIF), as.rsi)
-
-# fastest way to transform all columns with already valid AMR results to class `rsi`:
-example_isolates \%>\%
-  mutate_if(is.rsi.eligible, as.rsi)
-  
-# note: from dplyr 1.0.0 on, this will be: 
-# example_isolates \%>\%
-#   mutate(across(is.rsi.eligible, as.rsi))
-
-# default threshold of `is.rsi.eligible` is 5\%.
-is.rsi.eligible(WHONET$`First name`) # fails, >80\% is invalid
-is.rsi.eligible(WHONET$`First name`, threshold = 0.99) # succeeds
+# the dplyr way
+if (require("dplyr")) {
+  example_isolates \%>\%
+    mutate_at(vars(PEN:RIF), as.rsi)
+  # same:   
+  example_isolates \%>\%
+    as.rsi(PEN:RIF)
+ 
+  # fastest way to transform all columns with already valid AMR results to class `rsi`:
+  example_isolates \%>\%
+    mutate_if(is.rsi.eligible, as.rsi)
+    
+  # note: from dplyr 1.0.0 on, this will be: 
+  # example_isolates \%>\%
+  #   mutate(across(where(is.rsi.eligible), as.rsi))
+}
 }
 }
 \seealso{
-\code{\link[=as.mic]{as.mic()}}
+\code{\link[=as.mic]{as.mic()}}, \code{\link[=as.disk]{as.disk()}}, \code{\link[=as.mo]{as.mo()}}
 }

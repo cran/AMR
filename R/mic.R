@@ -1,33 +1,37 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis                              #
+# Antimicrobial Resistance (AMR) Analysis for R                        #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
 # (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# Developed at the University of Groningen, the Netherlands, in        #
+# collaboration with non-profit organisations Certe Medical            #
+# Diagnostics & Advice, and University Medical Center Groningen.       # 
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
 # GNU General Public License version 2.0 (GNU GPL-2), as published by  #
 # the Free Software Foundation.                                        #
-#                                                                      #
 # We created this package for both routine data analysis and academic  #
 # research and it was publicly released in the hope that it will be    #
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
-# Visit our website for more info: https://msberends.github.io/AMR.    #
+#                                                                      #
+# Visit our website for the full manual and a complete tutorial about  #
+# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
-#' Class 'mic'
+#' Transform input to minimum inhibitory concentrations (MIC)
 #'
-#' This transforms a vector to a new class [`mic`], which is an ordered [`factor`] with valid MIC values as levels. Invalid MIC values will be translated as `NA` with a warning.
+#' This transforms a vector to a new class [`mic`], which is an ordered [factor] with valid minimum inhibitory concentrations (MIC) as levels. Invalid MIC values will be translated as `NA` with a warning.
 #' @inheritSection lifecycle Stable lifecycle
 #' @rdname as.mic
 #' @param x vector
 #' @param na.rm a logical indicating whether missing values should be removed
 #' @details To interpret MIC values as RSI values, use [as.rsi()] on MIC values. It supports guidelines from EUCAST and CLSI.
-#' @return Ordered [`factor`] with new class [`mic`]
+#' @return Ordered [factor] with additional class [`mic`]
 #' @aliases mic
 #' @export
 #' @seealso [as.rsi()]
@@ -55,7 +59,7 @@ as.mic <- function(x, na.rm = FALSE) {
   if (is.mic(x)) {
     x
   } else {
-    x <- x %>% unlist()
+    x <- x %pm>% unlist()
     if (na.rm == TRUE) {
       x <- x[!is.na(x)]
     }
@@ -109,13 +113,13 @@ as.mic <- function(x, na.rm = FALSE) {
               c(t(sapply(ops, function(x) paste0(x, c(10:98)[9:98 %% 2 == TRUE])))),
               c(t(sapply(ops, function(x) paste0(x, sort(c(2 ^ c(7:10), 80 * c(2:12))))))))
     
-    na_before <- x[is.na(x) | x == ""] %>% length()
+    na_before <- x[is.na(x) | x == ""] %pm>% length()
     x[!x %in% lvls] <- NA
-    na_after <- x[is.na(x) | x == ""] %>% length()
+    na_after <- x[is.na(x) | x == ""] %pm>% length()
     
     if (na_before != na_after) {
-      list_missing <- x.bak[is.na(x) & !is.na(x.bak) & x.bak != ""] %>%
-        unique() %>%
+      list_missing <- x.bak[is.na(x) & !is.na(x.bak) & x.bak != ""] %pm>%
+        unique() %pm>%
         sort()
       list_missing <- paste0('"', list_missing, '"', collapse = ", ")
       warning(na_after - na_before, " results truncated (",
@@ -171,6 +175,18 @@ droplevels.mic <- function(x, exclude = ifelse(anyNA(levels(x)), NULL, NA), ...)
   x
 }
 
+# will be exported using s3_register() in R/zzz.R
+pillar_shaft.mic <- function(x, ...) {
+  out <- trimws(format(x))
+  out[is.na(x)] <- font_na(NA)
+  create_pillar_column(out, align = "right", min_width = 4)
+}
+
+# will be exported using s3_register() in R/zzz.R
+type_sum.mic <- function(x, ...) {
+  "mic"
+}
+
 #' @method print mic
 #' @export
 #' @noRd
@@ -184,21 +200,21 @@ print.mic <- function(x, ...) {
 #' @noRd
 summary.mic <- function(object, ...) {
   x <- object
-  n_total <- x %>% length()
+  n_total <- length(x)
   x <- x[!is.na(x)]
-  n <- x %>% length()
-  c(
-    "Class" = "mic",
-    "<NA>" = n_total - n,
-    "Min." = sort(x)[1] %>% as.character(),
-    "Max." = sort(x)[n] %>% as.character()
-  )
+  n <- length(x)
+  value <- c("Class" = "mic",
+             "<NA>" = n_total - n,
+             "Min." = as.character(sort(x)[1]),
+             "Max." = as.character(sort(x)[n]))
+  class(value) <- c("summaryDefault", "table")
+  value
 }
 
 #' @method plot mic
 #' @export
 #' @importFrom graphics barplot axis par
-#' @noRd
+#' @rdname plot
 plot.mic <- function(x,
                      main = paste("MIC values of", deparse(substitute(x))),
                      ylab = "Frequency",
@@ -217,7 +233,7 @@ plot.mic <- function(x,
 #' @method barplot mic
 #' @export
 #' @importFrom graphics barplot axis
-#' @noRd
+#' @rdname plot
 barplot.mic <- function(height,
                         main = paste("MIC values of", deparse(substitute(height))),
                         ylab = "Frequency",
@@ -271,7 +287,30 @@ barplot.mic <- function(height,
 #' @export
 #' @noRd
 c.mic <- function(x, ...) {
+  y <- unlist(lapply(list(...), as.character))
+  x <- as.character(x)
+  as.mic(c(x, y))
+}
+
+#' @method unique mic
+#' @export
+#' @noRd
+unique.mic <- function(x, incomparables = FALSE, ...) {
   y <- NextMethod()
   attributes(y) <- attributes(x)
   y
+}
+
+# will be exported using s3_register() in R/zzz.R
+get_skimmers.mic <- function(column) {
+  sfl <- import_fn("sfl", "skimr", error_on_fail = FALSE)
+  inline_hist <- import_fn("inline_hist", "skimr", error_on_fail = FALSE)
+  sfl(
+    skim_type = "mic",
+    min = ~as.character(sort(na.omit(.))[1]),
+    max = ~as.character(sort(stats::na.omit(.))[length(stats::na.omit(.))]),
+    median = ~as.character(stats::na.omit(.)[as.double(stats::na.omit(.)) == median(as.double(stats::na.omit(.)))])[1],
+    n_unique = ~pm_n_distinct(., na.rm = TRUE),
+    hist_log2 = ~inline_hist(log2(as.double(stats::na.omit(.))))
+  )
 }

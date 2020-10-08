@@ -10,12 +10,23 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<meta name="author" content="Matthijs S. Berends" />
 
-<meta name="date" content="2020-07-31" />
 
 <title>Welcome to the AMR package</title>
 
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
 <script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
 // v0.0.1
 // Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
@@ -230,18 +241,18 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 <h1 class="title toc-ignore">Welcome to the AMR package</h1>
-<h4 class="author">Matthijs S. Berends</h4>
-<h4 class="date">31 July 2020</h4>
 
 
 <div id="TOC">
 <ul>
-<li><a href="#welcome-to-the-amr-package">Welcome to the AMR package</a><ul>
+<li><a href="#welcome-to-the-amr-package">Welcome to the AMR package</a>
+<ul>
 <li><a href="#usage-examples">Usage examples</a></li>
 </ul></li>
 </ul>
 </div>
 
+<p><strong>READ ALL VIGNETTES <a href="https://msberends.github.io/AMR/articles/">ON OUR WEBSITE</a>.</strong></p>
 <div id="welcome-to-the-amr-package" class="section level1">
 <h1>Welcome to the AMR package</h1>
 <p><code>AMR</code> is a free, open-source and independent R package to simplify the analysis and prediction of Antimicrobial Resistance (AMR) and to work with microbial and antimicrobial data and properties, by using evidence-based methods. <strong>Our aim is to provide a standard</strong> for clean and reproducible antimicrobial resistance data analysis, that can therefore empower epidemiological analyses to continuously enable surveillance and treatment evaluation in any setting.</p>

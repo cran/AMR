@@ -5,7 +5,7 @@
 \alias{microorganisms}
 \title{Data set with 67,151 microorganisms}
 \format{
-A \code{\link{data.frame}} with 67,151 observations and 16 variables:
+A \link{data.frame} with 67,151 observations and 16 variables:
 \itemize{
 \item \code{mo}\cr ID of microorganism as used by this package
 \item \code{fullname}\cr Full name, like \code{"Escherichia coli"}
@@ -59,7 +59,7 @@ The file in R format (with preserved data structure) can be found here:
 \section{About the records from DSMZ (see source)}{
 
 Names of prokaryotes are defined as being validly published by the International Code of Nomenclature of Bacteria. Validly published are all names which are included in the Approved Lists of Bacterial Names and the names subsequently published in the International Journal of Systematic Bacteriology (IJSB) and, from January 2000, in the International Journal of Systematic and Evolutionary Microbiology (IJSEM) as original articles or in the validation lists.
-\emph{(from \url{https://www.dsmz.de/services/online-tools/prokaryotic-nomenclature-up-to-date/complete-list-readme})}
+\emph{(from \url{https://www.dsmz.de/services/online-tools/prokaryotic-nomenclature-up-to-date})}
 
 In February 2020, the DSMZ records were merged with the List of Prokaryotic names with Standing in Nomenclature (LPSN).
 }
@@ -72,12 +72,17 @@ This package contains the complete taxonomic tree of almost all microorganisms (
 \link[=catalogue_of_life]{Click here} for more information about the included taxa. Check which version of the Catalogue of Life was included in this package with \code{\link[=catalogue_of_life_version]{catalogue_of_life_version()}}.
 }
 
+\section{Reference data publicly available}{
+
+All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
+}
+
 \section{Read more on our website!}{
 
-On our website \url{https://msberends.github.io/AMR} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference}{complete documentation of all functions} (which reads a lot easier than here in R) and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \seealso{
-\code{\link[=as.mo]{as.mo()}}, \code{\link[=mo_property]{mo_property()}}, \link{microorganisms.codes}
+\code{\link[=as.mo]{as.mo()}}, \code{\link[=mo_property]{mo_property()}}, \link{microorganisms.codes}, \link{intrinsic_resistant}
 }
 \keyword{datasets}
