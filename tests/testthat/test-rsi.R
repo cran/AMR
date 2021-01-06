@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -26,6 +26,7 @@
 context("rsi.R")
 
 test_that("rsi works", {
+  
   skip_on_cran()
   
   expect_true(as.rsi("S") < as.rsi("I"))
@@ -83,7 +84,6 @@ test_that("rsi works", {
 
 })
 
-
 test_that("mic2rsi works", {
   
   skip_on_cran()
@@ -108,26 +108,13 @@ test_that("mic2rsi works", {
                as.rsi("S"))
   expect_equal(as.rsi(as.mic(32), "E. coli", "ampicillin", guideline = "EUCAST 2020"),
                as.rsi("R"))
-
-  expect_true(example_isolates %>%
-                mutate(amox_mic = as.mic(2)) %>%
-                select(mo, amox_mic) %>%
-                as.rsi() %>%
-                pull(amox_mic) %>%
-                is.rsi())
   
-  expect_warning(data.frame(mo = "E. coli",
-                            NIT = c("<= 2", 32)) %>%
-                   as.rsi())
-  expect_message(data.frame(mo = "E. coli",
-                            NIT = c("<= 2", 32),
-                            uti = TRUE) %>%
-                   as.rsi())
-  expect_message(
-    data.frame(mo = "E. coli",
-               NIT = c("<= 2", 32),
-               specimen = c("urine", "blood")) %>%
-      as.rsi())
+  expect_true(suppressWarnings(example_isolates %>%
+                                 mutate(amox_mic = as.mic(2)) %>%
+                                 select(mo, amox_mic) %>%
+                                 as.rsi() %>%
+                                 pull(amox_mic) %>%
+                                 is.rsi()))
 })
 
 test_that("disk2rsi works", {
@@ -159,4 +146,38 @@ test_that("disk2rsi works", {
                 as.rsi(guideline = "CLSI") %>%
                 pull(amox_disk) %>%
                 is.rsi())
+  
+  # frequency tables
+  if (require("cleaner")) {
+    expect_s3_class(cleaner::freq(example_isolates$AMX), "freq")
+  }
+})
+
+test_that("data.frame2rsi works", {
+  
+  skip_on_cran()
+  
+  df <- data.frame(microorganism = "Escherichia coli",
+                   AMP = as.mic(8),
+                   CIP = as.mic(0.256),
+                   GEN = as.disk(18),
+                   TOB = as.disk(16),
+                   ERY = "R", # note about assigning <rsi> class
+                   CLR = "V") # note about cleaning
+  expect_s3_class(suppressWarnings(as.rsi(df)), "data.frame")
+  
+  expect_s3_class(suppressWarnings(as.rsi(data.frame(mo = "Escherichia coli",
+                                                     amoxi = c("R", "S", "I", "invalid")))$amoxi), "rsi")
+  expect_warning(data.frame(mo = "E. coli",
+                            NIT = c("<= 2", 32)) %>%
+                   as.rsi())
+  expect_message(data.frame(mo = "E. coli",
+                            NIT = c("<= 2", 32),
+                            uti = TRUE) %>%
+                   as.rsi())
+  expect_message(
+    data.frame(mo = "E. coli",
+               NIT = c("<= 2", 32),
+               specimen = c("urine", "blood")) %>%
+      as.rsi())
 })

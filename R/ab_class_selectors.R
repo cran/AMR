@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -25,11 +25,11 @@
 
 #' Antibiotic class selectors
 #' 
-#' Use these selection helpers inside any function that allows [Tidyverse selection helpers](https://tidyselect.r-lib.org/reference/language.html), like `dplyr::select()` or `tidyr::pivot_longer()`. They help to select the columns of antibiotics that are of a specific antibiotic class, without the need to define the columns or antibiotic abbreviations.
+#' These functions help to select the columns of antibiotics that are of a specific antibiotic class, without the need to define the columns or antibiotic abbreviations.
 #' @inheritParams filter_ab_class 
-#' @details All columns will be searched for known antibiotic names, abbreviations, brand names and codes (ATC, EARS-Net, WHO, etc.) in the [antibiotics] data set. This means that a selector like e.g. [aminoglycosides()] will pick up column names like 'gen', 'genta', 'J01GB03', 'tobra', 'Tobracin', etc.
+#' @details \strong{\Sexpr{ifelse(as.double(R.Version()$major) + (as.double(R.Version()$minor) / 10) < 3.2, paste0("NOTE: THESE FUNCTIONS DO NOT WORK ON YOUR CURRENT R VERSION. These functions require R version 3.2 or later - you have ", R.version.string, "."), "")}}
 #' 
-#' **N.B. These functions only work if the `tidyselect` package is installed**, that comes with the `dplyr` package. An error will be thrown if the `tidyselect` package is not installed, or if the functions are used outside a function that allows Tidyverse selections like `select()` or `pivot_longer()`.
+#' All columns will be searched for known antibiotic names, abbreviations, brand names and codes (ATC, EARS-Net, WHO, etc.) in the [antibiotics] data set. This means that a selector like e.g. [aminoglycosides()] will pick up column names like 'gen', 'genta', 'J01GB03', 'tobra', 'Tobracin', etc.
 #' @rdname antibiotic_class_selectors
 #' @seealso [filter_ab_class()] for the `filter()` equivalent.
 #' @name antibiotic_class_selectors
@@ -37,6 +37,14 @@
 #' @inheritSection AMR Reference data publicly available
 #' @inheritSection AMR Read more on our website!
 #' @examples 
+#' # `example_isolates` is a dataset available in the AMR package.
+#' # See ?example_isolates.
+#' 
+#' # this will select columns 'IPM' (imipenem) and 'MEM' (meropenem):
+#' example_isolates[, c(carbapenems())]
+#' # this will select columns 'mo', 'AMK', 'GEN', 'KAN' and 'TOB':
+#' example_isolates[, c("mo", aminoglycosides())]
+#' 
 #' if (require("dplyr")) {
 #' 
 #'   # this will select columns 'IPM' (imipenem) and 'MEM' (meropenem):
@@ -54,7 +62,7 @@
 #'     
 #'   # get bug/drug combinations for only macrolides in Gram-positives:
 #'   example_isolates %>% 
-#'     filter(mo_gramstain(mo) %like% "pos") %>% 
+#'     filter(mo_is_gram_positive()) %>% 
 #'     select(mo, macrolides()) %>% 
 #'     bug_drug_combinations() %>%
 #'     format()
@@ -63,7 +71,12 @@
 #'   data.frame(some_column = "some_value",
 #'              J01CA01 = "S") %>%   # ATC code of ampicillin
 #'     select(penicillins())         # only the 'J01CA01' column will be selected
-#'
+#'     
+#'     
+#'   # with dplyr 1.0.0 and higher (that adds 'across()'), this is equal:
+#'   # (though the row names on the first are more correct)
+#'   example_isolates %>% filter_carbapenems("R", "all")
+#'   example_isolates %>% filter(across(carbapenems(), ~. == "R"))
 #' }
 ab_class <- function(ab_class) {
   ab_selector(ab_class, function_name = "ab_class")
@@ -148,14 +161,21 @@ tetracyclines <- function() {
 }
 
 ab_selector <- function(ab_class, function_name) {
-  peek_vars_tidyselect <- import_fn("peek_vars", "tidyselect")
-  vars_vct <- peek_vars_tidyselect(fn = function_name)
-  vars_df <- data.frame(as.list(vars_vct))[0, , drop = FALSE]
-  colnames(vars_df) <- vars_vct
+  meet_criteria(ab_class, allow_class = "character", has_length = 1, .call_depth = 1)
+  meet_criteria(function_name, allow_class = "character", has_length = 1, .call_depth = 1)
+  
+  if (as.double(R.Version()$major) + (as.double(R.Version()$minor) / 10) < 3.2) {
+    warning_("antibiotic class selectors such as ", function_name, 
+             "() require R version 3.2 or later - you have ", R.version.string,
+             call = FALSE)
+    return(NULL)
+  }
+  
+  vars_df <- get_current_data(arg_name = NA, call = -3)
   ab_in_data <- get_column_abx(vars_df, info = FALSE)
   
   if (length(ab_in_data) == 0) {
-    message(font_blue("NOTE: no antimicrobial agents found."))
+    message_("No antimicrobial agents found.")
     return(NULL)
   }
   
@@ -172,14 +192,19 @@ ab_selector <- function(ab_class, function_name) {
   }
   # get the columns with a group names in the chosen ab class
   agents <- ab_in_data[names(ab_in_data) %in% ab_reference$ab]
-  if (length(agents) == 0) {
-    message(font_blue(paste0("NOTE: No antimicrobial agents of class ", ab_group, 
-                             " found", examples, ".")))
-  } else {
-    message(font_blue(paste0("Selecting ", ab_group, ": ",
-                             paste(paste0("`", font_bold(agents, collapse = NULL),
-                                          "` (", ab_name(names(agents), tolower = TRUE, language = NULL), ")"),
-                                   collapse = ", "))))
-  }
+  if (message_not_thrown_before(function_name)) {
+    if (length(agents) == 0) {
+      message_("No antimicrobial agents of class ", ab_group, " found", examples, ".")
+    } else {
+      agents_formatted <- paste0("column '", font_bold(agents, collapse = NULL), "'")
+      agents_names <- ab_name(names(agents), tolower = TRUE, language = NULL)
+      agents_formatted[agents != agents_names] <- paste0(agents_formatted[agents != agents_names],
+                                                         " (", agents_names[agents != agents_names], ")")
+      message_("Selecting ", ab_group, ": ", paste(agents_formatted, collapse = ", "),
+               as_note = FALSE,
+               extra_indent = nchar(paste0("Selecting ", ab_group, ": ")))
+    }
+   remember_thrown_message(function_name)
+ }
   unname(agents)
 }

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -79,7 +79,9 @@ test_that("counts work", {
   )
   
   # warning for speed loss
+  reset_all_thrown_messages()
   expect_warning(count_resistant(as.character(example_isolates$AMC)))
+  reset_all_thrown_messages()
   expect_warning(count_resistant(example_isolates$AMC,
                                  as.character(example_isolates$GEN)))
   
@@ -91,5 +93,12 @@ test_that("counts work", {
   
   expect_error(count_df(c("A", "B", "C")))
   expect_error(count_df(example_isolates[, "date"]))
+  
+  # grouping in rsi_calc_df() (= backbone of rsi_df())
+  expect_true("hospital_id" %in% (example_isolates %>% 
+                group_by(hospital_id) %>% 
+                select(hospital_id, AMX, CIP, gender) %>%
+                rsi_df() %>% 
+                colnames()))
   
 })

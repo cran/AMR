@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -112,4 +112,25 @@ test_that("mo_property works", {
                   stringsAsFactors = FALSE)
   expect_equal(nrow(subset(x, f1 != f2)), 0)
   
+  # is gram pos/neg (also return FALSE for all non-bacteria)
+  expect_equal(mo_is_gram_negative(c("Escherichia coli", "Staphylococcus aureus", "Candida albicans")),
+               c(TRUE, FALSE, FALSE))
+  expect_equal(mo_is_gram_positive(c("Escherichia coli", "Staphylococcus aureus", "Candida albicans")),
+               c(FALSE, TRUE, FALSE))
+  # is intrinsic resistant
+  expect_equal(mo_is_intrinsic_resistant(c("Escherichia coli", "Staphylococcus aureus", "Candida albicans"),
+                                         "vanco"),
+               c(TRUE, FALSE, FALSE))
+  
+  # with reference data
+  expect_equal(mo_name("test", reference_df = data.frame(col1 = "test", mo = "B_ESCHR_COLI")), 
+               "Escherichia coli")
+  
+  library(dplyr)
+  expect_equal(example_isolates %>% filter(mo_is_gram_negative()) %>% nrow(),
+               730)
+  expect_equal(example_isolates %>% filter(mo_is_gram_positive()) %>% nrow(),
+               1238)
+  expect_equal(example_isolates %>% filter(mo_is_intrinsic_resistant(ab = "Vancomycin")) %>% nrow(),
+               710)
 })

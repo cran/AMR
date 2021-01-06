@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -27,5 +27,6 @@ context("deprecated.R")
 
 test_that("deprecated functions work", {
   skip_on_cran()
-  # if some functions get deprecated, put the tests here
+  expect_identical(suppressWarnings(p_symbol(c(0.001, 0.01, 0.05, 0.1, 1, NA, 3))),
+                   c("***", "**", "*", ".", " ", NA, NA))
 })

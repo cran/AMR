@@ -4,16 +4,18 @@
 \alias{age}
 \title{Age in years of individuals}
 \usage{
-age(x, reference = Sys.Date(), exact = FALSE, na.rm = FALSE)
+age(x, reference = Sys.Date(), exact = FALSE, na.rm = FALSE, ...)
 }
 \arguments{
 \item{x}{date(s), will be coerced with \code{\link[=as.POSIXlt]{as.POSIXlt()}}}
 
-\item{reference}{reference date(s) (defaults to today), will be coerced with \code{\link[=as.POSIXlt]{as.POSIXlt()}} and cannot be lower than \code{x}}
+\item{reference}{reference date(s) (defaults to today), will be coerced with \code{\link[=as.POSIXlt]{as.POSIXlt()}}}
 
 \item{exact}{a logical to indicate whether age calculation should be exact, i.e. with decimals. It divides the number of days of \href{https://en.wikipedia.org/wiki/Year-to-date}{year-to-date} (YTD) of \code{x} by the number of days in the year of \code{reference} (either 365 or 366).}
 
 \item{na.rm}{a logical to indicate whether missing values should be removed}
+
+\item{...}{arguments passed on to \code{\link[=as.POSIXlt]{as.POSIXlt()}}, such as \code{origin}}
 }
 \value{
 An \link{integer} (no decimals) if \code{exact = FALSE}, a \link{double} (with decimals) otherwise
@@ -21,12 +23,15 @@ An \link{integer} (no decimals) if \code{exact = FALSE}, a \link{double} (with d
 \description{
 Calculates age in years based on a reference date, which is the sytem date at default.
 }
+\details{
+Ages below 0 will be returned as \code{NA} with a warning. Ages above 120 will only give a warning.
+}
 \section{Stable lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Read more on our website!}{

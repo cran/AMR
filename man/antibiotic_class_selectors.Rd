@@ -50,12 +50,12 @@ tetracyclines()
 \item{ab_class}{an antimicrobial class, like \code{"carbapenems"}. The columns \code{group}, \code{atc_group1} and \code{atc_group2} of the \link{antibiotics} data set will be searched (case-insensitive) for this value.}
 }
 \description{
-Use these selection helpers inside any function that allows \href{https://tidyselect.r-lib.org/reference/language.html}{Tidyverse selection helpers}, like \code{dplyr::select()} or \code{tidyr::pivot_longer()}. They help to select the columns of antibiotics that are of a specific antibiotic class, without the need to define the columns or antibiotic abbreviations.
+These functions help to select the columns of antibiotics that are of a specific antibiotic class, without the need to define the columns or antibiotic abbreviations.
 }
 \details{
-All columns will be searched for known antibiotic names, abbreviations, brand names and codes (ATC, EARS-Net, WHO, etc.) in the \link{antibiotics} data set. This means that a selector like e.g. \code{\link[=aminoglycosides]{aminoglycosides()}} will pick up column names like 'gen', 'genta', 'J01GB03', 'tobra', 'Tobracin', etc.
+\strong{\Sexpr{ifelse(as.double(R.Version()$major) + (as.double(R.Version()$minor) / 10) < 3.2, paste0("NOTE: THESE FUNCTIONS DO NOT WORK ON YOUR CURRENT R VERSION. These functions require R version 3.2 or later - you have ", R.version.string, "."), "")}}
 
-\strong{N.B. These functions only work if the \code{tidyselect} package is installed}, that comes with the \code{dplyr} package. An error will be thrown if the \code{tidyselect} package is not installed, or if the functions are used outside a function that allows Tidyverse selections like \code{select()} or \code{pivot_longer()}.
+All columns will be searched for known antibiotic names, abbreviations, brand names and codes (ATC, EARS-Net, WHO, etc.) in the \link{antibiotics} data set. This means that a selector like e.g. \code{\link[=aminoglycosides]{aminoglycosides()}} will pick up column names like 'gen', 'genta', 'J01GB03', 'tobra', 'Tobracin', etc.
 }
 \section{Reference data publicly available}{
 
@@ -68,6 +68,14 @@ On our website \url{https://msberends.github.io/AMR/} you can find \href{https:/
 }
 
 \examples{
+# `example_isolates` is a dataset available in the AMR package.
+# See ?example_isolates.
+
+# this will select columns 'IPM' (imipenem) and 'MEM' (meropenem):
+example_isolates[, c(carbapenems())]
+# this will select columns 'mo', 'AMK', 'GEN', 'KAN' and 'TOB':
+example_isolates[, c("mo", aminoglycosides())]
+
 if (require("dplyr")) {
 
   # this will select columns 'IPM' (imipenem) and 'MEM' (meropenem):
@@ -85,7 +93,7 @@ if (require("dplyr")) {
     
   # get bug/drug combinations for only macrolides in Gram-positives:
   example_isolates \%>\% 
-    filter(mo_gramstain(mo) \%like\% "pos") \%>\% 
+    filter(mo_is_gram_positive()) \%>\% 
     select(mo, macrolides()) \%>\% 
     bug_drug_combinations() \%>\%
     format()
@@ -94,7 +102,12 @@ if (require("dplyr")) {
   data.frame(some_column = "some_value",
              J01CA01 = "S") \%>\%   # ATC code of ampicillin
     select(penicillins())         # only the 'J01CA01' column will be selected
-
+    
+    
+  # with dplyr 1.0.0 and higher (that adds 'across()'), this is equal:
+  # (though the row names on the first are more correct)
+  example_isolates \%>\% filter_carbapenems("R", "all")
+  example_isolates \%>\% filter(across(carbapenems(), ~. == "R"))
 }
 }
 \seealso{

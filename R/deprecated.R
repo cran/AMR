@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -30,4 +30,18 @@
 #' @inheritSection AMR Read more on our website!
 #' @keywords internal
 #' @name AMR-deprecated
-# @export
+#' @export
+p_symbol <- function(p, emptychar = " ") {
+  .Deprecated(package = "AMR", new = "cleaner::p_symbol")
+  
+  p <- as.double(p)
+  s <- rep(NA_character_, length(p))
+  
+  s[p <= 1] <- emptychar
+  s[p <= 0.100] <- "."
+  s[p <= 0.050] <- "*"
+  s[p <= 0.010] <- "**"
+  s[p <= 0.001] <- "***"
+  
+  s
+}

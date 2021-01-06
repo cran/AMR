@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -34,16 +34,16 @@
 #' @param year_every unit of sequence between lowest year found in the data and `year_max`
 #' @param minimum minimal amount of available isolates per year to include. Years containing less observations will be estimated by the model.
 #' @param model the statistical model of choice. This could be a generalised linear regression model with binomial distribution (i.e. using `glm(..., family = binomial)``, assuming that a period of zero resistance was followed by a period of increasing resistance leading slowly to more and more resistance. See Details for all valid options.
-#' @param I_as_S a logical to indicate whether values `I` should be treated as `S` (will otherwise be treated as `R`). The default, `TRUE`, follows the redefinition by EUCAST about the interpretion of I (increased exposure) in 2019, see section *Interpretation of S, I and R* below. 
+#' @param I_as_S a logical to indicate whether values `"I"` should be treated as `"S"` (will otherwise be treated as `"R"`). The default, `TRUE`, follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section *Interpretation of S, I and R* below. 
 #' @param preserve_measurements a logical to indicate whether predictions of years that are actually available in the data should be overwritten by the original data. The standard errors of those years will be `NA`.
 #' @param info a logical to indicate whether textual analysis should be printed with the name and [summary()] of the statistical model.
 #' @param main title of the plot
 #' @param ribbon a logical to indicate whether a ribbon should be shown (default) or error bars
-#' @param ... parameters passed on to functions
+#' @param ... arguments passed on to functions
 #' @inheritSection as.rsi Interpretation of R and S/I
 #' @inheritParams first_isolate
 #' @inheritParams graphics::plot
-#' @details Valid options for the statistical model (parameter `model`) are:
+#' @details Valid options for the statistical model (argument `model`) are:
 #' - `"binomial"` or `"binom"` or `"logit"`: a generalised linear regression model with binomial distribution
 #' - `"loglin"` or `"poisson"`: a generalised log-linear regression model with poisson distribution
 #' - `"lin"` or `"linear"`: a linear regression model
@@ -126,22 +126,29 @@ resistance_predict <- function(x,
                                preserve_measurements = TRUE,
                                info = interactive(),
                                ...) {
+  meet_criteria(x, allow_class = "data.frame")
+  meet_criteria(col_ab, allow_class = "character", has_length = 1, is_in = colnames(x))
+  meet_criteria(col_date, allow_class = "character", has_length = 1, is_in = colnames(x), allow_NULL = TRUE)
+  meet_criteria(year_min, allow_class = c("numeric", "integer"), has_length = 1, allow_NULL = TRUE)
+  meet_criteria(year_max, allow_class = c("numeric", "integer"), has_length = 1, allow_NULL = TRUE)
+  meet_criteria(year_every, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(model, allow_class = c("character", "function"), has_length = 1, allow_NULL = TRUE)
+  meet_criteria(I_as_S, allow_class = "logical", has_length = 1)
+  meet_criteria(preserve_measurements, allow_class = "logical", has_length = 1)
+  meet_criteria(info, allow_class = "logical", has_length = 1)
   
-  stop_ifnot(is.data.frame(x), "`x` must be a data.frame")
-  stop_if(any(dim(x) == 0), "`x` must contain rows and columns")
-  stop_if(is.null(model), 'choose a regression model with the `model` parameter, e.g. resistance_predict(..., model = "binomial")')
-  stop_ifnot(col_ab %in% colnames(x),
-             "column `", col_ab, "` not found")
-  
+  stop_if(is.null(model), 'choose a regression model with the `model` argument, e.g. resistance_predict(..., model = "binomial")')
+
   dots <- unlist(list(...))
   if (length(dots) != 0) {
-    # backwards compatibility with old parameters
+    # backwards compatibility with old arguments
     dots.names <- dots %pm>% names()
     if ("tbl" %in% dots.names) {
       x <- dots[which(dots.names == "tbl")]
     }
     if ("I_as_R" %in% dots.names) {
-      warning("`I_as_R is deprecated - use I_as_S instead.", call. = FALSE)
+      warning_("`I_as_R is deprecated - use I_as_S instead.", call = FALSE)
     }
   }
   
@@ -151,7 +158,7 @@ resistance_predict <- function(x,
     stop_if(is.null(col_date), "`col_date` must be set")
   }
   stop_ifnot(col_date %in% colnames(x),
-             "column `", col_date, "` not found")
+             "column '", col_date, "' not found")
   
   # no grouped tibbles
   x <- as.data.frame(x, stringsAsFactors = FALSE)
@@ -179,12 +186,15 @@ resistance_predict <- function(x,
   # remove rows with NAs
   df <- subset(df, !is.na(df[, col_ab, drop = TRUE]))
   df$year <- year(df[, col_date, drop = TRUE])
-  df <- as.data.frame(rbind(table(df[, c("year", col_ab)])), stringsAsFactors = FALSE)
+  df <- as.data.frame(rbind(table(df[, c("year", col_ab)])),
+                      stringsAsFactors = FALSE)
   df$year <- as.integer(rownames(df))
   rownames(df) <- NULL
   
   df <- subset(df, sum(df$R + df$S, na.rm = TRUE) >= minimum)
+  # nolint start
   df_matrix <- as.matrix(df[, c("R", "S"), drop = FALSE])
+  # nolint end
   
   stop_if(NROW(df) == 0, "there are no observations")
   
@@ -300,6 +310,7 @@ rsi_predict <- resistance_predict
 #' @rdname resistance_predict
 plot.resistance_predict <- function(x, main = paste("Resistance Prediction of", x_name), ...) {
   x_name <- paste0(ab_name(attributes(x)$ab), " (", attributes(x)$ab, ")")
+  meet_criteria(main, allow_class = "character", has_length = 1)
   
   if (attributes(x)$I_as_S == TRUE) {
     ylab <- "%R"
@@ -342,11 +353,13 @@ ggplot_rsi_predict <- function(x,
                                main = paste("Resistance Prediction of", x_name),
                                ribbon = TRUE,
                                ...) {
+  x_name <- paste0(ab_name(attributes(x)$ab), " (", attributes(x)$ab, ")")
+  meet_criteria(main, allow_class = "character", has_length = 1)
+  meet_criteria(ribbon, allow_class = "logical", has_length = 1)
   
   stop_ifnot_installed("ggplot2")
   stop_ifnot(inherits(x, "resistance_predict"), "`x` must be a resistance prediction model created with resistance_predict()")
   
-  x_name <- paste0(ab_name(attributes(x)$ab), " (", attributes(x)$ab, ")")
   
   if (attributes(x)$I_as_S == TRUE) {
     ylab <- "%R"

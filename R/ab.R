@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -37,13 +37,14 @@
 #' 
 #' All these properties will be searched for the user input. The [as.ab()] can correct for different forms of misspelling:
 #' 
-#'  * Wrong spelling of drug names (like "tobramicin" or "gentamycin"), which corrects for most audible similarities such as f/ph, x/ks, c/z/s, t/th, etc.
+#'  * Wrong spelling of drug names (such as "tobramicin" or "gentamycin"), which corrects for most audible similarities such as f/ph, x/ks, c/z/s, t/th, etc.
 #'  * Too few or too many vowels or consonants
-#'  * Switching two characters (like "mreopenem", often the case in clinical data, when doctors typed too fast)
+#'  * Switching two characters (such as "mreopenem", often the case in clinical data, when doctors typed too fast)
 #'  * Digitalised paper records, leaving artefacts like 0/o/O (zero and O's), B/8, n/r, etc.
 #'
-#' Use the [ab_property()] functions to get properties based on the returned antibiotic ID, see Examples.
+#' Use the [`ab_*`][ab_property()] functions to get properties based on the returned antibiotic ID, see Examples.
 #' 
+#' Note: the [as.ab()] and [`ab_*`][ab_property()] functions may use very long regular expression to match brand names of antimicrobial agents. This may fail on some systems.
 #' @section Source:
 #' World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://www.whocc.no/atc_ddd_index/}
 #'
@@ -82,6 +83,9 @@
 #' ab_name("J01FA01")    # "Erythromycin"
 #' ab_name("eryt")       # "Erythromycin"
 as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
+  meet_criteria(x, allow_class = c("character", "numeric", "integer", "factor"), allow_NA = TRUE)
+  meet_criteria(flag_multiple_results, allow_class = "logical", has_length = 1)
+  meet_criteria(info, allow_class = "logical", has_length = 1)
   
   check_dataset_integrity()
   
@@ -94,8 +98,8 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
   
   if (all(toupper(x) %in% antibiotics$ab)) {
     # valid AB code, but not yet right class
-    return(structure(.Data = toupper(x),
-                     class = c("ab", "character")))
+    return(set_clean_class(toupper(x),
+                           new_class = c("ab", "character")))
   }
   
   x_bak <- x
@@ -120,8 +124,8 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
         abnames <- abnames[!abnames == "clavulanic acid"]
       }
       if (length(abnames) > 1) {
-        message(font_blue(paste0("NOTE: more than one result was found for item ", index, ": ",
-                                 paste0(abnames, collapse = ", "))))
+        message_("More than one result was found for item ", index, ": ",
+                 paste0(abnames, collapse = ", "))
       }
     }
     found[1L]
@@ -150,7 +154,8 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
     }
     
     if (isTRUE(flag_multiple_results) & x[i] %like% "[ ]") {
-      from_text <- suppressWarnings(ab_from_text(x[i], initial_search = FALSE, translate_ab = FALSE)[[1]])
+      from_text <- tryCatch(suppressWarnings(ab_from_text(x[i], initial_search = FALSE, translate_ab = FALSE)[[1]]),
+                            error = function(e) character(0))
     } else {
       from_text <- character(0)
     }
@@ -342,7 +347,8 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
       if (isTRUE(flag_multiple_results)) {
         found <- from_text[1L]
       } else {
-        found <- suppressWarnings(ab_from_text(x[i], initial_search = FALSE, translate_ab = FALSE)[[1]][1L])
+        found <- tryCatch(suppressWarnings(ab_from_text(x[i], initial_search = FALSE, translate_ab = FALSE)[[1]][1L]),
+                          error = function(e) NA_character_)
       }
       if (!is.na(found)) {
         x_new[i] <- note_if_more_than_one_found(found, i, from_text)
@@ -431,17 +437,17 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
   x_unknown_ATCs <- x_unknown[x_unknown %like% "[A-Z][0-9][0-9][A-Z][A-Z][0-9][0-9]"]
   x_unknown <- x_unknown[!x_unknown %in% x_unknown_ATCs]
   if (length(x_unknown_ATCs) > 0) {
-    warning("These ATC codes are not (yet) in the antibiotics data set: ",
-            paste('"', sort(unique(x_unknown_ATCs)), '"', sep = "", collapse = ", "),
-            ".",
-            call. = FALSE)
+    warning_("These ATC codes are not (yet) in the antibiotics data set: ",
+             paste('"', sort(unique(x_unknown_ATCs)), '"', sep = "", collapse = ", "),
+             ".",
+             call = FALSE)
   }
   
   if (length(x_unknown) > 0) {
-    warning("These values could not be coerced to a valid antimicrobial ID: ",
-            paste('"', sort(unique(x_unknown)), '"', sep = "", collapse = ", "),
-            ".",
-            call. = FALSE)
+    warning_("These values could not be coerced to a valid antimicrobial ID: ",
+             paste('"', sort(unique(x_unknown)), '"', sep = "", collapse = ", "),
+             ".",
+             call = FALSE)
   }
   
   x_result <- data.frame(x = x_bak_clean, stringsAsFactors = FALSE) %pm>%
@@ -452,8 +458,8 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
     x_result <- NA_character_
   }
   
-  structure(.Data = x_result,
-            class = c("ab", "character"))
+  set_clean_class(x_result,
+                  new_class = c("ab", "character"))
 }
 
 #' @rdname as.ab

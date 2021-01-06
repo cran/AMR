@@ -11,7 +11,7 @@ get_locale()
 For language-dependent output of AMR functions, like \code{\link[=mo_name]{mo_name()}}, \code{\link[=mo_gramstain]{mo_gramstain()}}, \code{\link[=mo_type]{mo_type()}} and \code{\link[=ab_name]{ab_name()}}.
 }
 \details{
-Strings will be translated to foreign languages if they are defined in a local translation file. Additions to this file can be suggested at our repository. The file can be found here: \url{https://github.com/msberends/AMR/blob/master/data-raw/translations.tsv}. This file will be read by all functions where a translated output can be desired, like all \code{\link[=mo_property]{mo_property()}} functions (\code{\link[=mo_name]{mo_name()}}, \code{\link[=mo_gramstain]{mo_gramstain()}}, \code{\link[=mo_type]{mo_type()}}, etc.) and \code{\link[=ab_property]{ab_property()}} functions (\code{\link[=ab_name]{ab_name()}}, \code{\link[=ab_group]{ab_group()}} etc.).
+Strings will be translated to foreign languages if they are defined in a local translation file. Additions to this file can be suggested at our repository. The file can be found here: \url{https://github.com/msberends/AMR/blob/master/data-raw/translations.tsv}. This file will be read by all functions where a translated output can be desired, like all \code{\link[=mo_property]{mo_*}} functions (such as \code{\link[=mo_name]{mo_name()}}, \code{\link[=mo_gramstain]{mo_gramstain()}}, \code{\link[=mo_type]{mo_type()}}, etc.) and \code{\link[=ab_property]{ab_*}} functions (such as \code{\link[=ab_name]{ab_name()}}, \code{\link[=ab_group]{ab_group()}}, etc.).
 
 Currently supported languages are: Dutch, English, French, German, Italian, Portuguese, Spanish. Please note that currently not all these languages have translations available for all antimicrobial agents and colloquial microorganism names.
 
@@ -32,7 +32,7 @@ So if the R option \code{AMR_locale} is set, the system variables \code{LANGUAGE
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Read more on our website!}{
@@ -41,7 +41,7 @@ On our website \url{https://msberends.github.io/AMR/} you can find \href{https:/
 }
 
 \examples{
-# The 'language' parameter of below functions
+# The 'language' argument of below functions
 # will be set automatically to your system language
 # with get_locale()
 

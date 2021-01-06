@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -23,7 +23,11 @@
 # how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
+# set up package environment, used by numerous AMR functions
+pkg_env <- new.env(hash = FALSE)
+
 .onLoad <- function(libname, pkgname) {
+  
   assign(x = "AB_lookup",
          value = create_AB_lookup(),
          envir = asNamespace("AMR"))
@@ -34,6 +38,10 @@
   
   assign(x = "MO.old_lookup",
          value = create_MO.old_lookup(),
+         envir = asNamespace("AMR"))
+  
+  assign(x = "INTRINSIC_R",
+         value = create_intr_resistance(),
          envir = asNamespace("AMR"))
   
   assign(x = "LANGUAGES_SUPPORTED",
@@ -70,6 +78,13 @@
   s3_register("skimr::get_skimmers", "rsi")
   s3_register("skimr::get_skimmers", "mic")
   s3_register("skimr::get_skimmers", "disk")
+  
+  # if mo source exists, fire it up (see mo_source())
+  try({
+    if (file.exists(getOption("AMR_mo_source", "~/mo_source.rds"))) {
+      invisible(get_mo_source())
+    }
+  }, silent = TRUE)
 }
 
 .onAttach <- function(...) {
@@ -77,30 +92,41 @@
   if (!interactive() || stats::runif(1) > 0.1 || isTRUE(as.logical(getOption("AMR_silentstart", FALSE)))) {
     return()
   }
-  packageStartupMessage("Thank you for using the AMR package! ",
-                        "If you have a minute, please anonymously fill in this short questionnaire to improve the package and its functionalities:",
-                        "\nhttps://msberends.github.io/AMR/survey.html",
-                        "\n[ prevent his notice with suppressPackageStartupMessages(library(AMR)) or use options(AMR_silentstart = TRUE) ]")
+  packageStartupMessage(word_wrap("Thank you for using the AMR package! ",
+                                  "If you have a minute, please anonymously fill in this short questionnaire to improve the package and its functionalities: ",
+                                  font_blue("https://msberends.github.io/AMR/survey.html\n"),
+                                  "[prevent his notice with ",
+                                  font_bold("suppressPackageStartupMessages(library(AMR))"),
+                                  " or use ",
+                                  font_bold("options(AMR_silentstart = TRUE)"), "]"))
+}
+
+create_intr_resistance <- function() {
+  # for mo_is_intrinsic_resistant() - saves a lot of time when executed on this vector
+  paste(AMR::microorganisms[match(AMR::intrinsic_resistant$microorganism, AMR::microorganisms$fullname), "mo", drop = TRUE],
+        AMR::antibiotics[match(AMR::intrinsic_resistant$antibiotic, AMR::antibiotics$name), "ab", drop = TRUE])
 }
 
 create_species_cons_cops <- function(type = c("CoNS", "CoPS")) {
-  # Determination of which staphylococcal species are CoNS/CoPS according to Becker et al.:
-  # https://cmr.asm.org/content/cmr/27/4/870/F6.large.jpg
+  # Determination of which staphylococcal species are CoNS/CoPS according to:
+  # - Becker et al. 2014, PMID 25278577
+  # - Becker et al. 2019, PMID 30872103
+  # - Becker et al. 2020, PMID 32056452
   # this function returns class <mo>
   MO_staph <- AMR::microorganisms
   MO_staph <- MO_staph[which(MO_staph$genus == "Staphylococcus"), , drop = FALSE]
   if (type == "CoNS") {
-    MO_staph[which(MO_staph$species %in% c("coagulase-negative",
-                                           "arlettae", "auricularis", "capitis",
-                                           "caprae", "carnosus", "chromogenes", "cohnii", "condimenti",
-                                           "devriesei", "epidermidis", "equorum", "felis",
-                                           "fleurettii", "gallinarum", "haemolyticus",
-                                           "hominis", "jettensis", "kloosii", "lentus",
-                                           "lugdunensis", "massiliensis", "microti",
+    MO_staph[which(MO_staph$species %in% c("coagulase-negative", "argensis", "arlettae",
+                                           "auricularis", "caeli", "capitis", "caprae", 
+                                           "carnosus", "chromogenes", "cohnii", "condimenti",
+                                           "debuckii", "devriesei", "edaphicus", "epidermidis",
+                                           "equorum", "felis", "fleurettii", "gallinarum",
+                                           "haemolyticus", "hominis", "jettensis", "kloosii",
+                                           "lentus", "lugdunensis", "massiliensis", "microti",
                                            "muscae", "nepalensis", "pasteuri", "petrasii",
-                                           "pettenkoferi", "piscifermentans", "rostri",
-                                           "saccharolyticus", "saprophyticus", "sciuri",
-                                           "stepanovicii", "simulans", "succinus",
+                                           "pettenkoferi", "piscifermentans", "pseudoxylosus",
+                                           "rostri", "saccharolyticus", "saprophyticus",
+                                           "sciuri", "simulans", "stepanovicii", "succinus",
                                            "vitulinus", "warneri", "xylosus")
                    | (MO_staph$species == "schleiferi" & MO_staph$subspecies %in% c("schleiferi", ""))),
              "mo", drop = TRUE]

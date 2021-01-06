@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -43,12 +43,14 @@
 #'     availability()
 #' }
 availability <- function(tbl, width = NULL) {
-  stop_ifnot(is.data.frame(tbl), "`tbl` must be a data.frame")
-  x <- sapply(tbl, function(x) {
+  meet_criteria(tbl, allow_class = "data.frame")
+  meet_criteria(width, allow_class = "numeric", allow_NULL = TRUE)
+  
+  x <- vapply(FUN.VALUE = double(1), tbl, function(x) {
     1 - sum(is.na(x)) / length(x) 
   })
-  n <- sapply(tbl, function(x) length(x[!is.na(x)]))
-  R <- sapply(tbl, function(x) ifelse(is.rsi(x), resistance(x, minimum = 0), NA))
+  n <- vapply(FUN.VALUE = double(1), tbl, function(x) length(x[!is.na(x)]))
+  R <- vapply(FUN.VALUE = double(1), tbl, function(x) ifelse(is.rsi(x), resistance(x, minimum = 0), NA_real_))
   R_print <- character(length(R))
   R_print[!is.na(R)] <- percentage(R[!is.na(R)])
   R_print[is.na(R)] <- ""
@@ -83,7 +85,8 @@ availability <- function(tbl, width = NULL) {
                    available = percentage(x),
                    visual_availabilty = paste0("|", x_chars, x_chars_empty, "|"),
                    resistant = R_print,
-                   visual_resistance = vis_resistance)
+                   visual_resistance = vis_resistance,
+                   stringsAsFactors = FALSE)
   if (length(R[is.na(R)]) == ncol(tbl)) {
     df[, 1:3]
   } else {

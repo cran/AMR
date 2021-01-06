@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -25,10 +25,10 @@
 
 #' Data sets with `r format(nrow(antibiotics) + nrow(antivirals), big.mark = ",")` antimicrobials
 #'
-#' Two data sets containing all antibiotics/antimycotics and antivirals. Use [as.ab()] or one of the [ab_property()] functions to retrieve values from the [antibiotics] data set. Three identifiers are included in this data set: an antibiotic ID (`ab`, primarily used in this package) as defined by WHONET/EARS-Net, an ATC code (`atc`) as defined by the WHO, and a Compound ID (`cid`) as found in PubChem. Other properties in this data set are derived from one or more of these codes.
+#' Two data sets containing all antibiotics/antimycotics and antivirals. Use [as.ab()] or one of the [`ab_*`][ab_property()] functions to retrieve values from the [antibiotics] data set. Three identifiers are included in this data set: an antibiotic ID (`ab`, primarily used in this package) as defined by WHONET/EARS-Net, an ATC code (`atc`) as defined by the WHO, and a Compound ID (`cid`) as found in PubChem. Other properties in this data set are derived from one or more of these codes.
 #' @format
 #' ### For the [antibiotics] data set: a [data.frame] with `r nrow(antibiotics)` observations and `r ncol(antibiotics)` variables:
-#' - `ab`\cr Antibiotic ID as used in this package (like `AMC`), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available
+#' - `ab`\cr Antibiotic ID as used in this package (such as `AMC`), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available
 #' - `atc`\cr ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC, like `J01CR02`
 #' - `cid`\cr Compound ID as found in PubChem
 #' - `name`\cr Official name as used by WHONET/EARS-Net or the WHO
@@ -58,12 +58,12 @@
 #' Synonyms (i.e. trade names) are derived from the Compound ID (`cid`) and consequently only available where a CID is available.
 #' 
 #' ### Direct download
-#' These data sets are available as 'flat files' for use even without R - you can find the files here:
+#' These data sets are available as 'flat files' for use even without \R - you can find the files here:
 #' 
 #' * <https://github.com/msberends/AMR/raw/master/data-raw/antibiotics.txt>
 #' * <https://github.com/msberends/AMR/raw/master/data-raw/antivirals.txt>
 #' 
-#' Files in R format (with preserved data structure) can be found here:
+#' Files in \R format (with preserved data structure) can be found here:
 #' 
 #' * <https://github.com/msberends/AMR/raw/master/data/antibiotics.rda>
 #' * <https://github.com/msberends/AMR/raw/master/data/antivirals.rda>
@@ -106,11 +106,11 @@
 #' - `r format(nrow(subset(microorganisms, source == "DSMZ")), big.mark = ",")` species from the DSMZ (Deutsche Sammlung von Mikroorganismen und Zellkulturen) since the DSMZ contain the latest taxonomic information based on recent publications
 #' 
 #' ### Direct download
-#' This data set is available as 'flat file' for use even without R - you can find the file here:
+#' This data set is available as 'flat file' for use even without \R - you can find the file here:
 #' 
 #' * <https://github.com/msberends/AMR/raw/master/data-raw/microorganisms.txt>
 #' 
-#' The file in R format (with preserved data structure) can be found here:
+#' The file in \R format (with preserved data structure) can be found here:
 #' 
 #' * <https://github.com/msberends/AMR/raw/master/data/microorganisms.rda>
 #' @section About the records from DSMZ (see source):
@@ -120,7 +120,7 @@
 #' In February 2020, the DSMZ records were merged with the List of Prokaryotic names with Standing in Nomenclature (LPSN).
 #' @source Catalogue of Life: Annual Checklist (public online taxonomic database), <http://www.catalogueoflife.org> (check included annual version with [catalogue_of_life_version()]).
 #' 
-#' Parte, A.C. (2018). LPSN — List of Prokaryotic names with Standing in Nomenclature (bacterio.net), 20 years on. International Journal of Systematic and Evolutionary Microbiology, 68, 1825-1829; doi: 10.1099/ijsem.0.002786
+#' Parte, A.C. (2018). LPSN — List of Prokaryotic names with Standing in Nomenclature (bacterio.net), 20 years on. International Journal of Systematic and Evolutionary Microbiology, 68, 1825-1829; \doi{10.1099/ijsem.0.002786}
 #'
 #' Leibniz Institute DSMZ-German Collection of Microorganisms and Cell Cultures, Germany, Prokaryotic Nomenclature Up-to-Date, <https://www.dsmz.de/services/online-tools/prokaryotic-nomenclature-up-to-date> and <https://lpsn.dsmz.de> (check included version with [catalogue_of_life_version()]).
 #' @inheritSection AMR Reference data publicly available
@@ -147,7 +147,7 @@ catalogue_of_life <- list(
 #' - `prevalence`\cr Prevalence of the microorganism, see [as.mo()]
 #' @source Catalogue of Life: Annual Checklist (public online taxonomic database), <http://www.catalogueoflife.org> (check included annual version with [catalogue_of_life_version()]).
 #' 
-#' Parte, A.C. (2018). LPSN — List of Prokaryotic names with Standing in Nomenclature (bacterio.net), 20 years on. International Journal of Systematic and Evolutionary Microbiology, 68, 1825-1829; doi: 10.1099/ijsem.0.002786
+#' Parte, A.C. (2018). LPSN — List of Prokaryotic names with Standing in Nomenclature (bacterio.net), 20 years on. International Journal of Systematic and Evolutionary Microbiology, 68, 1825-1829; \doi{10.1099/ijsem.0.002786}
 #' @inheritSection AMR Reference data publicly available
 #' @inheritSection AMR Read more on our website!
 #' @seealso [as.mo()] [mo_property()] [microorganisms]
@@ -178,7 +178,7 @@ catalogue_of_life <- list(
 #' - `gender`\cr gender of the patient
 #' - `patient_id`\cr ID of the patient
 #' - `mo`\cr ID of microorganism created with [as.mo()], see also [microorganisms]
-#' - `PEN:RIF`\cr `r sum(sapply(example_isolates, is.rsi))` different antibiotics with class [`rsi`] (see [as.rsi()]); these column names occur in the [antibiotics] data set and can be translated with [ab_name()]
+#' - `PEN:RIF`\cr `r sum(vapply(FUN.VALUE = logical(1), example_isolates, is.rsi))` different antibiotics with class [`rsi`] (see [as.rsi()]); these column names occur in the [antibiotics] data set and can be translated with [ab_name()]
 #' @inheritSection AMR Reference data publicly available
 #' @inheritSection AMR Read more on our website!
 "example_isolates"
@@ -225,7 +225,7 @@ catalogue_of_life <- list(
 #' - `Inducible clindamycin resistance`\cr Clindamycin can be induced?
 #' - `Comment`\cr Other comments
 #' - `Date of data entry`\cr Date this data was entered in WHONET
-#' - `AMP_ND10:CIP_EE`\cr `r sum(sapply(WHONET, is.rsi))` different antibiotics. You can lookup the abbreviations in the [antibiotics] data set, or use e.g. [`ab_name("AMP")`][ab_name()] to get the official name immediately. Before analysis, you should transform this to a valid antibiotic class, using [as.rsi()].
+#' - `AMP_ND10:CIP_EE`\cr `r sum(vapply(FUN.VALUE = logical(1), WHONET, is.rsi))` different antibiotics. You can lookup the abbreviations in the [antibiotics] data set, or use e.g. [`ab_name("AMP")`][ab_name()] to get the official name immediately. Before analysis, you should transform this to a valid antibiotic class, using [as.rsi()].
 #' @inheritSection AMR Reference data publicly available
 #' @inheritSection AMR Read more on our website!
 "WHONET"
@@ -258,7 +258,7 @@ catalogue_of_life <- list(
 #' - `antibiotic`\cr Name of the antibiotic drug
 #' @details The repository of this `AMR` package contains a file comprising this exact data set: <https://github.com/msberends/AMR/blob/master/data-raw/intrinsic_resistant.txt>. This file **allows for machine reading EUCAST guidelines about intrinsic resistance**, which is almost impossible with the Excel and PDF files distributed by EUCAST. The file is updated automatically.
 #' 
-#' This data set is based on '`r EUCAST_VERSION_EXPERT_RULES[["3.2"]]$title`', `r EUCAST_VERSION_EXPERT_RULES[["3.2"]]$version_txt` from `r EUCAST_VERSION_EXPERT_RULES[["3.2"]]$year`.
+#' This data set is based on `r format_eucast_version_nr(3.2)`.
 #' @inheritSection AMR Reference data publicly available
 #' @inheritSection AMR Read more on our website!
 #' @examples

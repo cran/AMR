@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -66,9 +66,12 @@ pca <- function(x,
                 scale. = TRUE,
                 tol = NULL,
                 rank. = NULL) {
-  
-  stop_ifnot(is.data.frame(x), "`x` must be a data.frame")
-  stop_if(any(dim(x) == 0), "`x` must contain rows and columns")
+  meet_criteria(x, allow_class = "data.frame")
+  meet_criteria(retx, allow_class = "logical", has_length = 1)
+  meet_criteria(center, allow_class = "logical", has_length = 1)
+  meet_criteria(scale., allow_class = "logical", has_length = 1)
+  meet_criteria(tol, allow_class = "numeric", has_length = 1, allow_NULL = TRUE)
+  meet_criteria(rank., allow_class = "numeric", has_length = 1, allow_NULL = TRUE)
   
   # unset data.table, tibble, etc.
   # also removes groups made by dplyr::group_by
@@ -87,15 +90,15 @@ pca <- function(x,
           # this is to support quoted variables: df %pm>% pca("mycol1", "mycol2")
           new_list[[i]] <- x[, new_list[[i]]]
         } else {
-          # remove item - it's a parameter like `center`
+          # remove item - it's a argument like `center`
           new_list[[i]] <- NULL
         }
       }
     }
     
     x <- as.data.frame(new_list, stringsAsFactors = FALSE)
-    if (any(sapply(x, function(y) !is.numeric(y)))) {
-      warning("Be sure to first calculate the resistance (or susceptibility) of variables with antimicrobial test results, since PCA works with numeric variables only. Please see Examples in ?pca.")
+    if (any(vapply(FUN.VALUE = logical(1), x, function(y) !is.numeric(y)))) {
+      warning_("Be sure to first calculate the resistance (or susceptibility) of variables with antimicrobial test results, since PCA works with numeric variables only. Please see Examples in ?pca.")
     }
     
     # set column names
@@ -103,21 +106,21 @@ pca <- function(x,
              error = function(e) warning("column names could not be set"))
     
     # keep only numeric columns
-    x <- x[, sapply(x, function(y) is.numeric(y))]
+    x <- x[, vapply(FUN.VALUE = logical(1), x, function(y) is.numeric(y))]
     # bind the data set with the non-numeric columns
-    x <- cbind(x.bak[, sapply(x.bak, function(y) !is.numeric(y) & !all(is.na(y))), drop = FALSE], x)
+    x <- cbind(x.bak[, vapply(FUN.VALUE = logical(1), x.bak, function(y) !is.numeric(y) & !all(is.na(y))), drop = FALSE], x)
   }
   
- x <-  pm_ungroup(x)  # would otherwise select the grouping vars
+  x <- pm_ungroup(x)  # would otherwise select the grouping vars
   x <- x[rowSums(is.na(x)) == 0, ] # remove columns containing NAs
   
-  pca_data <- x[, which(sapply(x, function(x) is.numeric(x)))]
+  pca_data <- x[, which(vapply(FUN.VALUE = logical(1), x, function(x) is.numeric(x)))]
   
-  message(font_blue(paste0("NOTE: Columns selected for PCA: ", paste0(font_bold(colnames(pca_data)), collapse = "/"),
-                           ".\n      Total observations available: ", nrow(pca_data), ".")))
+  message_("Columns selected for PCA: ", paste0(font_bold(colnames(pca_data)), collapse = "/"),
+           ". Total observations available: ", nrow(pca_data), ".")
   
   pca_model <- prcomp(pca_data, retx = retx, center = center, scale. = scale., tol = tol, rank. = rank.)
-  attr(pca_model, "non_numeric_cols") <- x[, sapply(x, function(y) !is.numeric(y) & !all(is.na(y))), drop = FALSE]
+  attr(pca_model, "non_numeric_cols") <- x[, vapply(FUN.VALUE = logical(1), x, function(y) !is.numeric(y) & !all(is.na(y))), drop = FALSE]
   class(pca_model) <- c("pca", class(pca_model))
   pca_model
 }

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -150,12 +150,8 @@ test_that("first isolates work", {
                              col_date = "non-existing col",
                              col_mo = "mo"))
 
-  # look for columns itself
-  expect_message(first_isolate(example_isolates))
-  expect_message(first_isolate(example_isolates %>%
-                               mutate(mo = as.character(mo)) %>%
-                               left_join_microorganisms()))
-
+  require("dplyr")
+  
   # if mo is not an mo class, result should be the same
   expect_identical(example_isolates %>%
                      mutate(mo = as.character(mo)) %>%
@@ -166,6 +162,14 @@ test_that("first isolates work", {
                      first_isolate(col_date = "date",
                                    col_mo = "mo",
                                    col_patient_id = "patient_id"))
+  
+  # support for WHONET
+  expect_message(example_isolates %>%
+                   select(-patient_id) %>%
+                   mutate(`First name` = "test",
+                          `Last name` = "test", 
+                          Sex = "Female") %>% 
+                   first_isolate(info = TRUE))
 
   # missing dates should be no problem
   df <- example_isolates
@@ -200,4 +204,12 @@ test_that("first isolates work", {
   expect_identical(filter_first_weighted_isolate(example_isolates),
                    subset(example_isolates, first_isolate(ex)))
   
+  # notice that all mo's are distinct, so all are TRUE
+  expect_true(all(example_isolates %pm>%
+                    pm_distinct(mo, .keep_all = TRUE) %pm>%
+                    first_isolate(info = TRUE) == TRUE))
+  
+  # only one isolate, so return fast
+  expect_true(first_isolate(data.frame(mo = "Escherichia coli", date = Sys.Date(), patient = "patient"), info = TRUE))
+
 })

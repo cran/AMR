@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -25,7 +25,9 @@
 
 #' Calculate the matching score for microorganisms
 #' 
-#' This helper function is used by [as.mo()] to determine the most probable match of taxonomic records, based on user input. 
+#' This algorithm is used by [as.mo()] and all the [`mo_*`][mo_property()] functions to determine the most probable match of taxonomic records based on user input. 
+#' @inheritSection lifecycle Stable lifecycle
+#' @author Matthijs S. Berends
 #' @param x Any user input value(s)
 #' @param n A full taxonomic name, that exists in [`microorganisms$fullname`][microorganisms]
 #' @section Matching score for microorganisms:
@@ -53,6 +55,9 @@
 #' mo_matching_score(x = "E. coli",
 #'                   n = c("Escherichia coli", "Entamoeba coli"))
 mo_matching_score <- function(x, n) {
+  meet_criteria(x, allow_class = c("character", "data.frame", "list"))
+  meet_criteria(n, allow_class = "character")
+  
   x <- parse_and_convert(x)
   # no dots and other non-whitespace characters
   x <- gsub("[^a-zA-Z0-9 \\(\\)]+", "", x)

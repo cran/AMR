@@ -47,7 +47,7 @@ ggplot_rsi_predict(
 )
 }
 \arguments{
-\item{x}{a \link{data.frame} containing isolates.}
+\item{x}{a \link{data.frame} containing isolates. Can be left blank when used inside \code{dplyr} verbs, such as \code{\link[dplyr:filter]{filter()}}, \code{\link[dplyr:mutate]{mutate()}} and \code{\link[dplyr:summarise]{summarise()}}.}
 
 \item{col_ab}{column name of \code{x} containing antimicrobial interpretations (\code{"R"}, \code{"I"} and \code{"S"})}
 
@@ -63,13 +63,13 @@ ggplot_rsi_predict(
 
 \item{model}{the statistical model of choice. This could be a generalised linear regression model with binomial distribution (i.e. using `glm(..., family = binomial)``, assuming that a period of zero resistance was followed by a period of increasing resistance leading slowly to more and more resistance. See Details for all valid options.}
 
-\item{I_as_S}{a logical to indicate whether values \code{I} should be treated as \code{S} (will otherwise be treated as \code{R}). The default, \code{TRUE}, follows the redefinition by EUCAST about the interpretion of I (increased exposure) in 2019, see section \emph{Interpretation of S, I and R} below.}
+\item{I_as_S}{a logical to indicate whether values \code{"I"} should be treated as \code{"S"} (will otherwise be treated as \code{"R"}). The default, \code{TRUE}, follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section \emph{Interpretation of S, I and R} below.}
 
 \item{preserve_measurements}{a logical to indicate whether predictions of years that are actually available in the data should be overwritten by the original data. The standard errors of those years will be \code{NA}.}
 
 \item{info}{a logical to indicate whether textual analysis should be printed with the name and \code{\link[=summary]{summary()}} of the statistical model.}
 
-\item{...}{parameters passed on to functions}
+\item{...}{arguments passed on to functions}
 
 \item{main}{title of the plot}
 
@@ -93,7 +93,7 @@ Furthermore, the model itself is available as an attribute: \code{attributes(x)$
 Create a prediction model to predict antimicrobial resistance for the next years on statistical solid ground. Standard errors (SE) will be returned as columns \code{se_min} and \code{se_max}. See \emph{Examples} for a real live example.
 }
 \details{
-Valid options for the statistical model (parameter \code{model}) are:
+Valid options for the statistical model (argument \code{model}) are:
 \itemize{
 \item \code{"binomial"} or \code{"binom"} or \code{"logit"}: a generalised linear regression model with binomial distribution
 \item \code{"loglin"} or \code{"poisson"}: a generalised log-linear regression model with poisson distribution

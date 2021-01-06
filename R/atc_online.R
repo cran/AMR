@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -32,9 +32,9 @@
 #' @param administration type of administration when using `property = "Adm.R"`, see Details
 #' @param url url of website of the WHOCC. The sign `%s` can be used as a placeholder for ATC codes.
 #' @param url_vet url of website of the WHOCC for veterinary medicine. The sign `%s` can be used as a placeholder for ATC_vet codes (that all start with "Q").
-#' @param ... parameters to pass on to `atc_property`
+#' @param ... arguments to pass on to `atc_property`
 #' @details
-#' Options for parameter `administration`:
+#' Options for argument `administration`:
 #' 
 #' - `"Implant"` = Implant
 #' - `"Inhal"` = Inhalation
@@ -78,6 +78,11 @@ atc_online_property <- function(atc_code,
                                 administration = "O",
                                 url = "https://www.whocc.no/atc_ddd_index/?code=%s&showdescription=no",
                                 url_vet = "https://www.whocc.no/atcvet/atcvet_index/?code=%s&showdescription=no") {
+  meet_criteria(atc_code, allow_class = "character")
+  meet_criteria(property, allow_class = "character", has_length = 1, is_in = c("ATC", "Name", "DDD", "U", "Adm.R", "Note", "groups"), ignore.case = TRUE)
+  meet_criteria(administration, allow_class = "character", has_length = 1)
+  meet_criteria(url, allow_class = "character", has_length = 1, looks_like = "https?://")
+  meet_criteria(url_vet, allow_class = "character", has_length = 1, looks_like = "https?://")
   
   has_internet <- import_fn("has_internet", "curl")
   html_attr <- import_fn("html_attr", "rvest")
@@ -95,28 +100,18 @@ atc_online_property <- function(atc_code,
   }
   
   if (!has_internet()) {
-    message("There appears to be no internet connection, returning NA.")
+    message_("There appears to be no internet connection, returning NA.",
+             add_fn = font_red,
+             as_note = FALSE)
     return(rep(NA, length(atc_code)))
   }
-  
-  stop_if(length(property) != 1L, "`property` must be of length 1")
-  stop_if(length(administration) != 1L, "`administration` must be of length 1")
   
   # also allow unit as property
   if (property %like% "unit") {
     property <- "U"
   }
   
-  # validation of properties
-  valid_properties <- c("ATC", "Name", "DDD", "U", "Adm.R", "Note", "groups")
-  valid_properties.bak <- valid_properties
-  
   property <- tolower(property)
-  valid_properties <- tolower(valid_properties)
-  
-  stop_ifnot(property %in% valid_properties,
-             "Invalid `property`, use one of ", paste(valid_properties.bak, collapse = ", "))
-  
   if (property == "ddd") {
     returnvalue <- rep(NA_real_, length(atc_code))
   } else if (property == "groups") {
@@ -166,7 +161,7 @@ atc_online_property <- function(atc_code,
       colnames(tbl) <- gsub("^atc.*", "atc", tolower(colnames(tbl)))
       
       if (length(tbl) == 0) {
-        warning("ATC not found: ", atc_code[i], ". Please check ", atc_url, ".", call. = FALSE)
+        warning_("ATC not found: ", atc_code[i], ". Please check ", atc_url, ".", call = FALSE)
         returnvalue[i] <- NA
         next
       }
@@ -199,11 +194,13 @@ atc_online_property <- function(atc_code,
 #' @rdname atc_online
 #' @export
 atc_online_groups <- function(atc_code, ...) {
+  meet_criteria(atc_code, allow_class = "character")
   atc_online_property(atc_code = atc_code, property = "groups", ...)
 }
 
 #' @rdname atc_online
 #' @export
 atc_online_ddd <- function(atc_code, ...) {
+  meet_criteria(atc_code, allow_class = "character")
   atc_online_property(atc_code = atc_code, property = "ddd", ...)
 }

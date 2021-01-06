@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -57,8 +57,10 @@ test_that("as.mo works", {
   expect_equal(as.character(as.mo("Estreptococos grupo B")), "B_STRPT_GRPB")
   expect_equal(as.character(as.mo("Group B Streptococci")), "B_STRPT_GRPB")
   expect_equal(as.character(suppressWarnings(as.mo("B_STRPT_PNE"))), "B_STRPT_PNMN") # old MO code (<=v0.8.0)
+  expect_equal(as.character(as.mo(c("mycobacterie", "mycobakterium"))), c("B_MYCBC", "B_MYCBC"))
   
-  expect_equal(as.character(as.mo(c("GAS", "GBS"))), c("B_STRPT_GRPA", "B_STRPT_GRPB"))
+  expect_equal(as.character(as.mo(c("GAS", "GBS", "a MGS", "haemoly strep"))), c("B_STRPT_GRPA", "B_STRPT_GRPB", "B_STRPT_MILL", "B_STRPT_HAEM"))
+
   
   expect_equal(as.character(as.mo("S. pyo")), "B_STRPT_PYGN") # not Actinomyces pyogenes
   
@@ -110,7 +112,8 @@ test_that("as.mo works", {
     rep("B_PRBRK_NODS", 4))
   
   # empty values
-  expect_identical(as.character(as.mo(c("", NA, NaN))), rep(NA_character_, 3))
+  expect_identical(as.character(as.mo(c("", "  ", NA, NaN))), rep(NA_character_, 4))
+  expect_identical(as.character(as.mo("  ")), NA_character_)
   # too few characters
   expect_warning(as.mo("ab"))
   
@@ -203,6 +206,7 @@ test_that("as.mo works", {
   # check old names
   expect_equal(suppressMessages(as.character(as.mo("Escherichia blattae"))), "B_SHMWL_BLTT")
   print(mo_renamed())
+  expect_equal(suppressMessages(as.character(as.mo(c("E. coli", "Chlamydo psittaci")))), c("B_ESCHR_COLI", "B_CHLMY_PSTT"))
   
   # check uncertain names
   expect_equal(suppressMessages(as.character(as.mo("staaur extratest", allow_uncertain = TRUE))), "B_STPHY_AURS")
@@ -210,7 +214,7 @@ test_that("as.mo works", {
   expect_message(as.mo("e coli extra_text", allow_uncertain = TRUE))
   expect_equal(suppressMessages(as.character(as.mo("unexisting aureus", allow_uncertain = 3))), "B_STPHY_AURS")
   expect_equal(suppressMessages(as.character(as.mo("unexisting staphy", allow_uncertain = 3))), "B_STPHY_COPS")
-  expect_equal(suppressMessages(as.character(as.mo("Staphylococcus aureus unexisting", allow_uncertain = 3))), "B_STPHY_AURS_ANRB")
+  expect_equal(suppressMessages(as.character(as.mo(c("s aur THISISATEST", "Staphylococcus aureus unexisting"), allow_uncertain = 3))), c("B_STPHY_AURS_ANRB", "B_STPHY_AURS_ANRB"))
   
   # predefined reference_df
   expect_equal(as.character(as.mo("TestingOwnID",
@@ -237,6 +241,9 @@ test_that("as.mo works", {
       "Streptococcus suis (bovis gr)",
       "Raoultella (here some text) terrigena")))),
     c("B_MCRBC_PRXY", "B_STRPT_SUIS", "B_RLTLL_TRRG"))
+  expect_output(print(mo_uncertainties()))
+  x <- as.mo("S. aur")
+  # many hits
   expect_output(print(mo_uncertainties()))
 
   # Salmonella (City) are all actually Salmonella enterica spp (City)
@@ -284,5 +291,14 @@ test_that("as.mo works", {
   expect_warning(x[1] <- "invalid code")
   expect_warning(x[[1]] <- "invalid code")
   expect_warning(c(x[1], "test"))
+  
+  # ignoring patterns
+  expect_equal(as.character(as.mo(c("E. coli", "E. coli ignorethis"), ignore_pattern = "this")),
+               c("B_ESCHR_COLI", NA))
+  
+  # frequency tables
+  if (require("cleaner")) {
+    expect_s3_class(cleaner::freq(example_isolates$mo), "freq")
+  }
   
 })

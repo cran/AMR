@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -36,10 +36,11 @@ rsi_calc <- function(...,
                      as_percent = FALSE,
                      only_all_tested = FALSE,
                      only_count = FALSE) {
-  
-  stop_ifnot(is.numeric(minimum), "`minimum` must be numeric", call = -2)
-  stop_ifnot(is.logical(as_percent), "`as_percent` must be logical", call = -2)
-  stop_ifnot(is.logical(only_all_tested), "`only_all_tested` must be logical", call = -2)
+  meet_criteria(ab_result, allow_class = c("character", "numeric", "integer"), has_length = c(1, 2, 3), .call_depth = 1)
+  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, .call_depth = 1)
+  meet_criteria(as_percent, allow_class = "logical", has_length = 1, .call_depth = 1)
+  meet_criteria(only_all_tested, allow_class = "logical", has_length = 1, .call_depth = 1)
+  meet_criteria(only_count, allow_class = "logical", has_length = 1, .call_depth = 1)
   
   data_vars <- dots2vars(...)
   
@@ -69,7 +70,7 @@ rsi_calc <- function(...,
     }
     if (length(dots) == 0 | all(dots == "df")) {
      # for complete data.frames, like example_isolates %pm>% select(AMC, GEN) %pm>% proportion_S()
-      # and the old rsi function, which has "df" as name of the first parameter
+      # and the old rsi function, which has "df" as name of the first argument
       x <- dots_df
     } else {
       # get dots that are in column names already, and the ones that will be once evaluated using dots_df or global env
@@ -94,8 +95,12 @@ rsi_calc <- function(...,
   }
   
   if (is.null(x)) {
-    warning("argument is NULL (check if columns exist): returning NA", call. = FALSE)
-    return(NA)
+    warning_("argument is NULL (check if columns exist): returning NA", call = FALSE)
+    if (as_percent == TRUE) {
+      return(NA_character_)
+    } else {
+      return(NA_real_)
+    }
   }
   
   print_warning <- FALSE
@@ -117,19 +122,19 @@ rsi_calc <- function(...,
       rsi_integrity_check <- as.rsi(rsi_integrity_check)
     }
     
-    x_transposed <- as.list(as.data.frame(t(x)))
+    x_transposed <- as.list(as.data.frame(t(x), stringsAsFactors = FALSE))
     if (only_all_tested == TRUE) {
       # no NAs in any column
       y <- apply(X = as.data.frame(lapply(x, as.integer), stringsAsFactors = FALSE),
                  MARGIN = 1,
                  FUN = min)
       numerator <- sum(as.integer(y) %in% as.integer(ab_result), na.rm = TRUE)
-      denominator <- sum(sapply(x_transposed, function(y) !(any(is.na(y)))))
+      denominator <- sum(vapply(FUN.VALUE = logical(1), x_transposed, function(y) !(any(is.na(y)))))
     } else {
       # may contain NAs in any column
       other_values <- setdiff(c(NA, levels(ab_result)), ab_result)
-      numerator <- sum(sapply(x_transposed, function(y) any(y %in% ab_result, na.rm = TRUE)))
-      denominator <- sum(sapply(x_transposed, function(y) !(all(y %in% other_values) & any(is.na(y)))))
+      numerator <- sum(vapply(FUN.VALUE = logical(1), x_transposed, function(y) any(y %in% ab_result, na.rm = TRUE)))
+      denominator <- sum(vapply(FUN.VALUE = logical(1), x_transposed, function(y) !(all(y %in% other_values) & any(is.na(y)))))
     }
   } else {
     # x is not a data.frame
@@ -142,8 +147,11 @@ rsi_calc <- function(...,
   }
   
   if (print_warning == TRUE) {
-    warning("Increase speed by transforming to class <rsi> on beforehand: your_data %pm>% mutate_if(is.rsi.eligible, as.rsi)",
-            call. = FALSE)
+    if (message_not_thrown_before("rsi_calc")) {
+      warning_("Increase speed by transforming to class <rsi> on beforehand: your_data %>% mutate_if(is.rsi.eligible, as.rsi)",
+               call = FALSE)
+      remember_thrown_message("rsi_calc")
+    }
   }
   
   if (only_count == TRUE) {
@@ -154,7 +162,7 @@ rsi_calc <- function(...,
     if (data_vars != "") {
       data_vars <- paste(" for", data_vars)
     }
-    warning("Introducing NA: only ", denominator, " results available", data_vars, " (`minimum` = ", minimum, ").", call. = FALSE)
+    warning_("Introducing NA: only ", denominator, " results available", data_vars, " (`minimum` = ", minimum, ").", call = FALSE)
     fraction <- NA_real_
   } else {
     fraction <- numerator / denominator
@@ -177,17 +185,21 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
                         combine_SI = TRUE,
                         combine_IR = FALSE,
                         combine_SI_missing = FALSE) {
+  meet_criteria(type, is_in = c("proportion", "count", "both"), has_length = 1, .call_depth = 1)
+  meet_criteria(data, allow_class = "data.frame", contains_column_class = "rsi", .call_depth = 1)
+  meet_criteria(translate_ab, allow_class = c("character", "logical"), has_length = 1, allow_NA = TRUE, .call_depth = 1)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE, .call_depth = 1)
+  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, .call_depth = 1)
+  meet_criteria(as_percent, allow_class = "logical", has_length = 1, .call_depth = 1)
+  meet_criteria(combine_SI, allow_class = "logical", has_length = 1, .call_depth = 1)
+  meet_criteria(combine_SI_missing, allow_class = "logical", has_length = 1, .call_depth = 1)
   
   check_dataset_integrity()
-  stop_ifnot(is.data.frame(data), "`data` must be a data.frame", call = -2)
-  stop_if(any(dim(data) == 0), "`data` must contain rows and columns", call = -2)
-  stop_ifnot(any(sapply(data, is.rsi), na.rm = TRUE), "no columns with class <rsi> found. See ?as.rsi.", call = -2)
+  
   if (isTRUE(combine_IR) & isTRUE(combine_SI_missing)) {
     combine_SI <- FALSE
   }
   stop_if(isTRUE(combine_SI) & isTRUE(combine_IR), "either `combine_SI` or `combine_IR` can be TRUE, not both", call = -2)
-  stop_ifnot(is.numeric(minimum), "`minimum` must be numeric", call = -2)
-  stop_ifnot(is.logical(as_percent), "`as_percent` must be logical", call = -2)
   
   translate_ab <- get_translate_ab(translate_ab)
   
@@ -195,10 +207,10 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
   if (inherits(data, "grouped_df")) {
     data_has_groups <- TRUE
     groups <- setdiff(names(attributes(data)$groups), ".rows")
-    data <- data[, c(groups, colnames(data)[sapply(data, is.rsi)]), drop = FALSE]
+    data <- data[, c(groups, colnames(data)[vapply(FUN.VALUE = logical(1), data, is.rsi)]), drop = FALSE]
   } else {
     data_has_groups <- FALSE
-    data <- data[, colnames(data)[sapply(data, is.rsi)], drop = FALSE]
+    data <- data[, colnames(data)[vapply(FUN.VALUE = logical(1), data, is.rsi)], drop = FALSE]
   }
   
   data <- as.data.frame(data, stringsAsFactors = FALSE)
@@ -235,7 +247,7 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
       } else {
         values <- factor(values, levels = c("S", "I", "R"), ordered = TRUE)
       }
-      col_results <- as.data.frame(as.matrix(table(values)))
+      col_results <- as.data.frame(as.matrix(table(values)), stringsAsFactors = FALSE)
       col_results$interpretation <- rownames(col_results)
       col_results$isolates <- col_results[, 1, drop = TRUE]
       if (NROW(col_results) > 0 && sum(col_results$isolates, na.rm = TRUE) > 0) {
@@ -260,7 +272,7 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
           }
           out_new <- cbind(group_values, out_new)
         }
-        out <- rbind(out, out_new)
+        out <- rbind(out, out_new, stringsAsFactors = FALSE)
       }
     }
     out

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -56,6 +56,9 @@
 #' plot(mic_data)
 #' barplot(mic_data)
 as.mic <- function(x, na.rm = FALSE) {
+  meet_criteria(x, allow_class = c("mic", "character", "numeric", "integer"), allow_NA = TRUE)
+  meet_criteria(na.rm, allow_class = "logical", has_length = 1)
+  
   if (is.mic(x)) {
     x
   } else {
@@ -104,14 +107,14 @@ as.mic <- function(x, na.rm = FALSE) {
     
     # these are allowed MIC values and will become factor levels
     ops <- c("<", "<=", "", ">=", ">")
-    lvls <- c(c(t(sapply(ops, function(x) paste0(x, "0.00", 1:9)))),
-              unique(c(t(sapply(ops, function(x) paste0(x, sort(as.double(paste0("0.0", 
+    lvls <- c(c(t(vapply(FUN.VALUE = character(9), ops, function(x) paste0(x, "0.00", 1:9)))),
+              unique(c(t(vapply(FUN.VALUE = character(104), ops, function(x) paste0(x, sort(as.double(paste0("0.0", 
                                                                                  sort(c(1:99, 125, 128, 256, 512, 625)))))))))),
-              unique(c(t(sapply(ops, function(x) paste0(x, sort(as.double(paste0("0.", 
+              unique(c(t(vapply(FUN.VALUE = character(103), ops, function(x) paste0(x, sort(as.double(paste0("0.", 
                                                                                  c(1:99, 125, 128, 256, 512))))))))),
-              c(t(sapply(ops, function(x) paste0(x, sort(c(1:9, 1.5)))))),
-              c(t(sapply(ops, function(x) paste0(x, c(10:98)[9:98 %% 2 == TRUE])))),
-              c(t(sapply(ops, function(x) paste0(x, sort(c(2 ^ c(7:10), 80 * c(2:12))))))))
+              c(t(vapply(FUN.VALUE = character(10), ops, function(x) paste0(x, sort(c(1:9, 1.5)))))),
+              c(t(vapply(FUN.VALUE = character(45), ops, function(x) paste0(x, c(10:98)[9:98 %% 2 == TRUE])))),
+              c(t(vapply(FUN.VALUE = character(15), ops, function(x) paste0(x, sort(c(2 ^ c(7:10), 80 * c(2:12))))))))
     
     na_before <- x[is.na(x) | x == ""] %pm>% length()
     x[!x %in% lvls] <- NA
@@ -122,21 +125,24 @@ as.mic <- function(x, na.rm = FALSE) {
         unique() %pm>%
         sort()
       list_missing <- paste0('"', list_missing, '"', collapse = ", ")
-      warning(na_after - na_before, " results truncated (",
-              round(((na_after - na_before) / length(x)) * 100),
-              "%) that were invalid MICs: ",
-              list_missing, call. = FALSE)
+      warning_(na_after - na_before, " results truncated (",
+               round(((na_after - na_before) / length(x)) * 100),
+               "%) that were invalid MICs: ",
+               list_missing, call = FALSE)
     }
     
-    structure(.Data = factor(x, levels = lvls, ordered = TRUE),
-              class =  c("mic", "ordered", "factor"))
+    set_clean_class(factor(x, levels = lvls, ordered = TRUE),
+                    new_class =  c("mic", "ordered", "factor"))
   }
 }
 
 all_valid_mics <- function(x) {
+  if (!inherits(x, c("mic", "character", "factor", "numeric", "integer"))) {
+    return(FALSE)
+  }
   x_mic <- tryCatch(suppressWarnings(as.mic(x[!is.na(x)])),
                     error = function(e) NA)
-  !any(is.na(x_mic)) & !all(is.na(x))
+  !any(is.na(x_mic)) && !all(is.na(x))
 }
 
 #' @rdname as.mic
@@ -149,27 +155,27 @@ is.mic <- function(x) {
 #' @export
 #' @noRd
 as.double.mic <- function(x, ...) {
-  as.double(gsub("(<|=|>)+", "", as.character(x)))
+  as.double(gsub("[<=>]+", "", as.character(x)))
 }
 
 #' @method as.integer mic
 #' @export
 #' @noRd
 as.integer.mic <- function(x, ...) {
-  as.integer(gsub("(<|=|>)+", "", as.character(x)))
+  as.integer(gsub("[<=>]+", "", as.character(x)))
 }
 
 #' @method as.numeric mic
 #' @export
 #' @noRd
 as.numeric.mic <- function(x, ...) {
-  as.numeric(gsub("(<|=|>)+", "", as.character(x)))
+  as.numeric(gsub("[<=>]+", "", as.character(x)))
 }
 
 #' @method droplevels mic
 #' @export
 #' @noRd
-droplevels.mic <- function(x, exclude = ifelse(anyNA(levels(x)), NULL, NA), ...) {
+droplevels.mic <- function(x, exclude = if (any(is.na(levels(x)))) NULL else NA, ...) {
   x <- droplevels.factor(x, exclude = exclude, ...)
   class(x) <- c("mic", "ordered", "factor")
   x
@@ -177,9 +183,13 @@ droplevels.mic <- function(x, exclude = ifelse(anyNA(levels(x)), NULL, NA), ...)
 
 # will be exported using s3_register() in R/zzz.R
 pillar_shaft.mic <- function(x, ...) {
-  out <- trimws(format(x))
+  crude_numbers <- as.double(x)
+  operators <- gsub("[^<=>]+", "", as.character(x))
+  pasted <- trimws(paste0(operators, trimws(format(crude_numbers))))
+  out <- pasted
   out[is.na(x)] <- font_na(NA)
-  create_pillar_column(out, align = "right", min_width = 4)
+  out <- gsub("(<|=|>)", font_silver("\\1"), out)
+  create_pillar_column(out, align = "right", width = max(nchar(pasted)))
 }
 
 # will be exported using s3_register() in R/zzz.R
@@ -213,7 +223,7 @@ summary.mic <- function(object, ...) {
 
 #' @method plot mic
 #' @export
-#' @importFrom graphics barplot axis par
+#' @importFrom graphics barplot axis
 #' @rdname plot
 plot.mic <- function(x,
                      main = paste("MIC values of", deparse(substitute(x))),
@@ -221,13 +231,18 @@ plot.mic <- function(x,
                      xlab = "MIC value",
                      axes = FALSE,
                      ...) {
-  barplot(table(droplevels.factor(x)),
+  meet_criteria(main, allow_class = "character", has_length = 1)
+  meet_criteria(ylab, allow_class = "character", has_length = 1)
+  meet_criteria(xlab, allow_class = "character", has_length = 1)
+  meet_criteria(axes, allow_class = "logical", has_length = 1)
+  
+  barplot(table(as.double(x)),
           ylab = ylab,
           xlab = xlab,
           axes = axes,
           main = main,
           ...)
-  axis(2, seq(0, max(table(droplevels.factor(x)))))
+  axis(2, seq(0, max(table(as.double(x)))))
 }
 
 #' @method barplot mic
@@ -240,13 +255,18 @@ barplot.mic <- function(height,
                         xlab = "MIC value",
                         axes = FALSE,
                         ...) {
-  barplot(table(droplevels.factor(height)),
+  meet_criteria(main, allow_class = "character", has_length = 1)
+  meet_criteria(ylab, allow_class = "character", has_length = 1)
+  meet_criteria(xlab, allow_class = "character", has_length = 1)
+  meet_criteria(axes, allow_class = "logical", has_length = 1)
+  
+  barplot(table(as.double(height)),
           ylab = ylab,
           xlab = xlab,
           axes = axes,
           main = main,
           ...)
-  axis(2, seq(0, max(table(droplevels.factor(height)))))
+  axis(2, seq(0, max(table(as.double(height)))))
 }
 
 #' @method [ mic
@@ -303,14 +323,12 @@ unique.mic <- function(x, incomparables = FALSE, ...) {
 
 # will be exported using s3_register() in R/zzz.R
 get_skimmers.mic <- function(column) {
-  sfl <- import_fn("sfl", "skimr", error_on_fail = FALSE)
-  inline_hist <- import_fn("inline_hist", "skimr", error_on_fail = FALSE)
-  sfl(
+  skimr::sfl(
     skim_type = "mic",
-    min = ~as.character(sort(na.omit(.))[1]),
+    min = ~as.character(sort(stats::na.omit(.))[1]),
     max = ~as.character(sort(stats::na.omit(.))[length(stats::na.omit(.))]),
     median = ~as.character(stats::na.omit(.)[as.double(stats::na.omit(.)) == median(as.double(stats::na.omit(.)))])[1],
     n_unique = ~pm_n_distinct(., na.rm = TRUE),
-    hist_log2 = ~inline_hist(log2(as.double(stats::na.omit(.))))
+    hist_log2 = ~skimr::inline_hist(log2(as.double(stats::na.omit(.))))
   )
 }

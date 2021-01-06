@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -28,9 +28,18 @@ context("like.R")
 test_that("`like` works", {
   skip_on_cran()
   expect_true(sum("test" %like% c("^t", "^s")) == 1)
+  
   expect_true("test" %like% "test")
-  expect_true("test" %like% "TEST")
+  expect_false("test" %like_case% "TEST")
+  expect_true(factor("test") %like% factor("t"))
+  expect_true(factor("test") %like% "t")
+  expect_true("test" %like% factor("t"))
+
   expect_true(as.factor("test") %like% "TEST")
   expect_identical(factor(c("Test case", "Something different", "Yet another thing")) %like% c("case", "diff", "yet"),
                    c(TRUE, TRUE, TRUE))
+  expect_identical("test" %like% c("t", "e", "s", "t"),
+                   c(TRUE, TRUE, TRUE, TRUE))
+  expect_identical(factor("test") %like% factor(c("t", "e", "s", "t")),
+                   c(TRUE, TRUE, TRUE, TRUE))
 })

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -52,6 +52,7 @@ test_that("proportions works", {
                0.9382647,
                tolerance = 0.0001)
 
+  library(dplyr)
   # percentages
   expect_equal(example_isolates %>%
                  group_by(hospital_id) %>%
@@ -75,11 +76,15 @@ test_that("proportions works", {
                            combination_n = n_rsi(CIP, GEN)) %>%
                  pull(combination_n),
                c(305, 617, 241, 711))
-
+  
+  reset_all_thrown_messages()
   expect_warning(proportion_R(as.character(example_isolates$AMC)))
+  reset_all_thrown_messages()
   expect_warning(proportion_S(as.character(example_isolates$AMC)))
+  reset_all_thrown_messages()
   expect_warning(proportion_S(as.character(example_isolates$AMC,
-                                        example_isolates$GEN)))
+                                           example_isolates$GEN)))
+  reset_all_thrown_messages()
   expect_warning(n_rsi(as.character(example_isolates$AMC,
                                     example_isolates$GEN)))
   expect_equal(suppressWarnings(n_rsi(as.character(example_isolates$AMC,
@@ -104,8 +109,11 @@ test_that("proportions works", {
                    NA_real_)
 
   # warning for speed loss
+  reset_all_thrown_messages()
   expect_warning(proportion_R(as.character(example_isolates$GEN)))
+  reset_all_thrown_messages()
   expect_warning(proportion_I(as.character(example_isolates$GEN)))
+  reset_all_thrown_messages()
   expect_warning(proportion_S(example_isolates$AMC, as.character(example_isolates$GEN)))
 
   # proportion_df

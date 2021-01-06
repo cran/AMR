@@ -6,10 +6,10 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
-# Diagnostics & Advice, and University Medical Center Groningen.       # 
+# Diagnostics & Advice, and University Medical Center Groningen.       #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
@@ -27,21 +27,24 @@
 #'
 #' Use these functions to return a specific property of a microorganism based on the latest accepted taxonomy. All input values will be evaluated internally with [as.mo()], which makes it possible to use microbial abbreviations, codes and names as input. Please see *Examples*.
 #' @inheritSection lifecycle Stable lifecycle
-#' @param x any (vector of) text that can be coerced to a valid microorganism code with [as.mo()]
-#' @param property one of the column names of the [microorganisms] data set or `"shortname"`
-#' @param language language of the returned text, defaults to system language (see [get_locale()]) and can be overwritten by setting the option `AMR_locale`, e.g. `options(AMR_locale = "de")`, see [translate]. Use `language = NULL` or `language = ""` to prevent translation.
-#' @param ... other parameters passed on to [as.mo()], such as 'allow_uncertain' and 'ignore_pattern'
-#' @param open browse the URL using [utils::browseURL()]
+#' @param x any character (vector) that can be coerced to a valid microorganism code with [as.mo()]. Can be left blank for auto-guessing the column containing microorganism codes when used inside `dplyr` verbs, such as [`filter()`][dplyr::filter()], [`mutate()`][dplyr::mutate()] and [`summarise()`][dplyr::summarise()], please see *Examples*.
+#' @param property one of the column names of the [microorganisms] data set: `r paste0('"``', colnames(microorganisms), '\``"', collapse = ", ")`, or must be `"shortname"`
+#' @param language language of the returned text, defaults to system language (see [get_locale()]) and can be overwritten by setting the option `AMR_locale`, e.g. `options(AMR_locale = "de")`, see [translate]. Also used to translate text like "no growth". Use `language = NULL` or `language = ""` to prevent translation.
+#' @param ... other arguments passed on to [as.mo()], such as 'allow_uncertain' and 'ignore_pattern'
+#' @param ab any (vector of) text that can be coerced to a valid antibiotic code with [as.ab()]
+#' @param open browse the URL using [`browseURL()`][utils::browseURL()]
 #' @details All functions will return the most recently known taxonomic property according to the Catalogue of Life, except for [mo_ref()], [mo_authors()] and [mo_year()]. Please refer to this example, knowing that *Escherichia blattae* was renamed to *Shimwellia blattae* in 2010:
 #' - `mo_name("Escherichia blattae")` will return `"Shimwellia blattae"` (with a message about the renaming)
 #' - `mo_ref("Escherichia blattae")` will return `"Burgess et al., 1973"` (with a message about the renaming)
 #' - `mo_ref("Shimwellia blattae")` will return `"Priest et al., 2010"` (without a message)
 #'
-#' The short name - [mo_shortname()] - almost always returns the first character of the genus and the full species, like `"E. coli"`. Exceptions are abbreviations of staphylococci (like *"CoNS"*, Coagulase-Negative Staphylococci) and beta-haemolytic streptococci (like *"GBS"*, Group B Streptococci). Please bear in mind that e.g. *E. coli* could mean *Escherichia coli* (kingdom of Bacteria) as well as *Entamoeba coli* (kingdom of Protozoa). Returning to the full name will be done using [as.mo()] internally, giving priority to bacteria and human pathogens, i.e. `"E. coli"` will be considered *Escherichia coli*. In other words, `mo_fullname(mo_shortname("Entamoeba coli"))` returns `"Escherichia coli"`.
-#' 
+#' The short name - [mo_shortname()] - almost always returns the first character of the genus and the full species, like `"E. coli"`. Exceptions are abbreviations of staphylococci (such as *"CoNS"*, Coagulase-Negative Staphylococci) and beta-haemolytic streptococci (such as *"GBS"*, Group B Streptococci). Please bear in mind that e.g. *E. coli* could mean *Escherichia coli* (kingdom of Bacteria) as well as *Entamoeba coli* (kingdom of Protozoa). Returning to the full name will be done using [as.mo()] internally, giving priority to bacteria and human pathogens, i.e. `"E. coli"` will be considered *Escherichia coli*. In other words, `mo_fullname(mo_shortname("Entamoeba coli"))` returns `"Escherichia coli"`.
+#'
 #' Since the top-level of the taxonomy is sometimes referred to as 'kingdom' and sometimes as 'domain', the functions [mo_kingdom()] and [mo_domain()] return the exact same results.
 #'
-#' The Gram stain - [mo_gramstain()] - will be determined based on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002, [PMID 11837318](https://pubmed.ncbi.nlm.nih.gov/11837318)), who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value `NA`.
+#' The Gram stain - [mo_gramstain()] - will be determined based on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002, [PMID 11837318](https://pubmed.ncbi.nlm.nih.gov/11837318)), who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value `NA`. Functions [mo_is_gram_negative()] and [mo_is_gram_positive()] always return `TRUE` or `FALSE` (except when the input is `NA` or the MO code is `UNKNOWN`), thus always return `FALSE` for species outside the taxonomic kingdom of Bacteria.
+#' 
+#' Intrinsic resistance - [mo_is_intrinsic_resistant()] - will be determined based on the [intrinsic_resistant] data set, which is based on `r format_eucast_version_nr(3.2)`. The [mo_is_intrinsic_resistant()] can be vectorised over arguments `x` (input for microorganisms) and over `ab` (input for antibiotics).
 #'
 #' All output will be [translate]d where possible.
 #'
@@ -122,7 +125,7 @@
 #' mo_shortname("S. pyo", Lancefield = TRUE) # "GAS" (='Group A Streptococci')
 #'
 #'
-#' # language support for German, Dutch, Spanish, Portuguese, Italian and French
+#' # language support  --------------------------------------------------------
 #' mo_gramstain("E. coli", language = "de")  # "Gramnegativ"
 #' mo_gramstain("E. coli", language = "nl")  # "Gram-negatief"
 #' mo_gramstain("E. coli", language = "es")  # "Gram negativo"
@@ -140,12 +143,31 @@
 #'             language = "nl")              # "Streptococcus groep A"
 #'
 #'
+#' # other --------------------------------------------------------------------
+#' 
+#' # gram stains and intrinsic resistance can also be used as a filter in dplyr verbs
+#' if (require("dplyr")) {
+#'   example_isolates %>%
+#'     filter(mo_is_gram_positive())
+#'     
+#'   example_isolates %>%
+#'     filter(mo_is_intrinsic_resistant(ab = "vanco"))
+#' }
+#' 
+#' 
 #' # get a list with the complete taxonomy (from kingdom to subspecies)
 #' mo_taxonomy("E. coli")
 #' # get a list with the taxonomy, the authors, Gram-stain and URL to the online database
 #' mo_info("E. coli")
 #' }
 mo_name <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_name")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   translate_AMR(mo_validate(x = x, property = "fullname", language = language, ...), language = language, only_unknown = FALSE)
 }
 
@@ -156,6 +178,13 @@ mo_fullname <- mo_name
 #' @rdname mo_property
 #' @export
 mo_shortname <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_shortname")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   x.mo <- as.mo(x, language = language, ...)
   
   metadata <- get_mo_failures_uncertainties_renamed()
@@ -171,14 +200,15 @@ mo_shortname <- function(x, language = get_locale(), ...) {
   
   # exceptions for where no species is known
   shortnames[shortnames %like% ".[.] spp[.]"] <- genera[shortnames %like% ".[.] spp[.]"]
-  # exceptions for Staphylococci
+  # exceptions for staphylococci
   shortnames[shortnames == "S. coagulase-negative"] <- "CoNS"
   shortnames[shortnames == "S. coagulase-positive"] <- "CoPS"
-  # exceptions for Streptococci: Streptococcus Group A -> GAS
+  # exceptions for streptococci: Group A Streptococcus -> GAS
   shortnames[shortnames %like% "S. group [ABCDFGHK]"] <- paste0("G", gsub("S. group ([ABCDFGHK])", "\\1", shortnames[shortnames %like% "S. group [ABCDFGHK]"]), "S")
   # unknown species etc.
   shortnames[shortnames %like% "unknown"] <- paste0("(", trimws(gsub("[^a-zA-Z -]", "", shortnames[shortnames %like% "unknown"])), ")")
   
+  shortnames[is.na(x.mo)] <- NA_character_
   load_mo_failures_uncertainties_renamed(metadata)
   translate_AMR(shortnames, language = language, only_unknown = FALSE)
 }
@@ -186,48 +216,104 @@ mo_shortname <- function(x, language = get_locale(), ...) {
 #' @rdname mo_property
 #' @export
 mo_subspecies <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_subspecies")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   translate_AMR(mo_validate(x = x, property = "subspecies", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_species <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_species")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   translate_AMR(mo_validate(x = x, property = "species", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_genus <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_genus")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   translate_AMR(mo_validate(x = x, property = "genus", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_family <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_family")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   translate_AMR(mo_validate(x = x, property = "family", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_order <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_order")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   translate_AMR(mo_validate(x = x, property = "order", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_class <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_class")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   translate_AMR(mo_validate(x = x, property = "class", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_phylum <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_phylum")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   translate_AMR(mo_validate(x = x, property = "phylum", language = language, ...), language = language, only_unknown = TRUE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_kingdom <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_kingdom")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   translate_AMR(mo_validate(x = x, property = "kingdom", language = language, ...), language = language, only_unknown = TRUE)
 }
 
@@ -238,12 +324,26 @@ mo_domain <- mo_kingdom
 #' @rdname mo_property
 #' @export
 mo_type <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_type")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   translate_AMR(mo_validate(x = x, property = "kingdom", language = language, ...), language = language, only_unknown = FALSE)
 }
 
 #' @rdname mo_property
 #' @export
 mo_gramstain <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_gramstain")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   x.mo <- as.mo(x, language = language, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
   
@@ -274,19 +374,113 @@ mo_gramstain <- function(x, language = get_locale(), ...) {
 
 #' @rdname mo_property
 #' @export
+mo_is_gram_negative <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_is_gram_negative")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
+  x.mo <- as.mo(x, language = language, ...)
+  metadata <- get_mo_failures_uncertainties_renamed()
+  grams <- mo_gramstain(x.mo, language = NULL)
+  load_mo_failures_uncertainties_renamed(metadata)
+  out <- grams == "Gram-negative" & !is.na(grams)
+  out[x.mo %in% c(NA_character_, "UNKNOWN")] <- NA
+  out
+}
+
+#' @rdname mo_property
+#' @export
+mo_is_gram_positive <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_is_gram_positive")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
+  x.mo <- as.mo(x, language = language, ...)
+  metadata <- get_mo_failures_uncertainties_renamed()
+  grams <- mo_gramstain(x.mo, language = NULL)
+  load_mo_failures_uncertainties_renamed(metadata)
+  out <- grams == "Gram-positive" & !is.na(grams)
+  out[x.mo %in% c(NA_character_, "UNKNOWN")] <- NA
+  out
+}
+
+#' @rdname mo_property
+#' @export
+mo_is_intrinsic_resistant <- function(x, ab, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_is_intrinsic_resistant")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(ab, allow_NA = FALSE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
+  x <- as.mo(x, language = language, ...)
+  ab <- as.ab(ab, language = NULL, flag_multiple_results = FALSE, info = FALSE)
+  
+  if (length(x) == 1 & length(ab) > 1) {
+    x <- rep(x, length(ab))
+  } else if (length(ab) == 1 & length(x) > 1) {
+    ab <- rep(ab, length(x))
+  }
+  if (length(x) != length(ab)) {
+    stop_("length of `x` and `ab` must be equal, or one of them must be of length 1.")
+  }
+  
+  # show used version number once per session (pkg_env will reload every session)
+  if (message_not_thrown_before("intrinsic_resistant_version", entire_session = TRUE)) {
+    message_("Determining intrinsic resistance based on ",
+             format_eucast_version_nr(3.2, markdown = FALSE), ". ",
+             font_red("This note will be shown once per session."))
+    remember_thrown_message("intrinsic_resistant_version", entire_session = TRUE)
+  }
+  
+  # runs against internal vector: INTRINSIC_R (see zzz.R)
+  paste(x, ab) %in% INTRINSIC_R
+}
+
+#' @rdname mo_property
+#' @export
 mo_snomed <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_snomed")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   mo_validate(x = x, property = "snomed", language = language, ...)
 }
 
 #' @rdname mo_property
 #' @export
 mo_ref <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_ref")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   mo_validate(x = x, property = "ref", language = language, ...)
 }
 
 #' @rdname mo_property
 #' @export
 mo_authors <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_authors")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   x <- mo_validate(x = x, property = "ref", language = language, ...)
   # remove last 4 digits and presumably the comma and space that preceed them
   x[!is.na(x)] <- gsub(",? ?[0-9]{4}", "", x[!is.na(x)])
@@ -296,6 +490,13 @@ mo_authors <- function(x, language = get_locale(), ...) {
 #' @rdname mo_property
 #' @export
 mo_year <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_year")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   x <- mo_validate(x = x, property = "ref", language = language, ...)
   # get last 4 digits
   x[!is.na(x)] <- gsub(".*([0-9]{4})$", "\\1", x[!is.na(x)])
@@ -305,23 +506,37 @@ mo_year <- function(x, language = get_locale(), ...) {
 #' @rdname mo_property
 #' @export
 mo_rank <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_rank")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   mo_validate(x = x, property = "rank", language = language, ...)
 }
 
 #' @rdname mo_property
 #' @export
 mo_taxonomy <- function(x, language = get_locale(),  ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_taxonomy")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   x <- as.mo(x, language = language, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
   
   result <- list(kingdom = mo_kingdom(x, language = language),
-                       phylum = mo_phylum(x, language = language),
-                       class = mo_class(x, language = language),
-                       order = mo_order(x, language = language),
-                       family = mo_family(x, language = language),
-                       genus = mo_genus(x, language = language),
-                       species = mo_species(x, language = language),
-                       subspecies = mo_subspecies(x, language = language))
+                 phylum = mo_phylum(x, language = language),
+                 class = mo_class(x, language = language),
+                 order = mo_order(x, language = language),
+                 family = mo_family(x, language = language),
+                 genus = mo_genus(x, language = language),
+                 species = mo_species(x, language = language),
+                 subspecies = mo_subspecies(x, language = language))
   
   load_mo_failures_uncertainties_renamed(metadata)
   result
@@ -330,6 +545,13 @@ mo_taxonomy <- function(x, language = get_locale(),  ...) {
 #' @rdname mo_property
 #' @export
 mo_synonyms <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_synonyms")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   x <- as.mo(x, language = language, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
   
@@ -356,6 +578,13 @@ mo_synonyms <- function(x, language = get_locale(), ...) {
 #' @rdname mo_property
 #' @export
 mo_info <- function(x, language = get_locale(),  ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_info")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   x <- as.mo(x, language = language, ...)
   metadata <- get_mo_failures_uncertainties_renamed()
   
@@ -379,12 +608,20 @@ mo_info <- function(x, language = get_locale(),  ...) {
 #' @rdname mo_property
 #' @export
 mo_url <- function(x, open = FALSE, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_url")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(open, allow_class = "logical", has_length = 1)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   mo <- as.mo(x = x, language = language, ... = ...)
   mo_names <- mo_name(mo)
   metadata <- get_mo_failures_uncertainties_renamed()
   
   df <- data.frame(mo, stringsAsFactors = FALSE) %pm>%
-   pm_left_join(pm_select(microorganisms, mo, source, species_id), by = "mo")
+    pm_left_join(pm_select(microorganisms, mo, source, species_id), by = "mo")
   df$url <- ifelse(df$source == "CoL",
                    paste0(catalogue_of_life$url_CoL, "details/species/id/", df$species_id, "/"),
                    ifelse(df$source == "DSMZ",
@@ -395,7 +632,7 @@ mo_url <- function(x, open = FALSE, language = get_locale(), ...) {
   
   if (open == TRUE) {
     if (length(u) > 1) {
-      warning("only the first URL will be opened, as `browseURL()` only suports one string.")
+      warning_("Only the first URL will be opened, as `browseURL()` only suports one string.")
     }
     utils::browseURL(u[1L])
   }
@@ -408,15 +645,18 @@ mo_url <- function(x, open = FALSE, language = get_locale(), ...) {
 #' @rdname mo_property
 #' @export
 mo_property <- function(x, property = "fullname", language = get_locale(), ...) {
-  stop_ifnot(length(property) == 1L, "'property' must be of length 1")
-  stop_ifnot(property %in% colnames(microorganisms),
-             "invalid property: '", property, "' - use a column name of the `microorganisms` data set")
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_property")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(property, allow_class = "character", has_length = 1, is_in = colnames(microorganisms))
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
   
   translate_AMR(mo_validate(x = x, property = property, language = language, ...), language = language, only_unknown = TRUE)
 }
 
 mo_validate <- function(x, property, language, ...) {
-  
   check_dataset_integrity()
   
   if (tryCatch(all(x[!is.na(x)] %in% MO_lookup$mo) & length(list(...)) == 0, error = function(e) FALSE)) {
@@ -434,13 +674,13 @@ mo_validate <- function(x, property, language, ...) {
     Lancefield <- FALSE
   }
   
-  # try to catch an error when inputting an invalid parameter
+  # try to catch an error when inputting an invalid argument
   # so the 'call.' can be set to FALSE
   tryCatch(x[1L] %in% MO_lookup[1, property, drop = TRUE],
            error = function(e) stop(e$message, call. = FALSE))
   
-  if (is.mo(x) 
-      & !Becker %in% c(TRUE, "all") 
+  if (is.mo(x)
+      & !Becker %in% c(TRUE, "all")
       & !Lancefield %in% c(TRUE, "all")) {
     # this will not reset mo_uncertainties and mo_failures
     # because it's already a valid MO
@@ -452,10 +692,29 @@ mo_validate <- function(x, property, language, ...) {
   }
   
   if (property == "mo") {
-    return(to_class_mo(x))
+    return(set_clean_class(x, new_class = c("mo", "character")))
   } else if (property == "snomed") {
     return(as.double(eval(parse(text = x))))
   } else {
     return(x)
+  }
+}
+
+find_mo_col <- function(fn) {
+  # this function tries to find an mo column in the data the function was called in,
+  # which is useful when functions are used within dplyr verbs
+  df <- get_current_data(arg_name = "x", call = -3) # will return an error if not found
+  mo <- NULL
+  try({
+    mo <- suppressMessages(search_type_in_df(df, "mo"))
+  }, silent = TRUE)
+  if (!is.null(df) && !is.null(mo) && is.data.frame(df)) {
+    if (message_not_thrown_before(fn = fn)) {
+      message_("Using column '", font_bold(mo), "' as input for ", fn, "()")
+      remember_thrown_message(fn = fn)
+    }
+    return(df[, mo, drop = TRUE])
+  } else {
+    stop_("argument `x` is missing and no column with info about microorganisms could be found.", call = -2)
   }
 }

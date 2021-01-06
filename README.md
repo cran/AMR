@@ -2,8 +2,11 @@
 
 # `AMR` (for R)
 
-<img src="https://www.r-pkg.org/badges/version-ago/AMR" />
-<img src="https://cranlogs.r-pkg.org/badges/grand-total/AMR" />
+[![CRAN](https://www.r-pkg.org/badges/version-ago/AMR)](https://cran.r-project.org/package=AMR)
+[![CRANlogs](https://cranlogs.r-pkg.org/badges/grand-total/AMR)](https://cran.r-project.org/package=AMR)
+![R-code-check](https://github.com/msberends/AMR/workflows/R-code-check/badge.svg?branch=master)
+[![CodeFactor](https://www.codefactor.io/repository/github/msberends/amr/badge)](https://www.codefactor.io/repository/github/msberends/amr)
+[![Codecov](https://codecov.io/gh/msberends/AMR/branch/master/graph/badge.svg)](https://codecov.io/gh/msberends/AMR?branch=master)
 
 <img src="https://msberends.github.io/AMR/works_great_on.png" align="center" height="150px" />
 
@@ -19,6 +22,8 @@ This is the development source of the `AMR` package for R. Not a developer? Then
 
 ### How to get this package
 Please see [our website](https://msberends.github.io/AMR/#get-this-package).
+
+Bottom line: `install.packages("AMR")`
 
 ### Copyright
 

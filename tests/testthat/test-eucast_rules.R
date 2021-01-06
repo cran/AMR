@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -90,12 +90,12 @@ test_that("EUCAST rules work", {
     "R")
   
   # Azithromycin and Clarythromycin must be equal to Erythromycin
-  a <- eucast_rules(data.frame(mo = example_isolates$mo,
-                               ERY = example_isolates$ERY,
-                               AZM = as.rsi("R"),
-                               CLR = as.rsi("R"),
-                               stringsAsFactors = FALSE),
-                    version_expertrules = 3.1)$CLR
+  a <- suppressWarnings(as.rsi(eucast_rules(data.frame(mo = example_isolates$mo,
+                                                       ERY = example_isolates$ERY,
+                                                       AZM = as.rsi("R"),
+                                                       CLR = factor("R"),
+                                                       stringsAsFactors = FALSE),
+                                            version_expertrules = 3.1)$CLR))
   b <- example_isolates$ERY
   expect_identical(a[!is.na(b)],
                    b[!is.na(b)])
@@ -116,6 +116,26 @@ test_that("EUCAST rules work", {
   expect_output(suppressWarnings(eucast_rules(example_isolates %>% mutate(NOR = "S", NAL = "S"), info = TRUE)))
   
   # check verbose output
-  expect_output(suppressWarnings(eucast_rules(example_isolates, verbose = TRUE, info = TRUE)))
+  expect_output(suppressWarnings(eucast_rules(example_isolates, verbose = TRUE, rules = "all", info = TRUE)))
+  
+  # AmpC de-repressed cephalo mutants
+  expect_identical(
+    eucast_rules(data.frame(mo = c("Escherichia coli", "Enterobacter cloacae"),
+                            cefotax = as.rsi(c("S", "S"))),
+                 ampc_cephalosporin_resistance = "R",
+                 info = FALSE)$cefotax,
+    as.rsi(c("S", "R")))
+  expect_identical(
+    eucast_rules(data.frame(mo = c("Escherichia coli", "Enterobacter cloacae"),
+                            cefotax = as.rsi(c("S", "S"))),
+                 ampc_cephalosporin_resistance = NA,
+                 info = FALSE)$cefotax,
+    as.rsi(c("S", NA)))
+  expect_identical(
+    eucast_rules(data.frame(mo = c("Escherichia coli", "Enterobacter cloacae"),
+                            cefotax = as.rsi(c("S", "S"))),
+                 ampc_cephalosporin_resistance = NULL,
+                 info = FALSE)$cefotax,
+    as.rsi(c("S", "S")))
   
 })

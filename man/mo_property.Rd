@@ -16,6 +16,9 @@
 \alias{mo_domain}
 \alias{mo_type}
 \alias{mo_gramstain}
+\alias{mo_is_gram_negative}
+\alias{mo_is_gram_positive}
+\alias{mo_is_intrinsic_resistant}
 \alias{mo_snomed}
 \alias{mo_ref}
 \alias{mo_authors}
@@ -55,6 +58,12 @@ mo_type(x, language = get_locale(), ...)
 
 mo_gramstain(x, language = get_locale(), ...)
 
+mo_is_gram_negative(x, language = get_locale(), ...)
+
+mo_is_gram_positive(x, language = get_locale(), ...)
+
+mo_is_intrinsic_resistant(x, ab, language = get_locale(), ...)
+
 mo_snomed(x, language = get_locale(), ...)
 
 mo_ref(x, language = get_locale(), ...)
@@ -76,15 +85,17 @@ mo_url(x, open = FALSE, language = get_locale(), ...)
 mo_property(x, property = "fullname", language = get_locale(), ...)
 }
 \arguments{
-\item{x}{any (vector of) text that can be coerced to a valid microorganism code with \code{\link[=as.mo]{as.mo()}}}
+\item{x}{any character (vector) that can be coerced to a valid microorganism code with \code{\link[=as.mo]{as.mo()}}. Can be left blank for auto-guessing the column containing microorganism codes when used inside \code{dplyr} verbs, such as \code{\link[dplyr:filter]{filter()}}, \code{\link[dplyr:mutate]{mutate()}} and \code{\link[dplyr:summarise]{summarise()}}, please see \emph{Examples}.}
 
-\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_locale]{get_locale()}}) and can be overwritten by setting the option \code{AMR_locale}, e.g. \code{options(AMR_locale = "de")}, see \link{translate}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_locale]{get_locale()}}) and can be overwritten by setting the option \code{AMR_locale}, e.g. \code{options(AMR_locale = "de")}, see \link{translate}. Also used to translate text like "no growth". Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
-\item{...}{other parameters passed on to \code{\link[=as.mo]{as.mo()}}, such as 'allow_uncertain' and 'ignore_pattern'}
+\item{...}{other arguments passed on to \code{\link[=as.mo]{as.mo()}}, such as 'allow_uncertain' and 'ignore_pattern'}
 
-\item{open}{browse the URL using \code{\link[utils:browseURL]{utils::browseURL()}}}
+\item{ab}{any (vector of) text that can be coerced to a valid antibiotic code with \code{\link[=as.ab]{as.ab()}}}
 
-\item{property}{one of the column names of the \link{microorganisms} data set or \code{"shortname"}}
+\item{open}{browse the URL using \code{\link[utils:browseURL]{browseURL()}}}
+
+\item{property}{one of the column names of the \link{microorganisms} data set: "\code{mo}", "\code{fullname}", "\code{kingdom}", "\code{phylum}", "\code{class}", "\code{order}", "\code{family}", "\code{genus}", "\code{species}", "\code{subspecies}", "\code{rank}", "\code{ref}", "\code{species_id}", "\code{source}", "\code{prevalence}", "\code{snomed}", or must be \code{"shortname"}}
 }
 \value{
 \itemize{
@@ -106,11 +117,13 @@ All functions will return the most recently known taxonomic property according t
 \item \code{mo_ref("Shimwellia blattae")} will return \code{"Priest et al., 2010"} (without a message)
 }
 
-The short name - \code{\link[=mo_shortname]{mo_shortname()}} - almost always returns the first character of the genus and the full species, like \code{"E. coli"}. Exceptions are abbreviations of staphylococci (like \emph{"CoNS"}, Coagulase-Negative Staphylococci) and beta-haemolytic streptococci (like \emph{"GBS"}, Group B Streptococci). Please bear in mind that e.g. \emph{E. coli} could mean \emph{Escherichia coli} (kingdom of Bacteria) as well as \emph{Entamoeba coli} (kingdom of Protozoa). Returning to the full name will be done using \code{\link[=as.mo]{as.mo()}} internally, giving priority to bacteria and human pathogens, i.e. \code{"E. coli"} will be considered \emph{Escherichia coli}. In other words, \code{mo_fullname(mo_shortname("Entamoeba coli"))} returns \code{"Escherichia coli"}.
+The short name - \code{\link[=mo_shortname]{mo_shortname()}} - almost always returns the first character of the genus and the full species, like \code{"E. coli"}. Exceptions are abbreviations of staphylococci (such as \emph{"CoNS"}, Coagulase-Negative Staphylococci) and beta-haemolytic streptococci (such as \emph{"GBS"}, Group B Streptococci). Please bear in mind that e.g. \emph{E. coli} could mean \emph{Escherichia coli} (kingdom of Bacteria) as well as \emph{Entamoeba coli} (kingdom of Protozoa). Returning to the full name will be done using \code{\link[=as.mo]{as.mo()}} internally, giving priority to bacteria and human pathogens, i.e. \code{"E. coli"} will be considered \emph{Escherichia coli}. In other words, \code{mo_fullname(mo_shortname("Entamoeba coli"))} returns \code{"Escherichia coli"}.
 
 Since the top-level of the taxonomy is sometimes referred to as 'kingdom' and sometimes as 'domain', the functions \code{\link[=mo_kingdom]{mo_kingdom()}} and \code{\link[=mo_domain]{mo_domain()}} return the exact same results.
 
-The Gram stain - \code{\link[=mo_gramstain]{mo_gramstain()}} - will be determined based on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002, \href{https://pubmed.ncbi.nlm.nih.gov/11837318}{PMID 11837318}), who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value \code{NA}.
+The Gram stain - \code{\link[=mo_gramstain]{mo_gramstain()}} - will be determined based on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002, \href{https://pubmed.ncbi.nlm.nih.gov/11837318}{PMID 11837318}), who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value \code{NA}. Functions \code{\link[=mo_is_gram_negative]{mo_is_gram_negative()}} and \code{\link[=mo_is_gram_positive]{mo_is_gram_positive()}} always return \code{TRUE} or \code{FALSE} (except when the input is \code{NA} or the MO code is \code{UNKNOWN}), thus always return \code{FALSE} for species outside the taxonomic kingdom of Bacteria.
+
+Intrinsic resistance - \code{\link[=mo_is_intrinsic_resistant]{mo_is_intrinsic_resistant()}} - will be determined based on the \link{intrinsic_resistant} data set, which is based on \href{https://www.eucast.org/expert_rules_and_intrinsic_resistance/}{'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes' v3.2} from 2020. The \code{\link[=mo_is_intrinsic_resistant]{mo_is_intrinsic_resistant()}} can be vectorised over arguments \code{x} (input for microorganisms) and over \code{ab} (input for antibiotics).
 
 All output will be \link{translate}d where possible.
 
@@ -121,7 +134,7 @@ The function \code{\link[=mo_url]{mo_url()}} will return the direct URL to the o
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Matching score for microorganisms}{
@@ -148,17 +161,18 @@ All matches are sorted descending on their matching score and for all user input
 \section{Catalogue of Life}{
 
 \if{html}{\figure{logo_col.png}{options: height=40px style=margin-bottom:5px} \cr}
-This package contains the complete taxonomic tree of almost all microorganisms (~70,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
+This package contains the complete taxonomic tree of almost all microorganisms (~70,000 species) from the authoritative and comprehensive Catalogue of Life (CoL, \url{http://www.catalogueoflife.org}). The CoL is the most comprehensive and authoritative global index of species currently available. Nonetheless, we supplemented the CoL data with data from the List of Prokaryotic names with Standing in Nomenclature (LPSN, \href{https://lpsn.dsmz.de}{lpsn.dsmz.de}). This supplementation is needed until the \href{https://github.com/CatalogueOfLife/general}{CoL+ project} is finished, which we await.
 
-\link[=catalogue_of_life]{Click here} for more information about the included taxa. Check which version of the Catalogue of Life was included in this package with \code{\link[=catalogue_of_life_version]{catalogue_of_life_version()}}.
+\link[=catalogue_of_life]{Click here} for more information about the included taxa. Check which versions of the CoL and LSPN were included in this package with \code{\link[=catalogue_of_life_version]{catalogue_of_life_version()}}.
 }
 
 \section{Source}{
 
 \enumerate{
-\item Becker K \emph{et al.} \strong{Coagulase-Negative Staphylococci}. 2014. Clin Microbiol Rev. 27(4): 870–926. \url{https://dx.doi.org/10.1128/CMR.00109-13}
-\item Becker K \emph{et al.} \strong{Implications of identifying the recently defined members of the \emph{S. aureus} complex, \emph{S. argenteus} and \emph{S. schweitzeri}: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).} 2019. Clin Microbiol Infect. \url{https://doi.org/10.1016/j.cmi.2019.02.028}
-\item Lancefield RC \strong{A serological differentiation of human and other groups of hemolytic streptococci}. 1933. J Exp Med. 57(4): 571–95. \url{https://dx.doi.org/10.1084/jem.57.4.571}
+\item Becker K \emph{et al.} \strong{Coagulase-Negative Staphylococci}. 2014. Clin Microbiol Rev. 27(4): 870–926; \doi{10.1128/CMR.00109-13}
+\item Becker K \emph{et al.} \strong{Implications of identifying the recently defined members of the \emph{S. aureus} complex, \emph{S. argenteus} and \emph{S. schweitzeri}: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).} 2019. Clin Microbiol Infect; \doi{10.1016/j.cmi.2019.02.028}
+\item Becker K \emph{et al.} \strong{Emergence of coagulase-negative staphylococci} 2020. Expert Rev Anti Infect Ther. 18(4):349-366; \doi{10.1080/14787210.2020.1730813}
+\item Lancefield RC \strong{A serological differentiation of human and other groups of hemolytic streptococci}. 1933. J Exp Med. 57(4): 571–95; \doi{10.1084/jem.57.4.571}
 \item Catalogue of Life: Annual Checklist (public online taxonomic database), \url{http://www.catalogueoflife.org} (check included annual version with \code{\link[=catalogue_of_life_version]{catalogue_of_life_version()}}).
 }
 }
@@ -234,7 +248,7 @@ mo_shortname("S. pyo")                    # "S. pyogenes"
 mo_shortname("S. pyo", Lancefield = TRUE) # "GAS" (='Group A Streptococci')
 
 
-# language support for German, Dutch, Spanish, Portuguese, Italian and French
+# language support  --------------------------------------------------------
 mo_gramstain("E. coli", language = "de")  # "Gramnegativ"
 mo_gramstain("E. coli", language = "nl")  # "Gram-negatief"
 mo_gramstain("E. coli", language = "es")  # "Gram negativo"
@@ -250,6 +264,18 @@ mo_fullname("S. pyogenes",
 mo_fullname("S. pyogenes",
             Lancefield = TRUE,
             language = "nl")              # "Streptococcus groep A"
+
+
+# other --------------------------------------------------------------------
+
+# gram stains and intrinsic resistance can also be used as a filter in dplyr verbs
+if (require("dplyr")) {
+  example_isolates \%>\%
+    filter(mo_is_gram_positive())
+    
+  example_isolates \%>\%
+    filter(mo_is_intrinsic_resistant(ab = "vanco"))
+}
 
 
 # get a list with the complete taxonomy (from kingdom to subspecies)

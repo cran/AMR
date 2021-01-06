@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -23,26 +23,36 @@
 # how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
-#' Symbol of a p-value
-#'
-#' Return the symbol related to the p-value: 0 '`***`' 0.001 '`**`' 0.01 '`*`' 0.05 '`.`' 0.1 ' ' 1. Values above `p = 1` will return `NA`.
-#' @inheritSection lifecycle Questioning lifecycle
-#' @param p p value
-#' @param emptychar text to show when `p > 0.1`
-#' @details **NOTE**: this function will be moved to the `cleaner` package when a new version is being published on CRAN.
-#' @return Text
-#' @inheritSection AMR Read more on our website!
-#' @export
-p_symbol <- function(p, emptychar = " ") {
+context("episode.R")
+
+test_that("episodes work", {
+  skip_on_cran()
   
-  p <- as.double(p)
-  s <- rep(NA_character_, length(p))
+  test_df <- rbind(
+    data.frame(
+      date = as.Date(c("2015-01-01", "2015-10-01", "2016-02-04", "2016-12-31", "2017-01-01", "2017-02-01", "2017-02-05", "2020-01-01")),
+      patient_id = "A"
+    ),
+    data.frame(
+      date = as.Date(c("2015-01-01", "2016-02-01", "2016-12-31", "2017-01-01", "2017-02-03")),
+      patient_id = "B"
+    ))
   
-  s[p <= 1] <- emptychar
-  s[p <= 0.100] <- "."
-  s[p <= 0.050] <- "*"
-  s[p <= 0.010] <- "**"
-  s[p <= 0.001] <- "***"
+  expect_equal(get_episode(test_df$date, 365),
+               c(1, 1, 2, 2, 2, 3, 3, 4, 1, 2, 2, 2, 3))
   
-  s
-}
+  library(dplyr)
+  expect_identical(test_df %>% group_by(patient_id) %>% mutate(f = is_new_episode(date, 365)) %>% pull(f),
+                   c(TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE))
+  
+  suppressMessages(
+    x <- example_isolates %>%
+      mutate(out = first_isolate(., include_unknown = TRUE, info = FALSE))
+  )
+  
+  y <- example_isolates %>%
+    group_by(patient_id, mo) %>%
+    mutate(out = is_new_episode(date, 365))
+  
+  expect_identical(which(x$out), which(y$out))
+})

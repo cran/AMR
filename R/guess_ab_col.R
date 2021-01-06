@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -30,7 +30,7 @@
 #' @param x a [data.frame]
 #' @param search_string a text to search `x` for, will be checked with [as.ab()] if this value is not a column in `x`
 #' @param verbose a logical to indicate whether additional info should be printed
-#' @details You can look for an antibiotic (trade) name or abbreviation and it will search `x` and the [antibiotics] data set for any column containing a name or code of that antibiotic. **Longer columns names take precendence over shorter column names.**
+#' @details You can look for an antibiotic (trade) name or abbreviation and it will search `x` and the [antibiotics] data set for any column containing a name or code of that antibiotic. **Longer columns names take precedence over shorter column names.**
 #' @return A column name of `x`, or `NULL` when no result is found.
 #' @export
 #' @inheritSection AMR Read more on our website!
@@ -44,7 +44,7 @@
 #' # [1] "tetr"
 #'
 #' guess_ab_col(df, "J01AA07", verbose = TRUE)
-#' # NOTE: Using column `tetr` as input for `J01AA07` (tetracycline).
+#' # NOTE: Using column 'tetr' as input for J01AA07 (tetracycline).
 #' # [1] "tetr"
 #'
 #' # WHONET codes
@@ -63,16 +63,13 @@
 #' guess_ab_col(df, "ampicillin")
 #' # [1] "AMP_ED20"
 guess_ab_col <- function(x = NULL, search_string = NULL, verbose = FALSE) {
+  meet_criteria(x, allow_class = "data.frame", allow_NULL = TRUE)
+  meet_criteria(search_string, allow_class = "character", has_length = 1, allow_NULL = TRUE)
+  meet_criteria(verbose, allow_class = "logical", has_length = 1)
+  
   if (is.null(x) & is.null(search_string)) {
     return(as.name("guess_ab_col"))
   }
-  stop_ifnot(is.data.frame(x), "`x` must be a data.frame")
-  
-  if (length(search_string) > 1) {
-    warning("argument 'search_string' has length > 1 and only the first element will be used")
-    search_string <- search_string[1]
-  }
-  search_string <- as.character(search_string)
   
   if (search_string %in% colnames(x)) {
     ab_result <- search_string
@@ -97,14 +94,16 @@ guess_ab_col <- function(x = NULL, search_string = NULL, verbose = FALSE) {
   
   if (length(ab_result) == 0) {
     if (verbose == TRUE) {
-      message(paste0("No column found as input for `", search_string,
-                     "` (", ab_name(search_string, language = NULL, tolower = TRUE), ")."))
+      message_("No column found as input for ", search_string,
+               " (", ab_name(search_string, language = NULL, tolower = TRUE), ").",
+               add_fn = font_black,
+               as_note = FALSE)
     }
     return(NULL)
   } else {
     if (verbose == TRUE) {
-      message(font_blue(paste0("NOTE: Using column `", font_bold(ab_result), "` as input for `", search_string,
-                               "` (", ab_name(search_string, language = NULL, tolower = TRUE), ").")))
+      message_("Using column '", font_bold(ab_result), "' as input for ", search_string,
+               " (", ab_name(search_string, language = NULL, tolower = TRUE), ").")
     }
     return(ab_result)
   }
@@ -116,31 +115,39 @@ get_column_abx <- function(x,
                            verbose = FALSE,
                            info = TRUE,
                            ...) {
+  meet_criteria(x, allow_class = "data.frame")
+  meet_criteria(soft_dependencies, allow_class = "character", allow_NULL = TRUE)
+  meet_criteria(hard_dependencies, allow_class = "character", allow_NULL = TRUE)
+  meet_criteria(verbose, allow_class = "logical", has_length = 1)
+  meet_criteria(info, allow_class = "logical", has_length = 1)
   
   if (info == TRUE) {
-    message(font_blue("NOTE: Auto-guessing columns suitable for analysis"), appendLF = FALSE)
+    message_("Auto-guessing columns suitable for analysis", appendLF = FALSE)
   }
   
   x <- as.data.frame(x, stringsAsFactors = FALSE)
   if (NROW(x) > 10000) {
     # only test maximum of 10,000 values per column
     if (info == TRUE) {
-      message(font_blue(paste0(" (using only ", font_bold("the first 10,000 rows"), ")...")), appendLF = FALSE)
+      message_(" (using only ", font_bold("the first 10,000 rows"), ")...",
+               appendLF = FALSE, 
+               as_note = FALSE)
     }
     x <- x[1:10000, , drop = FALSE]
   } else if (info == TRUE) {
-    message(font_blue("..."), appendLF = FALSE)
+    message_("...", appendLF = FALSE, as_note = FALSE)
   }
   x_bak <- x
   # only check columns that are a valid AB code, ATC code, name, abbreviation or synonym,
-  # or already have the rsi class (as.rsi) 
-  # and that have no more than 50% invalid values
+  # or already have the <rsi> class (as.rsi) 
+  # and that they have no more than 50% invalid values
   vectr_antibiotics <- unique(toupper(unlist(antibiotics[, c("ab", "atc", "name", "abbreviations", "synonyms")])))
   vectr_antibiotics <- vectr_antibiotics[!is.na(vectr_antibiotics) & nchar(vectr_antibiotics) >= 3]
-  x_columns <- sapply(colnames(x), function(col, df = x_bak) {
-    if (toupper(col) %in% vectr_antibiotics | 
-        is.rsi(as.data.frame(df)[, col, drop = TRUE]) |
-        is.rsi.eligible(as.data.frame(df)[, col, drop = TRUE], threshold = 0.5)) {
+  x_columns <- vapply(FUN.VALUE = character(1), colnames(x), function(col, df = x_bak) {
+    if (toupper(col) %in% vectr_antibiotics || 
+        is.rsi(as.data.frame(df, stringsAsFactors = FALSE)[, col, drop = TRUE]) ||
+        is.rsi.eligible(as.data.frame(df, stringsAsFactors = FALSE)[, col, drop = TRUE],
+                        threshold = 0.5)) {
       return(col)
     } else {
       return(NA_character_)
@@ -150,7 +157,8 @@ get_column_abx <- function(x,
   x <- x[, x_columns, drop = FALSE] # without drop = TRUE, x will become a vector when x_columns is length 1
   
   df_trans <- data.frame(colnames = colnames(x),
-                         abcode = suppressWarnings(as.ab(colnames(x), info = FALSE)))
+                         abcode = suppressWarnings(as.ab(colnames(x), info = FALSE)),
+                         stringsAsFactors = FALSE)
   df_trans <- df_trans[!is.na(df_trans$abcode), , drop = FALSE]
   x <- as.character(df_trans$colnames)
   names(x) <- df_trans$abcode
@@ -161,8 +169,9 @@ get_column_abx <- function(x,
   if (length(dots) > 0) {
     newnames <- suppressWarnings(as.ab(names(dots), info = FALSE))
     if (any(is.na(newnames))) {
-      warning("Invalid antibiotic reference(s): ", toString(names(dots)[is.na(newnames)]),
-              call. = FALSE, immediate. = TRUE)
+      warning_("Invalid antibiotic reference(s): ", toString(names(dots)[is.na(newnames)]),
+               call = FALSE,
+               immediate = TRUE)
     }
     # turn all NULLs to NAs
     dots <- unlist(lapply(dots, function(x) if (is.null(x)) NA else x))
@@ -176,7 +185,7 @@ get_column_abx <- function(x,
   
   if (length(x) == 0) {
     if (info == TRUE) {
-      message(font_blue("No columns found."))
+      message_("No columns found.")
     }
     return(x)
   }
@@ -190,20 +199,21 @@ get_column_abx <- function(x,
   
   # succeeded with auto-guessing
   if (info == TRUE) {
-    message(font_blue("OK."))
+    message_(" OK.", add_fn = list(font_green, font_bold), as_note = FALSE)
   }
   
   for (i in seq_len(length(x))) {
     if (info == TRUE & verbose == TRUE & !names(x[i]) %in% names(duplicates)) {
-      message(font_blue(paste0("NOTE: Using column `", font_bold(x[i]), "` as input for `", names(x)[i],
-                               "` (", ab_name(names(x)[i], tolower = TRUE, language = NULL), ").")))
+      message_("Using column '", font_bold(x[i]), "' as input for ", names(x)[i],
+               " (", ab_name(names(x)[i], tolower = TRUE, language = NULL), ").")
     }
     if (info == TRUE & names(x[i]) %in% names(duplicates)) {
-      warning(font_red(paste0("Using column `", font_bold(x[i]), "` as input for `", names(x)[i],
-                              "` (", ab_name(names(x)[i], tolower = TRUE, language = NULL),
-                              "), although it was matched for multiple antibiotics or columns.")), 
-              call. = FALSE, 
-              immediate. = verbose)
+      warning_(paste0("Using column '", font_bold(x[i]), "' as input for ", names(x)[i],
+                      " (", ab_name(names(x)[i], tolower = TRUE, language = NULL),
+                      "), although it was matched for multiple antibiotics or columns."),
+               add_fn = font_red,
+               call = FALSE, 
+               immediate = verbose)
     }
   }
   
@@ -223,15 +233,10 @@ get_column_abx <- function(x,
       # missing a soft dependency may lower the reliability
       missing <- soft_dependencies[!soft_dependencies %in% names(x)]
       missing_msg <- paste(paste0(ab_name(missing, tolower = TRUE, language = NULL), 
-                                  " (", missing, ")"), 
+                                  " (", font_bold(missing, collapse = NULL), ")"), 
                            collapse = ", ")
-      missing_msg <- paste("NOTE: Reliability would be improved if these antimicrobial results would be available too:",
-                           missing_msg)
-      wrapped <- strwrap(missing_msg,
-                         width = 0.95 * getOption("width"),
-                         exdent = 6)
-      wrapped <- gsub("\\((.*?)\\)", paste0("(", font_bold("\\1"), ")"), wrapped) # add bold abbreviations
-      message(font_blue(wrapped, collapse = "\n"))
+      message_("Reliability would be improved if these antimicrobial results would be available too: ",
+               missing_msg)
     }
   }
   x
@@ -244,8 +249,8 @@ generate_warning_abs_missing <- function(missing, any = FALSE) {
   } else {
     any_txt <- c("", "are")
   }
-  warning(paste0("Introducing NAs since", any_txt[1], " these antimicrobials ", any_txt[2], " required: ",
-                 paste(missing, collapse = ", ")),
-          immediate. = TRUE,
-          call. = FALSE)
+  warning_(paste0("Introducing NAs since", any_txt[1], " these antimicrobials ", any_txt[2], " required: ",
+                  paste(missing, collapse = ", ")),
+           immediate = TRUE,
+           call = FALSE)
 }

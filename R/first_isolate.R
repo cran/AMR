@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -25,37 +25,50 @@
 
 #' Determine first (weighted) isolates
 #'
-#' Determine first (weighted) isolates of all microorganisms of every patient per episode and (if needed) per specimen type.
+#' Determine first (weighted) isolates of all microorganisms of every patient per episode and (if needed) per specimen type. To determine patient episodes not necessarily based on microorganisms, use [is_new_episode()] that also supports grouping with the `dplyr` package.
 #' @inheritSection lifecycle Stable lifecycle
-#' @param x a [data.frame] containing isolates.
-#' @param col_date column name of the result date (or date that is was received on the lab), defaults to the first column of with a date class
+#' @param x a [data.frame] containing isolates. Can be left blank when used inside `dplyr` verbs, such as [`filter()`][dplyr::filter()], [`mutate()`][dplyr::mutate()] and [`summarise()`][dplyr::summarise()].
+#' @param col_date column name of the result date (or date that is was received on the lab), defaults to the first column with a date class
 #' @param col_patient_id column name of the unique IDs of the patients, defaults to the first column that starts with 'patient' or 'patid' (case insensitive)
 #' @param col_mo column name of the IDs of the microorganisms (see [as.mo()]), defaults to the first column of class [`mo`]. Values will be coerced using [as.mo()].
-#' @param col_testcode column name of the test codes. Use `col_testcode = NULL` to **not** exclude certain test codes (like test codes for screening). In that case `testcodes_exclude` will be ignored.
+#' @param col_testcode column name of the test codes. Use `col_testcode = NULL` to **not** exclude certain test codes (such as test codes for screening). In that case `testcodes_exclude` will be ignored.
 #' @param col_specimen column name of the specimen type or group
 #' @param col_icu column name of the logicals (`TRUE`/`FALSE`) whether a ward or department is an Intensive Care Unit (ICU)
 #' @param col_keyantibiotics column name of the key antibiotics to determine first *weighted* isolates, see [key_antibiotics()]. Defaults to the first column that starts with 'key' followed by 'ab' or 'antibiotics' (case insensitive). Use `col_keyantibiotics = FALSE` to prevent this.
 #' @param episode_days episode in days after which a genus/species combination will be determined as 'first isolate' again. The default of 365 days is based on the guideline by CLSI, see Source. 
 #' @param testcodes_exclude character vector with test codes that should be excluded (case-insensitive)
-#' @param icu_exclude logical whether ICU isolates should be excluded (rows with value `TRUE` in column `col_icu`)
-#' @param specimen_group value in column `col_specimen` to filter on
+#' @param icu_exclude logical whether ICU isolates should be excluded (rows with value `TRUE` in the column set with `col_icu`)
+#' @param specimen_group value in the column set with `col_specimen` to filter on
 #' @param type type to determine weighed isolates; can be `"keyantibiotics"` or `"points"`, see Details
 #' @param ignore_I logical to determine whether antibiotic interpretations with `"I"` will be ignored when `type = "keyantibiotics"`, see Details
 #' @param points_threshold points until the comparison of key antibiotics will lead to inclusion of an isolate when `type = "points"`, see Details
 #' @param info print progress
 #' @param include_unknown logical to determine whether 'unknown' microorganisms should be included too, i.e. microbial code `"UNKNOWN"`, which defaults to `FALSE`. For WHONET users, this means that all records with organism code `"con"` (*contamination*) will be excluded at default. Isolates with a microbial ID of `NA` will always be excluded as first isolate.
-#' @param ... parameters passed on to the [first_isolate()] function
-#' @details **WHY THIS IS SO IMPORTANT** \cr
-#' To conduct an analysis of antimicrobial resistance, you should only include the first isolate of every patient per episode [(ref)](https:/pubmed.ncbi.nlm.nih.gov/17304462/). If you would not do this, you could easily get an overestimate or underestimate of the resistance of an antibiotic. Imagine that a patient was admitted with an MRSA and that it was found in 5 different blood cultures the following week. The resistance percentage of oxacillin of all *S. aureus* isolates would be overestimated, because you included this MRSA more than once. It would be [selection bias](https://en.wikipedia.org/wiki/Selection_bias).
-#'
+#' @param ... arguments passed on to [first_isolate()] when using [filter_first_isolate()], or arguments passed on to [key_antibiotics()] when using [filter_first_weighted_isolate()]
+#' @details 
+#' These functions are context-aware when used inside `dplyr` verbs, such as `filter()`, `mutate()` and `summarise()`. This means that then the `x` argument can be left blank, please see *Examples*.
+#' 
+#' The [first_isolate()] function is a wrapper around the [is_new_episode()] function, but more efficient for data sets containing microorganism codes or names.
+#' 
 #' All isolates with a microbial ID of `NA` will be excluded as first isolate.
+#' 
+#' ### Why this is so important
+#' To conduct an analysis of antimicrobial resistance, you should only include the first isolate of every patient per episode [(Hindler *et al.* 2007)](https://pubmed.ncbi.nlm.nih.gov/17304462/). If you would not do this, you could easily get an overestimate or underestimate of the resistance of an antibiotic. Imagine that a patient was admitted with an MRSA and that it was found in 5 different blood cultures the following week. The resistance percentage of oxacillin of all *S. aureus* isolates would be overestimated, because you included this MRSA more than once. It would be [selection bias](https://en.wikipedia.org/wiki/Selection_bias).
 #'
-#' The functions [filter_first_isolate()] and [filter_first_weighted_isolate()] are helper functions to quickly filter on first isolates. The function [filter_first_isolate()] is essentially equal to either:
+#' ### `filter_*()` shortcuts
+#'
+#' The functions [filter_first_isolate()] and [filter_first_weighted_isolate()] are helper functions to quickly filter on first isolates.
+#' 
+#' The function [filter_first_isolate()] is essentially equal to either:
+#' 
 #' ```
 #'   x[first_isolate(x, ...), ]
-#'   x %>% filter(first_isolate(x, ...))
+#'   
+#'   x %>% filter(first_isolate(...))
 #' ```
+#' 
 #' The function [filter_first_weighted_isolate()] is essentially equal to:
+#' 
 #' ```
 #'   x %>%
 #'     mutate(keyab = key_antibiotics(.)) %>%
@@ -67,11 +80,11 @@
 #' @section Key antibiotics:
 #' There are two ways to determine whether isolates can be included as first *weighted* isolates which will give generally the same results:
 #'
-#' 1. Using `type = "keyantibiotics"` and parameter `ignore_I`
+#' 1. Using `type = "keyantibiotics"` and argument `ignore_I`
 #' 
 #'    Any difference from S to R (or vice versa) will (re)select an isolate as a first weighted isolate. With `ignore_I = FALSE`, also differences from I to S|R (or vice versa) will lead to this. This is a reliable method and 30-35 times faster than method 2. Read more about this in the [key_antibiotics()] function.
 #'    
-#' 2. Using `type = "points"` and parameter `points_threshold`
+#' 2. Using `type = "points"` and argument `points_threshold`
 #' 
 #'    A difference from I to S|R (or vice versa) means 0.5 points, a difference from S to R (or vice versa) means 1 point. When the sum of points exceeds `points_threshold`, which default to `2`, an isolate will be (re)selected as a first weighted isolate.
 #' @rdname first_isolate
@@ -89,21 +102,24 @@
 #' # basic filtering on first isolates
 #' example_isolates[first_isolate(example_isolates), ]
 #' 
+#' # filtering based on isolates ----------------------------------------------
 #' \donttest{
 #' if (require("dplyr")) {
-#'   # Filter on first isolates:
+#'   # filter on first isolates:
 #'   example_isolates %>%
 #'     mutate(first_isolate = first_isolate(.)) %>%
 #'     filter(first_isolate == TRUE)
 #'  
-#'   # Short-hand versions:
+#'   # short-hand versions:
+#'   example_isolates %>%
+#'     filter(first_isolate())
 #'   example_isolates %>%
 #'     filter_first_isolate()
 #'     
 #'   example_isolates %>%
 #'     filter_first_weighted_isolate()
 #'   
-#'   # Now let's see if first isolates matter:
+#'   # now let's see if first isolates matter:
 #'   A <- example_isolates %>%
 #'     group_by(hospital_id) %>%
 #'     summarise(count = n_rsi(GEN),            # gentamicin availability
@@ -139,10 +155,36 @@ first_isolate <- function(x,
                           info = interactive(),
                           include_unknown = FALSE,
                           ...) {
+  if (missing(x)) {
+    x <- get_current_data(arg_name = "x", call = -2)
+  }
+  meet_criteria(x, allow_class = "data.frame") # also checks dimensions to be >0
+  meet_criteria(col_date, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
+  meet_criteria(col_patient_id, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
+  meet_criteria(col_mo, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
+  meet_criteria(col_testcode, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
+  if (isFALSE(col_specimen)) {
+    col_specimen <- NULL
+  }
+  meet_criteria(col_specimen, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
+  meet_criteria(col_icu, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
+  if (isFALSE(col_keyantibiotics)) {
+    col_keyantibiotics <- NULL
+  }
+  meet_criteria(col_keyantibiotics, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
+  meet_criteria(episode_days, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(testcodes_exclude, allow_class = "character", allow_NULL = TRUE)
+  meet_criteria(icu_exclude, allow_class = "logical", has_length = 1)
+  meet_criteria(specimen_group, allow_class = "character", has_length = 1, allow_NULL = TRUE)
+  meet_criteria(type, allow_class = "character", has_length = 1)
+  meet_criteria(ignore_I, allow_class = "logical", has_length = 1)
+  meet_criteria(points_threshold, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(info, allow_class = "logical", has_length = 1)
+  meet_criteria(include_unknown, allow_class = "logical", has_length = 1)
   
   dots <- unlist(list(...))
   if (length(dots) != 0) {
-    # backwards compatibility with old parameters
+    # backwards compatibility with old arguments
     dots.names <- dots %pm>% names()
     if ("filter_specimen" %in% dots.names) {
       specimen_group <- dots[which(dots.names == "filter_specimen")]
@@ -152,13 +194,10 @@ first_isolate <- function(x,
     }
   }
   
-  stop_ifnot(is.data.frame(x), "`x` must be a data.frame")
-  stop_if(any(dim(x) == 0), "`x` must contain rows and columns")
-  
   # remove data.table, grouping from tibbles, etc.
   x <- as.data.frame(x, stringsAsFactors = FALSE)
   
-  # try to find columns based on type
+ # try to find columns based on type
   # -- mo
   if (is.null(col_mo)) {
     col_mo <- search_type_in_df(x = x, type = "mo")
@@ -178,7 +217,7 @@ first_isolate <- function(x,
       # WHONET support
       x$patient_id <- paste(x$`First name`, x$`Last name`, x$Sex)
       col_patient_id <- "patient_id"
-      message(font_blue(paste0("NOTE: Using combined columns `", font_bold("First name"), "`, `", font_bold("Last name"), "` and `", font_bold("Sex"), "` as input for `col_patient_id`")))
+      message_("Using combined columns '", font_bold("First name"), "', '", font_bold("Last name"), "' and '", font_bold("Sex"), "' as input for `col_patient_id`")
     } else {
       col_patient_id <- search_type_in_df(x = x, type = "patient_id")
     }
@@ -189,23 +228,17 @@ first_isolate <- function(x,
   if (is.null(col_keyantibiotics)) {
     col_keyantibiotics <- search_type_in_df(x = x, type = "keyantibiotics")
   }
-  if (isFALSE(col_keyantibiotics)) {
-    col_keyantibiotics <- NULL
-  }
-  
+
   # -- specimen
   if (is.null(col_specimen) & !is.null(specimen_group)) {
     col_specimen <- search_type_in_df(x = x, type = "specimen")
-  }
-  if (isFALSE(col_specimen)) {
-    col_specimen <- NULL
   }
   
   # check if columns exist
   check_columns_existance <- function(column, tblname = x) {
     if (!is.null(column)) {
       stop_ifnot(column %in% colnames(tblname),
-                 "Column `", column, "` not found.", call = FALSE)
+                 "Column '", column, "' not found.", call = FALSE)
     }
   }
   
@@ -233,7 +266,9 @@ first_isolate <- function(x,
   }
   # remove testcodes
   if (!is.null(testcodes_exclude) & info == TRUE) {
-    message(font_black(paste0("[Criterion] Exclude test codes: ", toString(paste0("'", testcodes_exclude, "'")))))
+    message_("[Criterion] Exclude test codes: ", toString(paste0("'", testcodes_exclude, "'")),
+             add_fn = font_black,
+             as_note = FALSE)
   }
   
   if (is.null(col_specimen)) {
@@ -244,7 +279,9 @@ first_isolate <- function(x,
   if (!is.null(specimen_group)) {
     check_columns_existance(col_specimen, x)
     if (info == TRUE) {
-      message(font_black(paste0("[Criterion] Exclude other than specimen group '", specimen_group, "'")))
+      message_("[Criterion] Exclude other than specimen group '", specimen_group, "'",
+               add_fn = font_black,
+               as_note = FALSE)
     }
   }
   if (!is.null(col_keyantibiotics)) {
@@ -278,12 +315,31 @@ first_isolate <- function(x,
     )
   }
   
-  # no isolates found
+  # speed up - return immediately if obvious
   if (abs(row.start) == Inf | abs(row.end) == Inf) {
     if (info == TRUE) {
-      message(paste("=> Found", font_bold("no isolates")))
+      message_("=> Found ", font_bold("no isolates"),
+               add_fn = font_black, 
+               as_note = FALSE)
     }
     return(rep(FALSE, nrow(x)))
+  }
+  if (row.start == row.end) {
+    if (info == TRUE) {
+      message_("=> Found ", font_bold("1 isolate"), ", as the data only contained 1 row", 
+               add_fn = font_black,
+               as_note = FALSE)
+    }
+    return(TRUE)
+  }
+  if (length(c(row.start:row.end)) == pm_n_distinct(x[c(row.start:row.end), col_mo, drop = TRUE])) {
+    if (info == TRUE) {
+      message_("=> Found ", font_bold(paste(length(c(row.start:row.end)), "isolates")),
+               ", as all isolates were different microorganisms",
+               add_fn = font_black,
+               as_note = FALSE)
+    }
+    return(rep(TRUE, length(c(row.start:row.end))))
   }
   
   # did find some isolates - add new index numbers of rows
@@ -291,28 +347,6 @@ first_isolate <- function(x,
   
   scope.size <- nrow(x[which(x$newvar_row_index_sorted %in% c(row.start + 1:row.end) &
                                !is.na(x$newvar_mo)), , drop = FALSE])
-  
-  identify_new_year <- function(x, episode_days) {
-    # I asked on StackOverflow:
-    # https://stackoverflow.com/questions/42122245/filter-one-row-every-year
-    if (length(x) == 1) {
-      return(TRUE)
-    }
-    indices <- integer(0)
-    start <- x[1]
-    ind <- 1
-    indices[ind] <- ind
-    for (i in 2:length(x)) {
-      if (isTRUE(as.numeric(x[i] - start) >= episode_days)) {
-        ind <- ind + 1
-        indices[ind] <- i
-        start <- x[i]
-      }
-    }
-    result <- rep(FALSE, length(x))
-    result[indices] <- TRUE
-    return(result)
-  }
   
   # Analysis of first isolate ----
   x$other_pat_or_mo <- ifelse(x$newvar_patient_id == pm_lag(x$newvar_patient_id) &
@@ -324,8 +358,8 @@ first_isolate <- function(x,
                                            function(g,
                                                     df = x,
                                                     days = episode_days) {
-                                             identify_new_year(x = df[which(df$episode_group == g), "newvar_date", drop = TRUE],
-                                                               episode_days = days)
+                                             is_new_episode(x = df[which(df$episode_group == g), ]$newvar_date,
+                                                            episode_days = days)
                                            }))
   
   weighted.notice <- ""
@@ -333,13 +367,17 @@ first_isolate <- function(x,
     weighted.notice <- "weighted "
     if (info == TRUE) {
       if (type == "keyantibiotics") {
-        message(font_black(paste0("[Criterion] Base inclusion on key antibiotics, ",
-                                  ifelse(ignore_I == FALSE, "not ", ""),
-                                  "ignoring I")))
+        message_("[Criterion] Base inclusion on key antibiotics, ",
+                 ifelse(ignore_I == FALSE, "not ", ""),
+                 "ignoring I",
+                 add_fn = font_black,
+                 as_note = FALSE)
       }
       if (type == "points") {
-        message(font_black(paste0("[Criterion] Base inclusion on key antibiotics, using points threshold of "
-                                  , points_threshold)))
+        message_("[Criterion] Base inclusion on key antibiotics, using points threshold of "
+                 , points_threshold,
+                 add_fn = font_black,
+                 as_note = FALSE)
       }
     }
     type_param <- type
@@ -352,20 +390,20 @@ first_isolate <- function(x,
                                              info = info)
     # with key antibiotics
     x$newvar_first_isolate <- pm_if_else(x$newvar_row_index_sorted >= row.start &
-                                        x$newvar_row_index_sorted <= row.end &
-                                        x$newvar_genus_species != "" & 
-                                        (x$other_pat_or_mo | x$more_than_episode_ago | x$other_key_ab),
-                                      TRUE,
-                                      FALSE)
+                                           x$newvar_row_index_sorted <= row.end &
+                                           x$newvar_genus_species != "" & 
+                                           (x$other_pat_or_mo | x$more_than_episode_ago | x$other_key_ab),
+                                         TRUE,
+                                         FALSE)
     
   } else {
     # no key antibiotics
     x$newvar_first_isolate <- pm_if_else(x$newvar_row_index_sorted >= row.start &
-                                        x$newvar_row_index_sorted <= row.end &
-                                        x$newvar_genus_species != "" & 
-                                        (x$other_pat_or_mo | x$more_than_episode_ago),
-                                      TRUE,
-                                      FALSE)
+                                           x$newvar_row_index_sorted <= row.end &
+                                           x$newvar_genus_species != "" & 
+                                           (x$other_pat_or_mo | x$more_than_episode_ago),
+                                         TRUE,
+                                         FALSE)
   }
   
   # first one as TRUE
@@ -376,10 +414,14 @@ first_isolate <- function(x,
   }
   if (!is.null(col_icu)) {
     if (icu_exclude == TRUE) {
-      message(font_black("[Criterion] Exclude isolates from ICU.\n"))
+      message_("[Criterion] Exclude isolates from ICU.",
+               add_fn = font_black,
+               as_note = FALSE)
       x[which(as.logical(x[, col_icu, drop = TRUE])), "newvar_first_isolate"] <- FALSE
     } else {
-      message(font_black("[Criterion] Include isolates from ICU.\n"))
+      message_("[Criterion] Include isolates from ICU.",
+               add_fn = font_black,
+               as_note = FALSE)
     }
   }
   
@@ -388,18 +430,18 @@ first_isolate <- function(x,
   
   # handle empty microorganisms
   if (any(x$newvar_mo == "UNKNOWN", na.rm = TRUE) & info == TRUE) {
-    message(font_blue(paste0("NOTE: ", ifelse(include_unknown == TRUE, "Included ", "Excluded "), 
-                             format(sum(x$newvar_mo == "UNKNOWN", na.rm = TRUE),
-                                    decimal.mark = decimal.mark, big.mark = big.mark), 
-                             " isolates with a microbial ID 'UNKNOWN' (column `", font_bold(col_mo), "`)")))
+    message_(ifelse(include_unknown == TRUE, "Included ", "Excluded "), 
+             format(sum(x$newvar_mo == "UNKNOWN", na.rm = TRUE),
+                    decimal.mark = decimal.mark, big.mark = big.mark), 
+             " isolates with a microbial ID 'UNKNOWN' (column '", font_bold(col_mo), "')")
   }
   x[which(x$newvar_mo == "UNKNOWN"), "newvar_first_isolate"] <- include_unknown
   
   # exclude all NAs
   if (any(is.na(x$newvar_mo)) & info == TRUE) {
-    message(font_blue(paste0("NOTE: Excluded ", format(sum(is.na(x$newvar_mo), na.rm = TRUE),
-                                                       decimal.mark = decimal.mark, big.mark = big.mark), 
-                             " isolates with a microbial ID 'NA' (column `", font_bold(col_mo), "`)")))
+    message_("Excluded ", format(sum(is.na(x$newvar_mo), na.rm = TRUE),
+                                 decimal.mark = decimal.mark, big.mark = big.mark), 
+             " isolates with a microbial ID 'NA' (column '", font_bold(col_mo), "')")
   }
   x[which(is.na(x$newvar_mo)), "newvar_first_isolate"] <- FALSE
   
@@ -428,7 +470,7 @@ first_isolate <- function(x,
                         font_bold(paste0(n_found, " first ", weighted.notice, "isolates")),
                         " (", p_found_total, " of total where a microbial ID was available)")
     }
-    message(font_black(msg_txt))
+    message_(msg_txt, add_fn = font_black, as_note = FALSE)
   }
   
   x$newvar_first_isolate
@@ -442,6 +484,10 @@ filter_first_isolate <- function(x,
                                  col_patient_id = NULL,
                                  col_mo = NULL,
                                  ...) {
+  meet_criteria(x, allow_class = "data.frame")
+  meet_criteria(col_date, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
+  meet_criteria(col_patient_id, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
+  meet_criteria(col_mo, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
   subset(x, first_isolate(x = x,
                           col_date = col_date,
                           col_patient_id = col_patient_id,
@@ -457,6 +503,11 @@ filter_first_weighted_isolate <- function(x,
                                           col_mo = NULL,
                                           col_keyantibiotics = NULL,
                                           ...) {
+  meet_criteria(x, allow_class = "data.frame")
+  meet_criteria(col_date, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
+  meet_criteria(col_patient_id, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
+  meet_criteria(col_mo, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
+  meet_criteria(col_keyantibiotics, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
   y <- x
   if (is.null(col_keyantibiotics)) {
     # first try to look for it
@@ -472,8 +523,5 @@ filter_first_weighted_isolate <- function(x,
   
   subset(x, first_isolate(x = y,
                           col_date = col_date,
-                          col_patient_id = col_patient_id,
-                          col_mo = col_mo,
-                          col_keyantibiotics = col_keyantibiotics,
-                          ...))
+                          col_patient_id = col_patient_id))
 }

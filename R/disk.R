@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -39,7 +39,6 @@
 #' @examples
 #' \donttest{
 #' # transform existing disk zones to the `disk` class
-#' library(dplyr)
 #' df <- data.frame(microorganism = "E. coli",
 #'                  AMP = 20,
 #'                  CIP = 14,
@@ -58,6 +57,9 @@
 #' as.rsi(df)
 #' }
 as.disk <- function(x, na.rm = FALSE) {
+  meet_criteria(x, allow_class = c("disk", "character", "numeric", "integer"), allow_NA = TRUE)
+  meet_criteria(na.rm, allow_class = "logical", has_length = 1)
+  
   if (!is.disk(x)) {
     x <- x %pm>% unlist()
     if (na.rm == TRUE) {
@@ -67,13 +69,13 @@ as.disk <- function(x, na.rm = FALSE) {
     
     na_before <- length(x[is.na(x)])
     
-    # heavily based on the function from our cleaner package:
+    # heavily based on cleaner::clean_double():
     clean_double2 <- function(x, remove = "[^0-9.,-]", fixed = FALSE) {
       x <- gsub(",", ".", x)
       # remove ending dot/comma
       x <- gsub("[,.]$", "", x)
       # only keep last dot/comma
-      reverse <- function(x) sapply(lapply(strsplit(x, NULL), rev), paste, collapse = "")
+      reverse <- function(x) vapply(FUN.VALUE = character(1), lapply(strsplit(x, NULL), rev), paste, collapse = "")
       x <- sub("{{dot}}", ".", 
                gsub(".", "",
                     reverse(sub(".", "}}tod{{",
@@ -98,19 +100,23 @@ as.disk <- function(x, na.rm = FALSE) {
         unique() %pm>%
         sort()
       list_missing <- paste0('"', list_missing, '"', collapse = ", ")
-      warning(na_after - na_before, " results truncated (",
-              round(((na_after - na_before) / length(x)) * 100),
-              "%) that were invalid disk zones: ",
-              list_missing, call. = FALSE)
+      warning_(na_after - na_before, " results truncated (",
+               round(((na_after - na_before) / length(x)) * 100),
+               "%) that were invalid disk zones: ",
+               list_missing, call = FALSE)
     }
   }
-  structure(as.integer(x),
-            class = c("disk", "integer"))
+  set_clean_class(as.integer(x),
+                  new_class = c("disk", "integer"))
 }
 
 all_valid_disks <- function(x) {
-  x_disk <- suppressWarnings(as.disk(x[!is.na(x)]))
-  !any(is.na(x_disk)) & !all(is.na(x))
+  if (!inherits(x, c("disk", "character", "numeric", "integer"))) {
+    return(FALSE)
+  }
+  x_disk <- tryCatch(suppressWarnings(as.disk(x[!is.na(x)])),
+                     error = function(e) NA)
+  !any(is.na(x_disk)) && !all(is.na(x))
 }
 
 #' @rdname as.disk
@@ -137,6 +143,30 @@ type_sum.disk <- function(x, ...) {
 print.disk <- function(x, ...) {
   cat("Class <disk>\n")
   print(as.integer(x), quote = FALSE)
+}
+
+#' @method plot disk
+#' @export
+#' @importFrom graphics barplot axis
+#' @rdname plot
+plot.disk <- function(x,
+                      main = paste("Disk zones values of", deparse(substitute(x))),
+                      ylab = "Frequency",
+                      xlab = "Disk diffusion (mm)",
+                      axes = FALSE,
+                      ...) {
+  meet_criteria(main, allow_class = "character", has_length = 1)
+  meet_criteria(ylab, allow_class = "character", has_length = 1)
+  meet_criteria(xlab, allow_class = "character", has_length = 1)
+  meet_criteria(axes, allow_class = "logical", has_length = 1)
+  
+  barplot(table(x),
+          ylab = ylab,
+          xlab = xlab,
+          axes = axes,
+          main = main,
+          ...)
+  axis(2, seq(0, max(table(x))))
 }
 
 #' @method [ disk
@@ -194,14 +224,12 @@ unique.disk <- function(x, incomparables = FALSE, ...) {
 
 # will be exported using s3_register() in R/zzz.R
 get_skimmers.disk <- function(column) {
-  sfl <- import_fn("sfl", "skimr", error_on_fail = FALSE)
-  inline_hist <- import_fn("inline_hist", "skimr", error_on_fail = FALSE)
-  sfl(
+  skimr::sfl(
     skim_type = "disk",
     min = ~min(as.double(.), na.rm = TRUE),
     max = ~max(as.double(.), na.rm = TRUE),
     median = ~stats::median(as.double(.), na.rm = TRUE),
     n_unique = ~pm_n_distinct(., na.rm = TRUE),
-    hist = ~inline_hist(stats::na.omit(as.double(.)))
+    hist = ~skimr::inline_hist(stats::na.omit(as.double(.)))
   )
 }

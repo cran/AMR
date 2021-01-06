@@ -29,7 +29,7 @@ Interpret disk values as RSI values with \code{\link[=as.rsi]{as.rsi()}}. It sup
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Read more on our website!}{
@@ -40,7 +40,6 @@ On our website \url{https://msberends.github.io/AMR/} you can find \href{https:/
 \examples{
 \donttest{
 # transform existing disk zones to the `disk` class
-library(dplyr)
 df <- data.frame(microorganism = "E. coli",
                  AMP = 20,
                  CIP = 14,

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -49,7 +49,18 @@ test_that("PCA works", {
   expect_s3_class(pca_model, "pca")
   
   pdf(NULL) # prevent Rplots.pdf being created
-  
   ggplot_pca(pca_model, ellipse = TRUE)
   ggplot_pca(pca_model, arrows_textangled = FALSE)
+  
+  if (require("dplyr")) {
+    resistance_data <- example_isolates %>% 
+      group_by(order = mo_order(mo),
+               genus = mo_genus(mo)) %>%
+      summarise_if(is.rsi, resistance, minimum = 0)
+    pca_result <- resistance_data %>%         
+      pca(AMC, CXM, CTX, CAZ, GEN, TOB, TMP, "SXT") 
+    expect_s3_class(pca_result, "prcomp")
+    ggplot_pca(pca_result, ellipse = TRUE)
+    ggplot_pca(pca_result, ellipse = FALSE, arrows_textangled = FALSE, scale = FALSE)
+  }
 })

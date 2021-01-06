@@ -1,6 +1,6 @@
 Package: AMR
-Version: 1.4.0
-Date: 2020-10-08
+Version: 1.5.0
+Date: 2021-01-05
 Title: Antimicrobial Resistance Analysis
 Authors@R: c(
     person(role = c("aut", "cre"), 
@@ -30,6 +30,8 @@ Authors@R: c(
     person(role = "ctb",
            family = "Ny", given = "Sofia", email = "sofia.ny@folkhalsomyndigheten.se"),
     person(role = "ctb",
+           family = "Schade", given = c("Rogier", "P."), email = "r.schade@amsterdamumc.nl"),
+    person(role = "ctb",
            family = "Souverein", given = "Dennis", email = "d.souvereing@streeklabhaarlem.nl"),
     person(role = "ctb",
            family = "Underwood", given = "Anthony", email = "au3@sanger.ac.uk"))
@@ -39,8 +41,9 @@ Description: Functions to simplify the analysis and prediction of Antimicrobial
     <doi:10.1111/j.1469-0691.2011.03703.x> and the Clinical and Laboratory 
     Standards Institute (2014) <isbn: 1-56238-899-1>.
 Depends: R (>= 3.0.0)
-Suggests: cleaner, curl, dplyr, ggplot2, knitr, microbenchmark, readxl,
-        rmarkdown, rstudioapi, rvest, skimr, testthat, tidyr, xml2
+Suggests: cleaner, curl, dplyr, ggplot2, knitr, microbenchmark, pillar,
+        readxl, rmarkdown, rstudioapi, rvest, skimr, testthat, tidyr,
+        xml2
 VignetteBuilder: knitr,rmarkdown
 URL: https://msberends.github.io/AMR/, https://github.com/msberends/AMR
 BugReports: https://github.com/msberends/AMR/issues
@@ -49,7 +52,7 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2020-10-08 07:08:04 UTC; msberends
+Packaged: 2021-01-05 08:46:39 UTC; msberends
 Author: Matthijs S. Berends [aut, cre]
     (<https://orcid.org/0000-0001-7620-1800>),
   Christian F. Luz [aut, ctb] (<https://orcid.org/0000-0001-5809-5995>),
@@ -65,8 +68,9 @@ Author: Matthijs S. Berends [aut, cre]
   Annick Lenglet [ctb],
   Bart C. Meijer [ctb],
   Sofia Ny [ctb],
+  Rogier P. Schade [ctb],
   Dennis Souverein [ctb],
   Anthony Underwood [ctb]
 Maintainer: Matthijs S. Berends <m.s.berends@umcg.nl>
 Repository: CRAN
-Date/Publication: 2020-10-08 07:30:03 UTC
+Date/Publication: 2021-01-06 10:20:05 UTC

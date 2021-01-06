@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -40,6 +40,8 @@ test_that("data sets are valid", {
   expect_true(all(example_isolates$mo %in% microorganisms$mo))
   expect_true(all(microorganisms.translation$mo_new %in% microorganisms$mo))
   expect_true(all(rsi_translation$mo %in% microorganisms$mo))
+  expect_true(all(intrinsic_resistant$microorganism %in% microorganisms$fullname)) # also important for mo_is_intrinsic_resistant()
+  expect_true(all(intrinsic_resistant$antibiotic %in% antibiotics$name))
   expect_false(any(is.na(microorganisms.codes$code)))
   expect_false(any(is.na(microorganisms.codes$mo)))
   expect_false(any(microorganisms.translation$mo_old %in% microorganisms$mo))

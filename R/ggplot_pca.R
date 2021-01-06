@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -47,15 +47,16 @@
 #' @param arrows_textangled a logical whether the text at the end of the arrows should be angled
 #' @param arrows_alpha the alpha (transparency) of the arrows and their text
 #' @param base_textsize the text size for all plot elements except the labels and arrows
-#' @param ... Parameters passed on to functions
+#' @param ... Arguments passed on to functions
 #' @source The [ggplot_pca()] function is based on the `ggbiplot()` function from the `ggbiplot` package by Vince Vu, as found on GitHub: <https://github.com/vqv/ggbiplot> (retrieved: 2 March 2020, their latest commit: [`7325e88`](https://github.com/vqv/ggbiplot/commit/7325e880485bea4c07465a0304c470608fffb5d9); 12 February 2015).
 #' 
 #' As per their GPL-2 licence that demands documentation of code changes, the changes made based on the source code were: 
 #' 1. Rewritten code to remove the dependency on packages `plyr`, `scales` and `grid`
 #' 2. Parametrised more options, like arrow and ellipse settings
-#' 3. Added total amount of explained variance as a caption in the plot
-#' 4. Cleaned all syntax based on the `lintr` package and added integrity checks
-#' 5. Updated documentation
+#' 3. Hardened all input possibilities by defining the exact type of user input for every argument
+#' 4. Added total amount of explained variance as a caption in the plot
+#' 5. Cleaned all syntax based on the `lintr` package, fixed grammatical errors and added integrity checks
+#' 6. Updated documentation
 #' @details The colours for labels and points can be changed by adding another scale layer for colour, like `scale_colour_viridis_d()` or `scale_colour_brewer()`.
 #' @rdname ggplot_pca
 #' @export
@@ -85,7 +86,7 @@
 #' }
 ggplot_pca <- function(x,
                        choices = 1:2,
-                       scale = TRUE,
+                       scale = 1,
                        pc.biplot = TRUE,
                        labels = NULL,
                        labels_textsize = 3,
@@ -107,22 +108,27 @@ ggplot_pca <- function(x,
                        ...) {
   
   stop_ifnot_installed("ggplot2")
-  stop_ifnot(length(choices) == 2, "`choices` must be of length 2")
-  stop_ifnot(is.logical(arrows), "`arrows` must be TRUE or FALSE")
-  stop_ifnot(is.logical(arrows_textangled), "`arrows_textangled` must be TRUE or FALSE")
-  stop_ifnot(is.logical(ellipse), "`ellipse` must be TRUE or FALSE")
-  stop_ifnot(is.logical(pc.biplot), "`pc.biplot` must be TRUE or FALSE")
-  stop_ifnot(is.logical(scale), "`scale` must be TRUE or FALSE")
-  stop_ifnot(is.numeric(arrows_alpha), "`arrows_alpha` must be numeric")
-  stop_ifnot(is.numeric(arrows_size), "`arrows_size` must be numeric")
-  stop_ifnot(is.numeric(arrows_textsize), "`arrows_textsize` must be numeric")
-  stop_ifnot(is.numeric(base_textsize), "`base_textsize` must be numeric")
-  stop_ifnot(is.numeric(choices), "`choices` must be numeric")
-  stop_ifnot(is.numeric(ellipse_alpha), "`ellipse_alpha` must be numeric")
-  stop_ifnot(is.numeric(ellipse_prob), "`ellipse_prob` must be numeric")
-  stop_ifnot(is.numeric(ellipse_size), "`ellipse_size` must be numeric")
-  stop_ifnot(is.numeric(labels_text_placement), "`labels_text_placement` must be numeric")
-  stop_ifnot(is.numeric(labels_textsize), "`labels_textsize` must be numeric")
+  meet_criteria(x, allow_class = c("prcomp", "princomp", "PCA", "lda"))
+  meet_criteria(choices, allow_class = c("numeric", "integer"), has_length = 2)
+  meet_criteria(scale, allow_class = c("numeric", "integer", "logical"), has_length = 1)
+  meet_criteria(pc.biplot, allow_class = "logical", has_length = 1)
+  meet_criteria(labels, allow_class = "character", allow_NULL = TRUE)
+  meet_criteria(labels_textsize, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(labels_text_placement, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(groups, allow_class = "character", allow_NULL = TRUE)
+  meet_criteria(ellipse, allow_class = "logical", has_length = 1)
+  meet_criteria(ellipse_prob, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(ellipse_size, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(ellipse_alpha, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(points_size, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(points_alpha, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(arrows, allow_class = "logical", has_length = 1)
+  meet_criteria(arrows_colour, allow_class = "character", has_length = 1)
+  meet_criteria(arrows_size, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(arrows_textsize, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(arrows_textangled, allow_class = "logical", has_length = 1)
+  meet_criteria(arrows_alpha, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(base_textsize, allow_class = c("numeric", "integer"), has_length = 1)
   
   calculations <- pca_calculations(pca_model = x,
                                    groups = groups, 
@@ -300,19 +306,20 @@ pca_calculations <- function(pca_model,
     d <- pca_model$svd
     u <- predict(pca_model)$x / nobs.factor
     v <- pca_model$scaling
-    d.total <- sum(d ^ 2)
   } else {
-    stop("Expected a object of class prcomp, princomp, PCA, or lda")
+    stop("Expected an object of class prcomp, princomp, PCA, or lda")
   }
   
   # Scores
   choices <- pmin(choices, ncol(u))
   obs.scale <- 1 - as.integer(scale)
-  df.u <- as.data.frame(sweep(u[, choices], 2, d[choices] ^ obs.scale, FUN = "*"))
+  df.u <- as.data.frame(sweep(u[, choices], 2, d[choices] ^ obs.scale, FUN = "*"),
+                        stringsAsFactors = FALSE)
   
   # Directions
   v <- sweep(v, 2, d ^ as.integer(scale), FUN = "*")
-  df.v <- as.data.frame(v[, choices])
+  df.v <- as.data.frame(v[, choices],
+                        stringsAsFactors = FALSE)
   
   names(df.u) <- c("xvar", "yvar")
   names(df.v) <- names(df.u)
@@ -350,7 +357,8 @@ pca_calculations <- function(pca_model,
       if (nrow(x) <= 2) {
         return(data.frame(X1 = numeric(0),
                           X2 = numeric(0),
-                          groups = character(0)))
+                          groups = character(0),
+                          stringsAsFactors = FALSE))
       }
       sigma <- var(cbind(x$xvar, x$yvar))
       mu <- c(mean(x$xvar), mean(x$yvar))

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -388,29 +388,29 @@ pm_group_size <- function(x) {
 pm_n_groups <- function(x) {
   nrow(pm_group_data(x))
 }
-pm_group_split <- function(.data, ..., .keep = TRUE) {
-  dots_len <- ...length() > 0L
-  if (pm_has_groups(.data) && isTRUE(dots_len)) {
-    warning("... is ignored in pm_group_split(<grouped_df>), please use pm_group_by(..., .add = TRUE) %pm>% pm_group_split()")
-  }
-  if (!pm_has_groups(.data) && isTRUE(dots_len)) {
-    .data <- pm_group_by(.data, ...)
-  }
-  if (!pm_has_groups(.data) && isFALSE(dots_len)) {
-    return(list(.data))
-  }
-  pm_context$setup(.data)
-  on.exit(pm_context$clean(), add = TRUE)
-  pm_groups <- pm_get_groups(.data)
-  attr(pm_context$.data, "pm_groups") <- NULL
-  res <- pm_split_into_groups(pm_context$.data, pm_groups)
-  names(res) <- NULL
-  if (isFALSE(.keep)) {
-    res <- lapply(res, function(x) x[, !colnames(x) %in% pm_groups])
-  }
-  any_empty <- unlist(lapply(res, function(x) !(nrow(x) == 0L)))
-  res[any_empty]
-}
+# pm_group_split <- function(.data, ..., .keep = TRUE) {
+#   dots_len <- ...length() > 0L
+#   if (pm_has_groups(.data) && isTRUE(dots_len)) {
+#     warning("... is ignored in pm_group_split(<grouped_df>), please use pm_group_by(..., .add = TRUE) %pm>% pm_group_split()")
+#   }
+#   if (!pm_has_groups(.data) && isTRUE(dots_len)) {
+#     .data <- pm_group_by(.data, ...)
+#   }
+#   if (!pm_has_groups(.data) && isFALSE(dots_len)) {
+#     return(list(.data))
+#   }
+#   pm_context$setup(.data)
+#   on.exit(pm_context$clean(), add = TRUE)
+#   pm_groups <- pm_get_groups(.data)
+#   attr(pm_context$.data, "pm_groups") <- NULL
+#   res <- pm_split_into_groups(pm_context$.data, pm_groups)
+#   names(res) <- NULL
+#   if (isFALSE(.keep)) {
+#     res <- lapply(res, function(x) x[, !colnames(x) %in% pm_groups])
+#   }
+#   any_empty <- unlist(lapply(res, function(x) !(nrow(x) == 0L)))
+#   res[any_empty]
+# }
 
 pm_group_keys <- function(.data) {
   pm_groups <- pm_get_groups(.data)

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -134,7 +134,10 @@ count_R <- function(..., only_all_tested = FALSE) {
 #' @rdname count
 #' @export
 count_IR <- function(..., only_all_tested = FALSE) {
-  warning("Using 'count_IR' is discouraged; use 'count_resistant()' instead to not consider \"I\" being resistant.", call. = FALSE)
+  if (message_not_thrown_before("count_IR")) {
+    warning_("Using count_IR() is discouraged; use count_resistant() instead to not consider \"I\" being resistant.", call = FALSE)
+    remember_thrown_message("count_IR")
+  }
   rsi_calc(...,
            ab_result = c("I", "R"),
            only_all_tested = only_all_tested,
@@ -162,7 +165,10 @@ count_SI <- function(..., only_all_tested = FALSE) {
 #' @rdname count
 #' @export
 count_S <- function(..., only_all_tested = FALSE) {
-  warning("Using 'count_S' is discouraged; use 'count_susceptible()' instead to also consider \"I\" being susceptible.", call. = FALSE)
+  if (message_not_thrown_before("count_S")) {
+    warning_("Using count_S() is discouraged; use count_susceptible() instead to also consider \"I\" being susceptible.", call = FALSE)
+    remember_thrown_message("count_S")
+  }
   rsi_calc(...,
            ab_result = "S",
            only_all_tested = only_all_tested,
@@ -189,7 +195,6 @@ count_df <- function(data,
                      language = get_locale(),
                      combine_SI = TRUE,
                      combine_IR = FALSE) {
-  
   rsi_calc_df(type = "count",
               data = data,
               translate_ab = translate_ab,

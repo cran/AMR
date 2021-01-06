@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -39,7 +39,12 @@ test_that("disk works", {
   expect_s3_class(c(x[1], x[9]), "disk")
   expect_s3_class(unique(x[1], x[9]), "disk")
   expect_warning(as.disk("INVALID VALUE"))
+  x[2] <- 32
+  expect_s3_class(x, "disk")
   
+  pdf(NULL) # prevent Rplots.pdf being created
+  expect_silent(plot(as.disk(c(10, 20, 40))))
+
   expect_output(print(as.disk(12)))
   library(dplyr, warn.conflicts = FALSE)
   expect_output(print(tibble(d = as.disk(12))))

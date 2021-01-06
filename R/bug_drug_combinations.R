@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -31,8 +31,8 @@
 #' @param combine_IR logical to indicate whether values R and I should be summed
 #' @param add_ab_group logical to indicate where the group of the antimicrobials must be included as a first column
 #' @param remove_intrinsic_resistant logical to indicate that rows and columns with 100% resistance for all tested antimicrobials must be removed from the table
-#' @param FUN the function to call on the `mo` column to transform the microorganism IDs, defaults to [mo_shortname()] 
-#' @param translate_ab a character of length 1 containing column names of the [antibiotics] data set
+#' @param FUN function to call on the `mo` column to transform the microorganism IDs, defaults to [mo_shortname()] 
+#' @param translate_ab character of length 1 containing column names of the [antibiotics] data set
 #' @param ... arguments passed on to `FUN`
 #' @inheritParams rsi_df
 #' @inheritParams base::formatC
@@ -61,9 +61,10 @@ bug_drug_combinations <- function(x,
                                   col_mo = NULL, 
                                   FUN = mo_shortname,
                                   ...) {
-  stop_ifnot(is.data.frame(x), "`x` must be a data frame")
-  stop_ifnot(any(sapply(x, is.rsi), na.rm = TRUE), "No columns with class <rsi> found. See ?as.rsi.")
-  
+  meet_criteria(x, allow_class = "data.frame", contains_column_class = "rsi")
+  meet_criteria(col_mo, allow_class = "character", is_in = colnames(x), has_length = 1, allow_NULL = TRUE)
+  meet_criteria(FUN, allow_class = "function", has_length = 1)
+
   # try to find columns based on type
   # -- mo
   if (is.null(col_mo)) {
@@ -74,21 +75,21 @@ bug_drug_combinations <- function(x,
   x_class <- class(x)
   x <- as.data.frame(x, stringsAsFactors = FALSE)
   x[, col_mo] <- FUN(x[, col_mo, drop = TRUE], ...)
-  x <- x[, c(col_mo, names(which(sapply(x, is.rsi)))), drop = FALSE]
+  x <- x[, c(col_mo, names(which(vapply(FUN.VALUE = logical(1), x, is.rsi)))), drop = FALSE]
   
   unique_mo <- sort(unique(x[, col_mo, drop = TRUE]))
   
-  out <- data.frame(
-    mo = character(0),
-    ab = character(0),
-    S = integer(0),
-    I = integer(0),
-    R = integer(0),
-    total = integer(0))
+  out <- data.frame(mo = character(0),
+                    ab = character(0),
+                    S = integer(0),
+                    I = integer(0),
+                    R = integer(0),
+                    total = integer(0),
+                    stringsAsFactors = FALSE)
   
   for (i in seq_len(length(unique_mo))) {
     # filter on MO group and only select R/SI columns
-    x_mo_filter <- x[which(x[, col_mo, drop = TRUE] == unique_mo[i]), names(which(sapply(x, is.rsi))), drop = FALSE]
+    x_mo_filter <- x[which(x[, col_mo, drop = TRUE] == unique_mo[i]), names(which(vapply(FUN.VALUE = logical(1), x, is.rsi))), drop = FALSE]
     # turn and merge everything
     pivot <- lapply(x_mo_filter, function(x) {
       m <- as.matrix(table(x))
@@ -100,11 +101,13 @@ bug_drug_combinations <- function(x,
                             S = merged$S,
                             I = merged$I,
                             R = merged$R,
-                            total = merged$S + merged$I + merged$R)
-    out <- rbind(out, out_group)
+                            total = merged$S + merged$I + merged$R,
+                            stringsAsFactors = FALSE)
+    out <- rbind(out, out_group, stringsAsFactors = FALSE)
   }
   
-  structure(.Data = out, class = c("bug_drug_combinations", x_class))
+  set_clean_class(out,
+                  new_class = c("bug_drug_combinations", x_class))
 }
 
 #' @method format bug_drug_combinations
@@ -121,6 +124,17 @@ format.bug_drug_combinations <- function(x,
                                          decimal.mark = getOption("OutDec"),
                                          big.mark = ifelse(decimal.mark == ",", ".", ","),
                                          ...) {
+  meet_criteria(x, allow_class = "data.frame")
+  meet_criteria(translate_ab, allow_class = c("character", "logical"), has_length = 1, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(combine_SI, allow_class = "logical", has_length = 1)
+  meet_criteria(combine_IR, allow_class = "logical", has_length = 1)
+  meet_criteria(add_ab_group, allow_class = "logical", has_length = 1)
+  meet_criteria(remove_intrinsic_resistant, allow_class = "logical", has_length = 1)
+  meet_criteria(decimal.mark, allow_class = "character", has_length = 1)
+  meet_criteria(big.mark, allow_class = "character", has_length = 1)
+  
   x <- as.data.frame(x, stringsAsFactors = FALSE)
   x <- subset(x, total >= minimum)
   
@@ -151,7 +165,8 @@ format.bug_drug_combinations <- function(x,
   
   remove_NAs <- function(.data) {
     cols <- colnames(.data)
-    .data <- as.data.frame(sapply(.data, function(x) ifelse(is.na(x), "", x), simplify = FALSE))
+    .data <- as.data.frame(lapply(.data, function(x) ifelse(is.na(x), "", x)),
+                           stringsAsFactors = FALSE)
     colnames(.data) <- cols
     .data
   }
@@ -220,7 +235,7 @@ format.bug_drug_combinations <- function(x,
   }
   
   if (remove_intrinsic_resistant == TRUE) {
-    y <- y[, !sapply(y, function(col) all(col %like% "100", na.rm = TRUE) & !any(is.na(col))), drop = FALSE]
+    y <- y[, !vapply(FUN.VALUE = logical(1), y, function(col) all(col %like% "100", na.rm = TRUE) & !any(is.na(col))), drop = FALSE]
   }
   
   rownames(y) <- NULL
@@ -231,7 +246,8 @@ format.bug_drug_combinations <- function(x,
 #' @export
 print.bug_drug_combinations <- function(x, ...) {
   x_class <- class(x)
-  print(structure(x, class = x_class[x_class != "bug_drug_combinations"]),
+  print(set_clean_class(x, 
+                        new_class = x_class[x_class != "bug_drug_combinations"]),
         ...)
-  message(font_blue("NOTE: Use 'format()' on this result to get a publishable/printable format."))
+  message_("Use 'format()' on this result to get a publishable/printable format.", as_note = FALSE)
 }

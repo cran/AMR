@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -27,11 +27,11 @@
 #'
 #' Welcome to the `AMR` package.
 #' @details
-#' `AMR` is a free, open-source and independent R package to simplify the analysis and prediction of Antimicrobial Resistance (AMR) and to work with microbial and antimicrobial data and properties, by using evidence-based methods. Our aim is to provide a standard for clean and reproducible antimicrobial resistance data analysis, that can therefore empower epidemiological analyses to continuously enable surveillance and treatment evaluation in any setting.
+#' `AMR` is a free, open-source and independent \R package to simplify the analysis and prediction of Antimicrobial Resistance (AMR) and to work with microbial and antimicrobial data and properties, by using evidence-based methods. Our aim is to provide a standard for clean and reproducible antimicrobial resistance data analysis, that can therefore empower epidemiological analyses to continuously enable surveillance and treatment evaluation in any setting.
 #' 
-#' After installing this package, R knows ~70,000 distinct microbial species and all ~550 antibiotic, antimycotic and antiviral drugs by name and code (including ATC, EARS-NET, LOINC and SNOMED CT), and knows all about valid R/SI and MIC values. It supports any data format, including WHONET/EARS-Net data.
+#' After installing this package, \R knows ~70,000 distinct microbial species and all ~550 antibiotic, antimycotic and antiviral drugs by name and code (including ATC, EARS-NET, LOINC and SNOMED CT), and knows all about valid R/SI and MIC values. It supports any data format, including WHONET/EARS-Net data.
 #' 
-#' This package is fully independent of any other R package and works on Windows, macOS and Linux with all versions of R since R-3.0.0 (April 2013). It was designed to work in any setting, including those with very limited resources. It was created for both routine data analysis and academic research at the Faculty of Medical Sciences of the University of Groningen, in collaboration with non-profit organisations Certe Medical Diagnostics and Advice and University Medical Center Groningen. This R package is actively maintained and free software; you can freely use and distribute it for both personal and commercial (but not patent) purposes under the terms of the GNU General Public License version 2.0 (GPL-2), as published by the Free Software Foundation.
+#' This package is fully independent of any other \R package and works on Windows, macOS and Linux with all versions of \R since R-3.0.0 (April 2013). It was designed to work in any setting, including those with very limited resources. It was created for both routine data analysis and academic research at the Faculty of Medical Sciences of the University of Groningen, in collaboration with non-profit organisations Certe Medical Diagnostics and Advice and University Medical Center Groningen. This \R package is actively maintained and free software; you can freely use and distribute it for both personal and commercial (but not patent) purposes under the terms of the GNU General Public License version 2.0 (GPL-2), as published by the Free Software Foundation.
 #'
 #' This package can be used for:
 #' - Reference for the taxonomy of microorganisms, since the package contains all microbial (sub)species from the Catalogue of Life and List of Prokaryotic names with Standing in Nomenclature
@@ -42,8 +42,8 @@
 #' - Determining multi-drug resistance (MDR) / multi-drug resistant organisms (MDRO)
 #' - Calculating (empirical) susceptibility of both mono therapy and combination therapies
 #' - Predicting future antimicrobial resistance using regression models
-#' - Getting properties for any microorganism (like Gram stain, species, genus or family)
-#' - Getting properties for any antibiotic (like name, code of EARS-Net/ATC/LOINC/PubChem, defined daily dose or trade name)
+#' - Getting properties for any microorganism (such as Gram stain, species, genus or family)
+#' - Getting properties for any antibiotic (such as name, code of EARS-Net/ATC/LOINC/PubChem, defined daily dose or trade name)
 #' - Plotting antimicrobial resistance
 #' - Applying EUCAST expert rules
 #' - Getting SNOMED codes of a microorganism, or getting properties of a microorganism based on a SNOMED code
@@ -66,6 +66,7 @@
 #' Post Office Box 30001 \cr
 #' 9700 RB Groningen \cr
 #' The Netherlands
+#' <https://msberends.github.io/AMR/>
 #'
 #' If you have found a bug, please file a new issue at: \cr
 #' <https://github.com/msberends/AMR/issues>
@@ -73,12 +74,12 @@
 #' @rdname AMR
 NULL
 
-#' Plotting for classes `rsi` and `disk`
+#' Plotting for classes `rsi`, `mic` and `disk`
 #' 
 #' Functions to print classes of the `AMR` package.
 #' @inheritSection lifecycle Stable lifecycle
 #' @inheritSection AMR Read more on our website!
-#' @param ... Parameters passed on to functions
+#' @param ... Arguments passed on to functions
 #' @inheritParams base::plot
 #' @inheritParams graphics::barplot
 #' @name plot

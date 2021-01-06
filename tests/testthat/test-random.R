@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -23,10 +23,22 @@
 # how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
-context("p_symbol.R")
+context("random.R")
 
-test_that("P symbol works", {
+test_that("random works", {
   skip_on_cran()
-  expect_identical(p_symbol(c(0.001, 0.01, 0.05, 0.1, 1, NA, 3)),
-                   c("***", "**", "*", ".", " ", NA, NA))
+  
+  expect_s3_class(random_mic(100), "mic")
+  expect_s3_class(random_mic(100, mo = "Klebsiella pneumoniae"), "mic")
+  expect_s3_class(random_mic(100, mo = "Klebsiella pneumoniae", ab = "meropenem"), "mic")
+  expect_s3_class(random_mic(100, ab = "meropenem"), "mic")
+  # no normal factors of 2
+  expect_s3_class(random_mic(100, "Haemophilus influenzae", "ceftaroline"), "mic")
+  
+  expect_s3_class(random_disk(100), "disk")
+  expect_s3_class(random_disk(100, mo = "Klebsiella pneumoniae"), "disk")
+  expect_s3_class(random_disk(100, mo = "Klebsiella pneumoniae", ab = "meropenem"), "disk")
+  expect_s3_class(random_disk(100, ab = "meropenem"), "disk")
+  
+  expect_s3_class(random_rsi(100), "rsi")
 })

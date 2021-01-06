@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -32,21 +32,21 @@
 #' @param collapse character to pass on to `paste(..., collapse = ...)` to only return one character per element of `text`, see *Examples*
 #' @param translate_ab if `type = "drug"`: a column name of the [antibiotics] data set to translate the antibiotic abbreviations to, using [ab_property()]. Defaults to `FALSE`. Using `TRUE` is equal to using "name".
 #' @param thorough_search logical to indicate whether the input must be extensively searched for misspelling and other faulty input values. Setting this to `TRUE` will take considerably more time than when using `FALSE`. At default, it will turn `TRUE` when all input elements contain a maximum of three words.
-#' @param ... parameters passed on to [as.ab()]
-#' @details This function is also internally used by [as.ab()], although it then only searches for the first drug name and will throw a note if more drug names could have been returned.
+#' @param ... arguments passed on to [as.ab()]
+#' @details This function is also internally used by [as.ab()], although it then only searches for the first drug name and will throw a note if more drug names could have been returned. Note: the [as.ab()] function may use very long regular expression to match brand names of antimicrobial agents. This may fail on some systems.
 #' 
-#' ## Parameter `type`
+#' ## Argument `type`
 #' At default, the function will search for antimicrobial drug names. All text elements will be searched for official names, ATC codes and brand names. As it uses [as.ab()] internally, it will correct for misspelling.
 #' 
 #' With `type = "dose"` (or similar, like "dosing", "doses"), all text elements will be searched for numeric values that are higher than 100 and do not resemble years. The output will be numeric. It supports any unit (g, mg, IE, etc.) and multiple values in one clinical text, see *Examples*.
 #' 
 #' With `type = "administration"` (or abbreviations, like "admin", "adm"), all text elements will be searched for a form of drug administration. It supports the following forms (including common abbreviations): buccal, implant, inhalation, instillation, intravenous, nasal, oral, parenteral, rectal, sublingual, transdermal and vaginal. Abbreviations for oral (such as 'po', 'per os') will become "oral", all values for intravenous (such as 'iv', 'intraven') will become "iv". It supports multiple values in one clinical text, see *Examples*.
 #' 
-#' ## Parameter `collapse`
+#' ## Argument `collapse`
 #' Without using `collapse`, this function will return a [list]. This can be convenient to use e.g. inside a `mutate()`):\cr
 #' `df %>% mutate(abx = ab_from_text(clinical_text))` 
 #' 
-#' The returned AB codes can be transformed to official names, groups, etc. with all [ab_property()] functions like [ab_name()] and [ab_group()], or by using the `translate_ab` parameter.
+#' The returned AB codes can be transformed to official names, groups, etc. with all [`ab_*`][ab_property()] functions such as [ab_name()] and [ab_group()], or by using the `translate_ab` argument.
 #' 
 #' With using `collapse`, this function will return a [character]:\cr
 #' `df %>% mutate(abx = ab_from_text(clinical_text, collapse = "|"))` 
@@ -63,7 +63,7 @@
 #' ab_from_text("500 mg amoxi po and 400mg cipro iv", type = "admin")
 #' 
 #' ab_from_text("500 mg amoxi po and 400mg cipro iv", collapse = ", ")
-#' 
+#' \donttest{
 #' # if you want to know which antibiotic groups were administered, do e.g.:
 #' abx <- ab_from_text("500 mg amoxi po and 400mg cipro iv")
 #' ab_group(abx[[1]])
@@ -86,18 +86,24 @@
 #'                                          collapse = "|"))
 #' 
 #' }
+#' }
 ab_from_text <- function(text,
                          type = c("drug", "dose", "administration"),
                          collapse = NULL,
                          translate_ab = FALSE,
                          thorough_search = NULL,
                          ...) {
-  
   if (missing(type)) {
     type <- type[1L]
   }
+  
+  meet_criteria(text)
+  meet_criteria(type, allow_class = "character", has_length = 1)
+  meet_criteria(collapse, has_length = 1, allow_NULL = TRUE)
+  meet_criteria(translate_ab, allow_NULL = FALSE) # get_translate_ab() will be more informative about what's allowed
+  meet_criteria(thorough_search, allow_class = "logical", has_length = 1, allow_NULL = TRUE)
+
   type <- tolower(trimws(type))
-  stop_if(length(type) != 1, "`type` must be of length 1")
   
   text <- tolower(as.character(text))
   text_split_all <- strsplit(text, "[ ;.,:\\|]")
@@ -109,7 +115,7 @@ ab_from_text <- function(text,
     translate_ab <- get_translate_ab(translate_ab)
     
     if (isTRUE(thorough_search) | 
-        (isTRUE(is.null(thorough_search)) & max(sapply(text_split_all, length), na.rm = TRUE) <= 3)) {
+        (isTRUE(is.null(thorough_search)) & max(vapply(FUN.VALUE = double(1), text_split_all, length), na.rm = TRUE) <= 3)) {
       text_split_all <- text_split_all[nchar(text_split_all) >= 4 & grepl("[a-z]+", text_split_all)]
       result <- lapply(text_split_all, function(text_split) {
         progress$tick()
@@ -197,7 +203,7 @@ ab_from_text <- function(text,
   
   # collapse text if needed
   if (!is.null(collapse)) {
-    result <- sapply(result, function(x) {
+    result <- vapply(FUN.VALUE = character(1), result, function(x) {
       if (length(x) == 1 & all(is.na(x))) {
         NA_character_
       } else {

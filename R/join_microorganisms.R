@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -31,7 +31,7 @@
 #' @name join
 #' @aliases join inner_join
 #' @param x existing table to join, or character vector
-#' @param by a variable to join by - if left empty will search for a column with class [`mo`] (created with [as.mo()]) or will be `"mo"` if that column name exists in `x`, could otherwise be a column name of `x` with values that exist in `microorganisms$mo` (like `by = "bacteria_id"`), or another column in [microorganisms] (but then it should be named, like `by = c("bacteria_id" = "fullname")`)
+#' @param by a variable to join by - if left empty will search for a column with class [`mo`] (created with [as.mo()]) or will be `"mo"` if that column name exists in `x`, could otherwise be a column name of `x` with values that exist in `microorganisms$mo` (such as `by = "bacteria_id"`), or another column in [microorganisms] (but then it should be named, like `by = c("bacteria_id" = "fullname")`)
 #' @param suffix if there are non-joined duplicate variables in `x` and `y`, these suffixes will be added to the output to disambiguate them. Should be a character vector of length 2.
 #' @param ... ignored
 #' @details **Note:** As opposed to the `join()` functions of `dplyr`, [character] vectors are supported and at default existing columns will get a suffix `"2"` and the newly joined columns will not get a suffix. 
@@ -61,8 +61,12 @@
 #' }
 #' }
 inner_join_microorganisms <- function(x, by = NULL, suffix = c("2", ""), ...) {
+  meet_criteria(x, allow_class = c("data.frame", "character"))
+  meet_criteria(by, allow_class = "character", allow_NULL = TRUE)
+  meet_criteria(suffix, allow_class = "character", has_length = 2)
+  
   check_dataset_integrity()
-  check_groups_before_join(x, "inner_join_microorganisms")
+  x <- check_groups_before_join(x, "inner_join_microorganisms")
   checked <- joins_check_df(x, by)
   x_class <- get_prejoined_class(x)
   x <- checked$x
@@ -79,7 +83,7 @@ inner_join_microorganisms <- function(x, by = NULL, suffix = c("2", ""), ...) {
     )
   }
   if (NROW(join) > NROW(x)) {
-    warning("The newly joined tbl contains ", nrow(join) - nrow(x), " rows more that its original.")
+    warning_("The newly joined tbl contains ", nrow(join) - nrow(x), " rows more that its original.")
   }
   class(join) <- x_class
   join
@@ -88,8 +92,12 @@ inner_join_microorganisms <- function(x, by = NULL, suffix = c("2", ""), ...) {
 #' @rdname join
 #' @export
 left_join_microorganisms <- function(x, by = NULL, suffix = c("2", ""), ...) {
+  meet_criteria(x, allow_class = c("data.frame", "character"))
+  meet_criteria(by, allow_class = "character", allow_NULL = TRUE)
+  meet_criteria(suffix, allow_class = "character", has_length = 2)
+  
   check_dataset_integrity()
-  check_groups_before_join(x, "left_join_microorganisms")
+  x <- check_groups_before_join(x, "left_join_microorganisms")
   checked <- joins_check_df(x, by)
   x_class <- get_prejoined_class(x)
   x <- checked$x
@@ -106,7 +114,7 @@ left_join_microorganisms <- function(x, by = NULL, suffix = c("2", ""), ...) {
     )
   }
   if (NROW(join) > NROW(x)) {
-    warning("The newly joined tbl contains ", nrow(join) - nrow(x), " rows more that its original.")
+    warning_("The newly joined tbl contains ", nrow(join) - nrow(x), " rows more that its original.")
   }
   class(join) <- x_class
   join
@@ -115,8 +123,12 @@ left_join_microorganisms <- function(x, by = NULL, suffix = c("2", ""), ...) {
 #' @rdname join
 #' @export
 right_join_microorganisms <- function(x, by = NULL, suffix = c("2", ""), ...) {
+  meet_criteria(x, allow_class = c("data.frame", "character"))
+  meet_criteria(by, allow_class = "character", allow_NULL = TRUE)
+  meet_criteria(suffix, allow_class = "character", has_length = 2)
+  
   check_dataset_integrity()
-  check_groups_before_join(x, "right_join_microorganisms")
+  x <- check_groups_before_join(x, "right_join_microorganisms")
   checked <- joins_check_df(x, by)
   x_class <- get_prejoined_class(x)
   x <- checked$x
@@ -133,7 +145,7 @@ right_join_microorganisms <- function(x, by = NULL, suffix = c("2", ""), ...) {
     )
   }
   if (NROW(join) > NROW(x)) {
-    warning("The newly joined tbl contains ", nrow(join) - nrow(x), " rows more that its original.")
+    warning_("The newly joined tbl contains ", nrow(join) - nrow(x), " rows more that its original.")
   }
   class(join) <- x_class
   join
@@ -142,8 +154,12 @@ right_join_microorganisms <- function(x, by = NULL, suffix = c("2", ""), ...) {
 #' @rdname join
 #' @export
 full_join_microorganisms <- function(x, by = NULL, suffix = c("2", ""), ...) {
+  meet_criteria(x, allow_class = c("data.frame", "character"))
+  meet_criteria(by, allow_class = "character", allow_NULL = TRUE)
+  meet_criteria(suffix, allow_class = "character", has_length = 2)
+  
   check_dataset_integrity()
-  check_groups_before_join(x, "full_join_microorganisms")
+  x <- check_groups_before_join(x, "full_join_microorganisms")
   checked <- joins_check_df(x, by)
   x_class <- get_prejoined_class(x)
   x <- checked$x
@@ -160,7 +176,7 @@ full_join_microorganisms <- function(x, by = NULL, suffix = c("2", ""), ...) {
     )
   }
   if (NROW(join) > NROW(x)) {
-    warning("The newly joined tbl contains ", nrow(join) - nrow(x), " rows more that its original.")
+    warning_("The newly joined tbl contains ", nrow(join) - nrow(x), " rows more that its original.")
   }
   class(join) <- x_class
   join
@@ -169,8 +185,11 @@ full_join_microorganisms <- function(x, by = NULL, suffix = c("2", ""), ...) {
 #' @rdname join
 #' @export
 semi_join_microorganisms <- function(x, by = NULL, ...) {
+  meet_criteria(x, allow_class = c("data.frame", "character"))
+  meet_criteria(by, allow_class = "character", allow_NULL = TRUE)
+  
   check_dataset_integrity()
-  check_groups_before_join(x, "semi_join_microorganisms")
+  x <- check_groups_before_join(x, "semi_join_microorganisms")
   x_class <- get_prejoined_class(x)
   checked <- joins_check_df(x, by)
   x <- checked$x
@@ -193,8 +212,11 @@ semi_join_microorganisms <- function(x, by = NULL, ...) {
 #' @rdname join
 #' @export
 anti_join_microorganisms <- function(x, by = NULL, ...) {
+  meet_criteria(x, allow_class = c("data.frame", "character"))
+  meet_criteria(by, allow_class = "character", allow_NULL = TRUE)
+  
   check_dataset_integrity()
-  check_groups_before_join(x, "anti_join_microorganisms")
+  x <- check_groups_before_join(x, "anti_join_microorganisms")
   checked <- joins_check_df(x, by)
   x_class <- get_prejoined_class(x)
   x <- checked$x
@@ -233,7 +255,7 @@ joins_check_df <- function(x, by) {
         stop("Cannot join - no column found with name 'mo' or with class <mo>.", call. = FALSE)
       }
     }
-    message('Joining, by = "', by, '"') # message same as dplyr::join functions
+    message_('Joining, by = "', by, '"', add_fn = font_black, as_note = FALSE) # message same as dplyr::join functions
   }
   if (is.null(names(by))) {
     joinby <- colnames(microorganisms)[1]
@@ -255,6 +277,10 @@ get_prejoined_class <- function(x) {
 
 check_groups_before_join <- function(x, fn) {
   if (is.data.frame(x) && !is.null(attributes(x)$groups)) {
-    warning("Groups are dropped, since the ", fn, "() function relies on merge() from base R, not on join() from dplyr.", call. = FALSE)
+    x <- pm_ungroup(x)
+    attr(x, "groups") <- NULL
+    class(x) <- class(x)[!class(x) %like% "group"]
+    warning_("Groups are dropped, since the ", fn, "() function relies on merge() from base R.", call = FALSE)
   }
+  x
 }

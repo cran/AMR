@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -34,7 +34,7 @@
 #'
 #' The p-value is computed from the asymptotic chi-squared distribution of the test statistic.
 #'
-#' In the contingency table case simulation is done by random sampling from the set of all contingency tables with given marginals, and works only if the marginals are strictly positive. Note that this is not the usual sampling situation assumed for a chi-squared test (like the *G*-test) but rather that for Fisher's exact test.
+#' In the contingency table case simulation is done by random sampling from the set of all contingency tables with given marginals, and works only if the marginals are strictly positive. Note that this is not the usual sampling situation assumed for a chi-squared test (such as the *G*-test) but rather that for Fisher's exact test.
 #'
 #' In the goodness-of-fit case simulation is done by random sampling from the discrete distribution specified by `p`, each sample being of size `n = sum(x)`. This simulation is done in \R and may be slow.
 #'   
@@ -144,7 +144,7 @@ g.test <- function(x,
     DNAME <- paste(paste(DNAME, collapse = "\n"), "and",
                    paste(DNAME2, collapse = "\n"))
   }
-  if (any(x < 0) || anyNA(x))
+  if (any(x < 0) || any(is.na((x)))) # this last one was anyNA, but only introduced in R 3.1.0
     stop("all entries of 'x' must be nonnegative and finite")
   if ((n <- sum(x)) == 0)
     stop("at least one entry of 'x' must be positive")
@@ -200,7 +200,7 @@ g.test <- function(x,
   if (any(E < 5) && is.finite(PARAMETER))
     warning("G-statistic approximation may be incorrect due to E < 5")
   
-  structure(list(statistic = STATISTIC, parameter = PARAMETER,
+  structure(list(statistic = STATISTIC, argument = PARAMETER,
                  p.value = PVAL, method = METHOD, data.name = DNAME,
                  observed = x, expected = E, residuals = (x - E) / sqrt(E),
                  stdres = (x - E) / sqrt(V)), class = "htest")

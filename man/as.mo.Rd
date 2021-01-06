@@ -31,11 +31,11 @@ mo_renamed()
 \arguments{
 \item{x}{a character vector or a \link{data.frame} with one or two columns}
 
-\item{Becker}{a logical to indicate whether \emph{Staphylococci} should be categorised into coagulase-negative \emph{Staphylococci} ("CoNS") and coagulase-positive \emph{Staphylococci} ("CoPS") instead of their own species, according to Karsten Becker \emph{et al.} (1,2). Note that this does not include species that were newly named after these publications, like \emph{S. caeli}.
+\item{Becker}{a logical to indicate whether staphylococci should be categorised into coagulase-negative staphylococci ("CoNS") and coagulase-positive staphylococci ("CoPS") instead of their own species, according to Karsten Becker \emph{et al.} (1,2,3).
 
 This excludes \emph{Staphylococcus aureus} at default, use \code{Becker = "all"} to also categorise \emph{S. aureus} as "CoPS".}
 
-\item{Lancefield}{a logical to indicate whether beta-haemolytic \emph{Streptococci} should be categorised into Lancefield groups instead of their own species, according to Rebecca C. Lancefield (3). These \emph{Streptococci} will be categorised in their first group, e.g. \emph{Streptococcus dysgalactiae} will be group C, although officially it was also categorised into groups G and L.
+\item{Lancefield}{a logical to indicate whether beta-haemolytic \emph{Streptococci} should be categorised into Lancefield groups instead of their own species, according to Rebecca C. Lancefield (4). These \emph{Streptococci} will be categorised in their first group, e.g. \emph{Streptococcus dysgalactiae} will be group C, although officially it was also categorised into groups G and L.
 
 This excludes \emph{Enterococci} at default (who are in group D), use \code{Lancefield = "all"} to also categorise all \emph{Enterococci} as group D.}
 
@@ -47,13 +47,13 @@ This excludes \emph{Enterococci} at default (who are in group D), use \code{Lanc
 
 \item{language}{language to translate text like "no growth", which defaults to the system language (see \code{\link[=get_locale]{get_locale()}})}
 
-\item{...}{other parameters passed on to functions}
+\item{...}{other arguments passed on to functions}
 }
 \value{
 A \link{character} \link{vector} with additional class \code{\link{mo}}
 }
 \description{
-Use this function to determine a valid microorganism ID (\code{\link{mo}}). Determination is done using intelligent rules and the complete taxonomic kingdoms Bacteria, Chromista, Protozoa, Archaea and most microbial species from the kingdom Fungi (see Source). The input can be almost anything: a full name (like \code{"Staphylococcus aureus"}), an abbreviated name (like \code{"S. aureus"}), an abbreviation known in the field (like \code{"MRSA"}), or just a genus. Please see \emph{Examples}.
+Use this function to determine a valid microorganism ID (\code{\link{mo}}). Determination is done using intelligent rules and the complete taxonomic kingdoms Bacteria, Chromista, Protozoa, Archaea and most microbial species from the kingdom Fungi (see Source). The input can be almost anything: a full name (like \code{"Staphylococcus aureus"}), an abbreviated name (such as \code{"S. aureus"}), an abbreviation known in the field (such as \code{"MRSA"}), or just a genus. Please see \emph{Examples}.
 }
 \details{
 \subsection{General info}{
@@ -123,9 +123,10 @@ The intelligent rules consider the prevalence of microorganisms in humans groupe
 \section{Source}{
 
 \enumerate{
-\item Becker K \emph{et al.} \strong{Coagulase-Negative Staphylococci}. 2014. Clin Microbiol Rev. 27(4): 870–926. \url{https://dx.doi.org/10.1128/CMR.00109-13}
-\item Becker K \emph{et al.} \strong{Implications of identifying the recently defined members of the \emph{S. aureus} complex, \emph{S. argenteus} and \emph{S. schweitzeri}: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).} 2019. Clin Microbiol Infect. \url{https://doi.org/10.1016/j.cmi.2019.02.028}
-\item Lancefield RC \strong{A serological differentiation of human and other groups of hemolytic streptococci}. 1933. J Exp Med. 57(4): 571–95. \url{https://dx.doi.org/10.1084/jem.57.4.571}
+\item Becker K \emph{et al.} \strong{Coagulase-Negative Staphylococci}. 2014. Clin Microbiol Rev. 27(4): 870–926; \doi{10.1128/CMR.00109-13}
+\item Becker K \emph{et al.} \strong{Implications of identifying the recently defined members of the \emph{S. aureus} complex, \emph{S. argenteus} and \emph{S. schweitzeri}: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).} 2019. Clin Microbiol Infect; \doi{10.1016/j.cmi.2019.02.028}
+\item Becker K \emph{et al.} \strong{Emergence of coagulase-negative staphylococci} 2020. Expert Rev Anti Infect Ther. 18(4):349-366; \doi{10.1080/14787210.2020.1730813}
+\item Lancefield RC \strong{A serological differentiation of human and other groups of hemolytic streptococci}. 1933. J Exp Med. 57(4): 571–95; \doi{10.1084/jem.57.4.571}
 \item Catalogue of Life: Annual Checklist (public online taxonomic database), \url{http://www.catalogueoflife.org} (check included annual version with \code{\link[=catalogue_of_life_version]{catalogue_of_life_version()}}).
 }
 }
@@ -135,7 +136,7 @@ The intelligent rules consider the prevalence of microorganisms in humans groupe
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. For example, a parameter will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Matching score for microorganisms}{
@@ -162,9 +163,9 @@ All matches are sorted descending on their matching score and for all user input
 \section{Catalogue of Life}{
 
 \if{html}{\figure{logo_col.png}{options: height=40px style=margin-bottom:5px} \cr}
-This package contains the complete taxonomic tree of almost all microorganisms (~70,000 species) from the authoritative and comprehensive Catalogue of Life (\url{http://www.catalogueoflife.org}). The Catalogue of Life is the most comprehensive and authoritative global index of species currently available.
+This package contains the complete taxonomic tree of almost all microorganisms (~70,000 species) from the authoritative and comprehensive Catalogue of Life (CoL, \url{http://www.catalogueoflife.org}). The CoL is the most comprehensive and authoritative global index of species currently available. Nonetheless, we supplemented the CoL data with data from the List of Prokaryotic names with Standing in Nomenclature (LPSN, \href{https://lpsn.dsmz.de}{lpsn.dsmz.de}). This supplementation is needed until the \href{https://github.com/CatalogueOfLife/general}{CoL+ project} is finished, which we await.
 
-\link[=catalogue_of_life]{Click here} for more information about the included taxa. Check which version of the Catalogue of Life was included in this package with \code{\link[=catalogue_of_life_version]{catalogue_of_life_version()}}.
+\link[=catalogue_of_life]{Click here} for more information about the included taxa. Check which versions of the CoL and LSPN were included in this package with \code{\link[=catalogue_of_life_version]{catalogue_of_life_version()}}.
 }
 
 \section{Reference data publicly available}{
@@ -211,14 +212,15 @@ as.mo("S. pyogenes")                    # will remain species: B_STRPT_PYGN
 as.mo("S. pyogenes", Lancefield = TRUE) # will not remain species: B_STRPT_GRPA
 
 # All mo_* functions use as.mo() internally too (see ?mo_property):
-mo_genus("E. coli")           # returns "Escherichia"
-mo_gramstain("E. coli")       # returns "Gram negative"
+mo_genus("E. coli")                           # returns "Escherichia"
+mo_gramstain("E. coli")                       # returns "Gram negative"
+mo_is_intrinsic_resistant("E. coli", "vanco") # returns TRUE
 }
 }
 \seealso{
 \link{microorganisms} for the \link{data.frame} that is being used to determine ID's.
 
-The \code{\link[=mo_property]{mo_property()}} functions (like \code{\link[=mo_genus]{mo_genus()}}, \code{\link[=mo_gramstain]{mo_gramstain()}}) to get properties based on the returned code.
+The \code{\link[=mo_property]{mo_*}} functions (such as \code{\link[=mo_genus]{mo_genus()}}, \code{\link[=mo_gramstain]{mo_gramstain()}}) to get properties based on the returned code.
 }
 \keyword{Becker}
 \keyword{Lancefield}

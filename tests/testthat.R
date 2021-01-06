@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -23,7 +23,11 @@
 # how to conduct AMR analysis: https://msberends.github.io/AMR/        #
 # ==================================================================== #
 
-library(testthat, warn.conflicts = FALSE)
-library(AMR)
-
-test_check("AMR")
+if (require("testthat")) {
+  # the testthat package is in Suggests, but very old R versions will not be
+  # able to install it. Yet, we want checks in those R versions as well, so
+  # only run unit tests in later R versions:
+  library(testthat, warn.conflicts = FALSE)
+  library(AMR)
+  test_check("AMR")
+}

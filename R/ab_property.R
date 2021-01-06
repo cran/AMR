@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2020 Berends MS, Luz CF et al.                              #
+# (c) 2018-2021 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -34,7 +34,7 @@
 #' @param administration way of administration, either `"oral"` or `"iv"`
 #' @param units a logical to indicate whether the units instead of the DDDs itself must be returned, see Examples
 #' @param open browse the URL using [utils::browseURL()]
-#' @param ... other parameters passed on to [as.ab()]
+#' @param ... other arguments passed on to [as.ab()]
 #' @details All output will be [translate]d where possible.
 #' 
 #' The function [ab_url()] will return the direct URL to the official WHO website. A warning will be returned if the required ATC code is not available.
@@ -89,6 +89,10 @@
 #' ab_atc("cephthriaxone")
 #' ab_atc("seephthriaaksone")
 ab_name <- function(x, language = get_locale(), tolower = FALSE, ...) {
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  meet_criteria(tolower, allow_class = "logical", has_length = 1)
+  
   x <- translate_AMR(ab_validate(x = x, property = "name", ...), language = language)
   if (tolower == TRUE) {
     # use perl to only transform the first character
@@ -102,18 +106,21 @@ ab_name <- function(x, language = get_locale(), tolower = FALSE, ...) {
 #' @aliases ATC
 #' @export
 ab_atc <- function(x, ...) {
+  meet_criteria(x, allow_NA = TRUE)
   ab_validate(x = x, property = "atc", ...)
 }
 
 #' @rdname ab_property
 #' @export
 ab_cid <- function(x, ...) {
+  meet_criteria(x, allow_NA = TRUE)
   ab_validate(x = x, property = "cid", ...)
 }
 
 #' @rdname ab_property
 #' @export
 ab_synonyms <- function(x, ...) {
+  meet_criteria(x, allow_NA = TRUE)
   syns <- ab_validate(x = x, property = "synonyms", ...)
   names(syns) <- x
   if (length(syns) == 1) {
@@ -126,30 +133,38 @@ ab_synonyms <- function(x, ...) {
 #' @rdname ab_property
 #' @export
 ab_tradenames <- function(x, ...) {
+  meet_criteria(x, allow_NA = TRUE)
   ab_synonyms(x, ...)
 }
 
 #' @rdname ab_property
 #' @export
 ab_group <- function(x, language = get_locale(), ...) {
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
   translate_AMR(ab_validate(x = x, property = "group", ...), language = language)
 }
 
 #' @rdname ab_property
 #' @export
 ab_atc_group1 <- function(x, language = get_locale(), ...) {
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
   translate_AMR(ab_validate(x = x, property = "atc_group1", ...), language = language)
 }
 
 #' @rdname ab_property
 #' @export
 ab_atc_group2 <- function(x, language = get_locale(), ...) {
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
   translate_AMR(ab_validate(x = x, property = "atc_group2", ...), language = language)
 }
 
 #' @rdname ab_property
 #' @export
 ab_loinc <- function(x, ...) {
+  meet_criteria(x, allow_NA = TRUE)
   loincs <- ab_validate(x = x, property = "loinc", ...)
   names(loincs) <- x
   if (length(loincs) == 1) {
@@ -162,7 +177,10 @@ ab_loinc <- function(x, ...) {
 #' @rdname ab_property
 #' @export
 ab_ddd <- function(x, administration = "oral", units = FALSE, ...) {
-  stop_ifnot(administration %in% c("oral", "iv"), "`administration` must be 'oral' or 'iv'")
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(administration, is_in = c("oral", "iv"), has_length = 1)
+  meet_criteria(units, allow_class = "logical", has_length = 1)
+
   ddd_prop <- administration
   if (units == TRUE) {
     ddd_prop <- paste0(ddd_prop, "_units")
@@ -175,6 +193,9 @@ ab_ddd <- function(x, administration = "oral", units = FALSE, ...) {
 #' @rdname ab_property
 #' @export
 ab_info <- function(x, language = get_locale(), ...) {
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
   x <- as.ab(x, ...)
   list(ab = as.character(x),
              atc = ab_atc(x),
@@ -194,6 +215,9 @@ ab_info <- function(x, language = get_locale(), ...) {
 #' @rdname ab_property
 #' @export
 ab_url <- function(x, open = FALSE, ...) {
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(open, allow_class = "logical", has_length = 1)
+  
   ab <- as.ab(x = x, ... = ...)
   u <- paste0("https://www.whocc.no/atc_ddd_index/?code=", ab_atc(ab), "&showdescription=no")
   u[is.na(ab_atc(ab))] <- NA_character_
@@ -201,12 +225,12 @@ ab_url <- function(x, open = FALSE, ...) {
   
   NAs <- ab_name(ab, tolower = TRUE, language = NULL)[!is.na(ab) & is.na(ab_atc(ab))]
   if (length(NAs) > 0) {
-    warning("No ATC code available for ", paste0(NAs, collapse = ", "), ".")
+    warning_("No ATC code available for ", paste0(NAs, collapse = ", "), ".")
   }
   
   if (open == TRUE) {
     if (length(u) > 1 & !is.na(u[1L])) {
-      warning("only the first URL will be opened, as `browseURL()` only suports one string.")
+      warning_("Only the first URL will be opened, as `browseURL()` only suports one string.")
     }
     if (!is.na(u[1L])) {
       utils::browseURL(u[1L])
@@ -218,10 +242,9 @@ ab_url <- function(x, open = FALSE, ...) {
 #' @rdname ab_property
 #' @export
 ab_property <- function(x, property = "name", language = get_locale(), ...) {
-  stop_if(length(property) != 1L, "'property' must be of length 1.")
-  stop_ifnot(property %in% colnames(antibiotics),
-             "invalid property: '", property, "' - use a column name of the `antibiotics` data set")
-  
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(property, is_in = colnames(antibiotics), has_length = 1)
+  meet_criteria(language, is_in = c(LANGUAGES_SUPPORTED, ""), has_length = 1, allow_NULL = TRUE, allow_NA = TRUE)
   translate_AMR(ab_validate(x = x, property = property, ...), language = language)
 }
 
@@ -229,7 +252,7 @@ ab_validate <- function(x, property, ...) {
   
   check_dataset_integrity()
   
-  # try to catch an error when inputting an invalid parameter
+  # try to catch an error when inputting an invalid argument
   # so the 'call.' can be set to FALSE
   tryCatch(x[1L] %in% antibiotics[1, property],
            error = function(e) stop(e$message, call. = FALSE))
@@ -237,10 +260,10 @@ ab_validate <- function(x, property, ...) {
   if (!all(x %in% antibiotics[, property])) {
     x <- data.frame(ab = as.ab(x, ...), stringsAsFactors = FALSE) %pm>%
       pm_left_join(antibiotics, by = "ab") %pm>%
-     pm_pull(property)
+      pm_pull(property)
   }
   if (property == "ab") {
-    return(structure(x, class = property))
+    return(set_clean_class(x, new_class = c("ab", "character")))
   } else if (property == "cid") {
     return(as.integer(x))
   } else if (property %like% "ddd") {
