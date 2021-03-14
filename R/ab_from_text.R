@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,16 +20,16 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Retrieve antimicrobial drug names and doses from clinical text
+#' Retrieve Antimicrobial Drug Names and Doses from Clinical Text
 #' 
 #' Use this function on e.g. clinical texts from health care records. It returns a [list] with all antimicrobial drugs, doses and forms of administration found in the texts.
-#' @inheritSection lifecycle Maturing lifecycle
+#' @inheritSection lifecycle Stable Lifecycle
 #' @param text text to analyse
 #' @param type type of property to search for, either `"drug"`, `"dose"` or `"administration"`, see *Examples*
-#' @param collapse character to pass on to `paste(..., collapse = ...)` to only return one character per element of `text`, see *Examples*
+#' @param collapse character to pass on to `paste(, collapse = ...)` to only return one character per element of `text`, see *Examples*
 #' @param translate_ab if `type = "drug"`: a column name of the [antibiotics] data set to translate the antibiotic abbreviations to, using [ab_property()]. Defaults to `FALSE`. Using `TRUE` is equal to using "name".
 #' @param thorough_search logical to indicate whether the input must be extensively searched for misspelling and other faulty input values. Setting this to `TRUE` will take considerably more time than when using `FALSE`. At default, it will turn `TRUE` when all input elements contain a maximum of three words.
 #' @param ... arguments passed on to [as.ab()]
@@ -52,7 +52,7 @@
 #' `df %>% mutate(abx = ab_from_text(clinical_text, collapse = "|"))` 
 #' @export
 #' @return A [list], or a  [character] if `collapse` is not `NULL`
-#' @inheritSection AMR Read more on our website!
+#' @inheritSection AMR Read more on Our Website!
 #' @examples 
 #' # mind the bad spelling of amoxicillin in this line, 
 #' # straight from a true health care record:

@@ -20,7 +20,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
 context("disk.R")
@@ -43,9 +43,17 @@ test_that("disk works", {
   expect_s3_class(x, "disk")
   
   pdf(NULL) # prevent Rplots.pdf being created
+  expect_silent(barplot(as.disk(c(10, 20, 40))))
   expect_silent(plot(as.disk(c(10, 20, 40))))
-
+  expect_silent(plot(as.disk(c(10, 20, 40)), expand = FALSE))
+  expect_silent(plot(as.disk(c(10, 20, 40)), mo = "esco", ab = "cipr"))
+  if (require("ggplot2")) {
+    expect_s3_class(ggplot(as.disk(c(10, 20, 40))), "gg")
+    expect_s3_class(ggplot(as.disk(c(10, 20, 40)), expand = FALSE), "gg")
+    expect_s3_class(ggplot(as.disk(c(10, 20, 40)), mo = "esco", ab = "cipr"), "gg")
+  }
   expect_output(print(as.disk(12)))
+  
   library(dplyr, warn.conflicts = FALSE)
   expect_output(print(tibble(d = as.disk(12))))
 

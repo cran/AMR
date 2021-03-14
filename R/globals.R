@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,19 +20,60 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
+
+# add new version numbers here, and add the rules themselves to "data-raw/eucast_rules.tsv" and rsi_translation
+# (sourcing "data-raw/_internals.R" will process the TSV file)
+EUCAST_VERSION_BREAKPOINTS <- list("11.0" = list(version_txt = "v11.0",
+                                                 year = 2021, 
+                                                 title = "'EUCAST Clinical Breakpoint Tables'",
+                                                 url = "https://www.eucast.org/clinical_breakpoints/"),
+                                   "10.0" = list(version_txt = "v10.0",
+                                                 year = 2020, 
+                                                 title = "'EUCAST Clinical Breakpoint Tables'",
+                                                 url = "https://www.eucast.org/ast_of_bacteria/previous_versions_of_documents/"))
+EUCAST_VERSION_EXPERT_RULES <- list("3.1" = list(version_txt = "v3.1",
+                                                 year = 2016, 
+                                                 title = "'EUCAST Expert Rules, Intrinsic Resistance and Exceptional Phenotypes'",
+                                                 url = "https://www.eucast.org/expert_rules_and_intrinsic_resistance/"),
+                                    "3.2" = list(version_txt = "v3.2",
+                                                 year = 2020, 
+                                                 title = "'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes'",
+                                                 url = "https://www.eucast.org/expert_rules_and_intrinsic_resistance/"))
+
+SNOMED_VERSION <- list(title = "Public Health Information Network Vocabulary Access and Distribution System (PHIN VADS)",
+                       current_source = "US Edition of SNOMED CT from 1 September 2020",
+                       current_version = 12,
+                       current_oid = "2.16.840.1.114222.4.11.1009",
+                       value_set_name = "Microorganism",
+                       url = "https://phinvads.cdc.gov/vads/ViewValueSet.action?oid=2.16.840.1.114222.4.11.1009")
+
+CATALOGUE_OF_LIFE <- list(
+  year = 2019,
+  version = "Catalogue of Life: {year} Annual Checklist",
+  url_CoL = "http://www.catalogueoflife.org/col/",
+  url_LPSN = "https://lpsn.dsmz.de",
+  yearmonth_LPSN = "March 2021"
+)
 
 globalVariables(c(".rowid",
                   "ab",
                   "ab_txt",
+                  "affect_mo_name",
                   "angle",
                   "antibiotic",
                   "antibiotics",
                   "atc_group1",
                   "atc_group2",
                   "code",
+                  "cols",
+                  "count",
                   "data",
+                  "disk",
+                  "dosage",
+                  "dose",
+                  "dose_times",
                   "fullname",
                   "fullname_lower",
                   "g_species",
@@ -48,6 +89,8 @@ globalVariables(c(".rowid",
                   "language",
                   "lookup",
                   "method",
+                  "mic",
+                  "mic ",
                   "microorganism",
                   "microorganisms",
                   "microorganisms.codes",
@@ -63,8 +106,9 @@ globalVariables(c(".rowid",
                   "reference.rule",
                   "reference.rule_group",
                   "reference.version",
-                  "rsi_translation",
                   "rowid",
+                  "rsi",
+                  "rsi_translation",
                   "rule_group",
                   "rule_name",
                   "se_max",
@@ -73,6 +117,7 @@ globalVariables(c(".rowid",
                   "species_id",
                   "total",
                   "txt",
+                  "type",
                   "value",
                   "varname",
                   "xvar",

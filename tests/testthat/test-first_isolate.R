@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,7 +20,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
 context("first_isolate.R")
@@ -50,7 +50,7 @@ test_that("first isolates work", {
                       type = "keyantibiotics",
                       info = TRUE),
         na.rm = TRUE)),
-    1396)
+    1395)
 
   # when not ignoring I
   expect_equal(
@@ -65,7 +65,7 @@ test_that("first isolates work", {
                       type = "keyantibiotics",
                       info = TRUE),
         na.rm = TRUE)),
-    1419)
+    1418)
   # when using points
   expect_equal(
     suppressWarnings(
@@ -78,7 +78,7 @@ test_that("first isolates work", {
                       type = "points",
                       info = TRUE),
         na.rm = TRUE)),
-    1399)
+    1398)
 
   # first non-ICU isolates
   expect_equal(
@@ -196,6 +196,10 @@ test_that("first isolates work", {
   expect_equal(sum(first_isolate(test_unknown)),
                1045)
   
+  # empty rsi results
+  expect_equal(sum(first_isolate(example_isolates, include_untested_rsi = FALSE)),
+               1287)
+  
   # shortcuts
   expect_identical(filter_first_isolate(example_isolates),
                    subset(example_isolates, first_isolate(example_isolates)))
@@ -212,4 +216,9 @@ test_that("first isolates work", {
   # only one isolate, so return fast
   expect_true(first_isolate(data.frame(mo = "Escherichia coli", date = Sys.Date(), patient = "patient"), info = TRUE))
 
+  # groups
+  x <- example_isolates %>% group_by(ward_icu) %>% mutate(first = first_isolate())
+  y <- example_isolates %>% group_by(ward_icu) %>% mutate(first = first_isolate(.))
+  expect_identical(x, y)
+  
 })

@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,20 +20,21 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Guess antibiotic column
+#' Guess Antibiotic Column
 #'
 #' This tries to find a column name in a data set based on information from the [antibiotics] data set. Also supports WHONET abbreviations.
-#' @inheritSection lifecycle Stable lifecycle
+#' @inheritSection lifecycle Stable Lifecycle
 #' @param x a [data.frame]
 #' @param search_string a text to search `x` for, will be checked with [as.ab()] if this value is not a column in `x`
 #' @param verbose a logical to indicate whether additional info should be printed
+#' @param only_rsi_columns a logical to indicate whether only antibiotic columns must be detected that were transformed to class `<rsi>` (see [as.rsi()]) on beforehand (defaults to `FALSE`)
 #' @details You can look for an antibiotic (trade) name or abbreviation and it will search `x` and the [antibiotics] data set for any column containing a name or code of that antibiotic. **Longer columns names take precedence over shorter column names.**
 #' @return A column name of `x`, or `NULL` when no result is found.
 #' @export
-#' @inheritSection AMR Read more on our website!
+#' @inheritSection AMR Read more on Our Website!
 #' @examples
 #' df <- data.frame(amox = "S",
 #'                  tetr = "R")
@@ -62,35 +63,21 @@
 #'                  AMP_ED20 = "S")
 #' guess_ab_col(df, "ampicillin")
 #' # [1] "AMP_ED20"
-guess_ab_col <- function(x = NULL, search_string = NULL, verbose = FALSE) {
+guess_ab_col <- function(x = NULL, search_string = NULL, verbose = FALSE, only_rsi_columns = FALSE) {
   meet_criteria(x, allow_class = "data.frame", allow_NULL = TRUE)
   meet_criteria(search_string, allow_class = "character", has_length = 1, allow_NULL = TRUE)
   meet_criteria(verbose, allow_class = "logical", has_length = 1)
+  meet_criteria(only_rsi_columns, allow_class = "logical", has_length = 1)
   
   if (is.null(x) & is.null(search_string)) {
     return(as.name("guess_ab_col"))
+  } else {
+    meet_criteria(search_string, allow_class = "character", has_length = 1, allow_NULL = FALSE)
   }
   
-  if (search_string %in% colnames(x)) {
-    ab_result <- search_string
-  } else {
-    search_string.ab <- suppressWarnings(as.ab(search_string))
-    if (search_string.ab %in% colnames(x)) {
-      ab_result <- colnames(x)[colnames(x) == search_string.ab][1L]
-      
-    } else if (any(tolower(colnames(x)) %in% tolower(unlist(ab_property(search_string.ab, "abbreviations", language = NULL))))) {
-      ab_result <- colnames(x)[tolower(colnames(x)) %in% tolower(unlist(ab_property(search_string.ab, "abbreviations", language = NULL)))][1L]
-      
-    } else {
-      # sort colnames on length - longest first
-      cols <- colnames(x[, x %pm>% colnames() %pm>% nchar() %pm>% order() %pm>% rev()])
-      df_trans <- data.frame(cols = cols,
-                             abs = suppressWarnings(as.ab(cols)),
-                             stringsAsFactors = FALSE)
-      ab_result <- df_trans[which(df_trans$abs == search_string.ab), "cols"]
-      ab_result <- ab_result[!is.na(ab_result)][1L]
-    }
-  }
+  all_found <- get_column_abx(x, info = verbose, only_rsi_columns = only_rsi_columns, verbose = verbose)
+  search_string.ab <- suppressWarnings(as.ab(search_string))
+  ab_result <- unname(all_found[names(all_found) == search_string.ab])
   
   if (length(ab_result) == 0) {
     if (verbose == TRUE) {
@@ -114,18 +101,24 @@ get_column_abx <- function(x,
                            hard_dependencies = NULL,
                            verbose = FALSE,
                            info = TRUE,
+                           only_rsi_columns = FALSE,
                            ...) {
   meet_criteria(x, allow_class = "data.frame")
   meet_criteria(soft_dependencies, allow_class = "character", allow_NULL = TRUE)
   meet_criteria(hard_dependencies, allow_class = "character", allow_NULL = TRUE)
   meet_criteria(verbose, allow_class = "logical", has_length = 1)
   meet_criteria(info, allow_class = "logical", has_length = 1)
+  meet_criteria(only_rsi_columns, allow_class = "logical", has_length = 1)
   
   if (info == TRUE) {
-    message_("Auto-guessing columns suitable for analysis", appendLF = FALSE)
+    message_("Auto-guessing columns suitable for analysis", appendLF = FALSE, as_note = FALSE)
   }
   
   x <- as.data.frame(x, stringsAsFactors = FALSE)
+  if (only_rsi_columns == TRUE) {
+    x <- x[, which(is.rsi(x)), drop = FALSE]
+  }
+
   if (NROW(x) > 10000) {
     # only test maximum of 10,000 values per column
     if (info == TRUE) {
@@ -137,25 +130,27 @@ get_column_abx <- function(x,
   } else if (info == TRUE) {
     message_("...", appendLF = FALSE, as_note = FALSE)
   }
-  x_bak <- x
+
   # only check columns that are a valid AB code, ATC code, name, abbreviation or synonym,
   # or already have the <rsi> class (as.rsi) 
   # and that they have no more than 50% invalid values
-  vectr_antibiotics <- unique(toupper(unlist(antibiotics[, c("ab", "atc", "name", "abbreviations", "synonyms")])))
+  vectr_antibiotics <- unlist(AB_lookup$generalised_all)
   vectr_antibiotics <- vectr_antibiotics[!is.na(vectr_antibiotics) & nchar(vectr_antibiotics) >= 3]
-  x_columns <- vapply(FUN.VALUE = character(1), colnames(x), function(col, df = x_bak) {
-    if (toupper(col) %in% vectr_antibiotics || 
-        is.rsi(as.data.frame(df, stringsAsFactors = FALSE)[, col, drop = TRUE]) ||
-        is.rsi.eligible(as.data.frame(df, stringsAsFactors = FALSE)[, col, drop = TRUE],
-                        threshold = 0.5)) {
-      return(col)
-    } else {
-      return(NA_character_)
-    }
-  })
-  x_columns <- x_columns[!is.na(x_columns)]
-  x <- x[, x_columns, drop = FALSE] # without drop = TRUE, x will become a vector when x_columns is length 1
+  x_columns <- vapply(FUN.VALUE = character(1), 
+                      colnames(x),
+                      function(col, df = x) {
+                        if (generalise_antibiotic_name(col) %in% vectr_antibiotics || 
+                            is.rsi(x[, col, drop = TRUE]) ||
+                            is.rsi.eligible(x[, col, drop = TRUE], threshold = 0.5)
+                        ) {
+                          return(col)
+                        } else {
+                          return(NA_character_)
+                        }
+                      })
   
+  x_columns <- x_columns[!is.na(x_columns)]
+  x <- x[, x_columns, drop = FALSE] # without drop = FALSE, x will become a vector when x_columns is length 1
   df_trans <- data.frame(colnames = colnames(x),
                          abcode = suppressWarnings(as.ab(colnames(x), info = FALSE)),
                          stringsAsFactors = FALSE)
@@ -164,7 +159,7 @@ get_column_abx <- function(x,
   names(x) <- df_trans$abcode
   
   # add from self-defined dots (...):
-  # such as get_column_abx(example_isolates %pm>% rename(thisone = AMX), amox = "thisone")
+  # such as get_column_abx(example_isolates %>% rename(thisone = AMX), amox = "thisone")
   dots <- list(...)
   if (length(dots) > 0) {
     newnames <- suppressWarnings(as.ab(names(dots), info = FALSE))
@@ -217,7 +212,6 @@ get_column_abx <- function(x,
     }
   }
   
-  
   if (!is.null(hard_dependencies)) {
     hard_dependencies <- unique(hard_dependencies)
     if (!all(hard_dependencies %in% names(x))) {
@@ -232,9 +226,9 @@ get_column_abx <- function(x,
     if (info == TRUE & !all(soft_dependencies %in% names(x))) {
       # missing a soft dependency may lower the reliability
       missing <- soft_dependencies[!soft_dependencies %in% names(x)]
-      missing_msg <- paste(paste0(ab_name(missing, tolower = TRUE, language = NULL), 
-                                  " (", font_bold(missing, collapse = NULL), ")"), 
-                           collapse = ", ")
+      missing_msg <- vector_and(paste0(ab_name(missing, tolower = TRUE, language = NULL), 
+                                       " (", font_bold(missing, collapse = NULL), ")"), 
+                                quotes = FALSE)
       message_("Reliability would be improved if these antimicrobial results would be available too: ",
                missing_msg)
     }
@@ -250,7 +244,7 @@ generate_warning_abs_missing <- function(missing, any = FALSE) {
     any_txt <- c("", "are")
   }
   warning_(paste0("Introducing NAs since", any_txt[1], " these antimicrobials ", any_txt[2], " required: ",
-                  paste(missing, collapse = ", ")),
+                  vector_and(missing, quotes = FALSE)),
            immediate = TRUE,
            call = FALSE)
 }

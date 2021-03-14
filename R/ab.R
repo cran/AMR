@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,13 +20,13 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Transform input to an antibiotic ID
+#' Transform Input to an Antibiotic ID
 #'
 #' Use this function to determine the antibiotic code of one or more antibiotics. The data set [antibiotics] will be searched for abbreviations, official names and synonyms (brand names).
-#' @inheritSection lifecycle Stable lifecycle
+#' @inheritSection lifecycle Stable Lifecycle
 #' @param x character vector to determine to antibiotic ID
 #' @param flag_multiple_results logical to indicate whether a note should be printed to the console that probably more than one antibiotic code or name can be retrieved from a single input value.
 #' @param info logical to indicate whether a progress bar should be printed
@@ -42,7 +42,7 @@
 #'  * Switching two characters (such as "mreopenem", often the case in clinical data, when doctors typed too fast)
 #'  * Digitalised paper records, leaving artefacts like 0/o/O (zero and O's), B/8, n/r, etc.
 #'
-#' Use the [`ab_*`][ab_property()] functions to get properties based on the returned antibiotic ID, see Examples.
+#' Use the [`ab_*`][ab_property()] functions to get properties based on the returned antibiotic ID, see *Examples*.
 #' 
 #' Note: the [as.ab()] and [`ab_*`][ab_property()] functions may use very long regular expression to match brand names of antimicrobial agents. This may fail on some systems.
 #' @section Source:
@@ -56,8 +56,8 @@
 #' @seealso 
 #' * [antibiotics] for the [data.frame] that is being used to determine ATCs
 #' * [ab_from_text()] for a function to retrieve antimicrobial drugs from clinical text (from health care records)
-#' @inheritSection AMR Reference data publicly available
-#' @inheritSection AMR Read more on our website!
+#' @inheritSection AMR Reference Data Publicly Available
+#' @inheritSection AMR Read more on Our Website!
 #' @export
 #' @examples
 #' # these examples all return "ERY", the ID of erythromycin:
@@ -82,6 +82,14 @@
 #' # they use as.ab() internally:
 #' ab_name("J01FA01")    # "Erythromycin"
 #' ab_name("eryt")       # "Erythromycin"
+#' 
+#' if (require("dplyr")) {
+#' 
+#'   # you can quickly rename <rsi> columns using dplyr >= 1.0.0:
+#'   example_isolates %>%
+#'     rename_with(as.ab, where(is.rsi))
+#'    
+#' }
 as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
   meet_criteria(x, allow_class = c("character", "numeric", "integer", "factor"), allow_NA = TRUE)
   meet_criteria(flag_multiple_results, allow_class = "logical", has_length = 1)
@@ -95,19 +103,34 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
   
   initial_search <- is.null(list(...)$initial_search)
   already_regex <- isTRUE(list(...)$already_regex)
-  
-  if (all(toupper(x) %in% antibiotics$ab)) {
-    # valid AB code, but not yet right class
-    return(set_clean_class(toupper(x),
-                           new_class = c("ab", "character")))
-  }
+  fast_mode <- isTRUE(list(...)$fast_mode)
   
   x_bak <- x
   x <- toupper(x)
+  x_nonNA <- x[!is.na(x)]
+  
+  if (all(x_nonNA %in% antibiotics$ab, na.rm = TRUE)) {
+    # all valid AB codes, but not yet right class
+    return(set_clean_class(x,
+                           new_class = c("ab", "character")))
+  }
+  if (all(x_nonNA %in% toupper(antibiotics$name), na.rm = TRUE)) {
+    # all valid AB names
+    out <- antibiotics$ab[match(x, toupper(antibiotics$name))]
+    out[is.na(x)] <- NA_character_
+    return(out)
+  }
+  if (all(x_nonNA %in% antibiotics$atc, na.rm = TRUE)) {
+    # all valid ATC codes
+    out <- antibiotics$ab[match(x, antibiotics$atc)]
+    out[is.na(x)] <- NA_character_
+    return(out)
+  }
+  
   # remove diacritics
   x <- iconv(x, from = "UTF-8", to = "ASCII//TRANSLIT")
   x <- gsub('"', "", x, fixed = TRUE)
-  x <- gsub("(specimen|specimen date|specimen_date|spec_date)", "", x, ignore.case = TRUE, perl = TRUE)
+  x <- gsub("(specimen|specimen date|specimen_date|spec_date|^dates?$)", "", x, ignore.case = TRUE, perl = TRUE)
   x_bak_clean <- x
   if (already_regex == FALSE) {
     x_bak_clean <- generalise_antibiotic_name(x_bak_clean)
@@ -125,7 +148,7 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
       }
       if (length(abnames) > 1) {
         message_("More than one result was found for item ", index, ": ",
-                 paste0(abnames, collapse = ", "))
+                 vector_and(abnames, quotes = FALSE))
       }
     }
     found[1L]
@@ -137,6 +160,7 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
   }
   
   for (i in seq_len(length(x))) {
+
     if (initial_search == TRUE) {
       progress$tick()
     }
@@ -153,11 +177,17 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
       next
     }
     
-    if (isTRUE(flag_multiple_results) & x[i] %like% "[ ]") {
+    if (fast_mode == FALSE && flag_multiple_results == TRUE && x[i] %like% "[ ]") {
       from_text <- tryCatch(suppressWarnings(ab_from_text(x[i], initial_search = FALSE, translate_ab = FALSE)[[1]]),
                             error = function(e) character(0))
     } else {
       from_text <- character(0)
+    }
+    
+    # old code for phenoxymethylpenicillin (Peni V)
+    if (x[i] == "PNV") {
+      x_new[i] <- "PHN"
+      next
     }
     
     # exact name
@@ -268,8 +298,8 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
     }
     
     # INITIAL SEARCH - More uncertain results ----
-    
-    if (initial_search == TRUE) {
+
+    if (initial_search == TRUE && fast_mode == FALSE) {
       # only run on first try
       
       # try by removing all spaces
@@ -294,10 +324,12 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
       x_translated <- paste(lapply(strsplit(x[i], "[^A-Z0-9]"),
                                    function(y) {
                                      for (i in seq_len(length(y))) {
-                                       y[i] <- ifelse(tolower(y[i]) %in% tolower(translations_file$replacement),
-                                                      translations_file[which(tolower(translations_file$replacement) == tolower(y[i]) &
-                                                                                !isFALSE(translations_file$fixed)), "pattern"],
-                                                      y[i])
+                                       for (lang in LANGUAGES_SUPPORTED[LANGUAGES_SUPPORTED != "en"]) {
+                                         y[i] <- ifelse(tolower(y[i]) %in% tolower(translations_file[, lang, drop = TRUE]),
+                                                        translations_file[which(tolower(translations_file[, lang, drop = TRUE]) == tolower(y[i]) &
+                                                                                  !isFALSE(translations_file$fixed)), "pattern"],
+                                                        y[i])
+                                       }
                                      }
                                      generalise_antibiotic_name(y)
                                    })[[1]],
@@ -344,7 +376,7 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
       
       # try from a bigger text, like from a health care record, see ?ab_from_text
       # already calculated above if flag_multiple_results = TRUE
-      if (isTRUE(flag_multiple_results)) {
+      if (flag_multiple_results == TRUE) {
         found <- from_text[1L]
       } else {
         found <- tryCatch(suppressWarnings(ab_from_text(x[i], initial_search = FALSE, translate_ab = FALSE)[[1]][1L]),
@@ -438,21 +470,20 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
   x_unknown <- x_unknown[!x_unknown %in% x_unknown_ATCs]
   if (length(x_unknown_ATCs) > 0) {
     warning_("These ATC codes are not (yet) in the antibiotics data set: ",
-             paste('"', sort(unique(x_unknown_ATCs)), '"', sep = "", collapse = ", "),
-             ".",
+             vector_and(x_unknown_ATCs), ".",
              call = FALSE)
   }
   
-  if (length(x_unknown) > 0) {
+  if (length(x_unknown) > 0 & fast_mode == FALSE) {
     warning_("These values could not be coerced to a valid antimicrobial ID: ",
-             paste('"', sort(unique(x_unknown)), '"', sep = "", collapse = ", "),
+             vector_and(x_unknown), ".",
              ".",
              call = FALSE)
   }
   
   x_result <- data.frame(x = x_bak_clean, stringsAsFactors = FALSE) %pm>%
     pm_left_join(data.frame(x = x, x_new = x_new, stringsAsFactors = FALSE), by = "x") %pm>%
-   pm_pull(x_new)
+    pm_pull(x_new)
   
   if (length(x_result) == 0) {
     x_result <- NA_character_

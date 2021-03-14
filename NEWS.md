@@ -1,6 +1,99 @@
-# AMR 1.5.0
+# AMR 1.6.0
 
-*Note: the rules of 'EUCAST Clinical Breakpoints v11.0 (2021)' will be added in the next release, to be expected in February/March 2021.*
+
+### New
+* Support for EUCAST Clinical Breakpoints v11.0 (2021), effective in the `eucast_rules()` function and in `as.rsi()` to interpret MIC and disk diffusion values. This is now the default guideline in this package.
+  * Added function `eucast_dosage()` to get a `data.frame` with advised dosages of a certain bug-drug combination, which is based on the new `dosage` data set
+  * Added data set `dosage` to fuel the new `eucast_dosage()` function and to make this data available in a structured way 
+  * Existing data set `example_isolates` now reflects the latest EUCAST rules
+* Added argument `only_rsi_columns` for some functions, which defaults to `FALSE`, to indicate if the functions must only be applied to columns that are of class `<rsi>` (i.e., transformed with `as.rsi()`). This increases speed since automatic determination of antibiotic columns is not needed anymore. Affected functions are:
+  * All antibiotic selector functions (`ab_class()` and its wrappers, such as `aminoglycosides()`, `carbapenems()`, `penicillins()`)
+  * All antibiotic filter functions (`filter_ab_class()` and its wrappers, such as `filter_aminoglycosides()`, `filter_carbapenems()`, `filter_penicillins()`)
+  * `eucast_rules()`
+  * `mdro()` (including wrappers such as `brmo()`, `mrgn()` and `eucast_exceptional_phenotypes()`)
+  * `guess_ab_col()`
+* Functions `oxazolidinones()` (an antibiotic selector function) and `filter_oxazolidinones()` (an antibiotic filter function) to select/filter on e.g. linezolid and tedizolid
+  ```r
+  library(dplyr)
+  x <- example_isolates %>% select(date, hospital_id, oxazolidinones())
+  #> Selecting oxazolidinones: column 'LNZ' (linezolid)
+  
+  x <- example_isolates %>% filter_oxazolidinones()
+  #> Filtering on oxazolidinones: value in column `LNZ` (linezolid) is either "R", "S" or "I"
+   ```
+* Support for custom MDRO guidelines, using the new `custom_mdro_guideline()` function, please see `mdro()` for additional info
+* `ggplot()` generics for classes `<mic>` and `<disk>`
+* Function `mo_is_yeast()`, which determines whether a microorganism is a member of the taxonomic class Saccharomycetes or the taxonomic order Saccharomycetales:
+  ```r
+  mo_kingdom(c("Aspergillus", "Candida"))
+  #> [1] "Fungi" "Fungi"
+  
+  mo_is_yeast(c("Aspergillus", "Candida"))
+  #> [1] FALSE  TRUE
+  
+  # usage for filtering data:
+  example_isolates[which(mo_is_yeast()), ]   # base R
+  example_isolates %>% filter(mo_is_yeast()) # dplyr
+  ```
+  The `mo_type()` function has also been updated to reflect this change:
+  ```r
+  mo_type(c("Aspergillus", "Candida"))
+  # [1] "Fungi"  "Yeasts"
+  mo_type(c("Aspergillus", "Candida"), language = "es") # also supported: de, nl, fr, it, pt
+  #> [1] "Hongos"    "Levaduras"
+  ```
+* Added Pretomanid (PMD, J04AK08) to the `antibiotics` data set
+* MIC values (see `as.mic()`) can now be used in any mathematical processing, such as usage inside functions `min()`, `max()`, `range()`, and with binary operators (`+`, `-`, etc.). This allows for easy distribution analysis and fast filtering on MIC values:
+  ```r
+  x <- random_mic(10)
+  x
+  #> Class <mic>
+  #>  [1] 128   0.5   2     0.125 64    0.25  >=256 8     16    4
+  x[x > 4]
+  #> Class <mic>
+  #> [1] 128   64    >=256 8     16
+  range(x)
+  #> [1]   0.125 256.000
+  range(log2(x))
+  #> [1] -3  8
+  ```
+
+### Changed
+* Updated the bacterial taxonomy to 3 March 2021 (using [LSPN](https://lpsn.dsmz.de))
+  * Added 3,372 new species and 1,523 existing species became synomyms
+  * The URL of a bacterial species (`mo_url()`) will now lead to https://lpsn.dsmz.de
+* Big update for plotting classes `rsi`, `<mic>`, and `<disk>`:
+  * Plotting of MIC and disk diffusion values now support interpretation colouring if you supply the microorganism and antimicrobial agent
+  * All colours were updated to colour-blind friendly versions for values R, S and I for all plot methods (also applies to tibble printing)
+  * Interpretation of MIC and disk diffusion values to R/SI will now be translated if the system language is German, Dutch or Spanish (see `translate`)
+  * Plotting is now possible with base R using `plot()` and with ggplot2 using `ggplot()` on any vector of MIC and disk diffusion values
+* Updated SNOMED codes to US Edition of SNOMED CT from 1 September 2020 and added the source to the help page of the `microorganisms` data set
+* `is.rsi()` and `is.rsi.eligible()` now return a vector of `TRUE`/`FALSE` when the input is a data set, by iterating over all columns
+* Using functions without setting a data set (e.g., `mo_is_gram_negative()`, `mo_is_gram_positive()`, `mo_is_intrinsic_resistant()`, `first_isolate()`, `mdro()`) now work with `dplyr`s `group_by()` again
+* `first_isolate()` can be used with `group_by()` (also when using a dot `.` as input for the data) and now returns the names of the groups
+* Updated the data set `microorganisms.codes` (which contains popular LIS and WHONET codes for microorganisms) for some species of *Mycobacterium* that previously incorrectly returned *M. africanum*
+* WHONET code `"PNV"` will now correctly be interpreted as `PHN`, the antibiotic code for phenoxymethylpenicillin ('peni V')
+* Fix for verbose output of `mdro(..., verbose = TRUE)` for German guideline (3MGRN and 4MGRN) and Dutch guideline (BRMO, only *P. aeruginosa*)
+* `is.rsi.eligible()` now detects if the column name resembles an antibiotic name or code and now returns `TRUE` immediately if the input contains any of the values "R", "S" or "I". This drastically improves speed, also for a lot of other functions that rely on automatic determination of antibiotic columns.
+* Functions `get_episode()` and `is_new_episode()` now support less than a day as value for argument `episode_days` (e.g., to include one patient/test per hour)
+* Argument `ampc_cephalosporin_resistance` in `eucast_rules()` now also applies to value "I" (not only "S")
+* Functions `print()` and `summary()` on a Principal Components Analysis object (`pca()`) now print additional group info if the original data was grouped using `dplyr::group_by()`
+* Improved speed and reliability of `guess_ab_col()`. As this also internally improves the reliability of `first_isolate()` and `mdro()`, this might have a slight impact on the results of those functions.
+* Fix for `mo_name()` when used in other languages than English
+* The `like()` function (and its fast alias `%like%`) now always use Perl compatibility, improving speed for many functions in this package (e.g., `as.mo()` is now up to 4 times faster)
+* *Staphylococcus cornubiensis* is now correctly categorised as coagulase-positive
+* `random_disk()` and `random_mic()` now have an expanded range in their randomisation
+* Support for GISA (glycopeptide-intermediate *S. aureus*), so e.g. `mo_genus("GISA")` will return `"Staphylococcus"` 
+* Added translations of German and Spanish for more than 200 antimicrobial drugs
+* Speed improvement for `as.ab()` when the input is an official name or ATC code
+* Added argument `include_untested_rsi` to the `first_isolate()` functions (defaults to `TRUE` to keep existing behaviour), to be able to exclude rows where all R/SI values (class `<rsi>`, see `as.rsi()`) are empty
+
+### Other
+* Big documentation updates
+* Loading the package (i.e., `library(AMR)`) now is ~50 times faster than before, in costs of package size (which increased by ~3 MB)
+
+
+# AMR 1.5.0
 
 ### New
 * Functions `get_episode()` and `is_new_episode()` to determine (patient) episodes which are not necessarily based on microorganisms. The `get_episode()` function returns the index number of the episode per group, while the `is_new_episode()` function returns values `TRUE`/`FALSE` to indicate whether an item in a vector is the start of a new episode. They also support `dplyr`s grouping (i.e. using `group_by()`):
@@ -314,7 +407,7 @@ This software is now out of beta and considered stable. Nonetheless, this packag
   * Speed improvements, especially for the *G. species* format (G for genus), like *E. coli* and *K pneumoniae*
   * Support for more common codes used in laboratory information systems
 * Input values for `as.disk()` limited to a maximum of 50 millimeters
-* Added a lifecycle state to every function, following [the lifecycle circle of the `tidyverse`](https://www.tidyverse.org/lifecycle)
+* Added a lifecycle state to every function, following the lifecycle circle of the `tidyverse`
 * For in `as.ab()`: support for drugs starting with "co-" like co-amoxiclav, co-trimoxazole, co-trimazine and co-trimazole (thanks to Peter Dutey)
 * Changes to the `antibiotics` data set (thanks to Peter Dutey):
   * Added more synonyms to colistin, imipenem and piperacillin/tazobactam
@@ -600,7 +693,7 @@ This software is now out of beta and considered stable. Nonetheless, this packag
   * Based on the Compound ID, almost 5,000 official brand names have been added from many different countries
   * All references to antibiotics in our package now use EARS-Net codes, like `AMX` for amoxicillin
   * Functions `atc_certe`, `ab_umcg` and `atc_trivial_nl` have been removed
-  * All `atc_*` functions are superceded by `ab_*` functions
+  * All `atc_*` functions are superseded by `ab_*` functions
   * All output will be translated by using an included translation file which [can be viewed here](https://github.com/msberends/AMR/blob/master/data-raw/translations.tsv)
 * Improvements to plotting AMR results with `ggplot_rsi()`:
   * New argument `colours` to set the bar colours
@@ -653,7 +746,7 @@ This software is now out of beta and considered stable. Nonetheless, this packag
 We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.gitlab.io/AMR/) (built with the great [`pkgdown`](https://pkgdown.r-lib.org/))
 
 * Contains the complete manual of this package and all of its functions with an explanation of their arguments
-* Contains a comprehensive tutorial about how to conduct antimicrobial resistance analysis, import data from WHONET or SPSS and many more.
+* Contains a comprehensive tutorial about how to conduct AMR data analysis, import data from WHONET or SPSS and many more.
 
 #### New
 * **BREAKING**: removed deprecated functions, arguments and references to 'bactid'. Use `as.mo()` to identify an MO code.
@@ -712,7 +805,7 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
 * New function `mo_uncertainties()` to review values that could be coerced to a valid MO code using `as.mo()`, but with uncertainty.
 * New function `mo_renamed()` to get a list of all returned values from `as.mo()` that have had taxonomic renaming
 * New function `age()` to calculate the (patients) age in years
-* New function `age_groups()` to split ages into custom or predefined groups (like children or elderly). This allows for easier demographic antimicrobial resistance analysis per age group.
+* New function `age_groups()` to split ages into custom or predefined groups (like children or elderly). This allows for easier demographic AMR data analysis per age group.
 * New function `ggplot_rsi_predict()` as well as the base R `plot()` function can now be used for resistance prediction calculated with `resistance_predict()`:
   ```r
   x <- resistance_predict(septic_patients, col_ab = "amox")

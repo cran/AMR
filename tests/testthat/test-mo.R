@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,7 +20,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
 context("mo.R")
@@ -124,7 +124,6 @@ test_that("as.mo works", {
   expect_identical(as.character(as.mo("S. epidermidis",  Becker = FALSE)), "B_STPHY_EPDR")
   expect_identical(as.character(as.mo("S. epidermidis",  Becker = TRUE)),  "B_STPHY_CONS")
   expect_identical(as.character(as.mo("STAEPI",          Becker = TRUE)),  "B_STPHY_CONS")
-  expect_identical(as.character(as.mo("S. intermedius",  Becker = FALSE)), "B_STPHY_INTR")
   expect_identical(as.character(as.mo("Sta intermedius", Becker = FALSE)), "B_STPHY_INTR")
   expect_identical(as.character(as.mo("Sta intermedius", Becker = TRUE)),  "B_STPHY_COPS")
   expect_identical(as.character(as.mo("STAINT",          Becker = TRUE)),  "B_STPHY_COPS")

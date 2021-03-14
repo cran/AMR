@@ -5,7 +5,7 @@
 \alias{random_mic}
 \alias{random_disk}
 \alias{random_rsi}
-\title{Random MIC values/disk zones/RSI generation}
+\title{Random MIC Values/Disk Zones/RSI Generation}
 \usage{
 random_mic(size, mo = NULL, ab = NULL, ...)
 
@@ -28,22 +28,24 @@ random_rsi(size, prob_RSI = c(0.33, 0.33, 0.33), ...)
 class \verb{<mic>} for \code{\link[=random_mic]{random_mic()}} (see \code{\link[=as.mic]{as.mic()}}) and class \verb{<disk>} for \code{\link[=random_disk]{random_disk()}} (see \code{\link[=as.disk]{as.disk()}})
 }
 \description{
-These functions can be used for generating random MIC values and disk diffusion diameters, for AMR analysis practice.
+These functions can be used for generating random MIC values and disk diffusion diameters, for AMR data analysis practice. By providing a microorganism and antimicrobial agent, the generated results will reflect reality as much as possible.
 }
 \details{
 The base R function \code{\link[=sample]{sample()}} is used for generating values.
 
 Generated values are based on the latest EUCAST guideline implemented in the \link{rsi_translation} data set. To create specific generated values per bug or drug, set the \code{mo} and/or \code{ab} argument.
 }
-\section{Maturing lifecycle}{
+\section{Stable Lifecycle}{
 
-\if{html}{\figure{lifecycle_maturing.svg}{options: style=margin-bottom:5px} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. Since this function needs wider usage and more extensive testing, you are very welcome \href{https://github.com/msberends/AMR/issues}{to suggest changes at our repository} or \link[=AMR]{write us an email (see section 'Contact Us')}.
+\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
+The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
+
+If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
-\section{Read more on our website!}{
+\section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
@@ -57,8 +59,8 @@ random_mic(100, "Klebsiella pneumoniae")                 # range 0.0625-64
 random_mic(100, "Klebsiella pneumoniae", "meropenem")    # range 0.0625-16
 random_mic(100, "Streptococcus pneumoniae", "meropenem") # range 0.0625-4
 
-random_disk(100, "Klebsiella pneumoniae")                  # range 11-50
-random_disk(100, "Klebsiella pneumoniae", "ampicillin")    # range 6-14
-random_disk(100, "Streptococcus pneumoniae", "ampicillin") # range 16-22
+random_disk(100, "Klebsiella pneumoniae")                  # range 8-50
+random_disk(100, "Klebsiella pneumoniae", "ampicillin")    # range 11-17
+random_disk(100, "Streptococcus pneumoniae", "ampicillin") # range 12-27
 }
 }

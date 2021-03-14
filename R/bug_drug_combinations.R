@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,13 +20,13 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Determine bug-drug combinations
+#' Determine Bug-Drug Combinations
 #' 
-#' Determine antimicrobial resistance (AMR) of all bug-drug combinations in your data set where at least 30 (default) isolates are available per species. Use [format()] on the result to prettify it to a publicable/printable format, see Examples.
-#' @inheritSection lifecycle Stable lifecycle
+#' Determine antimicrobial resistance (AMR) of all bug-drug combinations in your data set where at least 30 (default) isolates are available per species. Use [format()] on the result to prettify it to a publicable/printable format, see *Examples*.
+#' @inheritSection lifecycle Stable Lifecycle
 #' @inheritParams eucast_rules
 #' @param combine_IR logical to indicate whether values R and I should be summed
 #' @param add_ab_group logical to indicate where the group of the antimicrobials must be included as a first column
@@ -41,7 +41,7 @@
 #' @rdname bug_drug_combinations
 #' @return The function [bug_drug_combinations()] returns a [data.frame] with columns "mo", "ab", "S", "I", "R" and "total".
 #' @source \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 4th Edition}, 2014, *Clinical and Laboratory Standards Institute (CLSI)*. <https://clsi.org/standards/products/microbiology/documents/m39/>.
-#' @inheritSection AMR Read more on our website!
+#' @inheritSection AMR Read more on Our Website!
 #' @examples 
 #' \donttest{
 #' x <- bug_drug_combinations(example_isolates)
@@ -69,8 +69,10 @@ bug_drug_combinations <- function(x,
   # -- mo
   if (is.null(col_mo)) {
     col_mo <- search_type_in_df(x = x, type = "mo")
+    stop_if(is.null(col_mo), "`col_mo` must be set")
+  } else {
+    stop_ifnot(col_mo %in% colnames(x), "column '", col_mo, "' (`col_mo`) not found")
   }
-  stop_if(is.null(col_mo), "`col_mo` must be set")
   
   x_class <- class(x)
   x <- as.data.frame(x, stringsAsFactors = FALSE)
@@ -127,7 +129,7 @@ format.bug_drug_combinations <- function(x,
   meet_criteria(x, allow_class = "data.frame")
   meet_criteria(translate_ab, allow_class = c("character", "logical"), has_length = 1, allow_NA = TRUE)
   meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
-  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_positive = TRUE, is_finite = TRUE)
   meet_criteria(combine_SI, allow_class = "logical", has_length = 1)
   meet_criteria(combine_IR, allow_class = "logical", has_length = 1)
   meet_criteria(add_ab_group, allow_class = "logical", has_length = 1)

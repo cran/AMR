@@ -4,9 +4,9 @@
 \name{antibiotics}
 \alias{antibiotics}
 \alias{antivirals}
-\title{Data sets with 557 antimicrobials}
+\title{Data Sets with 558 Antimicrobials}
 \format{
-\subsection{For the \link{antibiotics} data set: a \link{data.frame} with 455 observations and 14 variables:}{
+\subsection{For the \link{antibiotics} data set: a \link{data.frame} with 456 observations and 14 variables:}{
 \itemize{
 \item \code{ab}\cr Antibiotic ID as used in this package (such as \code{AMC}), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available
 \item \code{atc}\cr ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC, like \code{J01CR02}
@@ -75,7 +75,7 @@ Files in \R format (with preserved data structure) can be found here:
 }
 }
 }
-\section{Reference data publicly available}{
+\section{Reference Data Publicly Available}{
 
 All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
 }
@@ -92,9 +92,9 @@ The WHOCC is located in Oslo at the Norwegian Institute of Public Health and fun
 \strong{NOTE: The WHOCC copyright does not allow use for commercial purposes, unlike any other info from this package.} See \url{https://www.whocc.no/copyright_disclaimer/.}
 }
 
-\section{Read more on our website!}{
+\section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \seealso{

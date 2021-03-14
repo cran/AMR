@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,7 +20,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
 context("eucast_rules.R")
@@ -50,20 +50,21 @@ test_that("EUCAST rules work", {
   expect_warning(eucast_rules(data.frame(mo = "Escherichia coli", vancomycin = "S", stringsAsFactors = TRUE)))
   
   expect_identical(colnames(example_isolates),
-                   colnames(suppressWarnings(eucast_rules(example_isolates))))
+                   colnames(suppressWarnings(eucast_rules(example_isolates, info = FALSE))))
+  expect_output(suppressMessages(eucast_rules(example_isolates, info = TRUE)))
   
   a <- data.frame(mo = c("Klebsiella pneumoniae",
                          "Pseudomonas aeruginosa",
-                         "Enterobacter aerogenes"),
-                  amox = "-",           # Amoxicillin
+                         "Enterobacter cloacae"),
+                  amox = "-",        # Amoxicillin
                   stringsAsFactors = FALSE)
   b <- data.frame(mo = c("Klebsiella pneumoniae",
                          "Pseudomonas aeruginosa",
-                         "Enterobacter aerogenes"),
+                         "Enterobacter cloacae"),
                   amox = "R",       # Amoxicillin
                   stringsAsFactors = FALSE)
   expect_identical(suppressWarnings(eucast_rules(a, "mo", info = FALSE)), b)
-  expect_identical(suppressWarnings(eucast_rules(a, "mo", info = TRUE)), b)
+  expect_output(suppressMessages(suppressWarnings(eucast_rules(a, "mo", info = TRUE))))
   
   a <- data.frame(mo = c("Staphylococcus aureus",
                          "Streptococcus group A"),
@@ -81,8 +82,8 @@ test_that("EUCAST rules work", {
     example_isolates %>%
       mutate(TIC = as.rsi("R"),
              PIP = as.rsi("S")) %>%
-      eucast_rules(col_mo = "mo", version_expertrules = 3.1) %>%
-      left_join_microorganisms() %>%
+      eucast_rules(col_mo = "mo", version_expertrules = 3.1, info = FALSE) %>%
+      left_join_microorganisms(by = "mo") %>%
       filter(family == "Enterobacteriaceae") %>%
       pull(PIP) %>%
       unique() %>%
@@ -95,7 +96,8 @@ test_that("EUCAST rules work", {
                                                        AZM = as.rsi("R"),
                                                        CLR = factor("R"),
                                                        stringsAsFactors = FALSE),
-                                            version_expertrules = 3.1)$CLR))
+                                            version_expertrules = 3.1,
+                                            only_rsi_columns = FALSE)$CLR))
   b <- example_isolates$ERY
   expect_identical(a[!is.na(b)],
                    b[!is.na(b)])
@@ -122,7 +124,7 @@ test_that("EUCAST rules work", {
   expect_identical(
     eucast_rules(data.frame(mo = c("Escherichia coli", "Enterobacter cloacae"),
                             cefotax = as.rsi(c("S", "S"))),
-                 ampc_cephalosporin_resistance = "R",
+                 ampc_cephalosporin_resistance = TRUE,
                  info = FALSE)$cefotax,
     as.rsi(c("S", "R")))
   expect_identical(
@@ -137,5 +139,9 @@ test_that("EUCAST rules work", {
                  ampc_cephalosporin_resistance = NULL,
                  info = FALSE)$cefotax,
     as.rsi(c("S", "S")))
+  
+  # EUCAST dosage -----------------------------------------------------------
+  expect_equal(nrow(eucast_dosage(c("tobra", "genta", "cipro"))), 3)
+  expect_s3_class(eucast_dosage(c("tobra", "genta", "cipro")), "data.frame")
   
 })

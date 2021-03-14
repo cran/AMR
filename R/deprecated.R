@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,14 +20,14 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Deprecated functions
+#' Deprecated Functions
 #'
 #' These functions are so-called '[Deprecated]'. They will be removed in a future release. Using the functions will give a warning with the name of the function it has been replaced by (if there is one).
-#' @inheritSection lifecycle Retired lifecycle
-#' @inheritSection AMR Read more on our website!
+#' @inheritSection lifecycle Retired Lifecycle
+#' @inheritSection AMR Read more on Our Website!
 #' @keywords internal
 #' @name AMR-deprecated
 #' @export

@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,7 +20,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
 context("rsi.R")
@@ -42,6 +42,7 @@ test_that("rsi works", {
   pdf(NULL) # prevent Rplots.pdf being created
   expect_silent(barplot(as.rsi(c("S", "I", "R"))))
   expect_silent(plot(as.rsi(c("S", "I", "R"))))
+  if (require("ggplot2")) expect_s3_class(ggplot(as.rsi(c("S", "I", "R"))), "gg")
   expect_output(print(as.rsi(c("S", "I", "R"))))
   
   expect_equal(as.character(as.rsi(c(1:3))), c("S", "I", "R"))

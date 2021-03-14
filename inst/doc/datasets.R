@@ -15,13 +15,13 @@ options(knitr.kable.NA = '')
 structure_txt <- function(dataset) {
   paste0("A data set with ",
          format(nrow(dataset), big.mark = ","), " rows and ", 
-         ncol(dataset), " columns, containing the following column names:  \n*",
-         paste0("'", colnames(dataset), "'", collapse = ", "), "*.")
+         ncol(dataset), " columns, containing the following column names:  \n",
+         AMR:::vector_or(colnames(dataset), quotes = "*", last_sep = " and ", sort = FALSE), ".")
 }
 
 download_txt <- function(filename) {
   msg <- paste0("It was last updated on ", 
-                trimws(format(file.mtime(paste0("../data/", filename, ".rda")), "%e %B %Y %H:%M:%S %Z")), 
+                trimws(format(file.mtime(paste0("../data/", filename, ".rda")), "%e %B %Y %H:%M:%S %Z", tz = "UTC")), 
                 ". Find more info about the structure of this data set [here](https://msberends.github.io/AMR/reference/", ifelse(filename == "antivirals", "antibiotics", filename), ".html).\n")
   github_base <- "https://github.com/msberends/AMR/raw/master/data-raw/"
   filename <- paste0("../data-raw/", filename)
@@ -110,5 +110,9 @@ intrinsic_resistant %>%
 ## ---- echo = FALSE------------------------------------------------------------
 rsi_translation %>% 
   mutate(ab = ab_name(ab), mo = mo_name(mo)) %>% 
+  print_df()
+
+## ---- echo = FALSE------------------------------------------------------------
+dosage %>% 
   print_df()
 

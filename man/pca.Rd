@@ -59,14 +59,21 @@ The \code{\link[=pca]{pca()}} function takes a \link{data.frame} as input and pe
 
 The result of the \code{\link[=pca]{pca()}} function is a \link{prcomp} object, with an additional attribute \code{non_numeric_cols} which is a vector with the column names of all columns that do not contain numeric values. These are probably the groups and labels, and will be used by \code{\link[=ggplot_pca]{ggplot_pca()}}.
 }
-\section{Maturing lifecycle}{
+\section{Stable Lifecycle}{
 
-\if{html}{\figure{lifecycle_maturing.svg}{options: style=margin-bottom:5px} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. Since this function needs wider usage and more extensive testing, you are very welcome \href{https://github.com/msberends/AMR/issues}{to suggest changes at our repository} or \link[=AMR]{write us an email (see section 'Contact Us')}.
+\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
+The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
+
+If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+}
+
+\section{Read more on Our Website!}{
+
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
-# `example_isolates` is a dataset available in the AMR package.
+# `example_isolates` is a data set available in the AMR package.
 # See ?example_isolates.
 
 \donttest{
@@ -75,7 +82,7 @@ if (require("dplyr")) {
   # calculate the resistance per group first 
   resistance_data <- example_isolates \%>\% 
     group_by(order = mo_order(mo),       # group on anything, like order
-             genus = mo_genus(mo)) \%>\%   #  and genus as we do here
+             genus = mo_genus(mo)) \%>\%   #   and genus as we do here;
     summarise_if(is.rsi, resistance)     # then get resistance of all drugs
     
   # now conduct PCA for certain antimicrobial agents

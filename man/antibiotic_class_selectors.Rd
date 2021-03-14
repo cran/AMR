@@ -14,65 +14,78 @@
 \alias{fluoroquinolones}
 \alias{glycopeptides}
 \alias{macrolides}
+\alias{oxazolidinones}
 \alias{penicillins}
 \alias{tetracyclines}
-\title{Antibiotic class selectors}
+\title{Antibiotic Class Selectors}
 \usage{
-ab_class(ab_class)
+ab_class(ab_class, only_rsi_columns = FALSE)
 
-aminoglycosides()
+aminoglycosides(only_rsi_columns = FALSE)
 
-carbapenems()
+carbapenems(only_rsi_columns = FALSE)
 
-cephalosporins()
+cephalosporins(only_rsi_columns = FALSE)
 
-cephalosporins_1st()
+cephalosporins_1st(only_rsi_columns = FALSE)
 
-cephalosporins_2nd()
+cephalosporins_2nd(only_rsi_columns = FALSE)
 
-cephalosporins_3rd()
+cephalosporins_3rd(only_rsi_columns = FALSE)
 
-cephalosporins_4th()
+cephalosporins_4th(only_rsi_columns = FALSE)
 
-cephalosporins_5th()
+cephalosporins_5th(only_rsi_columns = FALSE)
 
-fluoroquinolones()
+fluoroquinolones(only_rsi_columns = FALSE)
 
-glycopeptides()
+glycopeptides(only_rsi_columns = FALSE)
 
-macrolides()
+macrolides(only_rsi_columns = FALSE)
 
-penicillins()
+oxazolidinones(only_rsi_columns = FALSE)
 
-tetracyclines()
+penicillins(only_rsi_columns = FALSE)
+
+tetracyclines(only_rsi_columns = FALSE)
 }
 \arguments{
 \item{ab_class}{an antimicrobial class, like \code{"carbapenems"}. The columns \code{group}, \code{atc_group1} and \code{atc_group2} of the \link{antibiotics} data set will be searched (case-insensitive) for this value.}
+
+\item{only_rsi_columns}{a logical to indicate whether only columns of class \verb{<rsi>} must be selected (defaults to \code{FALSE}), see \code{\link[=as.rsi]{as.rsi()}}}
 }
 \description{
-These functions help to select the columns of antibiotics that are of a specific antibiotic class, without the need to define the columns or antibiotic abbreviations.
+These functions help to select the columns of antibiotics that are of a specific antibiotic class, without the need to define the columns or antibiotic abbreviations. \strong{\Sexpr{ifelse(as.double(R.Version()$major) + (as.double(R.Version()$minor) / 10) < 3.2, paste0("NOTE: THESE FUNCTIONS DO NOT WORK ON YOUR CURRENT R VERSION. These functions require R version 3.2 or later - you have ", R.version.string, "."), "")}}
 }
 \details{
 \strong{\Sexpr{ifelse(as.double(R.Version()$major) + (as.double(R.Version()$minor) / 10) < 3.2, paste0("NOTE: THESE FUNCTIONS DO NOT WORK ON YOUR CURRENT R VERSION. These functions require R version 3.2 or later - you have ", R.version.string, "."), "")}}
 
 All columns will be searched for known antibiotic names, abbreviations, brand names and codes (ATC, EARS-Net, WHO, etc.) in the \link{antibiotics} data set. This means that a selector like e.g. \code{\link[=aminoglycosides]{aminoglycosides()}} will pick up column names like 'gen', 'genta', 'J01GB03', 'tobra', 'Tobracin', etc.
 }
-\section{Reference data publicly available}{
+\section{Stable Lifecycle}{
+
+\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
+The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
+
+If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+}
+
+\section{Reference Data Publicly Available}{
 
 All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
 }
 
-\section{Read more on our website!}{
+\section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
-# `example_isolates` is a dataset available in the AMR package.
+# `example_isolates` is a data set available in the AMR package.
 # See ?example_isolates.
 
 # this will select columns 'IPM' (imipenem) and 'MEM' (meropenem):
-example_isolates[, c(carbapenems())]
+example_isolates[, carbapenems()]
 # this will select columns 'mo', 'AMK', 'GEN', 'KAN' and 'TOB':
 example_isolates[, c("mo", aminoglycosides())]
 

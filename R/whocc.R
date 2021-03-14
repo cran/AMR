@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,7 +20,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
 #' WHOCC: WHO Collaborating Centre for Drug Statistics Methodology
@@ -35,7 +35,7 @@
 #' The WHOCC is located in Oslo at the Norwegian Institute of Public Health and funded by the Norwegian government. The European Commission is the executive of the European Union and promotes its general interest.
 #' 
 #' **NOTE: The WHOCC copyright does not allow use for commercial purposes, unlike any other info from this package.** See <https://www.whocc.no/copyright_disclaimer/.>
-#' @inheritSection AMR Read more on our website!
+#' @inheritSection AMR Read more on Our Website!
 #' @name WHOCC
 #' @rdname WHOCC
 #' @examples

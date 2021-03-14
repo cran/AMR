@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,7 +20,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
 context("ab_class_selectors.R")
@@ -39,6 +39,7 @@ test_that("Antibiotic class selectors work", {
   expect_lt(example_isolates %>% dplyr::select(fluoroquinolones()) %>% ncol(), ncol(example_isolates))
   expect_lt(example_isolates %>% dplyr::select(glycopeptides()) %>% ncol(), ncol(example_isolates))
   expect_lt(example_isolates %>% dplyr::select(macrolides()) %>% ncol(), ncol(example_isolates))
+  expect_lt(example_isolates %>% dplyr::select(oxazolidinones()) %>% ncol(), ncol(example_isolates))
   expect_lt(example_isolates %>% dplyr::select(penicillins()) %>% ncol(), ncol(example_isolates))
   expect_lt(example_isolates %>% dplyr::select(tetracyclines()) %>% ncol(), ncol(example_isolates))
   

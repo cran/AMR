@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,7 +20,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
 context("mdro.R")
@@ -34,20 +34,20 @@ test_that("mdro works", {
   expect_error(mdro(example_isolates, guideline = c("BRMO", "MRGN"), info = TRUE))
   expect_error(mdro(example_isolates, col_mo = "invalid", info = TRUE))
 
-  outcome <- suppressWarnings(mdro(example_isolates))
-  outcome <- mdro(example_isolates, "eucast3.1", info = TRUE)
-  outcome <- eucast_exceptional_phenotypes(example_isolates, info = TRUE)
+  expect_output(suppressMessages(suppressWarnings(mdro(example_isolates, info = TRUE))))
+  expect_output(suppressMessages(suppressWarnings(mdro(example_isolates, "eucast3.1", info = TRUE))))
+  expect_output(outcome <- suppressMessages(suppressWarnings(eucast_exceptional_phenotypes(example_isolates, info = TRUE))))
   # check class
   expect_equal(class(outcome), c("ordered", "factor"))
 
-  outcome <- mdro(example_isolates, "nl", info = TRUE)
+  expect_output(outcome <- mdro(example_isolates, "nl", info = TRUE))
   # check class
   expect_equal(class(outcome), c("ordered", "factor"))
 
   library(dplyr)
   # example_isolates should have these finding using Dutch guidelines
   expect_equal(as.double(table(outcome)),
-               c(1969, 25, 6)) # 1969 neg, 25 unconfirmed, 6 pos
+               c(1970, 24, 6)) # 1970 neg, 24 unconfirmed, 6 pos
 
   expect_equal(brmo(example_isolates, info = FALSE),
                mdro(example_isolates, guideline = "BRMO", info = FALSE))
@@ -222,5 +222,28 @@ test_that("mdro works", {
                      stringsAsFactors = FALSE)
   expect_equal(as.integer(mdro(acin)), c(1:4))
   expect_s3_class(mdro(acin, verbose = TRUE), "data.frame")
+  
+  # custom rules
+  custom <- custom_mdro_guideline("CIP == 'R' & age > 60" ~ "Elderly Type A",
+                                  "ERY == 'R' & age > 60" ~ "Elderly Type B",
+                                  as_factor = TRUE)
+  expect_output(print(custom))
+  expect_output(x <- mdro(example_isolates, guideline = custom, info = TRUE))
+  expect_equal(as.double(table(x)), c(1066, 43, 891))
+  
+  expect_output(print(custom_mdro_guideline(AMX == "R" ~ "test", as_factor = FALSE)))
+  expect_error(custom_mdro_guideline())
+  expect_error(custom_mdro_guideline("test"))
+  expect_error(custom_mdro_guideline("test" ~ c(1:3)))
+  expect_error(custom_mdro_guideline("test" ~ A))
+  expect_warning(mdro(example_isolates,
+                      # since `test` gives an error, it will be ignored with a warning
+                      guideline = custom_mdro_guideline(test ~ "A"), 
+                      info = FALSE))
+  
+  # print groups
+  library(dplyr)
+  expect_output(x <- mdro(example_isolates %>% group_by(hospital_id), info = TRUE))
+  expect_output(x <- mdro(example_isolates %>% group_by(hospital_id), guideline = custom, info = TRUE))
   
 })

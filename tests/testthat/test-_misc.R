@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,7 +20,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
 context("aa_helper_functions.R")
@@ -53,4 +53,13 @@ test_that("looking up ab columns works", {
   expect_message(get_column_abx(example_isolates, soft_dependencies = "FUS"))
   expect_warning(get_column_abx(dplyr::rename(example_isolates, thisone = AMX), amox = "thisone", tmp = "thisone", verbose = TRUE))
   expect_warning(get_column_abx(dplyr::rename(example_isolates, thisone = AMX), amox = "thisone", tmp = "thisone", verbose = FALSE))
+})
+
+test_that("looking up ab columns works", {
+  skip_on_cran()
+  library(dplyr)
+  
+  # we rely on "grouped_tbl" being a class of grouped tibbles, so:
+  expect_true(is_null_or_grouped_tbl(example_isolates %>% group_by(hospital_id)))
+
 })

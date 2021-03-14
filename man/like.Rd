@@ -4,7 +4,7 @@
 \alias{like}
 \alias{\%like\%}
 \alias{\%like_case\%}
-\title{Pattern matching with keyboard shortcut}
+\title{Pattern Matching with Keyboard Shortcut}
 \source{
 Idea from the \href{https://github.com/Rdatatable/data.table/blob/master/R/like.R}{\code{like} function from the \code{data.table} package}
 }
@@ -26,7 +26,7 @@ x \%like_case\% pattern
 A \code{\link{logical}} vector
 }
 \description{
-Convenient wrapper around \code{\link[=grep]{grep()}} to match a pattern: \code{x \%like\% pattern}. It always returns a \code{\link{logical}} vector and is always case-insensitive (use \code{x \%like_case\% pattern} for case-sensitive matching). Also, \code{pattern} can be as long as \code{x} to compare items of each index in both vectors, or they both can have the same length to iterate over all cases.
+Convenient wrapper around \code{\link[=grepl]{grepl()}} to match a pattern: \code{x \%like\% pattern}. It always returns a \code{\link{logical}} vector and is always case-insensitive (use \code{x \%like_case\% pattern} for case-sensitive matching). Also, \code{pattern} can be as long as \code{x} to compare items of each index in both vectors, or they both can have the same length to iterate over all cases.
 }
 \details{
 The \verb{\%like\%} function:
@@ -34,12 +34,12 @@ The \verb{\%like\%} function:
 \item Is case-insensitive (use \verb{\%like_case\%} for case-sensitive matching)
 \item Supports multiple patterns
 \item Checks if \code{pattern} is a regular expression and sets \code{fixed = TRUE} if not, to greatly improve speed
-\item Tries again with \code{perl = TRUE} if regex fails
+\item Always uses compatibility with Perl
 }
 
 Using RStudio? The text \verb{\%like\%} can also be directly inserted in your code from the Addins menu and can have its own Keyboard Shortcut like \code{Ctrl+Shift+L} or \code{Cmd+Shift+L} (see \code{Tools} > \verb{Modify Keyboard Shortcuts...}).
 }
-\section{Stable lifecycle}{
+\section{Stable Lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
@@ -47,9 +47,9 @@ The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stabl
 If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
-\section{Read more on our website!}{
+\section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
@@ -61,11 +61,15 @@ a \%like\% b
 b \%like\% a
 #> FALSE
 
-# also supports multiple patterns, length must be equal to x
+# also supports multiple patterns
 a <- c("Test case", "Something different", "Yet another thing")
 b <- c(     "case",           "diff",      "yet")
 a \%like\% b
 #> TRUE TRUE TRUE
+a[1] \%like\% b
+#> TRUE FALSE FALSE
+a \%like\% b[1]
+#> TRUE FALSE FALSE
 
 # get isolates whose name start with 'Ent' or 'ent'
 \donttest{
@@ -76,5 +80,5 @@ if (require("dplyr")) {
 }
 }
 \seealso{
-\code{\link[=grep]{grep()}}
+\code{\link[=grepl]{grepl()}}
 }

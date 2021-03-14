@@ -13,37 +13,131 @@
 \alias{filter_fluoroquinolones}
 \alias{filter_glycopeptides}
 \alias{filter_macrolides}
+\alias{filter_oxazolidinones}
 \alias{filter_penicillins}
 \alias{filter_tetracyclines}
-\title{Filter isolates on result in antimicrobial class}
+\title{Filter Isolates on Result in Antimicrobial Class}
 \usage{
-filter_ab_class(x, ab_class, result = NULL, scope = "any", ...)
+filter_ab_class(
+  x,
+  ab_class,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_aminoglycosides(x, result = NULL, scope = "any", ...)
+filter_aminoglycosides(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_carbapenems(x, result = NULL, scope = "any", ...)
+filter_carbapenems(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_cephalosporins(x, result = NULL, scope = "any", ...)
+filter_cephalosporins(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_1st_cephalosporins(x, result = NULL, scope = "any", ...)
+filter_1st_cephalosporins(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_2nd_cephalosporins(x, result = NULL, scope = "any", ...)
+filter_2nd_cephalosporins(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_3rd_cephalosporins(x, result = NULL, scope = "any", ...)
+filter_3rd_cephalosporins(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_4th_cephalosporins(x, result = NULL, scope = "any", ...)
+filter_4th_cephalosporins(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_5th_cephalosporins(x, result = NULL, scope = "any", ...)
+filter_5th_cephalosporins(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_fluoroquinolones(x, result = NULL, scope = "any", ...)
+filter_fluoroquinolones(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_glycopeptides(x, result = NULL, scope = "any", ...)
+filter_glycopeptides(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_macrolides(x, result = NULL, scope = "any", ...)
+filter_macrolides(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_penicillins(x, result = NULL, scope = "any", ...)
+filter_oxazolidinones(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 
-filter_tetracyclines(x, result = NULL, scope = "any", ...)
+filter_penicillins(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
+
+filter_tetracyclines(
+  x,
+  result = NULL,
+  scope = "any",
+  only_rsi_columns = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{a data set}
@@ -54,7 +148,9 @@ filter_tetracyclines(x, result = NULL, scope = "any", ...)
 
 \item{scope}{the scope to check which variables to check, can be \code{"any"} (default) or \code{"all"}}
 
-\item{...}{previously used when this package still depended on the \code{dplyr} package, now ignored}
+\item{only_rsi_columns}{a logical to indicate whether only columns must be included that were transformed to class \verb{<rsi>} (see \code{\link[=as.rsi]{as.rsi()}}) on beforehand (defaults to \code{FALSE})}
+
+\item{...}{arguments passed on to \code{\link[=filter_ab_class]{filter_ab_class()}}}
 }
 \description{
 Filter isolates on results in specific antimicrobial classes. This makes it easy to filter on isolates that were tested for e.g. any aminoglycoside, or to filter on carbapenem-resistant isolates without the need to specify the drugs.
@@ -62,7 +158,7 @@ Filter isolates on results in specific antimicrobial classes. This makes it easy
 \details{
 All columns of \code{x} will be searched for known antibiotic names, abbreviations, brand names and codes (ATC, EARS-Net, WHO, etc.). This means that a filter function like e.g. \code{\link[=filter_aminoglycosides]{filter_aminoglycosides()}} will include column names like 'gen', 'genta', 'J01GB03', 'tobra', 'Tobracin', etc.
 }
-\section{Stable lifecycle}{
+\section{Stable Lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
@@ -104,10 +200,11 @@ if (require("dplyr")) {
     filter_aminoglycosides("R", "all") \%>\%
     filter_fluoroquinolones("R", "all")
   
-  # with dplyr 1.0.0 and higher (that adds 'across()'), this is equal:
+  # with dplyr 1.0.0 and higher (that adds 'across()'), this is all equal:
   # (though the row names on the first are more correct)
   example_isolates \%>\% filter_carbapenems("R", "all")
   example_isolates \%>\% filter(across(carbapenems(), ~. == "R"))
+  example_isolates \%>\% filter(across(carbapenems(), function(x) x == "R"))
 }
 }
 }

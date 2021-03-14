@@ -3,10 +3,10 @@
 \name{key_antibiotics}
 \alias{key_antibiotics}
 \alias{key_antibiotics_equal}
-\title{Key antibiotics for first \emph{weighted} isolates}
+\title{Key Antibiotics for First (Weighted) Isolates}
 \usage{
 key_antibiotics(
-  x,
+  x = NULL,
   col_mo = NULL,
   universal_1 = guess_ab_col(x, "amoxicillin"),
   universal_2 = guess_ab_col(x, "amoxicillin/clavulanic acid"),
@@ -40,7 +40,7 @@ key_antibiotics_equal(
 )
 }
 \arguments{
-\item{x}{a \link{data.frame} with antibiotics columns, like \code{AMX} or \code{amox}. Can be left blank when used inside \code{dplyr} verbs, such as \code{filter()}, \code{mutate()} and \code{summarise()}.}
+\item{x}{a \link{data.frame} with antibiotics columns, like \code{AMX} or \code{amox}. Can be left blank to determine automatically}
 
 \item{col_mo}{column name of the IDs of the microorganisms (see \code{\link[=as.mo]{as.mo()}}), defaults to the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
 
@@ -56,19 +56,19 @@ key_antibiotics_equal(
 
 \item{y, z}{character vectors to compare}
 
-\item{type}{type to determine weighed isolates; can be \code{"keyantibiotics"} or \code{"points"}, see Details}
+\item{type}{type to determine weighed isolates; can be \code{"keyantibiotics"} or \code{"points"}, see \emph{Details}}
 
-\item{ignore_I}{logical to determine whether antibiotic interpretations with \code{"I"} will be ignored when \code{type = "keyantibiotics"}, see Details}
+\item{ignore_I}{logical to indicate whether antibiotic interpretations with \code{"I"} will be ignored when \code{type = "keyantibiotics"}, see \emph{Details}}
 
-\item{points_threshold}{points until the comparison of key antibiotics will lead to inclusion of an isolate when \code{type = "points"}, see Details}
+\item{points_threshold}{points until the comparison of key antibiotics will lead to inclusion of an isolate when \code{type = "points"}, see \emph{Details}}
 
 \item{info}{print progress}
 }
 \description{
-These function can be used to determine first isolates (see \code{\link[=first_isolate]{first_isolate()}}). Using key antibiotics to determine first isolates is more reliable than without key antibiotics. These selected isolates can then be called first \emph{weighted} isolates.
+These function can be used to determine first isolates (see \code{\link[=first_isolate]{first_isolate()}}). Using key antibiotics to determine first isolates is more reliable than without key antibiotics. These selected isolates can then be called first 'weighted' isolates.
 }
 \details{
-The \code{\link[=key_antibiotics]{key_antibiotics()}} function is context-aware when used inside \code{dplyr} verbs, such as \code{filter()}, \code{mutate()} and \code{summarise()}. This means that then the \code{x} argument can be left blank, please see \emph{Examples}.
+The \code{\link[=key_antibiotics]{key_antibiotics()}} function is context-aware. This means that then the \code{x} argument can be left blank, see \emph{Examples}.
 
 The function \code{\link[=key_antibiotics]{key_antibiotics()}} returns a character vector with 12 antibiotic results for every isolate. These isolates can then be compared using \code{\link[=key_antibiotics_equal]{key_antibiotics_equal()}}, to check if two isolates have generally the same antibiogram. Missing and invalid values are replaced with a dot (\code{"."}) by \code{\link[=key_antibiotics]{key_antibiotics()}} and ignored by \code{\link[=key_antibiotics_equal]{key_antibiotics_equal()}}.
 
@@ -108,7 +108,7 @@ At default the antibiotics that are used for \strong{Gram-negative bacteria} are
 
 The function \code{\link[=key_antibiotics_equal]{key_antibiotics_equal()}} checks the characters returned by \code{\link[=key_antibiotics]{key_antibiotics()}} for equality, and returns a \code{\link{logical}} vector.
 }
-\section{Stable lifecycle}{
+\section{Stable Lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
@@ -116,26 +116,26 @@ The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stabl
 If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
-\section{Key antibiotics}{
+\section{Key Antibiotics}{
 
-There are two ways to determine whether isolates can be included as first \emph{weighted} isolates which will give generally the same results:
+There are two ways to determine whether isolates can be included as first weighted isolates which will give generally the same results:
 \enumerate{
 \item Using \code{type = "keyantibiotics"} and argument \code{ignore_I}
 
 Any difference from S to R (or vice versa) will (re)select an isolate as a first weighted isolate. With \code{ignore_I = FALSE}, also differences from I to S|R (or vice versa) will lead to this. This is a reliable method and 30-35 times faster than method 2. Read more about this in the \code{\link[=key_antibiotics]{key_antibiotics()}} function.
 \item Using \code{type = "points"} and argument \code{points_threshold}
 
-A difference from I to S|R (or vice versa) means 0.5 points, a difference from S to R (or vice versa) means 1 point. When the sum of points exceeds \code{points_threshold}, which default to \code{2}, an isolate will be (re)selected as a first weighted isolate.
+A difference from I to S|R (or vice versa) means 0.5 points, a difference from S to R (or vice versa) means 1 point. When the sum of points exceeds \code{points_threshold}, which defaults to \code{2}, an isolate will be (re)selected as a first weighted isolate.
 }
 }
 
-\section{Read more on our website!}{
+\section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
-# `example_isolates` is a dataset available in the AMR package.
+# `example_isolates` is a data set available in the AMR package.
 # See ?example_isolates.
 
 # output of the `key_antibiotics()` function could be like this:

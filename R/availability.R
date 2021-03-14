@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,18 +20,18 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Check availability of columns
+#' Check Availability of Columns
 #'
 #' Easy check for data availability of all columns in a data set. This makes it easy to get an idea of which antimicrobial combinations can be used for calculation with e.g. [susceptibility()] and [resistance()].
-#' @inheritSection lifecycle Stable lifecycle
+#' @inheritSection lifecycle Stable Lifecycle
 #' @param tbl a [data.frame] or [list]
 #' @param width number of characters to present the visual availability, defaults to filling the width of the console
 #' @details The function returns a [data.frame] with columns `"resistant"` and `"visual_resistance"`. The values in that columns are calculated with [resistance()].
 #' @return [data.frame] with column names of `tbl` as row names
-#' @inheritSection AMR Read more on our website!
+#' @inheritSection AMR Read more on Our Website!
 #' @export
 #' @examples
 #' availability(example_isolates)
@@ -44,7 +44,7 @@
 #' }
 availability <- function(tbl, width = NULL) {
   meet_criteria(tbl, allow_class = "data.frame")
-  meet_criteria(width, allow_class = "numeric", allow_NULL = TRUE)
+  meet_criteria(width, allow_class = c("numeric", "integer"), has_length = 1, allow_NULL = TRUE, is_positive = TRUE, is_finite = TRUE)
   
   x <- vapply(FUN.VALUE = double(1), tbl, function(x) {
     1 - sum(is.na(x)) / length(x) 

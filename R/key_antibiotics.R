@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,14 +20,14 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Key antibiotics for first *weighted* isolates
+#' Key Antibiotics for First (Weighted) Isolates
 #'
-#' These function can be used to determine first isolates (see [first_isolate()]). Using key antibiotics to determine first isolates is more reliable than without key antibiotics. These selected isolates can then be called first *weighted* isolates.
-#' @inheritSection lifecycle Stable lifecycle
-#' @param x a [data.frame] with antibiotics columns, like `AMX` or `amox`. Can be left blank when used inside `dplyr` verbs, such as `filter()`, `mutate()` and `summarise()`.
+#' These function can be used to determine first isolates (see [first_isolate()]). Using key antibiotics to determine first isolates is more reliable than without key antibiotics. These selected isolates can then be called first 'weighted' isolates.
+#' @inheritSection lifecycle Stable Lifecycle
+#' @param x a [data.frame] with antibiotics columns, like `AMX` or `amox`. Can be left blank to determine automatically
 #' @param y,z character vectors to compare
 #' @inheritParams first_isolate
 #' @param universal_1,universal_2,universal_3,universal_4,universal_5,universal_6 column names of **broad-spectrum** antibiotics, case-insensitive. See details for which antibiotics will be used at default (which are guessed with [guess_ab_col()]).
@@ -36,7 +36,7 @@
 #' @param warnings give a warning about missing antibiotic columns (they will be ignored)
 #' @param ... other arguments passed on to functions
 #' @details 
-#' The [key_antibiotics()] function is context-aware when used inside `dplyr` verbs, such as `filter()`, `mutate()` and `summarise()`. This means that then the `x` argument can be left blank, please see *Examples*.
+#' The [key_antibiotics()] function is context-aware. This means that then the `x` argument can be left blank, see *Examples*.
 #' 
 #' The function [key_antibiotics()] returns a character vector with 12 antibiotic results for every isolate. These isolates can then be compared using [key_antibiotics_equal()], to check if two isolates have generally the same antibiogram. Missing and invalid values are replaced with a dot (`"."`) by [key_antibiotics()] and ignored by [key_antibiotics_equal()].
 #' 
@@ -71,13 +71,13 @@
 #' - Meropenem
 #' 
 #' The function [key_antibiotics_equal()] checks the characters returned by [key_antibiotics()] for equality, and returns a [`logical`] vector.
-#' @inheritSection first_isolate Key antibiotics
+#' @inheritSection first_isolate Key Antibiotics
 #' @rdname key_antibiotics
 #' @export
 #' @seealso [first_isolate()]
-#' @inheritSection AMR Read more on our website!
+#' @inheritSection AMR Read more on Our Website!
 #' @examples
-#' # `example_isolates` is a dataset available in the AMR package.
+#' # `example_isolates` is a data set available in the AMR package.
 #' # See ?example_isolates.
 #' 
 #' # output of the `key_antibiotics()` function could be like this:
@@ -108,7 +108,7 @@
 #'   sum(my_patients$first_weighted, na.rm = TRUE)
 #' }
 #' }
-key_antibiotics <- function(x,
+key_antibiotics <- function(x = NULL,
                             col_mo = NULL,
                             universal_1 = guess_ab_col(x, "amoxicillin"),
                             universal_2 = guess_ab_col(x, "amoxicillin/clavulanic acid"),
@@ -130,10 +130,12 @@ key_antibiotics <- function(x,
                             GramNeg_6 = guess_ab_col(x, "meropenem"),
                             warnings = TRUE,
                             ...) {
-  if (missing(x)) {
-    x <- get_current_data(arg_name = "x", call = -2)
+  if (is_null_or_grouped_tbl(x)) {
+    # when `x` is left blank, auto determine it (get_current_data() also contains dplyr::cur_data_all())
+    # is also fix for using a grouped df as input (a dot as first argument)
+    x <- tryCatch(get_current_data(arg_name = "x", call = -2), error = function(e) x)
   }
-  meet_criteria(x, allow_class = "data.frame")
+  meet_criteria(x, allow_class = "data.frame") # also checks dimensions to be >0
   meet_criteria(col_mo, allow_class = "character", has_length = 1, allow_NULL = TRUE, allow_NA = TRUE)
   meet_criteria(universal_1, allow_class = "character", has_length = 1, allow_NULL = TRUE, allow_NA = TRUE)
   meet_criteria(universal_2, allow_class = "character", has_length = 1, allow_NULL = TRUE, allow_NA = TRUE)
@@ -155,10 +157,13 @@ key_antibiotics <- function(x,
   meet_criteria(GramNeg_6, allow_class = "character", has_length = 1, allow_NULL = TRUE, allow_NA = TRUE)
   meet_criteria(warnings, allow_class = "logical", has_length = 1)
   
+  # force regular data.frame, not a tibble or data.table
+  x <- as.data.frame(x, stringsAsFactors = FALSE)
+  
   dots <- unlist(list(...))
   if (length(dots) != 0) {
     # backwards compatibility with old arguments
-    dots.names <- dots %pm>% names()
+    dots.names <- names(dots)
     if ("info" %in% dots.names) {
       warnings <- dots[which(dots.names == "info")]
     }
@@ -168,8 +173,10 @@ key_antibiotics <- function(x,
   # -- mo
   if (is.null(col_mo)) {
     col_mo <- search_type_in_df(x = x, type = "mo")
+    stop_if(is.null(col_mo), "`col_mo` must be set")
+  } else {
+    stop_ifnot(col_mo %in% colnames(x), "column '", col_mo, "' (`col_mo`) not found")
   }
-  stop_if(is.null(col_mo), "`col_mo` must be set")
   
   # check columns
   col.list <- c(universal_1, universal_2, universal_3, universal_4, universal_5, universal_6,
@@ -232,8 +239,9 @@ key_antibiotics <- function(x,
                      GramPos_4, GramPos_5, GramPos_6)
   gram_positive <- gram_positive[!is.null(gram_positive)]
   gram_positive <- gram_positive[!is.na(gram_positive)]
-  if (length(gram_positive) < 12) {
+  if (length(gram_positive) < 12 & message_not_thrown_before("key_antibiotics.grampos")) {
     warning_("Only using ", length(gram_positive), " different antibiotics as key antibiotics for Gram-positives. See ?key_antibiotics.", call = FALSE)
+    remember_thrown_message("key_antibiotics.grampos")
   }
   
   gram_negative <- c(universal,
@@ -241,11 +249,11 @@ key_antibiotics <- function(x,
                      GramNeg_4, GramNeg_5, GramNeg_6)
   gram_negative <- gram_negative[!is.null(gram_negative)]
   gram_negative <- gram_negative[!is.na(gram_negative)]
-  if (length(gram_negative) < 12) {
+  if (length(gram_negative) < 12 & message_not_thrown_before("key_antibiotics.gramneg")) {
     warning_("Only using ", length(gram_negative), " different antibiotics as key antibiotics for Gram-negatives. See ?key_antibiotics.", call = FALSE)
+    remember_thrown_message("key_antibiotics.gramneg")
   }
   
-  x <- as.data.frame(x, stringsAsFactors = FALSE)
   x[, col_mo] <- as.mo(x[, col_mo, drop = TRUE])
   x$gramstain <- mo_gramstain(x[, col_mo, drop = TRUE], language = NULL)
   x$key_ab <- NA_character_
@@ -289,7 +297,7 @@ key_antibiotics_equal <- function(y,
   meet_criteria(z, allow_class = "character")
   meet_criteria(type, allow_class = "character", has_length = c(1, 2))
   meet_criteria(ignore_I, allow_class = "logical", has_length = 1)
-  meet_criteria(points_threshold, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(points_threshold, allow_class = c("numeric", "integer"), has_length = 1, is_positive = TRUE, is_finite = TRUE)
   meet_criteria(info, allow_class = "logical", has_length = 1)
   
   stop_ifnot(length(y) == length(z), "length of `y` and `z` must be equal")

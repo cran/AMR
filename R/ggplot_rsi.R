@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,13 +20,13 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' AMR plots with `ggplot2`
+#' AMR Plots with `ggplot2`
 #'
-#' Use these functions to create bar plots for antimicrobial resistance analysis. All functions rely on [ggplot2][ggplot2::ggplot()] functions.
-#' @inheritSection lifecycle Maturing lifecycle
+#' Use these functions to create bar plots for AMR data analysis. All functions rely on [ggplot2][ggplot2::ggplot()] functions.
+#' @inheritSection lifecycle Stable Lifecycle
 #' @param data a [data.frame] with column(s) of class [`rsi`] (see [as.rsi()])
 #' @param position position adjustment of bars, either `"fill"`, `"stack"` or `"dodge"`
 #' @param x variable to show on x axis, either `"antibiotic"` (default) or `"interpretation"` or a grouping variable
@@ -36,7 +36,8 @@
 #' @param facet variable to split plots by, either `"interpretation"` (default) or `"antibiotic"` or a grouping variable
 #' @inheritParams proportion
 #' @param nrow (when using `facet`) number of rows
-#' @param colours a named vector with colours for the bars. The names must be one or more of: S, SI, I, IR, R or be `FALSE` to use default [ggplot2][ggplot2::ggplot()] colours.
+#' @param colours a named vactor with colour to be used for filling. The default colours are colour-blind friendly.
+#' @param aesthetics aesthetics to apply the colours to, defaults to "fill" but can also be (a combination of) "alpha", "colour", "fill", "linetype", "shape" or "size"
 #' @param datalabels show datalabels using [labels_rsi_count()]
 #' @param datalabels.size size of the datalabels
 #' @param datalabels.colour colour of the datalabels
@@ -45,26 +46,26 @@
 #' @param caption text to show as caption of the plot
 #' @param x.title text to show as x axis description
 #' @param y.title text to show as y axis description
-#' @param ... other arguments passed on to [geom_rsi()]
+#' @param ... other arguments passed on to [geom_rsi()] or, in case of [scale_rsi_colours()], named values to set colours. The default colours are colour-blind friendly, while maintaining the convention that e.g. 'susceptible' should be green and 'resistant' should be red. See *Examples*.
 #' @details At default, the names of antibiotics will be shown on the plots using [ab_name()]. This can be set with the `translate_ab` argument. See [count_df()].
 #'
-#' ## The functions
+#' ## The Functions
 #' [geom_rsi()] will take any variable from the data that has an [`rsi`] class (created with [as.rsi()]) using [rsi_df()] and will plot bars with the percentage R, I and S. The default behaviour is to have the bars stacked and to have the different antibiotics on the x axis.
 #'
 #' [facet_rsi()] creates 2d plots (at default based on S/I/R) using [ggplot2::facet_wrap()].
 #'
 #' [scale_y_percent()] transforms the y axis to a 0 to 100% range using [ggplot2::scale_y_continuous()].
 #'
-#' [scale_rsi_colours()] sets colours to the bars: pastel blue for S, pastel turquoise for I and pastel red for R, using [ggplot2::scale_fill_manual()].
+#' [scale_rsi_colours()] sets colours to the bars (green for S, yellow for I, and red for R). with multilingual support. The default colours are colour-blind friendly, while maintaining the convention that e.g. 'susceptible' should be green and 'resistant' should be red.
 #'
 #' [theme_rsi()] is a [ggplot2 theme][[ggplot2::theme()] with minimal distraction.
 #'
 #' [labels_rsi_count()] print datalabels on the bars with percentage and amount of isolates using [ggplot2::geom_text()].
 #'
-#' [ggplot_rsi()] is a wrapper around all above functions that uses data as first input. This makes it possible to use this function after a pipe (`%>%`). See Examples.
+#' [ggplot_rsi()] is a wrapper around all above functions that uses data as first input. This makes it possible to use this function after a pipe (`%>%`). See *Examples*.
 #' @rdname ggplot_rsi
 #' @export
-#' @inheritSection AMR Read more on our website!
+#' @inheritSection AMR Read more on Our Website!
 #' @examples
 #' if (require("ggplot2") & require("dplyr")) {
 #'  
@@ -99,11 +100,20 @@
 #'                size = 1,
 #'                linetype = 2,
 #'                alpha = 0.25)
-#'  
+#'
+#'   # you can alter the colours with colour names:
 #'   example_isolates %>%
 #'     select(AMX) %>%
 #'     ggplot_rsi(colours = c(SI = "yellow"))
-#'   
+#'
+#'   # but you can also use the built-in colour-blind friendly colours for
+#'   # your plots, where "S" is green, "I" is yellow and "R" is red:
+#'   data.frame(x = c("Value1", "Value2", "Value3"),
+#'              y = c(1, 2, 3),
+#'              z = c("Value4", "Value5", "Value6")) %>%
+#'     ggplot() +
+#'     geom_col(aes(x = x, y = y, fill = z)) +
+#'     scale_rsi_colours(Value4 = "S", Value5 = "I", Value6 = "R")
 #' }
 #'   
 #' \donttest{
@@ -118,11 +128,6 @@
 #'          CIP) %>%
 #'   ggplot_rsi(x = "age_group")
 #'   
-#' # for colourblind mode, use divergent colours from the viridis package:
-#' example_isolates %>%
-#'   select(AMX, NIT, FOS, TMP, CIP) %>%
-#'   ggplot_rsi() + 
-#'   scale_fill_viridis_d()
 #' # a shorter version which also adjusts data label colours:
 #' example_isolates %>%
 #'   select(AMX, NIT, FOS, TMP, CIP) %>%
@@ -154,11 +159,11 @@ ggplot_rsi <- function(data,
                        minimum = 30,
                        language = get_locale(),
                        nrow = NULL,
-                       colours = c(S = "#61a8ff",
-                                   SI = "#61a8ff",
-                                   I = "#61f7ff",
-                                   IR = "#ff6961",
-                                   R = "#ff6961"),
+                       colours = c(S = "#3CAEA3",
+                                   SI = "#3CAEA3",
+                                   I = "#F6D55C",
+                                   IR = "#ED553B",
+                                   R = "#ED553B"),
                        datalabels = TRUE,
                        datalabels.size = 2.5,
                        datalabels.colour = "grey15",
@@ -180,12 +185,12 @@ ggplot_rsi <- function(data,
   meet_criteria(translate_ab, allow_class = c("character", "logical"), has_length = 1, allow_NA = TRUE)
   meet_criteria(combine_SI, allow_class = "logical", has_length = 1)
   meet_criteria(combine_IR, allow_class = "logical", has_length = 1)
-  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_finite = TRUE)
   meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
-  meet_criteria(nrow, allow_class = c("numeric", "integer"), has_length = 1, allow_NULL = TRUE)
+  meet_criteria(nrow, allow_class = c("numeric", "integer"), has_length = 1, allow_NULL = TRUE, is_positive = TRUE, is_finite = TRUE)
   meet_criteria(colours, allow_class = c("character", "logical"))
   meet_criteria(datalabels, allow_class = "logical", has_length = 1)
-  meet_criteria(datalabels.size, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(datalabels.size, allow_class = c("numeric", "integer"), has_length = 1, is_positive = TRUE, is_finite = TRUE)
   meet_criteria(datalabels.colour, allow_class = "character", has_length = 1)
   meet_criteria(title, allow_class = "character", has_length = 1, allow_NULL = TRUE)
   meet_criteria(subtitle, allow_class = "character", has_length = 1, allow_NULL = TRUE)
@@ -223,11 +228,6 @@ ggplot_rsi <- function(data,
     theme_rsi()
   
   if (fill == "interpretation") {
-    # set RSI colours
-    if (isFALSE(colours) & missing(datalabels.colour)) {
-      # set datalabel colour to middle grey
-      datalabels.colour <- "grey50"
-    }
     p <- p + scale_rsi_colours(colours = colours)
   }
   
@@ -279,7 +279,7 @@ geom_rsi <- function(position = NULL,
   meet_criteria(x, allow_class = "character", has_length = 1)
   meet_criteria(fill, allow_class = "character", has_length = 1)
   meet_criteria(translate_ab, allow_class = c("character", "logical"), has_length = 1, allow_NA = TRUE)
-  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_finite = TRUE)
   meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
   meet_criteria(combine_SI, allow_class = "logical", has_length = 1)
   meet_criteria(combine_IR, allow_class = "logical", has_length = 1)
@@ -308,17 +308,19 @@ geom_rsi <- function(position = NULL,
     x <- "interpretation"
   }
   
-  ggplot2::layer(geom = "bar", stat = "identity", position = position,
-                 mapping = ggplot2::aes_string(x = x, y = y, fill = fill),
-                 params = list(...), data = function(x) {
-                   rsi_df(data = x,
-                          translate_ab = translate_ab,
-                          language = language,
-                          minimum = minimum,
-                          combine_SI = combine_SI,
-                          combine_IR = combine_IR)
-                 })
-  
+  ggplot2::geom_col(
+    data = function(x) {
+      rsi_df(data = x,
+             translate_ab = translate_ab,
+             language = language,
+             minimum = minimum,
+             combine_SI = combine_SI,
+             combine_IR = combine_IR)
+    },
+    mapping = ggplot2::aes_string(x = x, y = y, fill = fill),
+    position = position,
+    ...
+  )
 }
 
 #' @rdname ggplot_rsi
@@ -327,7 +329,7 @@ facet_rsi <- function(facet = c("interpretation", "antibiotic"), nrow = NULL) {
   facet <- facet[1]
   stop_ifnot_installed("ggplot2")
   meet_criteria(facet, allow_class = "character", has_length = 1)
-  meet_criteria(nrow, allow_class = c("numeric", "integer"), has_length = 1, allow_NULL = TRUE)
+  meet_criteria(nrow, allow_class = c("numeric", "integer"), has_length = 1, allow_NULL = TRUE, is_positive = TRUE, is_finite = TRUE)
   
   # we work with aes_string later on
   facet_deparse <- deparse(substitute(facet))
@@ -364,26 +366,52 @@ scale_y_percent <- function(breaks = seq(0, 1, 0.1), limits = NULL) {
 
 #' @rdname ggplot_rsi
 #' @export
-scale_rsi_colours <- function(colours = c(S = "#61a8ff",
-                                          SI = "#61a8ff",
-                                          I = "#61f7ff",
-                                          IR = "#ff6961",
-                                          R = "#ff6961")) {
+scale_rsi_colours <- function(...,
+                              aesthetics = "fill") {
   stop_ifnot_installed("ggplot2")
-  meet_criteria(colours, allow_class = c("character", "logical"))
+  meet_criteria(aesthetics, allow_class = "character", is_in = c("alpha", "colour", "color", "fill", "linetype", "shape", "size"))
   
-  # previous colour: palette = "RdYlGn"
-  # previous colours: values = c("#b22222", "#ae9c20", "#7cfc00")
-  
-  if (!identical(colours, FALSE)) {
-    original_cols <- c(S = "#61a8ff",
-                       SI = "#61a8ff",
-                       I = "#61f7ff",
-                       IR = "#ff6961",
-                       R = "#ff6961")
-    colours <- replace(original_cols, names(colours), colours)
-    ggplot2::scale_fill_manual(values = colours)
+  # behaviour until AMR pkg v1.5.0 and also when coming from ggplot_rsi()
+  if ("colours" %in% names(list(...))) {
+    original_cols <- c(S = "#3CAEA3",
+                       SI = "#3CAEA3",
+                       I = "#F6D55C",
+                       IR = "#ED553B",
+                       R = "#ED553B")
+    colours <- replace(original_cols, names(list(...)$colours), list(...)$colours)
+    return(ggplot2::scale_fill_manual(values = colours))
   }
+  if (identical(unlist(list(...)), FALSE)) {
+    return(invisible())
+  }
+  
+  names_susceptible <- c("S", "SI", "IS", "S+I", "I+S", "susceptible", "Susceptible",
+                         unique(translations_file[which(translations_file$pattern == "Susceptible"),
+                                                  "replacement", drop = TRUE]))
+  names_incr_exposure <- c("I", "intermediate", "increased exposure", "incr. exposure", "Increased exposure", "Incr. exposure",
+                           unique(translations_file[which(translations_file$pattern == "Intermediate"),
+                                                    "replacement", drop = TRUE]),
+                           unique(translations_file[which(translations_file$pattern == "Incr. exposure"),
+                                                    "replacement", drop = TRUE]))
+  names_resistant <- c("R", "IR", "RI", "R+I", "I+R", "resistant", "Resistant",
+                       unique(translations_file[which(translations_file$pattern == "Resistant"), 
+                                                "replacement", drop = TRUE]))
+  
+  susceptible <- rep("#3CAEA3", length(names_susceptible))
+  names(susceptible) <- names_susceptible
+  incr_exposure <- rep("#F6D55C", length(names_incr_exposure))
+  names(incr_exposure) <- names_incr_exposure
+  resistant <- rep("#ED553B", length(names_resistant))
+  names(resistant) <- names_resistant
+  
+  original_cols = c(susceptible, incr_exposure, resistant)
+  dots <- c(...)
+  # replace S, I, R as colours: scale_rsi_colours(mydatavalue = "S")
+  dots[dots == "S"] <- "#3CAEA3"
+  dots[dots == "I"] <- "#F6D55C"
+  dots[dots == "R"] <- "#ED553B"
+  cols <- replace(original_cols, names(dots), dots)
+  ggplot2::scale_discrete_manual(aesthetics = aesthetics, values = cols)
 }
 
 #' @rdname ggplot_rsi
@@ -414,11 +442,11 @@ labels_rsi_count <- function(position = NULL,
   meet_criteria(position, allow_class = "character", has_length = 1, is_in = c("fill", "stack", "dodge"), allow_NULL = TRUE)
   meet_criteria(x, allow_class = "character", has_length = 1)
   meet_criteria(translate_ab, allow_class = c("character", "logical"), has_length = 1, allow_NA = TRUE)
-  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_finite = TRUE)
   meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
   meet_criteria(combine_SI, allow_class = "logical", has_length = 1)
   meet_criteria(combine_IR, allow_class = "logical", has_length = 1)
-  meet_criteria(datalabels.size, allow_class = c("numeric", "integer"), has_length = 1)
+  meet_criteria(datalabels.size, allow_class = c("numeric", "integer"), has_length = 1, is_positive = TRUE, is_finite = TRUE)
   meet_criteria(datalabels.colour, allow_class = "character", has_length = 1)
   
   if (is.null(position)) {

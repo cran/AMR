@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,13 +20,13 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Transform input to disk diffusion diameters
+#' Transform Input to Disk Diffusion Diameters
 #'
 #' This transforms a vector to a new class [`disk`], which is a disk diffusion growth zone size (around an antibiotic disk) in millimetres between 6 and 50.
-#' @inheritSection lifecycle Stable lifecycle
+#' @inheritSection lifecycle Stable Lifecycle
 #' @rdname as.disk
 #' @param x vector
 #' @param na.rm a logical indicating whether missing values should be removed
@@ -35,7 +35,7 @@
 #' @aliases disk
 #' @export
 #' @seealso [as.rsi()]
-#' @inheritSection AMR Read more on our website!
+#' @inheritSection AMR Read more on Our Website!
 #' @examples
 #' \donttest{
 #' # transform existing disk zones to the `disk` class
@@ -61,7 +61,7 @@ as.disk <- function(x, na.rm = FALSE) {
   meet_criteria(na.rm, allow_class = "logical", has_length = 1)
   
   if (!is.disk(x)) {
-    x <- x %pm>% unlist()
+    x <- unlist(x)
     if (na.rm == TRUE) {
       x <- x[!is.na(x)]
     }
@@ -98,8 +98,8 @@ as.disk <- function(x, na.rm = FALSE) {
     if (na_before != na_after) {
       list_missing <- x.bak[is.na(x) & !is.na(x.bak)] %pm>%
         unique() %pm>%
-        sort()
-      list_missing <- paste0('"', list_missing, '"', collapse = ", ")
+        sort() %pm>%
+        vector_and(quotes = TRUE)
       warning_(na_after - na_before, " results truncated (",
                round(((na_after - na_before) / length(x)) * 100),
                "%) that were invalid disk zones: ",
@@ -143,30 +143,6 @@ type_sum.disk <- function(x, ...) {
 print.disk <- function(x, ...) {
   cat("Class <disk>\n")
   print(as.integer(x), quote = FALSE)
-}
-
-#' @method plot disk
-#' @export
-#' @importFrom graphics barplot axis
-#' @rdname plot
-plot.disk <- function(x,
-                      main = paste("Disk zones values of", deparse(substitute(x))),
-                      ylab = "Frequency",
-                      xlab = "Disk diffusion (mm)",
-                      axes = FALSE,
-                      ...) {
-  meet_criteria(main, allow_class = "character", has_length = 1)
-  meet_criteria(ylab, allow_class = "character", has_length = 1)
-  meet_criteria(xlab, allow_class = "character", has_length = 1)
-  meet_criteria(axes, allow_class = "logical", has_length = 1)
-  
-  barplot(table(x),
-          ylab = ylab,
-          xlab = xlab,
-          axes = axes,
-          main = main,
-          ...)
-  axis(2, seq(0, max(table(x))))
 }
 
 #' @method [ disk

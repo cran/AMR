@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,15 +20,15 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Get properties of a microorganism
+#' Get Properties of a Microorganism
 #'
-#' Use these functions to return a specific property of a microorganism based on the latest accepted taxonomy. All input values will be evaluated internally with [as.mo()], which makes it possible to use microbial abbreviations, codes and names as input. Please see *Examples*.
-#' @inheritSection lifecycle Stable lifecycle
-#' @param x any character (vector) that can be coerced to a valid microorganism code with [as.mo()]. Can be left blank for auto-guessing the column containing microorganism codes when used inside `dplyr` verbs, such as [`filter()`][dplyr::filter()], [`mutate()`][dplyr::mutate()] and [`summarise()`][dplyr::summarise()], please see *Examples*.
-#' @param property one of the column names of the [microorganisms] data set: `r paste0('"``', colnames(microorganisms), '\``"', collapse = ", ")`, or must be `"shortname"`
+#' Use these functions to return a specific property of a microorganism based on the latest accepted taxonomy. All input values will be evaluated internally with [as.mo()], which makes it possible to use microbial abbreviations, codes and names as input. See *Examples*.
+#' @inheritSection lifecycle Stable Lifecycle
+#' @param x any character (vector) that can be coerced to a valid microorganism code with [as.mo()]. Can be left blank for auto-guessing the column containing microorganism codes if used in a data set, see *Examples*.
+#' @param property one of the column names of the [microorganisms] data set: `r vector_or(colnames(microorganisms), sort = FALSE, quotes = TRUE)`, or must be `"shortname"`
 #' @param language language of the returned text, defaults to system language (see [get_locale()]) and can be overwritten by setting the option `AMR_locale`, e.g. `options(AMR_locale = "de")`, see [translate]. Also used to translate text like "no growth". Use `language = NULL` or `language = ""` to prevent translation.
 #' @param ... other arguments passed on to [as.mo()], such as 'allow_uncertain' and 'ignore_pattern'
 #' @param ab any (vector of) text that can be coerced to a valid antibiotic code with [as.ab()]
@@ -44,12 +44,16 @@
 #'
 #' The Gram stain - [mo_gramstain()] - will be determined based on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002, [PMID 11837318](https://pubmed.ncbi.nlm.nih.gov/11837318)), who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value `NA`. Functions [mo_is_gram_negative()] and [mo_is_gram_positive()] always return `TRUE` or `FALSE` (except when the input is `NA` or the MO code is `UNKNOWN`), thus always return `FALSE` for species outside the taxonomic kingdom of Bacteria.
 #' 
-#' Intrinsic resistance - [mo_is_intrinsic_resistant()] - will be determined based on the [intrinsic_resistant] data set, which is based on `r format_eucast_version_nr(3.2)`. The [mo_is_intrinsic_resistant()] can be vectorised over arguments `x` (input for microorganisms) and over `ab` (input for antibiotics).
+#' Determination of yeasts - [mo_is_yeast()] - will be based on the taxonomic kingdom and class. *Budding yeasts* are fungi of the phylum Ascomycetes, class Saccharomycetes (also called Hemiascomycetes). *True yeasts* are aggregated into the underlying order Saccharomycetales. Thus, for all microorganisms that are fungi and member of the taxonomic class Saccharomycetes, the function will return `TRUE`. It returns `FALSE` otherwise (except when the input is `NA` or the MO code is `UNKNOWN`).
+#' 
+#' Intrinsic resistance - [mo_is_intrinsic_resistant()] - will be determined based on the [intrinsic_resistant] data set, which is based on `r format_eucast_version_nr(3.2)`. The [mo_is_intrinsic_resistant()] functions can be vectorised over arguments `x` (input for microorganisms) and over `ab` (input for antibiotics).
 #'
-#' All output will be [translate]d where possible.
+#' All output [will be translated][translate] where possible.
 #'
 #' The function [mo_url()] will return the direct URL to the online database entry, which also shows the scientific reference of the concerned species.
-#' @inheritSection mo_matching_score Matching score for microorganisms
+#' 
+#' SNOMED codes - [mo_snomed()] - are from the `r SNOMED_VERSION$current_source`. See the [microorganisms] data set for more info.
+#' @inheritSection mo_matching_score Matching Score for Microorganisms
 #' @inheritSection catalogue_of_life Catalogue of Life
 #' @inheritSection as.mo Source
 #' @rdname mo_property
@@ -58,12 +62,12 @@
 #' - An [integer] in case of [mo_year()]
 #' - A [list] in case of [mo_taxonomy()] and [mo_info()]
 #' - A named [character] in case of [mo_url()]
-#' - A [double] in case of [mo_snomed()]
+#' - A [numeric] in case of [mo_snomed()]
 #' - A [character] in all other cases
 #' @export
 #' @seealso [microorganisms]
-#' @inheritSection AMR Reference data publicly available
-#' @inheritSection AMR Read more on our website!
+#' @inheritSection AMR Reference Data Publicly Available
+#' @inheritSection AMR Read more on Our Website!
 #' @examples
 #' # taxonomic tree -----------------------------------------------------------
 #' mo_kingdom("E. coli")         # "Bacteria"
@@ -145,6 +149,8 @@
 #'
 #' # other --------------------------------------------------------------------
 #' 
+#' mo_is_yeast(c("Candida", "E. coli"))      # TRUE, FALSE
+#' 
 #' # gram stains and intrinsic resistance can also be used as a filter in dplyr verbs
 #' if (require("dplyr")) {
 #'   example_isolates %>%
@@ -157,7 +163,8 @@
 #' 
 #' # get a list with the complete taxonomy (from kingdom to subspecies)
 #' mo_taxonomy("E. coli")
-#' # get a list with the taxonomy, the authors, Gram-stain and URL to the online database
+#' # get a list with the taxonomy, the authors, Gram-stain,
+#' #   SNOMED codes, and URL to the online database
 #' mo_info("E. coli")
 #' }
 mo_name <- function(x, language = get_locale(), ...) {
@@ -168,7 +175,10 @@ mo_name <- function(x, language = get_locale(), ...) {
   meet_criteria(x, allow_NA = TRUE)
   meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
   
-  translate_AMR(mo_validate(x = x, property = "fullname", language = language, ...), language = language, only_unknown = FALSE)
+  translate_AMR(mo_validate(x = x, property = "fullname", language = language, ...),
+                language = language,
+                only_unknown = FALSE,
+                affect_mo_name = TRUE)
 }
 
 #' @rdname mo_property
@@ -210,7 +220,7 @@ mo_shortname <- function(x, language = get_locale(), ...) {
   
   shortnames[is.na(x.mo)] <- NA_character_
   load_mo_failures_uncertainties_renamed(metadata)
-  translate_AMR(shortnames, language = language, only_unknown = FALSE)
+  translate_AMR(shortnames, language = language, only_unknown = FALSE, affect_mo_name = TRUE)
 }
 
 #' @rdname mo_property
@@ -331,7 +341,10 @@ mo_type <- function(x, language = get_locale(), ...) {
   meet_criteria(x, allow_NA = TRUE)
   meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
   
-  translate_AMR(mo_validate(x = x, property = "kingdom", language = language, ...), language = language, only_unknown = FALSE)
+  x.mo <- as.mo(x, language = language, ...)
+  out <- mo_kingdom(x.mo, language = NULL)
+  out[which(mo_is_yeast(x.mo))] <- "Yeasts"
+  translate_AMR(out, language = language, only_unknown = FALSE)
 }
 
 #' @rdname mo_property
@@ -406,6 +419,32 @@ mo_is_gram_positive <- function(x, language = get_locale(), ...) {
   grams <- mo_gramstain(x.mo, language = NULL)
   load_mo_failures_uncertainties_renamed(metadata)
   out <- grams == "Gram-positive" & !is.na(grams)
+  out[x.mo %in% c(NA_character_, "UNKNOWN")] <- NA
+  out
+}
+
+#' @rdname mo_property
+#' @export
+mo_is_yeast <- function(x, language = get_locale(), ...) {
+  if (missing(x)) {
+    # this tries to find the data and an <mo> column
+    x <- find_mo_col(fn = "mo_is_yeast")
+  }
+  meet_criteria(x, allow_NA = TRUE)
+  meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
+  
+  x.mo <- as.mo(x, language = language, ...)
+  metadata <- get_mo_failures_uncertainties_renamed()
+  
+  x.kingdom <- mo_kingdom(x.mo, language = NULL)
+  x.phylum <- mo_phylum(x.mo, language = NULL)
+  x.class <- mo_class(x.mo, language = NULL)
+  x.order <- mo_order(x.mo, language = NULL)
+  
+  load_mo_failures_uncertainties_renamed(metadata)
+  
+  out <- rep(FALSE, length(x))
+  out[x.kingdom == "Fungi" & x.class == "Saccharomycetes"] <- TRUE
   out[x.mo %in% c(NA_character_, "UNKNOWN")] <- NA
   out
 }
@@ -593,7 +632,8 @@ mo_info <- function(x, language = get_locale(),  ...) {
       list(synonyms = mo_synonyms(y),
            gramstain = mo_gramstain(y, language = language),
            url = unname(mo_url(y, open = FALSE)),
-           ref = mo_ref(y))))
+           ref = mo_ref(y),
+           snomed = unlist(mo_snomed(y)))))
   if (length(info) > 1) {
     names(info) <- mo_name(x)
     result <- info
@@ -623,11 +663,21 @@ mo_url <- function(x, open = FALSE, language = get_locale(), ...) {
   df <- data.frame(mo, stringsAsFactors = FALSE) %pm>%
     pm_left_join(pm_select(microorganisms, mo, source, species_id), by = "mo")
   df$url <- ifelse(df$source == "CoL",
-                   paste0(catalogue_of_life$url_CoL, "details/species/id/", df$species_id, "/"),
-                   ifelse(df$source == "DSMZ",
-                          paste0(catalogue_of_life$url_DSMZ, "/advanced_search?adv[taxon-name]=", gsub(" ", "+", mo_names), "/"),
-                          NA_character_))
+                   paste0(CATALOGUE_OF_LIFE$url_CoL, "details/species/id/", df$species_id, "/"),
+                   NA_character_)
   u <- df$url
+  u[mo_kingdom(mo) == "Bacteria"] <- paste0(CATALOGUE_OF_LIFE$url_LPSN, "/species/", gsub(" ", "-", tolower(mo_names), fixed = TRUE))
+  u[mo_kingdom(mo) == "Bacteria" & mo_rank(mo) == "genus"] <- gsub("/species/",
+                                                                   "/genus/",
+                                                                   u[mo_kingdom(mo) == "Bacteria" & mo_rank(mo) == "genus"],
+                                                                   fixed = TRUE)
+  u[mo_kingdom(mo) == "Bacteria" &
+      mo_rank(mo) %in% c("subsp.", "infraspecies")] <- gsub("/species/",
+                                                            "/subspecies/",
+                                                            u[mo_kingdom(mo) == "Bacteria" &
+                                                                mo_rank(mo) %in% c("subsp.", "infraspecies")],
+                                                            fixed = TRUE)
+  
   names(u) <- mo_names
   
   if (open == TRUE) {
@@ -658,22 +708,22 @@ mo_property <- function(x, property = "fullname", language = get_locale(), ...) 
 
 mo_validate <- function(x, property, language, ...) {
   check_dataset_integrity()
-  
-  if (tryCatch(all(x[!is.na(x)] %in% MO_lookup$mo) & length(list(...)) == 0, error = function(e) FALSE)) {
-    # special case for mo_* functions where class is already <mo>
-    return(MO_lookup[match(x, MO_lookup$mo), property, drop = TRUE])
-  }
-  
   dots <- list(...)
   Becker <- dots$Becker
-  if (is.null(Becker)) {
+  if (is.null(Becker) | property %in% c("kingdom", "phylum", "class", "order", "family", "genus")) {
     Becker <- FALSE
   }
   Lancefield <- dots$Lancefield
-  if (is.null(Lancefield)) {
+  if (is.null(Lancefield) | property %in% c("kingdom", "phylum", "class", "order", "family", "genus")) {
     Lancefield <- FALSE
   }
+  has_Becker_or_Lancefield <- Becker %in% c(TRUE, "all") | Lancefield %in% c(TRUE, "all")
   
+  if (tryCatch(all(x[!is.na(x)] %in% MO_lookup$mo) & !has_Becker_or_Lancefield, error = function(e) FALSE)) {
+    # special case for mo_* functions where class is already <mo>
+    return(MO_lookup[match(x, MO_lookup$mo), property, drop = TRUE])
+  }
+
   # try to catch an error when inputting an invalid argument
   # so the 'call.' can be set to FALSE
   tryCatch(x[1L] %in% MO_lookup[1, property, drop = TRUE],
@@ -686,8 +736,7 @@ mo_validate <- function(x, property, language, ...) {
     # because it's already a valid MO
     x <- exec_as.mo(x, property = property, initial_search = FALSE, language = language, ...)
   } else if (!all(x %in% MO_lookup[, property, drop = TRUE])
-             | Becker %in% c(TRUE, "all")
-             | Lancefield %in% c(TRUE, "all")) {
+             | has_Becker_or_Lancefield) {
     x <- exec_as.mo(x, property = property, language = language, ...)
   }
   

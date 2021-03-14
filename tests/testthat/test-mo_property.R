@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,7 +20,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
 context("mo_property.R")
@@ -50,7 +50,8 @@ test_that("mo_property works", {
   expect_equal(class(mo_synonyms(c("Candida albicans", "Escherichia coli"))), "list")
   expect_equal(names(mo_info("Escherichia coli")), c("kingdom", "phylum", "class", "order",
                                             "family", "genus", "species", "subspecies",
-                                            "synonyms", "gramstain", "url", "ref"))
+                                            "synonyms", "gramstain", "url", "ref",
+                                            "snomed"))
   expect_equal(class(mo_info(c("Escherichia coli", "Staphylococcus aureus"))), "list")
 
   expect_equal(mo_ref("Escherichia coli"), "Castellani et al., 1919")
@@ -65,7 +66,8 @@ test_that("mo_property works", {
   expect_equal(mo_shortname("Streptococcus agalactiae"), "S. agalactiae")
   expect_equal(mo_shortname("Streptococcus agalactiae", Lancefield = TRUE), "GBS")
 
-  expect_true(mo_url("Escherichia coli") %like% "www.catalogueoflife.org")
+  expect_true(mo_url("Candida albicans") %like% "catalogueoflife.org")
+  expect_true(mo_url("Escherichia coli") %like% "lpsn.dsmz.de")
 
   # test integrity
   MOs <- microorganisms
@@ -84,6 +86,9 @@ test_that("mo_property works", {
   expect_output(print(mo_gramstain("Escherichia coli", language = "fr")))
 
   expect_error(mo_gramstain("Escherichia coli", language = "UNKNOWN"))
+  
+  dutch <- mo_name(microorganisms$fullname, language = "nl") # should be transformable to English again
+  expect_identical(mo_name(dutch, language = NULL), microorganisms$fullname) # gigantic test - will run ALL names
 
   # manual property function
   expect_error(mo_property("Escherichia coli", property = c("tsn", "fullname")))
@@ -98,7 +103,7 @@ test_that("mo_property works", {
   expect_identical(suppressWarnings(mo_ref("Chlamydia psittaci")), "Page, 1968")
   expect_identical(mo_ref("Chlamydophila psittaci"), "Everett et al., 1999")
 
-  expect_equal(mo_snomed("Escherichia coli"), 112283007)
+  expect_true(112283007 %in% mo_snomed("Escherichia coli"))
   
   # old codes must throw a warning in mo_* family
   expect_message(mo_name(c("B_ESCHR_COL", "B_STPHY_AUR")))

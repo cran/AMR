@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,53 +20,46 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
-
-# add new version numbers here, and add the rules themselves to "data-raw/eucast_rules.tsv"
-# (running "data-raw/internals.R" will process that TSV file)
-EUCAST_VERSION_BREAKPOINTS <- list("10.0" = list(version_txt = "v10.0",
-                                                 year = 2020, 
-                                                 title = "'EUCAST Clinical Breakpoints'",
-                                                 url = "https://www.eucast.org/clinical_breakpoints/"))
-EUCAST_VERSION_EXPERT_RULES <- list("3.1" = list(version_txt = "v3.1",
-                                                 year = 2016, 
-                                                 title = "'EUCAST Expert Rules, Intrinsic Resistance and Exceptional Phenotypes'",
-                                                 url = "https://www.eucast.org/expert_rules_and_intrinsic_resistance/"),
-                                    "3.2" = list(version_txt = "v3.2",
-                                                 year = 2020, 
-                                                 title = "'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes'",
-                                                 url = "https://www.eucast.org/expert_rules_and_intrinsic_resistance/"))
 
 format_eucast_version_nr <- function(version, markdown = TRUE) {
   # for documentation - adds title, version number, year and url in markdown language
   lst <- c(EUCAST_VERSION_BREAKPOINTS, EUCAST_VERSION_EXPERT_RULES)
-  version <- format(version, nsmall = 1)
-  if (markdown == TRUE) {
-    paste0("[", lst[[version]]$title, " ", lst[[version]]$version_txt, "](", lst[[version]]$url, ")",
-           " from ", lst[[version]]$year)
-  } else {
-    paste0(lst[[version]]$title, " ", lst[[version]]$version_txt,
-           " from ", lst[[version]]$year)
+  version <- format(unique(version), nsmall = 1)
+  txt <- character(0)
+  for (i in seq_len(length(version))) {
+    v <- version[i]
+    if (markdown == TRUE) {
+      txt <- c(txt, paste0("[", lst[[v]]$title, " ", lst[[v]]$version_txt, "](", lst[[v]]$url, ")",
+             " (", lst[[v]]$year, ")"))
+    } else {
+      txt <- c(txt, paste0(lst[[version]]$title, " ", lst[[v]]$version_txt,
+             " (", lst[[v]]$year, ")"))
+    }
   }
+  
+  vector_and(txt, quotes = FALSE)
 }
 
-#' Apply EUCAST rules
+#' Apply EUCAST Rules
 #' 
 #' @description
-#' Apply rules for clinical breakpoints and intrinsic resistance as defined by the European Committee on Antimicrobial Susceptibility Testing (EUCAST, <https://eucast.org>), see *Source*.
+#' Apply rules for clinical breakpoints and intrinsic resistance as defined by the European Committee on Antimicrobial Susceptibility Testing (EUCAST, <https://eucast.org>), see *Source*. Use [eucast_dosage()] to get a [data.frame] with advised dosages of a certain bug-drug combination, which is based on the [dosage] data set.
 #' 
-#' To improve the interpretation of the antibiogram before EUCAST rules are applied, some non-EUCAST rules can applied at default, see Details.
-#' @inheritSection lifecycle Stable lifecycle
+#' To improve the interpretation of the antibiogram before EUCAST rules are applied, some non-EUCAST rules can applied at default, see *Details*.
+#' @inheritSection lifecycle Stable Lifecycle
 #' @param x data with antibiotic columns, such as `amox`, `AMX` and `AMC`
 #' @param info a logical to indicate whether progress should be printed to the console, defaults to only print while in interactive sessions
 #' @param rules a character vector that specifies which rules should be applied. Must be one or more of `"breakpoints"`, `"expert"`, `"other"`, `"all"`, and defaults to `c("breakpoints", "expert")`. The default value can be set to another value, e.g. using `options(AMR_eucastrules = "all")`.
 #' @param verbose a [logical] to turn Verbose mode on and off (default is off). In Verbose mode, the function does not apply rules to the data, but instead returns a data set in logbook form with extensive info about which rows and columns would be effected and in which way. Using Verbose mode takes a lot more time.
-#' @param version_breakpoints the version number to use for the EUCAST Clinical Breakpoints guideline. Currently supported: `r paste0(names(EUCAST_VERSION_BREAKPOINTS), collapse = ", ")`.
-#' @param version_expertrules the version number to use for the EUCAST Expert Rules and Intrinsic Resistance guideline. Currently supported: `r paste0(names(EUCAST_VERSION_EXPERT_RULES), collapse = ", ")`.
-#' @param ampc_cephalosporin_resistance a character value that should be applied for AmpC de-repressed cephalosporin-resistant mutants, defaults to `NA`. Currently only works when `version_expertrules` is `3.2`; '*EUCAST Expert Rules v3.2 on Enterobacterales*' states that susceptible (S) results of cefotaxime, ceftriaxone and ceftazidime should be reported with a note, or results should be suppressed (emptied) for these agents. A value of `NA` for this argument will remove results for these agents, while e.g. a value of `"R"` will make the results for these agents resistant. Use `NULL` to not alter the results for AmpC de-repressed cephalosporin-resistant mutants. \cr For *EUCAST Expert Rules* v3.2, this rule applies to: *`r gsub("[)(^]", "", gsub("|", ", ", eucast_rules_file[which(eucast_rules_file$reference.version == 3.2 & eucast_rules_file$reference.rule %like% "ampc"), "this_value"][1], fixed = TRUE))`*.
-#' 
-#' @param ... column name of an antibiotic, please see section *Antibiotics* below
+#' @param version_breakpoints the version number to use for the EUCAST Clinical Breakpoints guideline. Can be either `r vector_or(names(EUCAST_VERSION_BREAKPOINTS), reverse = TRUE)`.
+#' @param version_expertrules the version number to use for the EUCAST Expert Rules and Intrinsic Resistance guideline. Can be either `r vector_or(names(EUCAST_VERSION_EXPERT_RULES), reverse = TRUE)`.
+#' @param ampc_cephalosporin_resistance a character value that should be applied to cefotaxime, ceftriaxone and ceftazidime for AmpC de-repressed cephalosporin-resistant mutants, defaults to `NA`. Currently only works when `version_expertrules` is `3.2`; '*EUCAST Expert Rules v3.2 on Enterobacterales*' states that results of cefotaxime, ceftriaxone and ceftazidime should be reported with a note, or results should be suppressed (emptied) for these three agents. A value of `NA` (the default) for this argument will remove results for these three agents, while e.g. a value of `"R"` will make the results for these agents resistant. Use `NULL` or `FALSE` to not alter results for these three agents of AmpC de-repressed cephalosporin-resistant mutants. Using `TRUE` is equal to using `"R"`. \cr For *EUCAST Expert Rules* v3.2, this rule applies to: `r vector_and(gsub("[^a-zA-Z ]+", "", unlist(strsplit(eucast_rules_file[which(eucast_rules_file$reference.version == 3.2 & eucast_rules_file$reference.rule %like% "ampc"), "this_value"][1], "|", fixed = TRUE))), quotes = "*")`.
+#' @param ... column name of an antibiotic, see section *Antibiotics* below
+#' @param ab any (vector of) text that can be coerced to a valid antibiotic code with [as.ab()]
+#' @param administration route of administration, either `r vector_or(dosage$administration)`
+#' @param only_rsi_columns a logical to indicate whether only antibiotic columns must be detected that were transformed to class `<rsi>` (see [as.rsi()]) on beforehand (defaults to `FALSE`)
 #' @inheritParams first_isolate
 #' @details
 #' **Note:** This function does not translate MIC values to RSI values. Use [as.rsi()] for that. \cr
@@ -74,7 +67,7 @@ format_eucast_version_nr <- function(version, markdown = TRUE) {
 #'
 #' The file containing all EUCAST rules is located here: <https://github.com/msberends/AMR/blob/master/data-raw/eucast_rules.tsv>.
 #' 
-#' ## 'Other' rules
+#' ## 'Other' Rules
 #' 
 #' Before further processing, two non-EUCAST rules about drug combinations can be applied to improve the efficacy of the EUCAST rules, and the reliability of your data (analysis). These rules are:
 #' 
@@ -89,7 +82,7 @@ format_eucast_version_nr <- function(version, markdown = TRUE) {
 #'
 #' The following antibiotics are used for the functions [eucast_rules()] and [mdro()]. These are shown below in the format 'name (`antimicrobial ID`, [ATC code](https://www.whocc.no/atc/structure_and_principles/))', sorted alphabetically:
 #'
-#' `r create_ab_documentation(c("AMC", "AMK", "AMP", "AMX", "ATM", "AVO", "AZL", "AZM", "BAM", "BPR", "CAC", "CAT", "CAZ", "CCP", "CCV", "CCX", "CDC", "CDR", "CDZ", "CEC", "CED", "CEI", "CEM", "CEP", "CFM", "CFM1", "CFP", "CFR", "CFS", "CFZ", "CHE", "CHL", "CID", "CIP", "CLI", "CLR", "CMX", "CMZ", "CND", "COL", "CPD", "CPI", "CPL", "CPM", "CPO", "CPR", "CPT", "CPX", "CRB", "CRD", "CRN", "CRO", "CSL", "CTB", "CTC", "CTF", "CTL", "CTS", "CTT", "CTX", "CTZ", "CXM", "CYC", "CZA", "CZD", "CZO", "CZP", "CZX", "DAL", "DAP", "DIR", "DIT", "DIX", "DIZ", "DKB", "DOR", "DOX", "ENX", "EPC", "ERY", "ETP", "FEP", "FLC", "FLE", "FLR1", "FOS", "FOV", "FOX", "FOX1", "FUS", "GAT", "GEM", "GEN", "GRX", "HAP", "HET", "IPM", "ISE", "JOS", "KAN", "LEX", "LIN", "LNZ", "LOM", "LOR", "LTM", "LVX", "MAN", "MCM", "MEC", "MEM", "MEV", "MEZ", "MFX", "MID", "MNO", "MTM", "NAL", "NEO", "NET", "NIT", "NOR", "NOV", "NVA", "OFX", "OLE", "ORI", "OXA", "PAZ", "PEF", "PEN", "PHN", "PIP", "PLB", "PME", "PRI", "PRL", "PRU", "PVM", "QDA", "RAM", "RFL", "RID", "RIF", "ROK", "RST", "RXT", "SAM", "SBC", "SDI", "SDM", "SIS", "SLF", "SLF1", "SLF10", "SLF11", "SLF12", "SLF13", "SLF2", "SLF3", "SLF4", "SLF5", "SLF6", "SLF7", "SLF8", "SLF9", "SLT1", "SLT2", "SLT3", "SLT4", "SLT5", "SMX", "SPI", "SPX", "STR", "STR1", "SUD", "SUT", "SXT", "SZO", "TAL", "TCC", "TCM", "TCY", "TEC", "TEM", "TGC", "THA", "TIC", "TIO", "TLT", "TLV", "TMP", "TMX", "TOB", "TRL", "TVA", "TZD", "TZP", "VAN"))`
+#' `r create_ab_documentation(c("AMC", "AMK", "AMP", "AMX", "APL", "APX", "ATM", "AVB", "AVO", "AZD", "AZL", "AZM", "BAM", "BPR", "CAC", "CAT", "CAZ", "CCP", "CCV", "CCX", "CDC", "CDR", "CDZ", "CEC", "CED", "CEI", "CEM", "CEP", "CFM", "CFM1", "CFP", "CFR", "CFS", "CFZ", "CHE", "CHL", "CIC", "CID", "CIP", "CLI", "CLM", "CLO", "CLR", "CMX", "CMZ", "CND", "COL", "CPD", "CPI", "CPL", "CPM", "CPO", "CPR", "CPT", "CPX", "CRB", "CRD", "CRN", "CRO", "CSL", "CTB", "CTC", "CTF", "CTL", "CTS", "CTT", "CTX", "CTZ", "CXM", "CYC", "CZA", "CZD", "CZO", "CZP", "CZX", "DAL", "DAP", "DIC", "DIR", "DIT", "DIX", "DIZ", "DKB", "DOR", "DOX", "ENX", "EPC", "ERY", "ETP", "FEP", "FLC", "FLE", "FLR1", "FOS", "FOV", "FOX", "FOX1", "FUS", "GAT", "GEM", "GEN", "GRX", "HAP", "HET", "IPM", "ISE", "JOS", "KAN", "LEN", "LEX", "LIN", "LNZ", "LOM", "LOR", "LTM", "LVX", "MAN", "MCM", "MEC", "MEM", "MET", "MEV", "MEZ", "MFX", "MID", "MNO", "MTM", "NAC", "NAF", "NAL", "NEO", "NET", "NIT", "NOR", "NOV", "NVA", "OFX", "OLE", "ORI", "OXA", "PAZ", "PEF", "PEN", "PHE", "PHN", "PIP", "PLB", "PME", "PNM", "PRC", "PRI", "PRL", "PRP", "PRU", "PVM", "QDA", "RAM", "RFL", "RID", "RIF", "ROK", "RST", "RXT", "SAM", "SBC", "SDI", "SDM", "SIS", "SLF", "SLF1", "SLF10", "SLF11", "SLF12", "SLF13", "SLF2", "SLF3", "SLF4", "SLF5", "SLF6", "SLF7", "SLF8", "SLF9", "SLT1", "SLT2", "SLT3", "SLT4", "SLT5", "SLT6", "SMX", "SPI", "SPX", "SRX", "STR", "STR1", "SUD", "SUL", "SUT", "SXT", "SZO", "TAL", "TAZ", "TCC", "TCM", "TCY", "TEC", "TEM", "TGC", "THA", "TIC", "TIO", "TLT", "TLV", "TMP", "TMX", "TOB", "TRL", "TVA", "TZD", "TZP", "VAN"))`
 #' @aliases EUCAST
 #' @rdname eucast_rules
 #' @export
@@ -101,8 +94,9 @@ format_eucast_version_nr <- function(version, markdown = TRUE) {
 #' - EUCAST Intrinsic Resistance and Unusual Phenotypes. Version 3.2, 2020. [(link)](https://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/2020/Intrinsic_Resistance_and_Unusual_Phenotypes_Tables_v3.2_20200225.pdf)
 #' - EUCAST Breakpoint tables for interpretation of MICs and zone diameters. Version 9.0, 2019. [(link)](https://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Breakpoint_tables/v_9.0_Breakpoint_Tables.xlsx)
 #' - EUCAST Breakpoint tables for interpretation of MICs and zone diameters. Version 10.0, 2020. [(link)](https://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Breakpoint_tables/v_10.0_Breakpoint_Tables.xlsx)
-#' @inheritSection AMR Reference data publicly available
-#' @inheritSection AMR Read more on our website!
+#' - EUCAST Breakpoint tables for interpretation of MICs and zone diameters. Version 11.0, 2021. [(link)](https://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Breakpoint_tables/v_11.0_Breakpoint_Tables.xlsx)
+#' @inheritSection AMR Reference Data Publicly Available
+#' @inheritSection AMR Read more on Our Website!
 #' @examples
 #' \donttest{
 #' a <- data.frame(mo = c("Staphylococcus aureus",
@@ -144,23 +138,27 @@ format_eucast_version_nr <- function(version, markdown = TRUE) {
 #' # containing all details about the transformations:
 #' c <- eucast_rules(a, verbose = TRUE)
 #' }
+#' 
+#' eucast_dosage(c("tobra", "genta", "cipro"), "iv")
 eucast_rules <- function(x,
                          col_mo = NULL,
                          info = interactive(),
                          rules = getOption("AMR_eucastrules", default = c("breakpoints", "expert")),
                          verbose = FALSE,
-                         version_breakpoints = 10.0,
+                         version_breakpoints = 11.0,
                          version_expertrules = 3.2,
                          ampc_cephalosporin_resistance = NA,
+                         only_rsi_columns = FALSE,
                          ...) {
   meet_criteria(x, allow_class = "data.frame")
   meet_criteria(col_mo, allow_class = "character", has_length = 1, is_in = colnames(x), allow_NULL = TRUE)
   meet_criteria(info, allow_class = "logical", has_length = 1)
   meet_criteria(rules, allow_class = "character", has_length = c(1, 2, 3, 4), is_in = c("breakpoints", "expert", "other", "all"))
   meet_criteria(verbose, allow_class = "logical", has_length = 1)
-  meet_criteria(version_breakpoints, allow_class = "numeric", has_length = 1)
-  meet_criteria(version_expertrules, allow_class = "numeric", has_length = 1)
-  meet_criteria(ampc_cephalosporin_resistance, allow_class = c("rsi", "character"), has_length = 1, allow_NA = TRUE, allow_NULL = TRUE, is_in = c("R", "S", "I"))
+  meet_criteria(version_breakpoints, allow_class = c("numeric", "integer"), has_length = 1, is_in = as.double(names(EUCAST_VERSION_BREAKPOINTS)))
+  meet_criteria(version_expertrules, allow_class = c("numeric", "integer"), has_length = 1, is_in = as.double(names(EUCAST_VERSION_EXPERT_RULES)))
+  meet_criteria(ampc_cephalosporin_resistance, allow_class = c("logical", "character", "rsi"), has_length = 1, allow_NA = TRUE, allow_NULL = TRUE)
+  meet_criteria(only_rsi_columns, allow_class = "logical", has_length = 1)
   
   x_deparsed <- deparse(substitute(x))
   if (length(x_deparsed) > 1 || !all(x_deparsed %like% "[a-z]+")) {
@@ -169,12 +167,6 @@ eucast_rules <- function(x,
   
   check_dataset_integrity()
   
-  version_breakpoints <- as.double(gsub("[^0-9.]+", "", version_breakpoints))
-  version_expertrules <- as.double(gsub("[^0-9.]+", "", version_expertrules))
-  stop_ifnot(version_breakpoints %in% as.double(names(EUCAST_VERSION_BREAKPOINTS)),
-             "EUCAST version ", version_breakpoints, " for clinical breakpoints not found")
-  stop_ifnot(version_expertrules %in% as.double(names(EUCAST_VERSION_EXPERT_RULES)),
-             "EUCAST version ", version_expertrules, " for expert rules/intrinsic resistance not found")
   breakpoints_info <- EUCAST_VERSION_BREAKPOINTS[[which(as.double(names(EUCAST_VERSION_BREAKPOINTS)) == version_breakpoints)]]
   expertrules_info <- EUCAST_VERSION_EXPERT_RULES[[which(as.double(names(EUCAST_VERSION_EXPERT_RULES)) == version_expertrules)]]
   
@@ -203,8 +195,10 @@ eucast_rules <- function(x,
   # -- mo
   if (is.null(col_mo)) {
     col_mo <- search_type_in_df(x = x, type = "mo", info = info)
+    stop_if(is.null(col_mo), "`col_mo` must be set")
+  } else {
+    stop_ifnot(col_mo %in% colnames(x), "column '", col_mo, "' (`col_mo`) not found")
   }
-  stop_if(is.null(col_mo), "`col_mo` must be set")
   
   decimal.mark <- getOption("OutDec")
   big.mark <- ifelse(decimal.mark != ",", ",", ".")
@@ -267,14 +261,19 @@ eucast_rules <- function(x,
                             hard_dependencies = NULL,
                             verbose = verbose,
                             info = info,
+                            only_rsi_columns = only_rsi_columns,
                             ...)
-  
+
   AMC <- cols_ab["AMC"]
   AMK <- cols_ab["AMK"]
   AMP <- cols_ab["AMP"]
   AMX <- cols_ab["AMX"]
+  APL <- cols_ab["APL"]
+  APX <- cols_ab["APX"]
   ATM <- cols_ab["ATM"]
+  AVB <- cols_ab["AVB"]
   AVO <- cols_ab["AVO"]
+  AZD <- cols_ab["AZD"]
   AZL <- cols_ab["AZL"]
   AZM <- cols_ab["AZM"]
   BAM <- cols_ab["BAM"]
@@ -301,9 +300,12 @@ eucast_rules <- function(x,
   CFZ <- cols_ab["CFZ"]
   CHE <- cols_ab["CHE"]
   CHL <- cols_ab["CHL"]
+  CIC <- cols_ab["CIC"]
   CID <- cols_ab["CID"]
   CIP <- cols_ab["CIP"]
   CLI <- cols_ab["CLI"]
+  CLM <- cols_ab["CLM"]
+  CLO <- cols_ab["CLO"]
   CLR <- cols_ab["CLR"]
   CMX <- cols_ab["CMX"]
   CMZ <- cols_ab["CMZ"]
@@ -339,6 +341,7 @@ eucast_rules <- function(x,
   CZX <- cols_ab["CZX"]
   DAL <- cols_ab["DAL"]
   DAP <- cols_ab["DAP"]
+  DIC <- cols_ab["DIC"]
   DIR <- cols_ab["DIR"]
   DIT <- cols_ab["DIT"]
   DIX <- cols_ab["DIX"]
@@ -369,6 +372,7 @@ eucast_rules <- function(x,
   ISE <- cols_ab["ISE"]
   JOS <- cols_ab["JOS"]
   KAN <- cols_ab["KAN"]
+  LEN <- cols_ab["LEN"]
   LEX <- cols_ab["LEX"]
   LIN <- cols_ab["LIN"]
   LNZ <- cols_ab["LNZ"]
@@ -380,12 +384,15 @@ eucast_rules <- function(x,
   MCM <- cols_ab["MCM"]
   MEC <- cols_ab["MEC"]
   MEM <- cols_ab["MEM"]
+  MET <- cols_ab["MET"]
   MEV <- cols_ab["MEV"]
   MEZ <- cols_ab["MEZ"]
   MFX <- cols_ab["MFX"]
   MID <- cols_ab["MID"]
   MNO <- cols_ab["MNO"]
   MTM <- cols_ab["MTM"]
+  NAC <- cols_ab["NAC"]
+  NAF <- cols_ab["NAF"]
   NAL <- cols_ab["NAL"]
   NEO <- cols_ab["NEO"]
   NET <- cols_ab["NET"]
@@ -400,12 +407,16 @@ eucast_rules <- function(x,
   PAZ <- cols_ab["PAZ"]
   PEF <- cols_ab["PEF"]
   PEN <- cols_ab["PEN"]
+  PHE <- cols_ab["PHE"]
   PHN <- cols_ab["PHN"]
   PIP <- cols_ab["PIP"]
   PLB <- cols_ab["PLB"]
   PME <- cols_ab["PME"]
+  PNM <- cols_ab["PNM"]
+  PRC <- cols_ab["PRC"]
   PRI <- cols_ab["PRI"]
   PRL <- cols_ab["PRL"]
+  PRP <- cols_ab["PRP"]
   PRU <- cols_ab["PRU"]
   PVM <- cols_ab["PVM"]
   QDA <- cols_ab["QDA"]
@@ -440,16 +451,20 @@ eucast_rules <- function(x,
   SLT3 <- cols_ab["SLT3"]
   SLT4 <- cols_ab["SLT4"]
   SLT5 <- cols_ab["SLT5"]
+  SLT6 <- cols_ab["SLT6"]
   SMX <- cols_ab["SMX"]
   SPI <- cols_ab["SPI"]
   SPX <- cols_ab["SPX"]
+  SRX <- cols_ab["SRX"]
   STR <- cols_ab["STR"]
   STR1 <- cols_ab["STR1"]
   SUD <- cols_ab["SUD"]
+  SUL <- cols_ab["SUL"]
   SUT <- cols_ab["SUT"]
   SXT <- cols_ab["SXT"]
   SZO <- cols_ab["SZO"]
   TAL <- cols_ab["TAL"]
+  TAZ <- cols_ab["TAZ"]
   TCC <- cols_ab["TCC"]
   TCM <- cols_ab["TCM"]
   TCY <- cols_ab["TCY"]
@@ -724,12 +739,8 @@ eucast_rules <- function(x,
     
   } else {
     if (info == TRUE) {
-      message_("\n\nSkipping inheritance rules defined by this package, such as setting trimethoprim (TMP) = R where trimethoprim/sulfamethoxazole (SXT) = R.",
-               as_note = FALSE,
-               add_fn = font_red)
-      message_("Use eucast_rules(..., rules = \"all\") to also apply those rules.",
-               as_note = FALSE,
-               add_fn = font_red)
+      cat("\n")
+      message_("Skipping inheritance rules defined by this package, such as setting trimethoprim (TMP) = R where trimethoprim/sulfamethoxazole (SXT) = R. Use `eucast_rules(..., rules = \"all\")` to also apply those rules.")
     }
   }
   
@@ -739,7 +750,7 @@ eucast_rules <- function(x,
     # this allows: eucast_rules(x, eucast_rules_df = AMR:::eucast_rules_file %>% filter(is.na(have_these_values)))
     eucast_rules_df <- list(...)$eucast_rules_df
   } else {
-    # otherwise internal data file, created in data-raw/internals.R
+    # otherwise internal data file, created in data-raw/_internals.R
     eucast_rules_df <- eucast_rules_file
   }
   
@@ -755,10 +766,14 @@ eucast_rules <- function(x,
                                 (reference.rule_group %like% "expert" & reference.version == version_expertrules))
   }
   # filter out AmpC de-repressed cephalosporin-resistant mutants ----
-  if (is.null(ampc_cephalosporin_resistance)) {
+  # cefotaxime, ceftriaxone, ceftazidime
+  if (is.null(ampc_cephalosporin_resistance) || isFALSE(ampc_cephalosporin_resistance)) {
     eucast_rules_df <- subset(eucast_rules_df,
                               !reference.rule %like% "ampc")
   } else {
+    if (isTRUE(ampc_cephalosporin_resistance)) {
+      ampc_cephalosporin_resistance <- "R"
+    }
     eucast_rules_df[which(eucast_rules_df$reference.rule %like% "ampc"), "to_value"] <- as.character(ampc_cephalosporin_resistance)
   }
   
@@ -830,7 +845,7 @@ eucast_rules <- function(x,
         # is new rule within group, print its name
         cat(markup_italics_where_needed(word_wrap(rule_current, 
                                                   width = getOption("width") - 30,
-                                                  extra_indent = 4)))
+                                                  extra_indent = 6)))
         warned <- FALSE
       }
     }
@@ -886,7 +901,7 @@ eucast_rules <- function(x,
     target_value <- eucast_rules_df[i, "to_value", drop = TRUE]
     
     if (is.na(source_antibiotics)) {
-      rows <- tryCatch(which(x[, if_mo_property, drop = TRUE] %like_perl% mo_value),
+      rows <- tryCatch(which(x[, if_mo_property, drop = TRUE] %like% mo_value),
                        error = function(e) integer(0))
     } else {
       source_antibiotics <- get_antibiotic_columns(source_antibiotics, x)
@@ -896,17 +911,17 @@ eucast_rules <- function(x,
       if (length(source_antibiotics) == 0) {
         rows <- integer(0)
       } else if (length(source_antibiotics) == 1) {
-        rows <-  tryCatch(which(x[, if_mo_property, drop = TRUE] %like_perl% mo_value
+        rows <-  tryCatch(which(x[, if_mo_property, drop = TRUE] %like% mo_value
                                 & as.rsi_no_warning(x[, source_antibiotics[1L]]) == source_value[1L]),
                           error = function(e) integer(0))
       } else if (length(source_antibiotics) == 2) {
-        rows <-  tryCatch(which(x[, if_mo_property, drop = TRUE] %like_perl% mo_value
+        rows <-  tryCatch(which(x[, if_mo_property, drop = TRUE] %like% mo_value
                                 & as.rsi_no_warning(x[, source_antibiotics[1L]]) == source_value[1L]
                                 & as.rsi_no_warning(x[, source_antibiotics[2L]]) == source_value[2L]),
                           error = function(e) integer(0))
         # nolint start
       # } else if (length(source_antibiotics) == 3) {
-      #   rows <-  tryCatch(which(x[, if_mo_property, drop = TRUE] %like_perl% mo_value
+      #   rows <-  tryCatch(which(x[, if_mo_property, drop = TRUE] %like% mo_value
       #                           & as.rsi_no_warning(x[, source_antibiotics[1L]]) == source_value[1L]
       #                           & as.rsi_no_warning(x[, source_antibiotics[2L]]) == source_value[2L]
       #                           & as.rsi_no_warning(x[, source_antibiotics[3L]]) == source_value[3L]),
@@ -1040,6 +1055,7 @@ eucast_rules <- function(x,
     warn_lacking_rsi_class <- unique(warn_lacking_rsi_class)
     warning_("Not all columns with antimicrobial results are of class <rsi>. Transform them on beforehand, with e.g.:\n",
              "  ", x_deparsed, " %>% mutate_if(is.rsi.eligible, as.rsi)\n",
+             "  ", x_deparsed, " %>% mutate(across((is.rsi.eligible), as.rsi))\n",
              "  ", x_deparsed, " %>% as.rsi(", ifelse(length(warn_lacking_rsi_class) == 1, 
                                                       warn_lacking_rsi_class,
                                                       paste0(warn_lacking_rsi_class[1], ":", warn_lacking_rsi_class[length(warn_lacking_rsi_class)])), 
@@ -1167,4 +1183,39 @@ edit_rsi <- function(x,
     }
   }
   return(track_changes)
+}
+
+#' @rdname eucast_rules
+#' @export
+eucast_dosage <- function(ab, administration = "iv", version_breakpoints = 11.0) {
+  meet_criteria(ab, allow_class = c("character", "numeric", "integer", "factor"))
+  meet_criteria(administration, allow_class = "character", is_in = dosage$administration[!is.na(dosage$administration)], has_length = 1)
+  meet_criteria(version_breakpoints, allow_class = c("numeric", "integer"), has_length = 1, is_in = as.double(names(EUCAST_VERSION_BREAKPOINTS)))
+  
+  # show used version_breakpoints number once per session (pkg_env will reload every session)
+  if (message_not_thrown_before(paste0("eucast_dosage_v", gsub("[^0-9]", "", version_breakpoints)), entire_session = TRUE)) {
+    message_("Dosages for antimicrobial drugs, as meant for ",
+             format_eucast_version_nr(version_breakpoints, markdown = FALSE), ". ",
+             font_red("This note will be shown once per session."))
+    remember_thrown_message(paste0("eucast_dosage_v", gsub("[^0-9]", "", version_breakpoints)), entire_session = TRUE)
+  }
+  
+  ab <- as.ab(ab)
+  lst <- vector("list", length = length(ab))
+  for (i in seq_len(length(ab))) {
+    df <- AMR::dosage[which(AMR::dosage$ab == ab[i] & AMR::dosage$administration == administration), , drop = FALSE]
+    lst[[i]] <- list(ab = "",
+                     name = "",
+                     standard_dosage = ifelse("standard_dosage" %in% df$type,
+                                              df[which(df$type == "standard_dosage"), ]$original_txt, 
+                                              NA_character_),
+                     high_dosage = ifelse("high_dosage" %in% df$type,
+                                          df[which(df$type == "high_dosage"), ]$original_txt, 
+                                          NA_character_))
+  }
+  out <- do.call("rbind", lapply(lst, as.data.frame, stringsAsFactors = FALSE))
+  rownames(out) <- NULL
+  out$ab <- ab
+  out$name <- ab_name(ab, language = NULL)
+  out
 }

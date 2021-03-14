@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,7 +20,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
 context("filter_ab_class.R")
@@ -30,17 +30,20 @@ test_that("ATC-group filtering works", {
   
   library(dplyr)
   expect_gt(example_isolates %>% filter_ab_class("carbapenem") %>% nrow(), 0)
-  expect_gt(example_isolates %>% filter_aminoglycosides() %>% nrow(), 0)
-  expect_gt(example_isolates %>% filter_carbapenems() %>% nrow(), 0)
-  expect_gt(example_isolates %>% filter_cephalosporins() %>% nrow(), 0)
-  expect_gt(example_isolates %>% filter_1st_cephalosporins() %>% nrow(), 0)
-  expect_gt(example_isolates %>% filter_2nd_cephalosporins() %>% nrow(), 0)
-  expect_gt(example_isolates %>% filter_3rd_cephalosporins() %>% nrow(), 0)
-  expect_gt(example_isolates %>% filter_4th_cephalosporins() %>% nrow(), 0)
-  expect_gt(example_isolates %>% filter_fluoroquinolones() %>% nrow(), 0)
-  expect_gt(example_isolates %>% filter_glycopeptides() %>% nrow(), 0)
-  expect_gt(example_isolates %>% filter_macrolides() %>% nrow(), 0)
-  expect_gt(example_isolates %>% filter_tetracyclines() %>% nrow(), 0)
+  expect_gt(example_isolates %>% filter_aminoglycosides() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_carbapenems() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_cephalosporins() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_1st_cephalosporins() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_2nd_cephalosporins() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_3rd_cephalosporins() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_4th_cephalosporins() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_5th_cephalosporins() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_fluoroquinolones() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_glycopeptides() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_macrolides() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_oxazolidinones() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_penicillins() %>% ncol(), 0)
+  expect_gt(example_isolates %>% filter_tetracyclines() %>% ncol(), 0)
 
   expect_gt(example_isolates %>% filter_carbapenems("R", "all") %>% nrow(), 0)
 

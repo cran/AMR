@@ -8,7 +8,7 @@
 \alias{scale_rsi_colours}
 \alias{theme_rsi}
 \alias{labels_rsi_count}
-\title{AMR plots with \code{ggplot2}}
+\title{AMR Plots with \code{ggplot2}}
 \usage{
 ggplot_rsi(
   data,
@@ -24,8 +24,8 @@ ggplot_rsi(
   minimum = 30,
   language = get_locale(),
   nrow = NULL,
-  colours = c(S = "#61a8ff", SI = "#61a8ff", I = "#61f7ff", IR = "#ff6961", R =
-    "#ff6961"),
+  colours = c(S = "#3CAEA3", SI = "#3CAEA3", I = "#F6D55C", IR = "#ED553B", R =
+    "#ED553B"),
   datalabels = TRUE,
   datalabels.size = 2.5,
   datalabels.colour = "grey15",
@@ -53,10 +53,7 @@ facet_rsi(facet = c("interpretation", "antibiotic"), nrow = NULL)
 
 scale_y_percent(breaks = seq(0, 1, 0.1), limits = NULL)
 
-scale_rsi_colours(
-  colours = c(S = "#61a8ff", SI = "#61a8ff", I = "#61f7ff", IR = "#ff6961", R =
-    "#ff6961")
-)
+scale_rsi_colours(..., aesthetics = "fill")
 
 theme_rsi()
 
@@ -93,13 +90,13 @@ labels_rsi_count(
 
 \item{combine_IR}{a logical to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. I+R (susceptible vs. non-susceptible). This is outdated, see argument \code{combine_SI}.}
 
-\item{minimum}{the minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see Source.}
+\item{minimum}{the minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see \emph{Source}.}
 
 \item{language}{language of the returned text, defaults to system language (see \code{\link[=get_locale]{get_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
 \item{nrow}{(when using \code{facet}) number of rows}
 
-\item{colours}{a named vector with colours for the bars. The names must be one or more of: S, SI, I, IR, R or be \code{FALSE} to use default \link[ggplot2:ggplot]{ggplot2} colours.}
+\item{colours}{a named vactor with colour to be used for filling. The default colours are colour-blind friendly.}
 
 \item{datalabels}{show datalabels using \code{\link[=labels_rsi_count]{labels_rsi_count()}}}
 
@@ -117,14 +114,16 @@ labels_rsi_count(
 
 \item{y.title}{text to show as y axis description}
 
-\item{...}{other arguments passed on to \code{\link[=geom_rsi]{geom_rsi()}}}
+\item{...}{other arguments passed on to \code{\link[=geom_rsi]{geom_rsi()}} or, in case of \code{\link[=scale_rsi_colours]{scale_rsi_colours()}}, named values to set colours. The default colours are colour-blind friendly, while maintaining the convention that e.g. 'susceptible' should be green and 'resistant' should be red. See \emph{Examples}.}
+
+\item{aesthetics}{aesthetics to apply the colours to, defaults to "fill" but can also be (a combination of) "alpha", "colour", "fill", "linetype", "shape" or "size"}
 }
 \description{
-Use these functions to create bar plots for antimicrobial resistance analysis. All functions rely on \link[ggplot2:ggplot]{ggplot2} functions.
+Use these functions to create bar plots for AMR data analysis. All functions rely on \link[ggplot2:ggplot]{ggplot2} functions.
 }
 \details{
 At default, the names of antibiotics will be shown on the plots using \code{\link[=ab_name]{ab_name()}}. This can be set with the \code{translate_ab} argument. See \code{\link[=count_df]{count_df()}}.
-\subsection{The functions}{
+\subsection{The Functions}{
 
 \code{\link[=geom_rsi]{geom_rsi()}} will take any variable from the data that has an \code{\link{rsi}} class (created with \code{\link[=as.rsi]{as.rsi()}}) using \code{\link[=rsi_df]{rsi_df()}} and will plot bars with the percentage R, I and S. The default behaviour is to have the bars stacked and to have the different antibiotics on the x axis.
 
@@ -132,24 +131,26 @@ At default, the names of antibiotics will be shown on the plots using \code{\lin
 
 \code{\link[=scale_y_percent]{scale_y_percent()}} transforms the y axis to a 0 to 100\% range using \code{\link[ggplot2:scale_continuous]{ggplot2::scale_y_continuous()}}.
 
-\code{\link[=scale_rsi_colours]{scale_rsi_colours()}} sets colours to the bars: pastel blue for S, pastel turquoise for I and pastel red for R, using \code{\link[ggplot2:scale_manual]{ggplot2::scale_fill_manual()}}.
+\code{\link[=scale_rsi_colours]{scale_rsi_colours()}} sets colours to the bars (green for S, yellow for I, and red for R). with multilingual support. The default colours are colour-blind friendly, while maintaining the convention that e.g. 'susceptible' should be green and 'resistant' should be red.
 
 \code{\link[=theme_rsi]{theme_rsi()}} is a [ggplot2 theme][\code{\link[ggplot2:theme]{ggplot2::theme()}} with minimal distraction.
 
 \code{\link[=labels_rsi_count]{labels_rsi_count()}} print datalabels on the bars with percentage and amount of isolates using \code{\link[ggplot2:geom_text]{ggplot2::geom_text()}}.
 
-\code{\link[=ggplot_rsi]{ggplot_rsi()}} is a wrapper around all above functions that uses data as first input. This makes it possible to use this function after a pipe (\verb{\%>\%}). See Examples.
+\code{\link[=ggplot_rsi]{ggplot_rsi()}} is a wrapper around all above functions that uses data as first input. This makes it possible to use this function after a pipe (\verb{\%>\%}). See \emph{Examples}.
 }
 }
-\section{Maturing lifecycle}{
+\section{Stable Lifecycle}{
 
-\if{html}{\figure{lifecycle_maturing.svg}{options: style=margin-bottom:5px} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{maturing}. The unlying code of a maturing function has been roughed out, but finer details might still change. Since this function needs wider usage and more extensive testing, you are very welcome \href{https://github.com/msberends/AMR/issues}{to suggest changes at our repository} or \link[=AMR]{write us an email (see section 'Contact Us')}.
+\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
+The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
+
+If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
-\section{Read more on our website!}{
+\section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
@@ -186,11 +187,20 @@ if (require("ggplot2") & require("dplyr")) {
                size = 1,
                linetype = 2,
                alpha = 0.25)
- 
+
+  # you can alter the colours with colour names:
   example_isolates \%>\%
     select(AMX) \%>\%
     ggplot_rsi(colours = c(SI = "yellow"))
-  
+
+  # but you can also use the built-in colour-blind friendly colours for
+  # your plots, where "S" is green, "I" is yellow and "R" is red:
+  data.frame(x = c("Value1", "Value2", "Value3"),
+             y = c(1, 2, 3),
+             z = c("Value4", "Value5", "Value6")) \%>\%
+    ggplot() +
+    geom_col(aes(x = x, y = y, fill = z)) +
+    scale_rsi_colours(Value4 = "S", Value5 = "I", Value6 = "R")
 }
   
 \donttest{
@@ -205,11 +215,6 @@ example_isolates \%>\%
          CIP) \%>\%
   ggplot_rsi(x = "age_group")
   
-# for colourblind mode, use divergent colours from the viridis package:
-example_isolates \%>\%
-  select(AMX, NIT, FOS, TMP, CIP) \%>\%
-  ggplot_rsi() + 
-  scale_fill_viridis_d()
 # a shorter version which also adjusts data label colours:
 example_isolates \%>\%
   select(AMX, NIT, FOS, TMP, CIP) \%>\%

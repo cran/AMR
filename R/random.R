@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,13 +20,13 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Random MIC values/disk zones/RSI generation
+#' Random MIC Values/Disk Zones/RSI Generation
 #'
-#' These functions can be used for generating random MIC values and disk diffusion diameters, for AMR analysis practice.
-#' @inheritSection lifecycle Maturing lifecycle 
+#' These functions can be used for generating random MIC values and disk diffusion diameters, for AMR data analysis practice. By providing a microorganism and antimicrobial agent, the generated results will reflect reality as much as possible.
+#' @inheritSection lifecycle Stable Lifecycle 
 #' @param size desired size of the returned vector
 #' @param mo any character that can be coerced to a valid microorganism code with [as.mo()]
 #' @param ab any character that can be coerced to a valid antimicrobial agent code with [as.ab()]
@@ -39,7 +39,7 @@
 #' @name random
 #' @rdname random
 #' @export
-#' @inheritSection AMR Read more on our website!
+#' @inheritSection AMR Read more on Our Website!
 #' @examples
 #' random_mic(100)
 #' random_disk(100)
@@ -51,9 +51,9 @@
 #' random_mic(100, "Klebsiella pneumoniae", "meropenem")    # range 0.0625-16
 #' random_mic(100, "Streptococcus pneumoniae", "meropenem") # range 0.0625-4
 #' 
-#' random_disk(100, "Klebsiella pneumoniae")                  # range 11-50
-#' random_disk(100, "Klebsiella pneumoniae", "ampicillin")    # range 6-14
-#' random_disk(100, "Streptococcus pneumoniae", "ampicillin") # range 16-22
+#' random_disk(100, "Klebsiella pneumoniae")                  # range 8-50
+#' random_disk(100, "Klebsiella pneumoniae", "ampicillin")    # range 11-17
+#' random_disk(100, "Streptococcus pneumoniae", "ampicillin") # range 12-27
 #' }
 random_mic <- function(size, mo = NULL, ab = NULL, ...) {
   random_exec("MIC", size = size, mo = mo, ab = ab)
@@ -111,18 +111,26 @@ random_exec <- function(type, size, mo = NULL, ab = NULL) {
     if (log(set_range_max, 2) %% 1 == 0) {
       # return powers of 2
       valid_range <- unique(as.double(valid_range))
-      # add one higher MIC level to set_range_max
-      set_range_max <- 2 ^ (log(set_range_max, 2) + 1)
+      # add 1-3 higher MIC levels to set_range_max
+      set_range_max <- 2 ^ (log(set_range_max, 2) + sample(c(1:3), 1))
       set_range <- as.mic(valid_range[log(valid_range, 2) %% 1 == 0 & valid_range <= set_range_max])
     } else {
       # no power of 2, return factors of 2 to left and right side
       valid_mics <- suppressWarnings(as.mic(set_range_max / (2 ^ c(-3:3))))
       set_range <- valid_mics[!is.na(valid_mics)]
     }
-    return(as.mic(sample(set_range, size = size, replace = TRUE)))
+    out <- as.mic(sample(set_range, size = size, replace = TRUE))
+    # 50% chance that lowest will get <= and highest will get >=
+    if (stats::runif(1) > 0.5) {
+      out[out == min(out)] <- paste0("<=", out[out == min(out)])
+    }
+    if (stats::runif(1) > 0.5) {
+      out[out == max(out)] <- paste0(">=", out[out == max(out)])
+    }
+    return(out)
   } else if (type == "DISK") {
-    set_range <- seq(from = as.integer(min(df$breakpoint_R)),
-                     to = as.integer(max(df$breakpoint_S)),
+    set_range <- seq(from = as.integer(min(df$breakpoint_R) / 1.25),
+                     to = as.integer(max(df$breakpoint_S) * 1.25),
                      by = 1)
     out <- sample(set_range, size = size, replace = TRUE)
     out[out < 6] <- sample(c(6:10), length(out[out < 6]), replace = TRUE)

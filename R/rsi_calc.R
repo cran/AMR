@@ -1,6 +1,6 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Analysis for R                        #
+# Antimicrobial Resistance (AMR) Data Analysis for R                   #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
@@ -20,14 +20,14 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR analysis: https://msberends.github.io/AMR/        #
+# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
 dots2vars <- function(...) {
   # this function is to give more informative output about 
   # variable names in count_* and proportion_* functions
   dots <- substitute(list(...))
-  paste(as.character(dots)[2:length(dots)], collapse = ", ")
+  vector_and(as.character(dots)[2:length(dots)], quotes = FALSE)
 }
 
 rsi_calc <- function(...,
@@ -37,7 +37,7 @@ rsi_calc <- function(...,
                      only_all_tested = FALSE,
                      only_count = FALSE) {
   meet_criteria(ab_result, allow_class = c("character", "numeric", "integer"), has_length = c(1, 2, 3), .call_depth = 1)
-  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, .call_depth = 1)
+  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_finite = TRUE, .call_depth = 1)
   meet_criteria(as_percent, allow_class = "logical", has_length = 1, .call_depth = 1)
   meet_criteria(only_all_tested, allow_class = "logical", has_length = 1, .call_depth = 1)
   meet_criteria(only_count, allow_class = "logical", has_length = 1, .call_depth = 1)
@@ -78,7 +78,7 @@ rsi_calc <- function(...,
       dots <- c(dots[dots %in% colnames(dots_df)],
                 eval(parse(text = dots[!dots %in% colnames(dots_df)]), envir = dots_df, enclos = globalenv()))
       dots_not_exist <- dots[!dots %in% colnames(dots_df)]
-      stop_if(length(dots_not_exist) > 0, "column(s) not found: ", paste0("'", dots_not_exist, "'", collapse = ", "), call = -2)
+      stop_if(length(dots_not_exist) > 0, "column(s) not found: ", vector_and(dots_not_exist, quotes = TRUE), call = -2)
       x <- dots_df[, dots, drop = FALSE]
     }
   } else if (ndots == 1) {
@@ -148,7 +148,9 @@ rsi_calc <- function(...,
   
   if (print_warning == TRUE) {
     if (message_not_thrown_before("rsi_calc")) {
-      warning_("Increase speed by transforming to class <rsi> on beforehand: your_data %>% mutate_if(is.rsi.eligible, as.rsi)",
+      warning_("Increase speed by transforming to class <rsi> on beforehand:\n",
+               "  your_data %>% mutate_if(is.rsi.eligible, as.rsi)\n",
+               "  your_data %>% mutate(across((is.rsi.eligible), as.rsi))",
                call = FALSE)
       remember_thrown_message("rsi_calc")
     }
@@ -189,7 +191,7 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
   meet_criteria(data, allow_class = "data.frame", contains_column_class = "rsi", .call_depth = 1)
   meet_criteria(translate_ab, allow_class = c("character", "logical"), has_length = 1, allow_NA = TRUE, .call_depth = 1)
   meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE, .call_depth = 1)
-  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, .call_depth = 1)
+  meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_finite = TRUE, .call_depth = 1)
   meet_criteria(as_percent, allow_class = "logical", has_length = 1, .call_depth = 1)
   meet_criteria(combine_SI, allow_class = "logical", has_length = 1, .call_depth = 1)
   meet_criteria(combine_SI_missing, allow_class = "logical", has_length = 1, .call_depth = 1)

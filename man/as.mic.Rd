@@ -4,27 +4,59 @@
 \alias{as.mic}
 \alias{mic}
 \alias{is.mic}
-\title{Transform input to minimum inhibitory concentrations (MIC)}
+\title{Transform Input to Minimum Inhibitory Concentrations (MIC)}
 \usage{
 as.mic(x, na.rm = FALSE)
 
 is.mic(x)
 }
 \arguments{
-\item{x}{vector}
+\item{x}{character or numeric vector}
 
 \item{na.rm}{a logical indicating whether missing values should be removed}
 }
 \value{
-Ordered \link{factor} with additional class \code{\link{mic}}
+Ordered \link{factor} with additional class \code{\link{mic}}, that in mathematical operations acts as decimal numbers. Bare in mind that the outcome of any mathematical operation on MICs will return a numeric value.
 }
 \description{
-This transforms a vector to a new class \code{\link{mic}}, which is an ordered \link{factor} with valid minimum inhibitory concentrations (MIC) as levels. Invalid MIC values will be translated as \code{NA} with a warning.
+This ransforms vectors to a new class \code{\link{mic}}, which treats the input as decimal numbers, while maintaining operators (such as ">=") and only allowing valid MIC values known to the field of (medical) microbiology.
 }
 \details{
 To interpret MIC values as RSI values, use \code{\link[=as.rsi]{as.rsi()}} on MIC values. It supports guidelines from EUCAST and CLSI.
+
+This class for MIC values is a quite a special data type: formally it is an ordered factor with valid MIC values as factor levels (to make sure only valid MIC values are retained), but for any mathematical operation it acts as decimal numbers:\preformatted{x <- random_mic(10)
+x
+#> Class <mic>
+#>  [1] 16     1      8      8      64     >=128  0.0625 32     32     16
+
+is.factor(x)
+#> [1] TRUE
+
+x[1] * 2
+#> [1] 32
+
+median(x)
+#> [1] 26
 }
-\section{Stable lifecycle}{
+
+This makes it possible to maintain operators that often come with MIC values, such ">=" and "<=", even when filtering using numeric values in data analysis, e.g.:\preformatted{x[x > 4]
+#> Class <mic>
+#> [1] 16    8     8     64    >=128 32    32    16
+
+df <- data.frame(x, hospital = "A")
+subset(df, x > 4) # or with dplyr: df \%>\% filter(x > 4)
+#>        x hospital
+#> 1     16        A
+#> 5     64        A
+#> 6  >=128        A
+#> 8     32        A
+#> 9     32        A
+#> 10    16        A
+}
+
+The following \link[=groupGeneric]{generic functions} are implemented for the MIC class: \code{!}, \code{!=}, \code{\%\%}, \code{\%/\%}, \code{&}, \code{*}, \code{+}, \code{-}, \code{/}, \code{<}, \code{<=}, \code{==}, \code{>}, \code{>=}, \code{^}, \code{|}, \code{\link[=abs]{abs()}}, \code{\link[=acos]{acos()}}, \code{\link[=acosh]{acosh()}}, \code{\link[=all]{all()}}, \code{\link[=any]{any()}}, \code{\link[=asin]{asin()}}, \code{\link[=asinh]{asinh()}}, \code{\link[=atan]{atan()}}, \code{\link[=atanh]{atanh()}}, \code{\link[=ceiling]{ceiling()}}, \code{\link[=cos]{cos()}}, \code{\link[=cosh]{cosh()}}, \code{\link[=cospi]{cospi()}}, \code{\link[=cummax]{cummax()}}, \code{\link[=cummin]{cummin()}}, \code{\link[=cumprod]{cumprod()}}, \code{\link[=cumsum]{cumsum()}}, \code{\link[=digamma]{digamma()}}, \code{\link[=exp]{exp()}}, \code{\link[=expm1]{expm1()}}, \code{\link[=floor]{floor()}}, \code{\link[=gamma]{gamma()}}, \code{\link[=lgamma]{lgamma()}}, \code{\link[=log]{log()}}, \code{\link[=log1p]{log1p()}}, \code{\link[=log2]{log2()}}, \code{\link[=log10]{log10()}}, \code{\link[=max]{max()}}, \code{\link[=mean]{mean()}}, \code{\link[=min]{min()}}, \code{\link[=prod]{prod()}}, \code{\link[=range]{range()}}, \code{\link[=round]{round()}}, \code{\link[=sign]{sign()}}, \code{\link[=signif]{signif()}}, \code{\link[=sin]{sin()}}, \code{\link[=sinh]{sinh()}}, \code{\link[=sinpi]{sinpi()}}, \code{\link[=sqrt]{sqrt()}}, \code{\link[=sum]{sum()}}, \code{\link[=tan]{tan()}}, \code{\link[=tanh]{tanh()}}, \code{\link[=tanpi]{tanpi()}}, \code{\link[=trigamma]{trigamma()}} and \code{\link[=trunc]{trunc()}}. Some functions of the \code{stats} package are also implemented: \code{\link[=median]{median()}}, \code{\link[=quantile]{quantile()}}, \code{\link[=mad]{mad()}}, \code{\link[=IQR]{IQR()}}, \code{\link[=fivenum]{fivenum()}}. Also, \code{\link[=boxplot.stats]{boxplot.stats()}} is supported. Since \code{\link[=sd]{sd()}} and \code{\link[=var]{var()}} are non-generic functions, these could not be extended. Use \code{\link[=mad]{mad()}} as an alternative, or use e.g. \code{sd(as.numeric(x))} where \code{x} is your vector of MIC values.
+}
+\section{Stable Lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
@@ -32,9 +64,9 @@ The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stabl
 If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
-\section{Read more on our website!}{
+\section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
 }
 
 \examples{
@@ -43,6 +75,11 @@ is.mic(mic_data)
 
 # this can also coerce combined MIC/RSI values:
 as.mic("<=0.002; S") # will return <=0.002
+
+# mathematical processing treats MICs as numeric values
+fivenum(mic_data)
+quantile(mic_data)
+all(mic_data < 512)
 
 # interpret MIC values
 as.rsi(x = as.mic(2),
@@ -54,8 +91,9 @@ as.rsi(x = as.mic(4),
        ab = "AMX",
        guideline = "EUCAST")
 
+# plot MIC values, see ?plot
 plot(mic_data)
-barplot(mic_data)
+plot(mic_data, mo = "E. coli", ab = "cipro")
 }
 \seealso{
 \code{\link[=as.rsi]{as.rsi()}}
