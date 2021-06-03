@@ -46,7 +46,7 @@ World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodo
 
 WHONET 2019 software: \url{http://www.whonet.org/software.html}
 
-European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}
+European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 }
 \usage{
 antibiotics
@@ -83,7 +83,7 @@ All reference data sets (about microorganisms, antibiotics, R/SI interpretation,
 \section{WHOCC}{
 
 \if{html}{\figure{logo_who.png}{options: height=60px style=margin-bottom:5px} \cr}
-This package contains \strong{all ~550 antibiotic, antimycotic and antiviral drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}).
+This package contains \strong{all ~550 antibiotic, antimycotic and antiviral drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}).
 
 These have become the gold standard for international drug utilisation monitoring and research.
 
@@ -94,7 +94,7 @@ The WHOCC is located in Oslo at the Norwegian Institute of Public Health and fun
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \seealso{

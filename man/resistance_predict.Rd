@@ -4,6 +4,7 @@
 \alias{resistance_predict}
 \alias{rsi_predict}
 \alias{plot.resistance_predict}
+\alias{ggplot.resistance_predict}
 \alias{ggplot_rsi_predict}
 \title{Predict antimicrobial resistance}
 \usage{
@@ -39,6 +40,8 @@ rsi_predict(
 
 \method{plot}{resistance_predict}(x, main = paste("Resistance Prediction of", x_name), ...)
 
+\method{ggplot}{resistance_predict}(x, main = paste("Resistance Prediction of", x_name), ribbon = TRUE, ...)
+
 ggplot_rsi_predict(
   x,
   main = paste("Resistance Prediction of", x_name),
@@ -63,17 +66,17 @@ ggplot_rsi_predict(
 
 \item{model}{the statistical model of choice. This could be a generalised linear regression model with binomial distribution (i.e. using `glm(..., family = binomial)``, assuming that a period of zero resistance was followed by a period of increasing resistance leading slowly to more and more resistance. See \emph{Details} for all valid options.}
 
-\item{I_as_S}{a logical to indicate whether values \code{"I"} should be treated as \code{"S"} (will otherwise be treated as \code{"R"}). The default, \code{TRUE}, follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section \emph{Interpretation of S, I and R} below.}
+\item{I_as_S}{a \link{logical} to indicate whether values \code{"I"} should be treated as \code{"S"} (will otherwise be treated as \code{"R"}). The default, \code{TRUE}, follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section \emph{Interpretation of S, I and R} below.}
 
-\item{preserve_measurements}{a logical to indicate whether predictions of years that are actually available in the data should be overwritten by the original data. The standard errors of those years will be \code{NA}.}
+\item{preserve_measurements}{a \link{logical} to indicate whether predictions of years that are actually available in the data should be overwritten by the original data. The standard errors of those years will be \code{NA}.}
 
-\item{info}{a logical to indicate whether textual analysis should be printed with the name and \code{\link[=summary]{summary()}} of the statistical model.}
+\item{info}{a \link{logical} to indicate whether textual analysis should be printed with the name and \code{\link[=summary]{summary()}} of the statistical model.}
 
 \item{...}{arguments passed on to functions}
 
 \item{main}{title of the plot}
 
-\item{ribbon}{a logical to indicate whether a ribbon should be shown (default) or error bars}
+\item{ribbon}{a \link{logical} to indicate whether a ribbon should be shown (default) or error bars}
 }
 \value{
 A \link{data.frame} with extra class \code{\link{resistance_predict}} with columns:
@@ -120,12 +123,12 @@ A microorganism is categorised as \emph{Susceptible, standard dosing regimen}, w
 A microorganism is categorised as \emph{Susceptible, Increased exposure} when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.
 }
 
-This AMR package honours this new insight. Use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
+This AMR package honours this (new) insight. Use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
 }
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -134,6 +137,7 @@ x <- resistance_predict(example_isolates,
                         year_min = 2010,
                         model = "binomial")
 plot(x)
+\donttest{
 if (require("ggplot2")) {
   ggplot_rsi_predict(x)
 }
@@ -161,8 +165,10 @@ if (require("dplyr") & require("ggplot2")) {
                        model = "binomial",
                        info = FALSE,
                        minimum = 15)
+                       
+  ggplot(data)
 
-  ggplot(data,
+  ggplot(as.data.frame(data),
          aes(x = year)) +
     geom_col(aes(y = value),
              fill = "grey75") +
@@ -177,6 +183,7 @@ if (require("dplyr") & require("ggplot2")) {
          y = "\%R",
          x = "Year") +
     theme_minimal(base_size = 13)
+}
 }
 }
 \seealso{

@@ -83,6 +83,7 @@
   xlab = "Antimicrobial Interpretation",
   ylab = "Frequency",
   colours_RSI = c("#ED553B", "#3CAEA3", "#F6D55C"),
+  language = get_locale(),
   ...
 )
 }
@@ -103,7 +104,7 @@
 
 \item{language}{language to be used to translate 'Susceptible', 'Increased exposure'/'Intermediate' and 'Resistant', defaults to system language (see \code{\link[=get_locale]{get_locale()}}) and can be overwritten by setting the option \code{AMR_locale}, e.g. \code{options(AMR_locale = "de")}, see \link{translate}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
-\item{expand}{logical to indicate whether the range on the x axis should be expanded between the lowest and highest value. For MIC values, intermediate values will be factors of 2 starting from the highest MIC value. For disk diameters, the whole diameter range will be filled.}
+\item{expand}{a \link{logical} to indicate whether the range on the x axis should be expanded between the lowest and highest value. For MIC values, intermediate values will be factors of 2 starting from the highest MIC value. For disk diameters, the whole diameter range will be filled.}
 
 \item{...}{arguments passed on to \code{\link[=as.rsi]{as.rsi()}}}
 
@@ -118,7 +119,7 @@ Functions to plot classes \code{rsi}, \code{mic} and \code{disk}, with support f
 \details{
 The interpretation of "I" will be named "Increased exposure" for all EUCAST guidelines since 2019, and will be named "Intermediate" in all other cases.
 
-For interpreting MIC values as well as disk diffusion diameters, supported guidelines to be used as input for the \code{guideline} argument are: "EUCAST 2021", "EUCAST 2020", "EUCAST 2019", "EUCAST 2018", "EUCAST 2017", "EUCAST 2016", "EUCAST 2015", "EUCAST 2014", "EUCAST 2013", "EUCAST 2012", "EUCAST 2011", "CLSI 2019", "CLSI 2018", "CLSI 2017", "CLSI 2016", "CLSI 2015", "CLSI 2014", "CLSI 2013", "CLSI 2012", "CLSI 2011" and "CLSI 2010".
+For interpreting MIC values as well as disk diffusion diameters, supported guidelines to be used as input for the \code{guideline} argument are: "EUCAST 2021", "EUCAST 2020", "EUCAST 2019", "EUCAST 2018", "EUCAST 2017", "EUCAST 2016", "EUCAST 2015", "EUCAST 2014", "EUCAST 2013", "EUCAST 2012", "EUCAST 2011", "CLSI 2020", "CLSI 2019", "CLSI 2018", "CLSI 2017", "CLSI 2016", "CLSI 2015", "CLSI 2014", "CLSI 2013", "CLSI 2012", "CLSI 2011" and "CLSI 2010".
 
 Simply using \code{"CLSI"} or \code{"EUCAST"} as input will automatically select the latest version of that guideline.
 }
@@ -132,7 +133,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -148,9 +149,11 @@ plot(some_rsi_values)
 plot(some_mic_values, mo = "S. aureus", ab = "ampicillin")
 plot(some_disk_values, mo = "Escherichia coli", ab = "cipro")
 
+\donttest{
 if (require("ggplot2")) {
   ggplot(some_mic_values)
   ggplot(some_disk_values, mo = "Escherichia coli", ab = "cipro")
   ggplot(some_rsi_values)
+}
 }
 }

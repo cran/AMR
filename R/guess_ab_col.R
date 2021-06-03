@@ -29,8 +29,8 @@
 #' @inheritSection lifecycle Stable Lifecycle
 #' @param x a [data.frame]
 #' @param search_string a text to search `x` for, will be checked with [as.ab()] if this value is not a column in `x`
-#' @param verbose a logical to indicate whether additional info should be printed
-#' @param only_rsi_columns a logical to indicate whether only antibiotic columns must be detected that were transformed to class `<rsi>` (see [as.rsi()]) on beforehand (defaults to `FALSE`)
+#' @param verbose a [logical] to indicate whether additional info should be printed
+#' @param only_rsi_columns a [logical] to indicate whether only antibiotic columns must be detected that were transformed to class `<rsi>` (see [as.rsi()]) on beforehand (defaults to `FALSE`)
 #' @details You can look for an antibiotic (trade) name or abbreviation and it will search `x` and the [antibiotics] data set for any column containing a name or code of that antibiotic. **Longer columns names take precedence over shorter column names.**
 #' @return A column name of `x`, or `NULL` when no result is found.
 #' @export
@@ -102,13 +102,21 @@ get_column_abx <- function(x,
                            verbose = FALSE,
                            info = TRUE,
                            only_rsi_columns = FALSE,
+                           sort = TRUE,
                            ...) {
+  
+  # check if retrieved before, then get it from package environment
+  if (identical(unique_call_id(entire_session = FALSE), pkg_env$get_column_abx.call)) {
+    return(pkg_env$get_column_abx.out)
+  }
+  
   meet_criteria(x, allow_class = "data.frame")
   meet_criteria(soft_dependencies, allow_class = "character", allow_NULL = TRUE)
   meet_criteria(hard_dependencies, allow_class = "character", allow_NULL = TRUE)
   meet_criteria(verbose, allow_class = "logical", has_length = 1)
   meet_criteria(info, allow_class = "logical", has_length = 1)
   meet_criteria(only_rsi_columns, allow_class = "logical", has_length = 1)
+  meet_criteria(sort, allow_class = "logical", has_length = 1)
   
   if (info == TRUE) {
     message_("Auto-guessing columns suitable for analysis", appendLF = FALSE, as_note = FALSE)
@@ -182,15 +190,21 @@ get_column_abx <- function(x,
     if (info == TRUE) {
       message_("No columns found.")
     }
+    pkg_env$get_column_abx.call <- unique_call_id(entire_session = FALSE)
+    pkg_env$get_column_abx.out <- x
     return(x)
   }
   
   # sort on name
-  x <- x[order(names(x), x)]
+  if (sort == TRUE) {
+    x <- x[order(names(x), x)]
+  }
   duplicates <- c(x[duplicated(x)], x[duplicated(names(x))]) 
   duplicates <- duplicates[unique(names(duplicates))]
   x <- c(x[!names(x) %in% names(duplicates)], duplicates)
-  x <- x[order(names(x), x)]
+  if (sort == TRUE) {
+    x <- x[order(names(x), x)]
+  }
   
   # succeeded with auto-guessing
   if (info == TRUE) {
@@ -233,6 +247,9 @@ get_column_abx <- function(x,
                missing_msg)
     }
   }
+  
+  pkg_env$get_column_abx.call <- unique_call_id(entire_session = FALSE)
+  pkg_env$get_column_abx.out <- x
   x
 }
 

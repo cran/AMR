@@ -3,41 +3,47 @@
 \name{like}
 \alias{like}
 \alias{\%like\%}
+\alias{\%unlike\%}
 \alias{\%like_case\%}
-\title{Pattern Matching with Keyboard Shortcut}
+\alias{\%unlike_case\%}
+\title{Vectorised Pattern Matching with Keyboard Shortcut}
 \source{
-Idea from the \href{https://github.com/Rdatatable/data.table/blob/master/R/like.R}{\code{like} function from the \code{data.table} package}
+Idea from the \href{https://github.com/Rdatatable/data.table/blob/ec1259af1bf13fc0c96a1d3f9e84d55d8106a9a4/R/like.R}{\code{like} function from the \code{data.table} package}, although altered as explained in \emph{Details}.
 }
 \usage{
 like(x, pattern, ignore.case = TRUE)
 
 x \%like\% pattern
 
+x \%unlike\% pattern
+
 x \%like_case\% pattern
+
+x \%unlike_case\% pattern
 }
 \arguments{
-\item{x}{a character vector where matches are sought, or an object which can be coerced by \code{\link[=as.character]{as.character()}} to a character vector.}
+\item{x}{a \link{character} vector where matches are sought, or an object which can be coerced by \code{\link[=as.character]{as.character()}} to a \link{character} vector.}
 
-\item{pattern}{a character string containing a regular expression (or \link{character} string for \code{fixed = TRUE}) to be matched in the given character vector. Coerced by \code{\link[=as.character]{as.character()}} to a character string if possible.  If a \link{character} vector of length 2 or more is supplied, the first element is used with a warning.}
+\item{pattern}{a \link{character} vector containing regular expressions (or a \link{character} string for \code{fixed = TRUE}) to be matched in the given \link{character} vector. Coerced by \code{\link[=as.character]{as.character()}} to a \link{character} string if possible.}
 
 \item{ignore.case}{if \code{FALSE}, the pattern matching is \emph{case sensitive} and if \code{TRUE}, case is ignored during matching.}
 }
 \value{
-A \code{\link{logical}} vector
+A \link{logical} vector
 }
 \description{
 Convenient wrapper around \code{\link[=grepl]{grepl()}} to match a pattern: \code{x \%like\% pattern}. It always returns a \code{\link{logical}} vector and is always case-insensitive (use \code{x \%like_case\% pattern} for case-sensitive matching). Also, \code{pattern} can be as long as \code{x} to compare items of each index in both vectors, or they both can have the same length to iterate over all cases.
 }
 \details{
-The \verb{\%like\%} function:
+These \code{\link[=like]{like()}} and \verb{\%like\%}/\verb{\%unlike\%} functions:
 \itemize{
-\item Is case-insensitive (use \verb{\%like_case\%} for case-sensitive matching)
-\item Supports multiple patterns
-\item Checks if \code{pattern} is a regular expression and sets \code{fixed = TRUE} if not, to greatly improve speed
-\item Always uses compatibility with Perl
+\item Are case-insensitive (use \verb{\%like_case\%}/\verb{\%unlike_case\%} for case-sensitive matching)
+\item Support multiple patterns
+\item Check if \code{pattern} is a valid regular expression and sets \code{fixed = TRUE} if not, to greatly improve speed (vectorised over \code{pattern})
+\item Always use compatibility with Perl unless \code{fixed = TRUE}, to greatly improve speed
 }
 
-Using RStudio? The text \verb{\%like\%} can also be directly inserted in your code from the Addins menu and can have its own Keyboard Shortcut like \code{Ctrl+Shift+L} or \code{Cmd+Shift+L} (see \code{Tools} > \verb{Modify Keyboard Shortcuts...}).
+Using RStudio? The \verb{\%like\%}/\verb{\%unlike\%} functions can also be directly inserted in your code from the Addins menu and can have its own keyboard shortcut like \code{Shift+Ctrl+L} or \code{Shift+Cmd+L} (see menu \code{Tools} > \verb{Modify Keyboard Shortcuts...}). If you keep pressing your shortcut, the inserted text will be iterated over \verb{\%like\%} -> \verb{\%unlike\%} -> \verb{\%like_case\%} -> \verb{\%unlike_case\%}.
 }
 \section{Stable Lifecycle}{
 
@@ -49,11 +55,10 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
-# simple test
 a <- "This is a test"
 b <- "TEST"
 a \%like\% b
@@ -66,16 +71,23 @@ a <- c("Test case", "Something different", "Yet another thing")
 b <- c(     "case",           "diff",      "yet")
 a \%like\% b
 #> TRUE TRUE TRUE
+a \%unlike\% b
+#> FALSE FALSE FALSE
+
 a[1] \%like\% b
 #> TRUE FALSE FALSE
 a \%like\% b[1]
 #> TRUE FALSE FALSE
 
 # get isolates whose name start with 'Ent' or 'ent'
+example_isolates[which(mo_name(example_isolates$mo) \%like\% "^ent"), ]
 \donttest{
+# faster way, only works in R 3.2 and later:
+example_isolates[which(mo_name() \%like\% "^ent"), ]
+
 if (require("dplyr")) {
   example_isolates \%>\%
-    filter(mo_name(mo) \%like\% "^ent")
+    filter(mo_name() \%like\% "^ent")
 }
 }
 }

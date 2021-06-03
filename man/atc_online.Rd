@@ -22,7 +22,7 @@ atc_online_groups(atc_code, ...)
 atc_online_ddd(atc_code, ...)
 }
 \arguments{
-\item{atc_code}{a character or character vector with ATC code(s) of antibiotic(s)}
+\item{atc_code}{a \link{character} or \link{character} vector with ATC code(s) of antibiotic(s)}
 
 \item{property}{property of an ATC code. Valid values are \code{"ATC"}, \code{"Name"}, \code{"DDD"}, \code{"U"} (\code{"unit"}), \code{"Adm.R"}, \code{"Note"} and \code{groups}. For this last option, all hierarchical groups of an ATC code will be returned, see \emph{Examples}.}
 
@@ -61,7 +61,7 @@ Abbreviations of return values when using \code{property = "U"} (unit):
 \item \code{"TU"} = thousand units
 \item \code{"MU"} = million units
 \item \code{"mmol"} = millimole
-\item \code{"ml"} = milliliter (e.g. eyedrops)
+\item \code{"ml"} = millilitre (e.g. eyedrops)
 }
 
 \strong{N.B. This function requires an internet connection and only works if the following packages are installed: \code{curl}, \code{rvest}, \code{xml2}.}
@@ -76,17 +76,19 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
 \donttest{
-# oral DDD (Defined Daily Dose) of amoxicillin
-atc_online_property("J01CA04", "DDD", "O")
+if (requireNamespace("curl") && requireNamespace("rvest") && requireNamespace("xml2")) { 
+  # oral DDD (Defined Daily Dose) of amoxicillin
+  atc_online_property("J01CA04", "DDD", "O")
 
-# parenteral DDD (Defined Daily Dose) of amoxicillin
-atc_online_property("J01CA04", "DDD", "P")
+  # parenteral DDD (Defined Daily Dose) of amoxicillin
+  atc_online_property("J01CA04", "DDD", "P")
 
-atc_online_property("J01CA04", property = "groups") # search hierarchical groups of amoxicillin
+  atc_online_property("J01CA04", property = "groups") # search hierarchical groups of amoxicillin
+}
 }
 }

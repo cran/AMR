@@ -48,13 +48,13 @@ ab_property(x, property = "name", language = get_locale(), ...)
 
 \item{language}{language of the returned text, defaults to system language (see \code{\link[=get_locale]{get_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
-\item{tolower}{logical to indicate whether the first character of every output should be transformed to a lower case character. This will lead to e.g. "polymyxin B" and not "polymyxin b".}
+\item{tolower}{a \link{logical} to indicate whether the first \link{character} of every output should be transformed to a lower case \link{character}. This will lead to e.g. "polymyxin B" and not "polymyxin b".}
 
 \item{...}{other arguments passed on to \code{\link[=as.ab]{as.ab()}}}
 
 \item{administration}{way of administration, either \code{"oral"} or \code{"iv"}}
 
-\item{units}{a logical to indicate whether the units instead of the DDDs itself must be returned, see \emph{Examples}}
+\item{units}{a \link{logical} to indicate whether the units instead of the DDDs itself must be returned, see \emph{Examples}}
 
 \item{open}{browse the URL using \code{\link[utils:browseURL]{utils::browseURL()}}}
 
@@ -90,7 +90,7 @@ World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodo
 
 WHONET 2019 software: \url{http://www.whonet.org/software.html}
 
-European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}
+European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 }
 
 \section{Reference Data Publicly Available}{
@@ -100,7 +100,7 @@ All reference data sets (about microorganisms, antibiotics, R/SI interpretation,
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{

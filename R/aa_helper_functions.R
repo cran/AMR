@@ -71,7 +71,49 @@ addin_insert_in <- function() {
 
 # No export, no Rd
 addin_insert_like <- function() {
-  import_fn("insertText", "rstudioapi")(" %like% ")
+  # we want Shift + Ctrl/Cmd + L to iterate over %like%, %unlike%, %like_case%, and %unlike_case%
+  
+  getActiveDocumentContext <- import_fn("getActiveDocumentContext", "rstudioapi")
+  insertText <- import_fn("insertText", "rstudioapi")
+  modifyRange <- import_fn("modifyRange", "rstudioapi")
+  document_range <- import_fn("document_range", "rstudioapi")
+  document_position <- import_fn("document_position", "rstudioapi")
+  
+  context <- getActiveDocumentContext()
+  current_row <- context$selection[[1]]$range$end[1]
+  current_col <- context$selection[[1]]$range$end[2]
+  current_row_txt <- context$contents[current_row]
+  if (is.null(current_row) || current_row_txt %unlike% "%(un)?like") {
+    insertText(" %like% ")
+    return(invisible())
+  }
+  
+  pos_preceded_by <- function(txt) {
+    if (tryCatch(substr(current_row_txt, current_col - nchar(trimws(txt, which = "right")), current_col) == trimws(txt, which = "right"),
+                 error = function(e) FALSE)) {
+      return(TRUE)
+    }
+    tryCatch(substr(current_row_txt, current_col - nchar(txt), current_col) %like% paste0("^", txt),
+             error = function(e) FALSE)
+  }
+  replace_pos <- function(old, with) {
+    modifyRange(document_range(document_position(current_row, current_col - nchar(old)),
+                               document_position(current_row, current_col)),
+                text = with,
+                id = context$id)
+  }
+  
+  if (pos_preceded_by(" %like% ")) {
+    replace_pos(" %like% ", with = " %unlike% ")
+  } else if (pos_preceded_by(" %unlike% ")) {
+    replace_pos(" %unlike% ", with = " %like_case% ")
+  } else if (pos_preceded_by(" %like_case% ")) {
+    replace_pos(" %like_case% ", with = " %unlike_case% ")
+  } else if (pos_preceded_by(" %unlike_case% ")) {
+    replace_pos(" %unlike_case% ", with = " %like% ")
+  } else {
+    insertText(" %like% ")
+  }
 }
 
 check_dataset_integrity <- function() {
@@ -87,11 +129,14 @@ check_dataset_integrity <- function() {
     } else {
       plural <- c(" is", "s", "")
     }
-    warning_("The following data set", plural[1],
-             " overwritten by your global environment and prevent", plural[2], 
-             " the AMR package from working correctly: ",
-             vector_and(overwritten, quotes = "'"),
-             ".\nPlease rename your object", plural[3], ".", call = FALSE)
+    if (message_not_thrown_before("dataset_overwritten")) {
+      warning_("The following data set", plural[1],
+               " overwritten by your global environment and prevent", plural[2], 
+               " the AMR package from working correctly: ",
+               vector_and(overwritten, quotes = "'"),
+               ".\nPlease rename your object", plural[3], ".", call = FALSE)
+      remember_thrown_message("dataset_overwritten")
+    }
   }
   # check if other packages did not overwrite our data sets
   valid_microorganisms <- TRUE
@@ -133,9 +178,7 @@ search_type_in_df <- function(x, type, info = TRUE) {
       found <- sort(colnames(x)[vapply(FUN.VALUE = logical(1), x, is.mo)])[1]
     } else if ("mo" %in% colnames(x) &
                suppressWarnings(
-                 all(x$mo %in% c(NA,
-                                 microorganisms$mo,
-                                 microorganisms.translation$mo_old)))) {
+                 all(x$mo %in% c(NA, microorganisms$mo)))) {
       found <- "mo"
     } else if (any(colnames(x) %like% "^(mo|microorganism|organism|bacteria|ba[ck]terie)s?$")) {
       found <- sort(colnames(x)[colnames(x) %like% "^(mo|microorganism|organism|bacteria|ba[ck]terie)s?$"])[1]
@@ -147,9 +190,9 @@ search_type_in_df <- function(x, type, info = TRUE) {
 
   }
   # -- key antibiotics
-  if (type == "keyantibiotics") {
-    if (any(colnames(x) %like% "^key.*(ab|antibiotics)")) {
-      found <- sort(colnames(x)[colnames(x) %like% "^key.*(ab|antibiotics)"])[1]
+  if (type %in% c("keyantibiotics", "keyantimicrobials")) {
+    if (any(colnames(x) %like% "^key.*(ab|antibiotics|antimicrobials)")) {
+      found <- sort(colnames(x)[colnames(x) %like% "^key.*(ab|antibiotics|antimicrobials)"])[1]
     }
   }
   # -- date
@@ -211,10 +254,21 @@ search_type_in_df <- function(x, type, info = TRUE) {
   found
 }
 
-is_possibly_regex <- function(x) {
-  tryCatch(vapply(FUN.VALUE = character(1), strsplit(x, ""),
-                  function(y) any(y %in% c("$", "(", ")", "*", "+", "-", ".", "?", "[", "]", "^", "{", "|", "}", "\\"), na.rm = TRUE)),
-           error = function(e) rep(TRUE, length(x)))
+is_valid_regex <- function(x) {
+  regex_at_all <- tryCatch(vapply(FUN.VALUE = logical(1),
+                                  X = strsplit(x, ""),
+                                  FUN = function(y) any(y %in% c("$", "(", ")", "*", "+", "-",
+                                                                 ".", "?", "[", "]", "^", "{", 
+                                                                 "|", "}", "\\"),
+                                                        na.rm = TRUE),
+                                  USE.NAMES = FALSE),
+                           error = function(e) rep(TRUE, length(x)))
+  regex_valid <- vapply(FUN.VALUE = logical(1),
+                        X = x,
+                        FUN = function(y) !"try-error" %in% class(try(grepl(y, "", perl = TRUE),
+                                                                      silent = TRUE)),
+                        USE.NAMES = FALSE)
+  regex_at_all & regex_valid
 }
 
 stop_ifnot_installed <- function(package) {
@@ -223,8 +277,8 @@ stop_ifnot_installed <- function(package) {
   vapply(FUN.VALUE = character(1), package, function(pkg)
     tryCatch(get(".packageName", envir = asNamespace(pkg)),
              error = function(e) {
-               if (package == "rstudioapi") {
-                 stop("This function only works in RStudio.", call. = FALSE)
+               if (pkg == "rstudioapi") {
+                 stop("This function only works in RStudio when using R >= 3.2.", call. = FALSE)
                } else if (pkg != "base") {
                  stop("This requires the '", pkg, "' package.",
                       "\nTry to install it with: install.packages(\"", pkg, "\")",
@@ -232,6 +286,15 @@ stop_ifnot_installed <- function(package) {
                }
              }))
   return(invisible())
+}
+
+pkg_is_available <- function(pkg, also_load = TRUE) {
+  if (also_load == TRUE) {
+    out <- suppressWarnings(require(pkg, character.only = TRUE, warn.conflicts = FALSE, quietly = TRUE))
+  } else {
+    out <- requireNamespace(pkg, quietly = TRUE)
+  }
+  isTRUE(out)
 }
 
 import_fn <- function(name, pkg, error_on_fail = TRUE) {
@@ -265,7 +328,7 @@ word_wrap <- function(...,
   msg <- paste0(c(...), collapse = "")
   
   if (isTRUE(as_note)) {
-    msg <- paste0("NOTE: ", gsub("^note:? ?", "", msg, ignore.case = TRUE))
+    msg <- paste0(pkg_env$info_icon, " ", gsub("^note:? ?", "", msg, ignore.case = TRUE))
   }
   
   if (msg %like% "\n") {
@@ -280,6 +343,9 @@ word_wrap <- function(...,
                   collapse = "\n"))
   }
   
+  # correct for operators (will add the space later on)
+  ops <- "([,./><\\]\\[])"
+  msg <- gsub(paste0(ops, " ", ops), "\\1\\2", msg, perl = TRUE)
   # we need to correct for already applied style, that adds text like "\033[31m\"
   msg_stripped <- font_stripstyle(msg)
   # where are the spaces now?
@@ -296,11 +362,13 @@ word_wrap <- function(...,
   # put it together
   msg <- unlist(strsplit(msg, " "))
   msg[replace_spaces] <- paste0(msg[replace_spaces], "\n")
+  # add space around operators again
+  msg <- gsub(paste0(ops, ops), "\\1 \\2", msg, perl = TRUE)
   msg <- paste0(msg, collapse = " ")
   msg <- gsub("\n ", "\n", msg, fixed = TRUE)
   
-  if (msg_stripped %like% "^NOTE: ") {
-    indentation <- 6 + extra_indent
+  if (msg_stripped %like% "\u2139 ") {
+    indentation <- 2 + extra_indent
   } else if (msg_stripped %like% "^=> ") {
     indentation <- 3 + extra_indent
   } else {
@@ -309,7 +377,7 @@ word_wrap <- function(...,
   msg <- gsub("\n", paste0("\n", strrep(" ", indentation)), msg, fixed = TRUE)
   # remove trailing empty characters
   msg <- gsub("(\n| )+$", "", msg)
-  
+
   if (length(add_fn) > 0) {
     if (!is.list(add_fn)) {
       add_fn <- list(add_fn)
@@ -403,7 +471,7 @@ stop_ifnot <- function(expr, ..., call = TRUE) {
          ifelse(!is.na(y), y, NA))
 }
 
-class_integrity_check <- function(value, type, check_vector) {
+return_after_integrity_check <- function(value, type, check_vector) {
   if (!all(value[!is.na(value)] %in% check_vector)) {
     warning_(paste0("invalid ", type, ", NA generated"), call = FALSE)
     value[!value %in% check_vector] <- NA
@@ -437,14 +505,30 @@ dataset_UTF8_to_ASCII <- function(df) {
 }
 
 # for eucast_rules() and mdro(), creates markdown output with URLs and names
-create_ab_documentation <- function(ab) {
+create_eucast_ab_documentation <- function() {
+  x <- trimws(unique(toupper(unlist(strsplit(eucast_rules_file$then_change_these_antibiotics, ",")))))
+  ab <- character()
+  for (val in x) {
+    if (val %in% ls(envir = asNamespace("AMR"))) {
+      # antibiotic group names, as defined in data-raw/_internals.R, such as `CARBAPENEMS`
+      val <- eval(parse(text = val), envir = asNamespace("AMR"))
+    } else if (val %in% AB_lookup$ab) {
+      # separate drugs, such as `AMX`
+      val <- as.ab(val)
+    } else {
+      val <- as.rsi(NA)
+    }
+    ab <- c(ab, val)
+  }
+  ab <- unique(ab)
+  atcs <- ab_atc(ab)
+  # only keep ABx with an ATC code:
+  ab <- ab[!is.na(atcs)]
   ab_names <- ab_name(ab, language = NULL, tolower = TRUE)
   ab <- ab[order(ab_names)]
   ab_names <- ab_names[order(ab_names)]
-  atcs <- ab_atc(ab)
-  atcs[!is.na(atcs)] <- paste0("[", atcs[!is.na(atcs)], "](", ab_url(ab[!is.na(atcs)]), ")")
-  atcs[is.na(atcs)] <- "no ATC code"
-  out <- paste0(ab_names, " (`", ab, "`, ", atcs, ")", collapse = ", ")
+  atc_txt <- paste0("[", atcs[!is.na(atcs)], "](", ab_url(ab), ")")
+  out <- paste0(ab_names, " (`", ab, "`, ", atc_txt, ")", collapse = ", ")
   substr(out, 1, 1) <- toupper(substr(out, 1, 1))
   out
 }
@@ -481,7 +565,7 @@ vector_and <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE) {
   vector_or(v = v, quotes = quotes, reverse = reverse, sort = sort, last_sep = " and ")
 }
 
-format_class <- function(class, plural) {
+format_class <- function(class, plural = FALSE) {
   class.bak <- class
   class[class == "numeric"] <- "number"
   class[class == "integer"] <- "whole number"
@@ -495,17 +579,15 @@ format_class <- function(class, plural) {
                                                         ifelse(plural, "s", ""))
   # exceptions
   class[class == "logical"] <- ifelse(plural, "a vector of `TRUE`/`FALSE`", "`TRUE` or `FALSE`")
-  if ("data.frame" %in% class) {
-    class <- "a data set"
-  }
+  class[class == "data.frame"] <- "a data set"
   if ("list" %in% class) {
     class <- "a list"
   }
   if ("matrix" %in% class) {
     class <- "a matrix"
   }
-  if ("isolate_identifier" %in% class) {
-    class <- "created with isolate_identifier()"
+  if ("custom_eucast_rules" %in% class) {
+    class <- "input created with `custom_eucast_rules()`"
   }
   if (any(c("mo", "ab", "rsi") %in% class)) {
     class <- paste0("of class <", class[1L], ">")
@@ -522,6 +604,7 @@ meet_criteria <- function(object,
                           looks_like = NULL,
                           is_in = NULL,
                           is_positive = NULL,
+                          is_positive_or_zero = NULL,
                           is_finite = NULL,
                           contains_column_class = NULL,
                           allow_NULL = FALSE,
@@ -583,23 +666,31 @@ meet_criteria <- function(object,
       object <- tolower(object)
       is_in <- tolower(is_in)
     }
-    stop_ifnot(all(object %in% is_in, na.rm = TRUE), "argument `", obj_name,
-               "` must be ",
-               ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1, "either ", ""),
+    stop_ifnot(all(object %in% is_in, na.rm = TRUE), "argument `", obj_name, "` ",
+               ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1, 
+                      "must be either ",
+                      "must only contain values "),
                vector_or(is_in, quotes = !isTRUE(any(c("double", "numeric", "integer") %in% allow_class))),
                ifelse(allow_NA == TRUE, ", or NA", ""),
                call = call_depth)
   }
-  if (!is.null(is_positive)) {
+  if (isTRUE(is_positive)) {
     stop_if(is.numeric(object) && !all(object > 0, na.rm = TRUE), "argument `", obj_name,
             "` must ",
             ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1,
-                   "be a positive number",
-                   "all be positive numbers"),
-            " (higher than zero)",
+                   "be a number higher than zero",
+                   "all be numbers higher than zero"),
             call = call_depth)
   }
-  if (!is.null(is_finite)) {
+  if (isTRUE(is_positive_or_zero)) {
+    stop_if(is.numeric(object) && !all(object >= 0, na.rm = TRUE), "argument `", obj_name,
+            "` must ",
+            ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1,
+                   "be zero or a positive number",
+                   "all be zero or numbers higher than zero"),
+            call = call_depth)
+  }
+  if (isTRUE(is_finite)) {
     stop_if(is.numeric(object) && !all(is.finite(object[!is.na(object)]), na.rm = TRUE), "argument `", obj_name,
             "` must ",
             ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1,
@@ -623,6 +714,11 @@ meet_criteria <- function(object,
 }
 
 get_current_data <- function(arg_name, call) {
+  # check if retrieved before, then get it from package environment
+  if (identical(unique_call_id(entire_session = FALSE), pkg_env$get_current_data.call)) {
+    return(pkg_env$get_current_data.out)
+  }
+  
   # try dplyr::cur_data_all() first to support dplyr groups
   # only useful for e.g. dplyr::filter(), dplyr::mutate() and dplyr::summarise()
   # not useful (throws error) with e.g. dplyr::select() - but that will be caught later in this function
@@ -630,32 +726,43 @@ get_current_data <- function(arg_name, call) {
   if (!is.null(cur_data_all)) {
     out <- tryCatch(cur_data_all(), error = function(e) NULL)
     if (is.data.frame(out)) {
+      out <- structure(out, type = "dplyr_cur_data_all")
+      pkg_env$get_current_data.call <- unique_call_id(entire_session = FALSE)
+      pkg_env$get_current_data.out <- out
       return(out)
     }
   }
-  
-  if (as.double(R.Version()$major) + (as.double(R.Version()$minor) / 10) < 3.2) {
+
+  if (getRversion() < "3.2") {
     # R-3.0 and R-3.1 do not have an `x` element in the call stack, rendering this function useless
     if (is.na(arg_name)) {
       # like in carbapenems() etc.
       warning_("this function can only be used in R >= 3.2", call = call)
       return(data.frame())
     } else {
+      # mimic a default R error, e.g. for example_isolates[which(mo_name() %like% "^ent"), ] 
       stop_("argument `", arg_name, "` is missing with no default", call = call)
     }
   }
   
   # try a (base R) method, by going over the complete system call stack with sys.frames()
   not_set <- TRUE
+  source <- "base_R"
   frms <- lapply(sys.frames(), function(el) {
     if (not_set == TRUE && ".Generic" %in% names(el)) {
       if (tryCatch(".data" %in% names(el) && is.data.frame(el$`.data`), error = function(e) FALSE)) {
-        # dplyr? - an element `.data` will be in the system call stack
-        # will be used in dplyr::select() (but not in dplyr::filter(), dplyr::mutate() or dplyr::summarise())
+        # - - - -
+        # dplyr
+        # - - - -
+        # an element `.data` will be in the system call stack when using dplyr::select()
+        # [but not when using dplyr::filter(), dplyr::mutate() or dplyr::summarise()]
         not_set <<- FALSE
+        source <<- "dplyr_selector"
         el$`.data`
       } else if (tryCatch(any(c("x", "xx") %in% names(el)), error = function(e) FALSE)) {
-        # otherwise try base R:
+        # - - - -
+        # base R
+        # - - - -
         # an element `x` will be in this environment for only cols, e.g. `example_isolates[, carbapenems()]`
         # an element `xx` will be in this environment for rows + cols, e.g. `example_isolates[c(1:3), carbapenems()]`
         if (tryCatch(is.data.frame(el$xx), error = function(e) FALSE)) {
@@ -675,9 +782,13 @@ get_current_data <- function(arg_name, call) {
     }
   })
   
+  # lookup the matched frame and return its value: a data.frame
   vars_df <- tryCatch(frms[[which(!vapply(FUN.VALUE = logical(1), frms, is.null))]], error = function(e) NULL)
   if (is.data.frame(vars_df)) {
-    return(vars_df)
+    out <- structure(vars_df, type = source)
+    pkg_env$get_current_data.call <- unique_call_id(entire_session = FALSE)
+    pkg_env$get_current_data.out <- out
+    return(out)
   }
   
   # nothing worked, so:
@@ -751,8 +862,13 @@ unique_call_id <- function(entire_session = FALSE) {
   } else {
     # combination of environment ID (like "0x7fed4ee8c848")
     # and highest system call
+    call <- paste0(deparse(sys.calls()[[1]]), collapse = "")
+    if (!interactive() || call %like% "run_test_dir|test_all|tinytest|test_package|testthat") {
+      # unit tests will keep the same call and environment - give them a unique ID
+      call <- paste0(sample(c(c(0:9), letters[1:6]), size = 64, replace = TRUE), collapse = "")
+    }
     c(envir = gsub("<environment: (.*)>", "\\1", utils::capture.output(sys.frames()[[1]])),
-      call = paste0(deparse(sys.calls()[[1]]), collapse = ""))
+      call = call)
   }
 }
 
@@ -766,13 +882,6 @@ remember_thrown_message <- function(fn, entire_session = FALSE) {
 
 message_not_thrown_before <- function(fn, entire_session = FALSE) {
   is.null(pkg_env[[paste0("thrown_msg.", fn)]]) || !identical(pkg_env[[paste0("thrown_msg.", fn)]], unique_call_id(entire_session))
-}
-
-reset_all_thrown_messages <- function() {
-  # for unit tests, where the environment and highest system call do not change
-  pkg_env_contents <- ls(envir = pkg_env)
-  rm(list = pkg_env_contents[pkg_env_contents %like% "^thrown_msg."],
-     envir = pkg_env)
 }
 
 has_colour <- function() {
@@ -790,7 +899,7 @@ has_colour <- function() {
     if (Sys.getenv("RSTUDIO", "") == "") {
       return(FALSE)
     }
-    if ((cols <- Sys.getenv("RSTUDIO_CONSOLE_COLOR", "")) != "" && !is.na(as.numeric(cols))) {
+    if ((cols <- Sys.getenv("RSTUDIO_CONSOLE_COLOR", "")) != "" && !is.na(as.double(cols))) {
       return(TRUE)
     }
     tryCatch(get("isAvailable", envir = asNamespace("rstudioapi"))(), error = function(e) return(FALSE)) &&
@@ -913,8 +1022,8 @@ font_stripstyle <- function(x) {
   gsub("(?:(?:\\x{001b}\\[)|\\x{009b})(?:(?:[0-9]{1,3})?(?:(?:;[0-9]{0,3})*)?[A-M|f-m])|\\x{001b}[A-M]", "", x, perl = TRUE)
 }
 
-progress_ticker <- function(n = 1, n_min = 0, ...) {
-  if (!interactive() || n < n_min) {
+progress_ticker <- function(n = 1, n_min = 0, print = TRUE, ...) {
+  if (print == FALSE || n < n_min) {
     pb <- list()
     pb$tick <- function() {
       invisible()
@@ -1011,7 +1120,7 @@ s3_register <- function(generic, class, method = NULL) {
 
 # works exactly like round(), but rounds `round2(44.55, 1)` to 44.6 instead of 44.5
 # and adds decimal zeroes until `digits` is reached when force_zero = TRUE
-round2 <- function(x, digits = 0, force_zero = TRUE) {
+round2 <- function(x, digits = 1, force_zero = TRUE) {
   x <- as.double(x)
   # https://stackoverflow.com/a/12688836/4575331
   val <- (trunc((abs(x) * 10 ^ digits) + 0.5) / 10 ^ digits) * sign(x)
@@ -1056,11 +1165,14 @@ percentage <- function(x, digits = NULL, ...) {
     if (is.null(digits)) {
       digits <- getdecimalplaces(x)
     }
+    if (is.null(digits) || is.na(digits) || !is.numeric(digits)) {
+      digits <- 2
+    }
 
     # round right: percentage(0.4455) and format(as.percentage(0.4455), 1) should return "44.6%", not "44.5%"
     x_formatted <- format(round2(as.double(x), digits = digits + 2) * 100,
                           scientific = FALSE,
-                          digits = digits,
+                          digits = max(1, digits),
                           nsmall = digits,
                           ...)
     x_formatted <- paste0(x_formatted, "%")
@@ -1080,15 +1192,15 @@ percentage <- function(x, digits = NULL, ...) {
 }
 
 time_start_tracking <- function() {
-  pkg_env$time_start <- round(as.numeric(Sys.time()) * 1000)
+  pkg_env$time_start <- round(as.double(Sys.time()) * 1000)
 }
 
 time_track <- function(name = NULL) {
-  paste("(until now:", trimws(round(as.numeric(Sys.time()) * 1000) - pkg_env$time_start), "ms)")
+  paste("(until now:", trimws(round(as.double(Sys.time()) * 1000) - pkg_env$time_start), "ms)")
 }
 
-# prevent dependency on package 'backports'
-# these functions were not available in previous versions of R (last checked: R 4.0.3)
+# prevent dependency on package 'backports' ----
+# these functions were not available in previous versions of R (last checked: R 4.1.0)
 # see here for the full list: https://github.com/r-lib/backports
 strrep <- function(x, times) {
   x <- as.character(x)
@@ -1102,14 +1214,13 @@ strrep <- function(x, times) {
     paste0(replicate(times, x), collapse = "")
   }, list(x = x, times = times), MoreArgs = list()), use.names = FALSE)
 }
-trimws <- function(x, which = c("both", "left", "right")) {
+trimws <- function(x, which = c("both", "left", "right"), whitespace = "[ \t\r\n]") {
   which <- match.arg(which)
   mysub <- function(re, x) sub(re, "", x, perl = TRUE)
-  if (which == "left")
-    return(mysub("^[ \t\r\n]+", x))
-  if (which == "right")
-    return(mysub("[ \t\r\n]+$", x))
-  mysub("[ \t\r\n]+$", mysub("^[ \t\r\n]+", x))
+  switch(which,
+         left = mysub(paste0("^", whitespace, "+"), x),
+         right = mysub(paste0(whitespace, "+$"), x),
+         both = mysub(paste0(whitespace, "+$"), mysub(paste0("^", whitespace, "+"), x)))
 }
 isFALSE <- function(x) {
   is.logical(x) && length(x) == 1L && !is.na(x) && !x
@@ -1134,4 +1245,16 @@ isNamespaceLoaded <- function(pkg) {
 }
 lengths <- function(x, use.names = TRUE) {
   vapply(x, length, FUN.VALUE = NA_integer_, USE.NAMES = use.names)
+}
+
+if (getRversion() < "3.1") {
+  # R-3.0 does not contain these functions, set them here to prevent installation failure
+  # (required for extension of the <mic> class)
+  cospi <- function(...) 1
+  sinpi <- function(...) 1
+  tanpi <- function(...) 1
+}
+dir.exists <- function (paths) {
+  x = base::file.info(paths)$isdir
+  !is.na(x) & x
 }

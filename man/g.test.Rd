@@ -52,9 +52,9 @@ A list with class \code{"htest"} containing the following
 \code{\link[=g.test]{g.test()}} performs chi-squared contingency table tests and goodness-of-fit tests, just like \code{\link[=chisq.test]{chisq.test()}} but is more reliable (1). A \emph{G}-test can be used to see whether the number of observations in each category fits a theoretical expectation (called a \strong{\emph{G}-test of goodness-of-fit}), or to see whether the proportions of one variable are different for different values of the other variable (called a \strong{\emph{G}-test of independence}).
 }
 \details{
-If \code{x} is a matrix with one row or column, or if \code{x} is a vector and \code{y} is not given, then a \emph{goodness-of-fit test} is performed (\code{x} is treated as a one-dimensional contingency table). The entries of \code{x} must be non-negative integers. In this case, the hypothesis tested is whether the population probabilities equal those in \code{p}, or are all equal if \code{p} is not given.
+If \code{x} is a \link{matrix} with one row or column, or if \code{x} is a vector and \code{y} is not given, then a \emph{goodness-of-fit test} is performed (\code{x} is treated as a one-dimensional contingency table). The entries of \code{x} must be non-negative integers. In this case, the hypothesis tested is whether the population probabilities equal those in \code{p}, or are all equal if \code{p} is not given.
 
-If \code{x} is a matrix with at least two rows and columns, it is taken as a two-dimensional contingency table: the entries of \code{x} must be non-negative integers.  Otherwise, \code{x} and \code{y} must be vectors or factors of the same length; cases with missing values are removed, the objects are coerced to factors, and the contingency table is computed from these.  Then Pearson's chi-squared test is performed of the null hypothesis that the joint distribution of the cell counts in a 2-dimensional contingency table is the product of the row and column marginals.
+If \code{x} is a \link{matrix} with at least two rows and columns, it is taken as a two-dimensional contingency table: the entries of \code{x} must be non-negative integers.  Otherwise, \code{x} and \code{y} must be vectors or factors of the same length; cases with missing values are removed, the objects are coerced to factors, and the contingency table is computed from these.  Then Pearson's chi-squared test is performed of the null hypothesis that the joint distribution of the cell counts in a 2-dimensional contingency table is the product of the row and column marginals.
 
 The p-value is computed from the asymptotic chi-squared distribution of the test statistic.
 
@@ -105,7 +105,7 @@ The \link[=lifecycle]{lifecycle} of this function is \strong{questioning}. This 
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{

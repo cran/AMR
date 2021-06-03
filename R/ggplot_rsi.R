@@ -31,8 +31,8 @@
 #' @param position position adjustment of bars, either `"fill"`, `"stack"` or `"dodge"`
 #' @param x variable to show on x axis, either `"antibiotic"` (default) or `"interpretation"` or a grouping variable
 #' @param fill variable to categorise using the plots legend, either `"antibiotic"` (default) or `"interpretation"` or a grouping variable
-#' @param breaks numeric vector of positions
-#' @param limits numeric vector of length two providing limits of the scale, use `NA` to refer to the existing minimum or maximum
+#' @param breaks a [numeric] vector of positions
+#' @param limits a [numeric] vector of length two providing limits of the scale, use `NA` to refer to the existing minimum or maximum
 #' @param facet variable to split plots by, either `"interpretation"` (default) or `"antibiotic"` or a grouping variable
 #' @inheritParams proportion
 #' @param nrow (when using `facet`) number of rows
@@ -67,6 +67,7 @@
 #' @export
 #' @inheritSection AMR Read more on Our Website!
 #' @examples
+#' \donttest{
 #' if (require("ggplot2") & require("dplyr")) {
 #'  
 #'   # get antimicrobial results for drugs against a UTI:
@@ -114,36 +115,35 @@
 #'     ggplot() +
 #'     geom_col(aes(x = x, y = y, fill = z)) +
 #'     scale_rsi_colours(Value4 = "S", Value5 = "I", Value6 = "R")
+#'   
+#'   # resistance of ciprofloxacine per age group
+#'   example_isolates %>%
+#'     mutate(first_isolate = first_isolate()) %>%
+#'     filter(first_isolate == TRUE,
+#'            mo == as.mo("E. coli")) %>%
+#'     # age_groups() is also a function in this AMR package:
+#'     group_by(age_group = age_groups(age)) %>%
+#'     select(age_group,
+#'            CIP) %>%
+#'     ggplot_rsi(x = "age_group")
+#'   
+#'   # a shorter version which also adjusts data label colours:
+#'   example_isolates %>%
+#'     select(AMX, NIT, FOS, TMP, CIP) %>%
+#'     ggplot_rsi(colours = FALSE)
+#'
+#'
+#'   # it also supports groups (don't forget to use the group var on `x` or `facet`):
+#'   example_isolates %>%
+#'     select(hospital_id, AMX, NIT, FOS, TMP, CIP) %>%
+#'     group_by(hospital_id) %>%
+#'     ggplot_rsi(x = "hospital_id",
+#'                facet = "antibiotic",
+#'                nrow = 1,
+#'                title = "AMR of Anti-UTI Drugs Per Hospital",
+#'                x.title = "Hospital",
+#'                datalabels = FALSE)
 #' }
-#'   
-#' \donttest{
-#' # resistance of ciprofloxacine per age group
-#' example_isolates %>%
-#'   mutate(first_isolate = first_isolate(.)) %>%
-#'   filter(first_isolate == TRUE,
-#'          mo == as.mo("E. coli")) %>%
-#'   # age_groups() is also a function in this AMR package:
-#'   group_by(age_group = age_groups(age)) %>%
-#'   select(age_group,
-#'          CIP) %>%
-#'   ggplot_rsi(x = "age_group")
-#'   
-#' # a shorter version which also adjusts data label colours:
-#' example_isolates %>%
-#'   select(AMX, NIT, FOS, TMP, CIP) %>%
-#'   ggplot_rsi(colours = FALSE)
-#'
-#'
-#' # it also supports groups (don't forget to use the group var on `x` or `facet`):
-#' example_isolates %>%
-#'   select(hospital_id, AMX, NIT, FOS, TMP, CIP) %>%
-#'   group_by(hospital_id) %>%
-#'   ggplot_rsi(x = "hospital_id",
-#'              facet = "antibiotic",
-#'              nrow = 1,
-#'              title = "AMR of Anti-UTI Drugs Per Hospital",
-#'              x.title = "Hospital",
-#'              datalabels = FALSE)
 #' }
 ggplot_rsi <- function(data,
                        position = NULL,

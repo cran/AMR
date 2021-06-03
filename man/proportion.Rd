@@ -56,9 +56,9 @@ rsi_df(
 
 \item{minimum}{the minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see \emph{Source}.}
 
-\item{as_percent}{a logical to indicate whether the output must be returned as a hundred fold with \% sign (a character). A value of \code{0.123456} will then be returned as \code{"12.3\%"}.}
+\item{as_percent}{a \link{logical} to indicate whether the output must be returned as a hundred fold with \% sign (a character). A value of \code{0.123456} will then be returned as \code{"12.3\%"}.}
 
-\item{only_all_tested}{(for combination therapies, i.e. using more than one variable for \code{...}): a logical to indicate that isolates must be tested for all antibiotics, see section \emph{Combination Therapy} below}
+\item{only_all_tested}{(for combination therapies, i.e. using more than one variable for \code{...}): a \link{logical} to indicate that isolates must be tested for all antibiotics, see section \emph{Combination Therapy} below}
 
 \item{data}{a \link{data.frame} containing columns with class \code{\link{rsi}} (see \code{\link[=as.rsi]{as.rsi()}})}
 
@@ -66,9 +66,9 @@ rsi_df(
 
 \item{language}{language of the returned text, defaults to system language (see \code{\link[=get_locale]{get_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
-\item{combine_SI}{a logical to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant). This used to be the argument \code{combine_IR}, but this now follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. Default is \code{TRUE}.}
+\item{combine_SI}{a \link{logical} to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant). This used to be the argument \code{combine_IR}, but this now follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. Default is \code{TRUE}.}
 
-\item{combine_IR}{a logical to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. I+R (susceptible vs. non-susceptible). This is outdated, see argument \code{combine_SI}.}
+\item{combine_IR}{a \link{logical} to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. I+R (susceptible vs. non-susceptible). This is outdated, see argument \code{combine_SI}.}
 }
 \value{
 A \link{double} or, when \code{as_percent = TRUE}, a \link{character}.
@@ -81,7 +81,7 @@ These functions can be used to calculate the (co-)resistance or susceptibility o
 \details{
 The function \code{\link[=resistance]{resistance()}} is equal to the function \code{\link[=proportion_R]{proportion_R()}}. The function \code{\link[=susceptibility]{susceptibility()}} is equal to the function \code{\link[=proportion_SI]{proportion_SI()}}.
 
-\strong{Remember that you should filter your table to let it contain only first isolates!} This is needed to exclude duplicates and to reduce selection bias. Use \code{\link[=first_isolate]{first_isolate()}} to determine them in your data set.
+\strong{Remember that you should filter your data to let it contain only first isolates!} This is needed to exclude duplicates and to reduce selection bias. Use \code{\link[=first_isolate]{first_isolate()}} to determine them in your data set.
 
 These functions are not meant to count isolates, but to calculate the proportion of resistance/susceptibility. Use the \code{\link[=count]{count()}} functions to count isolates. The function \code{\link[=susceptibility]{susceptibility()}} is essentially equal to \code{count_susceptible() / count_all()}. \emph{Low counts can influence the outcome - the \code{proportion} functions may camouflage this, since they only return the proportion (albeit being dependent on the \code{minimum} argument).}
 
@@ -138,12 +138,12 @@ A microorganism is categorised as \emph{Susceptible, standard dosing regimen}, w
 A microorganism is categorised as \emph{Susceptible, Increased exposure} when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.
 }
 
-This AMR package honours this new insight. Use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
+This AMR package honours this (new) insight. Use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
 }
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -160,6 +160,7 @@ proportion_I(example_isolates$AMX)
 proportion_IR(example_isolates$AMX)
 proportion_R(example_isolates$AMX)
 
+\donttest{
 if (require("dplyr")) {
   example_isolates \%>\%
     group_by(hospital_id) \%>\%
@@ -217,6 +218,7 @@ if (require("dplyr")) {
     select(hospital_id, AMX, CIP) \%>\%
     group_by(hospital_id) \%>\%
     proportion_df(translate = FALSE)
+}
 }
 }
 \seealso{

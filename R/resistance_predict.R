@@ -34,11 +34,11 @@
 #' @param year_every unit of sequence between lowest year found in the data and `year_max`
 #' @param minimum minimal amount of available isolates per year to include. Years containing less observations will be estimated by the model.
 #' @param model the statistical model of choice. This could be a generalised linear regression model with binomial distribution (i.e. using `glm(..., family = binomial)``, assuming that a period of zero resistance was followed by a period of increasing resistance leading slowly to more and more resistance. See *Details* for all valid options.
-#' @param I_as_S a logical to indicate whether values `"I"` should be treated as `"S"` (will otherwise be treated as `"R"`). The default, `TRUE`, follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section *Interpretation of S, I and R* below. 
-#' @param preserve_measurements a logical to indicate whether predictions of years that are actually available in the data should be overwritten by the original data. The standard errors of those years will be `NA`.
-#' @param info a logical to indicate whether textual analysis should be printed with the name and [summary()] of the statistical model.
+#' @param I_as_S a [logical] to indicate whether values `"I"` should be treated as `"S"` (will otherwise be treated as `"R"`). The default, `TRUE`, follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section *Interpretation of S, I and R* below. 
+#' @param preserve_measurements a [logical] to indicate whether predictions of years that are actually available in the data should be overwritten by the original data. The standard errors of those years will be `NA`.
+#' @param info a [logical] to indicate whether textual analysis should be printed with the name and [summary()] of the statistical model.
 #' @param main title of the plot
-#' @param ribbon a logical to indicate whether a ribbon should be shown (default) or error bars
+#' @param ribbon a [logical] to indicate whether a ribbon should be shown (default) or error bars
 #' @param ... arguments passed on to functions
 #' @inheritSection as.rsi Interpretation of R and S/I
 #' @inheritParams first_isolate
@@ -70,6 +70,7 @@
 #'                         year_min = 2010,
 #'                         model = "binomial")
 #' plot(x)
+#' \donttest{
 #' if (require("ggplot2")) {
 #'   ggplot_rsi_predict(x)
 #' }
@@ -97,8 +98,10 @@
 #'                        model = "binomial",
 #'                        info = FALSE,
 #'                        minimum = 15)
+#'                        
+#'   ggplot(data)
 #'
-#'   ggplot(data,
+#'   ggplot(as.data.frame(data),
 #'          aes(x = year)) +
 #'     geom_col(aes(y = value),
 #'              fill = "grey75") +
@@ -113,6 +116,7 @@
 #'          y = "%R",
 #'          x = "Year") +
 #'     theme_minimal(base_size = 13)
+#' }
 #' }
 resistance_predict <- function(x,
                                col_ab,
@@ -347,6 +351,20 @@ plot.resistance_predict <- function(x, main = paste("Resistance Prediction of", 
          col = "grey40")
 }
 
+
+#' @method ggplot resistance_predict
+#' @rdname resistance_predict
+# will be exported using s3_register() in R/zzz.R
+ggplot.resistance_predict <- function(x,
+                               main = paste("Resistance Prediction of", x_name),
+                               ribbon = TRUE,
+                               ...) {
+  x_name <- paste0(ab_name(attributes(x)$ab), " (", attributes(x)$ab, ")")
+  meet_criteria(main, allow_class = "character", has_length = 1)
+  meet_criteria(ribbon, allow_class = "logical", has_length = 1)
+  ggplot_rsi_predict(x = x, main = main, ribbon = ribbon, ...)
+}
+
 #' @rdname resistance_predict
 #' @export
 ggplot_rsi_predict <- function(x,
@@ -360,14 +378,14 @@ ggplot_rsi_predict <- function(x,
   stop_ifnot_installed("ggplot2")
   stop_ifnot(inherits(x, "resistance_predict"), "`x` must be a resistance prediction model created with resistance_predict()")
   
-  
   if (attributes(x)$I_as_S == TRUE) {
     ylab <- "%R"
   } else {
     ylab <- "%IR"
   }
   
-  p <- ggplot2::ggplot(x, ggplot2::aes(x = year, y = value)) +
+  p <- ggplot2::ggplot(as.data.frame(x, stringsAsFactors = FALSE),
+                       ggplot2::aes(x = year, y = value)) +
     ggplot2::geom_point(data = subset(x, !is.na(observations)),
                         size = 2) +
     scale_y_percent(limits = c(0, 1)) +

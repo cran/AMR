@@ -18,7 +18,7 @@ skewness(x, na.rm = FALSE)
 \arguments{
 \item{x}{a vector of values, a \link{matrix} or a \link{data.frame}}
 
-\item{na.rm}{a logical value indicating whether \code{NA} values should be stripped before the computation proceeds}
+\item{na.rm}{a \link{logical} value indicating whether \code{NA} values should be stripped before the computation proceeds}
 }
 \description{
 Skewness is a measure of the asymmetry of the probability distribution of a real-valued random variable about its mean.
@@ -35,7 +35,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \seealso{

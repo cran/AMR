@@ -6,16 +6,16 @@
 \alias{is.ab}
 \title{Transform Input to an Antibiotic ID}
 \usage{
-as.ab(x, flag_multiple_results = TRUE, info = TRUE, ...)
+as.ab(x, flag_multiple_results = TRUE, info = interactive(), ...)
 
 is.ab(x)
 }
 \arguments{
-\item{x}{character vector to determine to antibiotic ID}
+\item{x}{a \link{character} vector to determine to antibiotic ID}
 
-\item{flag_multiple_results}{logical to indicate whether a note should be printed to the console that probably more than one antibiotic code or name can be retrieved from a single input value.}
+\item{flag_multiple_results}{a \link{logical} to indicate whether a note should be printed to the console that probably more than one antibiotic code or name can be retrieved from a single input value.}
 
-\item{info}{logical to indicate whether a progress bar should be printed}
+\item{info}{a \link{logical} to indicate whether a progress bar should be printed, defaults to \code{TRUE} only in interactive mode}
 
 \item{...}{arguments passed on to internal functions}
 }
@@ -46,7 +46,7 @@ World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodo
 
 WHONET 2019 software: \url{http://www.whonet.org/software.html}
 
-European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}
+European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 }
 
 \section{Stable Lifecycle}{
@@ -60,7 +60,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 \section{WHOCC}{
 
 \if{html}{\figure{logo_who.png}{options: height=60px style=margin-bottom:5px} \cr}
-This package contains \strong{all ~550 antibiotic, antimycotic and antiviral drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}).
+This package contains \strong{all ~550 antibiotic, antimycotic and antiviral drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}).
 
 These have become the gold standard for international drug utilisation monitoring and research.
 
@@ -76,7 +76,7 @@ All reference data sets (about microorganisms, antibiotics, R/SI interpretation,
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -102,13 +102,14 @@ ab_atc("seephthriaaksone") # and even this works
 # they use as.ab() internally:
 ab_name("J01FA01")    # "Erythromycin"
 ab_name("eryt")       # "Erythromycin"
-
+\donttest{
 if (require("dplyr")) {
 
   # you can quickly rename <rsi> columns using dplyr >= 1.0.0:
   example_isolates \%>\%
     rename_with(as.ab, where(is.rsi))
    
+}
 }
 }
 \seealso{

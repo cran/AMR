@@ -25,17 +25,17 @@
 
 #' Interpret MIC and Disk Values, or Clean Raw R/SI Data
 #'
-#' Interpret minimum inhibitory concentration (MIC) values and disk diffusion diameters according to EUCAST or CLSI, or clean up existing R/SI values. This transforms the input to a new class [`rsi`], which is an ordered factor with levels `S < I < R`. Values that cannot be interpreted will be returned as `NA` with a warning.
+#' Interpret minimum inhibitory concentration (MIC) values and disk diffusion diameters according to EUCAST or CLSI, or clean up existing R/SI values. This transforms the input to a new class [`rsi`], which is an ordered [factor] with levels `S < I < R`.
 #' @inheritSection lifecycle Stable Lifecycle
 #' @rdname as.rsi
-#' @param x vector of values (for class [`mic`]: an MIC value in mg/L, for class [`disk`]: a disk diffusion radius in millimetres)
-#' @param mo any (vector of) text that can be coerced to a valid microorganism code with [as.mo()], can be left empty to determine it automatically
+#' @param x vector of values (for class [`mic`]: MIC values in mg/L, for class [`disk`]: a disk diffusion radius in millimetres)
+#' @param mo any (vector of) text that can be coerced to valid microorganism codes with [as.mo()], can be left empty to determine it automatically
 #' @param ab any (vector of) text that can be coerced to a valid antimicrobial code with [as.ab()]
-#' @param uti (Urinary Tract Infection) A vector with [logical]s (`TRUE` or `FALSE`) to specify whether a UTI specific interpretation from the guideline should be chosen. For using [as.rsi()] on a [data.frame], this can also be a column containing [logical]s or when left blank, the data set will be searched for a 'specimen' and rows containing 'urin' (such as 'urine', 'urina') in that column will be regarded isolates from a UTI. See *Examples*.
+#' @param uti (Urinary Tract Infection) A vector with [logical]s (`TRUE` or `FALSE`) to specify whether a UTI specific interpretation from the guideline should be chosen. For using [as.rsi()] on a [data.frame], this can also be a column containing [logical]s or when left blank, the data set will be searched for a column 'specimen', and rows within this column containing 'urin' (such as 'urine', 'urina') will be regarded isolates from a UTI. See *Examples*.
 #' @inheritParams first_isolate
 #' @param guideline defaults to the latest included EUCAST guideline, see *Details* for all options
-#' @param conserve_capped_values a logical to indicate that MIC values starting with `">"` (but not `">="`) must always return "R" , and that MIC values starting with `"<"` (but not `"<="`) must always return "S"
-#' @param add_intrinsic_resistance *(only useful when using a EUCAST guideline)* a logical to indicate whether intrinsic antibiotic resistance must also be considered for applicable bug-drug combinations, meaning that e.g. ampicillin will always return "R" in *Klebsiella* species. Determination is based on the [intrinsic_resistant] data set, that itself is based on `r format_eucast_version_nr(3.2)`.
+#' @param conserve_capped_values a [logical] to indicate that MIC values starting with `">"` (but not `">="`) must always return "R" , and that MIC values starting with `"<"` (but not `"<="`) must always return "S"
+#' @param add_intrinsic_resistance *(only useful when using a EUCAST guideline)* a [logical] to indicate whether intrinsic antibiotic resistance must also be considered for applicable bug-drug combinations, meaning that e.g. ampicillin will always return "R" in *Klebsiella* species. Determination is based on the [intrinsic_resistant] data set, that itself is based on `r format_eucast_version_nr(3.2)`.
 #' @param reference_data a [data.frame] to be used for interpretation, which defaults to the [rsi_translation] data set. Changing this argument allows for using own interpretation guidelines. This argument must contain a data set that is equal in structure to the [rsi_translation] data set (same column names and column types). Please note that the `guideline` argument will be ignored when `reference_data` is manually set.
 #' @param threshold maximum fraction of invalid antimicrobial interpretations of `x`, see *Examples*
 #' @param ... for using on a [data.frame]: names of columns to apply [as.rsi()] on (supports tidy selection like `AMX:VAN`). Otherwise: arguments passed on to methods.
@@ -49,25 +49,25 @@
 #' 2. For **interpreting minimum inhibitory concentration (MIC) values** according to EUCAST or CLSI. You must clean your MIC values first using [as.mic()], that also gives your columns the new data class [`mic`]. Also, be sure to have a column with microorganism names or codes. It will be found automatically, but can be set manually using the `mo` argument.
 #'    * Using `dplyr`, R/SI interpretation can be done very easily with either: 
 #'      ```
-#'      your_data %>% mutate_if(is.mic, as.rsi)         # until dplyr 1.0.0
-#'      your_data %>% mutate(across((is.mic), as.rsi))  # since dplyr 1.0.0
+#'      your_data %>% mutate_if(is.mic, as.rsi)             # until dplyr 1.0.0
+#'      your_data %>% mutate(across(where(is.mic), as.rsi)) # since dplyr 1.0.0
 #'      ```
 #'    * Operators like "<=" will be stripped before interpretation. When using `conserve_capped_values = TRUE`, an MIC value of e.g. ">2" will always return "R", even if the breakpoint according to the chosen guideline is ">=4". This is to prevent that capped values from raw laboratory data would not be treated conservatively. The default behaviour (`conserve_capped_values = FALSE`) considers ">2" to be lower than ">=4" and might in this case return "S" or "I".
 #'      
 #' 3. For **interpreting disk diffusion diameters** according to EUCAST or CLSI. You must clean your disk zones first using [as.disk()], that also gives your columns the new data class [`disk`]. Also, be sure to have a column with microorganism names or codes. It will be found automatically, but can be set manually using the `mo` argument.
 #'    * Using `dplyr`, R/SI interpretation can be done very easily with either: 
 #'      ```
-#'      your_data %>% mutate_if(is.disk, as.rsi)         # until dplyr 1.0.0
-#'      your_data %>% mutate(across((is.disk), as.rsi))  # since dplyr 1.0.0
+#'      your_data %>% mutate_if(is.disk, as.rsi)             # until dplyr 1.0.0
+#'      your_data %>% mutate(across(where(is.disk), as.rsi)) # since dplyr 1.0.0
 #'      ```
 #' 
 #' 4. For **interpreting a complete data set**, with automatic determination of MIC values, disk diffusion diameters, microorganism names or codes, and antimicrobial test results. This is done very simply by running `as.rsi(data)`.
 #' 
 #' ## Supported Guidelines
 #' 
-#' For interpreting MIC values as well as disk diffusion diameters, supported guidelines to be used as input for the `guideline` argument are: `r vector_and(AMR::rsi_translation$guideline, quotes = TRUE, reverse = TRUE)`.
+#' For interpreting MIC values as well as disk diffusion diameters, currently implemented guidelines are EUCAST (`r min(as.integer(gsub("[^0-9]", "", subset(rsi_translation, guideline %like% "EUCAST")$guideline)))`-`r max(as.integer(gsub("[^0-9]", "", subset(rsi_translation, guideline %like% "EUCAST")$guideline)))`) and CLSI (`r min(as.integer(gsub("[^0-9]", "", subset(rsi_translation, guideline %like% "CLSI")$guideline)))`-`r max(as.integer(gsub("[^0-9]", "", subset(rsi_translation, guideline %like% "CLSI")$guideline)))`). 
 #' 
-#' Simply using `"CLSI"` or `"EUCAST"` as input will automatically select the latest version of that guideline. You can set your own data set using the `reference_data` argument. The `guideline` argument will then be ignored.
+#' Thus, the `guideline` argument must be set to e.g., ``r paste0('"', subset(rsi_translation, guideline %like% "EUCAST")$guideline[1], '"')`` or ``r paste0('"', subset(rsi_translation, guideline %like% "CLSI")$guideline[1], '"')``. By simply using `"EUCAST"` (the default) or `"CLSI"` as input, the latest version of that guideline will automatically be selected. You can set your own data set using the `reference_data` argument. The `guideline` argument will then be ignored.
 #' 
 #' ## After Interpretation
 #' 
@@ -79,9 +79,9 @@
 #'
 #' ## Other
 #' 
-#' The function [is.rsi()] detects if the input contains class `<rsi>`. If the input is a data.frame, it iterates over all columns and returns a logical vector.
+#' The function [is.rsi()] detects if the input contains class `<rsi>`. If the input is a [data.frame], it iterates over all columns and returns a [logical] vector.
 #'
-#' The function [is.rsi.eligible()] returns `TRUE` when a columns contains at most 5% invalid antimicrobial interpretations (not S and/or I and/or R), and `FALSE` otherwise. The threshold of 5% can be set with the `threshold` argument. If the input is a data.frame, it iterates over all columns and returns a logical vector.
+#' The function [is.rsi.eligible()] returns `TRUE` when a columns contains at most 5% invalid antimicrobial interpretations (not S and/or I and/or R), and `FALSE` otherwise. The threshold of 5% can be set with the `threshold` argument. If the input is a [data.frame], it iterates over all columns and returns a [logical] vector.
 #' @section Interpretation of R and S/I:
 #' In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories R and S/I as shown below (<https://www.eucast.org/newsiandr/>).
 #'
@@ -92,8 +92,8 @@
 #' - **I = Increased exposure, but still susceptible**\cr
 #'   A microorganism is categorised as *Susceptible, Increased exposure* when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.
 #'
-#' This AMR package honours this new insight. Use [susceptibility()] (equal to [proportion_SI()]) to determine antimicrobial susceptibility and [count_susceptible()] (equal to [count_SI()]) to count susceptible isolates.
-#' @return Ordered factor with new class `<rsi>`
+#' This AMR package honours this (new) insight. Use [susceptibility()] (equal to [proportion_SI()]) to determine antimicrobial susceptibility and [count_susceptible()] (equal to [count_SI()]) to count susceptible isolates.
+#' @return Ordered [factor] with new class `<rsi>`
 #' @aliases rsi
 #' @export
 #' @seealso [as.mic()], [as.disk()], [as.mo()]
@@ -101,12 +101,12 @@
 #' @inheritSection AMR Read more on Our Website!
 #' @examples
 #' summary(example_isolates) # see all R/SI results at a glance
-#' 
+#' \donttest{
 #' if (require("skimr")) {
 #'   # class <rsi> supported in skim() too:
 #'   skim(example_isolates)
 #' }
-#' 
+#' }
 #' # For INTERPRETING disk diffusion and MIC values -----------------------
 #'        
 #' # a whole data set, even with combined MIC values and disk zones
@@ -135,7 +135,7 @@
 #' if (require("dplyr")) {
 #'   df %>% mutate_if(is.mic, as.rsi)
 #'   df %>% mutate_if(function(x) is.mic(x) | is.disk(x), as.rsi)
-#'   df %>% mutate(across((is.mic), as.rsi))
+#'   df %>% mutate(across(where(is.mic), as.rsi))
 #'   df %>% mutate_at(vars(AMP:TOB), as.rsi)
 #'   df %>% mutate(across(AMP:TOB, as.rsi))
 #'  
@@ -181,7 +181,7 @@
 #'     
 #'   # note: from dplyr 1.0.0 on, this will be: 
 #'   # example_isolates %>%
-#'   #   mutate(across((is.rsi.eligible), as.rsi))
+#'   #   mutate(across(where(is.rsi.eligible), as.rsi))
 #' }
 #' }
 as.rsi <- function(x, ...) {
@@ -215,7 +215,6 @@ is.rsi.eligible <- function(x, threshold = 0.05) {
             "ab",
             "Date",
             "POSIXt",
-            "rsi",
             "raw",
             "hms",
             "mic",
@@ -259,13 +258,24 @@ as.rsi.default <- function(x, ...) {
   }
   
   if (inherits(x, c("integer", "numeric", "double")) && all(x %in% c(1:3, NA))) {
-    x[x == 1] <- "S"
-    x[x == 2] <- "I"
-    x[x == 3] <- "R"
+    x.bak <- x
+    x <- as.character(x) # this is needed to prevent the vctrs pkg from throwing an error
     
-  } else if (!all(is.na(x)) && !identical(levels(x), c("S", "I", "R"))) {
-    
-    if (!any(x %like% "(R|S|I)", na.rm = TRUE)) {
+    # support haven package for importing e.g., from SPSS - it adds the 'labels' attribute
+    lbls <- attributes(x)$labels
+    if (!is.null(lbls) && all(c("R", "S", "I") %in% names(lbls)) && all(c(1:3) %in% lbls)) {
+      x[x.bak == 1] <- names(lbls[lbls == 1])
+      x[x.bak == 2] <- names(lbls[lbls == 2])
+      x[x.bak == 3] <- names(lbls[lbls == 3])
+    } else {
+      x[x.bak == 1] <- "S"
+      x[x.bak == 2] <- "I"
+      x[x.bak == 3] <- "R"  
+    }
+
+  } else if (!all(is.na(x)) && !identical(levels(x), c("R", "S", "I")) && !all(x %in% c("R", "S", "I", NA))) {
+
+    if (all(x %unlike% "(R|S|I)", na.rm = TRUE)) {
       # check if they are actually MICs or disks
       if (all_valid_mics(x)) {
         warning_("The input seems to be MIC values. Transform them with `as.mic()` before running `as.rsi()` to interpret them.")
@@ -535,7 +545,7 @@ as.rsi.data.frame <- function(x,
   }
   if (!is.null(col_uti)) {
     if (is.logical(col_uti)) {
-      # already a logical vector as input
+      # already a [logical] vector as input
       if (length(col_uti) == 1) {
         uti <- rep(col_uti, NROW(x))
       } else {
@@ -544,7 +554,7 @@ as.rsi.data.frame <- function(x,
     } else {
       # column found, transform to logical
       stop_if(length(col_uti) != 1 | !col_uti %in% colnames(x),
-              "argument `uti` must be a logical vector, of must be a single column name of `x`")
+              "argument `uti` must be a [logical] vector, of must be a single column name of `x`")
       uti <- as.logical(x[, col_uti, drop = TRUE])
     }
   } else {
@@ -683,7 +693,7 @@ get_guideline <- function(guideline, reference_data) {
   if (guideline_param %in% c("CLSI", "EUCAST")) {
     guideline_param <- rev(sort(subset(reference_data, guideline %like% guideline_param)$guideline))[1L]
   }
-  if (!guideline_param %like% " ") {
+  if (guideline_param %unlike% " ") {
     # like 'EUCAST2020', should be 'EUCAST 2020'
     guideline_param <- gsub("([a-z]+)([0-9]+)", "\\1 \\2", guideline_param, ignore.case = TRUE)
   }
@@ -776,7 +786,7 @@ exec_as.rsi <- function(method,
     any_is_intrinsic_resistant <- any_is_intrinsic_resistant | is_intrinsic_r
     
     if (isTRUE(add_intrinsic_resistance) & is_intrinsic_r) {
-      if (!guideline_coerced %like% "EUCAST") {
+      if (guideline_coerced %unlike% "EUCAST") {
         if (message_not_thrown_before("as.rsi2")) {
           warning_("Using 'add_intrinsic_resistance' is only useful when using EUCAST guidelines, since the rules for intrinsic resistance are based on EUCAST.", call = FALSE)
           remember_thrown_message("as.rsi2")
@@ -923,28 +933,16 @@ get_skimmers.rsi <- function(column) {
   # get the variable name 'skim_variable'
   name_call <- function(.data) {
     calls <- sys.calls()
+    frms <- sys.frames()
     calls_txt <- vapply(calls, function(x) paste(deparse(x), collapse = ""), FUN.VALUE = character(1))
     if (any(calls_txt %like% "skim_variable", na.rm = TRUE)) {
       ind <- which(calls_txt %like% "skim_variable")[1L]
-      vars <- tryCatch(eval(parse(text = ".data$skim_variable"), envir = sys.frame(ind)), 
+      vars <- tryCatch(eval(parse(text = ".data$skim_variable$rsi"), envir = frms[[ind]]), 
                        error = function(e) NULL)
+      tryCatch(ab_name(as.character(calls[[length(calls)]][[2]]), language = NULL),
+               error = function(e) NA_character_)
     } else {
-      vars <- NULL
-    }
-    i <- tryCatch(attributes(calls[[length(calls)]])$position, 
-                  error = function(e) NULL)
-    if (is.null(vars) | is.null(i)) {
       NA_character_
-    } else {
-      lengths <- vapply(FUN.VALUE = double(1), vars, length)
-      when_starts_rsi <- which(names(vapply(FUN.VALUE = double(1), vars, length)) == "rsi")
-      offset <- sum(lengths[c(1:when_starts_rsi - 1)])
-      var <- vars$rsi[i - offset]
-      if (!isFALSE(var == "data")) {
-        NA_character_
-      } else{
-        ab_name(var)
-      }
     }
   }
   
@@ -1027,10 +1025,8 @@ summary.rsi <- function(object, ...) {
 #' @method c rsi
 #' @export
 #' @noRd
-c.rsi <- function(x, ...) {
-  y <- unlist(lapply(list(...), as.character))
-  x <- as.character(x)
-  as.rsi(c(x, y))
+c.rsi <- function(...) {
+  as.rsi(unlist(lapply(list(...), as.character)))
 }
 
 #' @method unique rsi

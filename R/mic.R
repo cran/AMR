@@ -28,11 +28,11 @@
 #' This ransforms vectors to a new class [`mic`], which treats the input as decimal numbers, while maintaining operators (such as ">=") and only allowing valid MIC values known to the field of (medical) microbiology.
 #' @inheritSection lifecycle Stable Lifecycle
 #' @rdname as.mic
-#' @param x character or numeric vector
-#' @param na.rm a logical indicating whether missing values should be removed
+#' @param x a [character] or [numeric] vector
+#' @param na.rm a [logical] indicating whether missing values should be removed
 #' @details To interpret MIC values as RSI values, use [as.rsi()] on MIC values. It supports guidelines from EUCAST and CLSI.
 #' 
-#' This class for MIC values is a quite a special data type: formally it is an ordered factor with valid MIC values as factor levels (to make sure only valid MIC values are retained), but for any mathematical operation it acts as decimal numbers:
+#' This class for MIC values is a quite a special data type: formally it is an ordered [factor] with valid MIC values as [factor] levels (to make sure only valid MIC values are retained), but for any mathematical operation it acts as decimal numbers:
 #' 
 #' ```
 #' x <- random_mic(10)
@@ -50,7 +50,7 @@
 #' #> [1] 26
 #' ```
 #' 
-#' This makes it possible to maintain operators that often come with MIC values, such ">=" and "<=", even when filtering using numeric values in data analysis, e.g.:
+#' This makes it possible to maintain operators that often come with MIC values, such ">=" and "<=", even when filtering using [numeric] values in data analysis, e.g.:
 #' 
 #' ```
 #' x[x > 4]
@@ -69,7 +69,7 @@
 #' ```
 #' 
 #' The following [generic functions][groupGeneric()] are implemented for the MIC class: `!`, `!=`, `%%`, `%/%`, `&`, `*`, `+`, `-`, `/`, `<`, `<=`, `==`, `>`, `>=`, `^`, `|`, [abs()], [acos()], [acosh()], [all()], [any()], [asin()], [asinh()], [atan()], [atanh()], [ceiling()], [cos()], [cosh()], [cospi()], [cummax()], [cummin()], [cumprod()], [cumsum()], [digamma()], [exp()], [expm1()], [floor()], [gamma()], [lgamma()], [log()], [log1p()], [log2()], [log10()], [max()], [mean()], [min()], [prod()], [range()], [round()], [sign()], [signif()], [sin()], [sinh()], [sinpi()], [sqrt()], [sum()], [tan()], [tanh()], [tanpi()], [trigamma()] and [trunc()]. Some functions of the `stats` package are also implemented: [median()], [quantile()], [mad()], [IQR()], [fivenum()]. Also, [boxplot.stats()] is supported. Since [sd()] and [var()] are non-generic functions, these could not be extended. Use [mad()] as an alternative, or use e.g. `sd(as.numeric(x))` where `x` is your vector of MIC values.
-#' @return Ordered [factor] with additional class [`mic`], that in mathematical operations acts as decimal numbers. Bare in mind that the outcome of any mathematical operation on MICs will return a numeric value.
+#' @return Ordered [factor] with additional class [`mic`], that in mathematical operations acts as decimal numbers. Bare in mind that the outcome of any mathematical operation on MICs will return a [numeric] value.
 #' @aliases mic
 #' @export
 #' @seealso [as.rsi()]
@@ -81,7 +81,7 @@
 #' # this can also coerce combined MIC/RSI values:
 #' as.mic("<=0.002; S") # will return <=0.002
 #' 
-#' # mathematical processing treats MICs as numeric values
+#' # mathematical processing treats MICs as [numeric] values
 #' fivenum(mic_data)
 #' quantile(mic_data)
 #' all(mic_data < 512)
@@ -133,7 +133,7 @@ as.mic <- function(x, na.rm = FALSE) {
     # keep only one zero before dot
     x <- gsub("0+[.]", "0.", x, perl = TRUE)
     # starting 00 is probably 0.0 if there's no dot yet
-    x[!x %like% "[.]"] <- gsub("^00", "0.0", x[!x %like% "[.]"])
+    x[x %unlike% "[.]"] <- gsub("^00", "0.0", x[!x %like% "[.]"])
     # remove last zeroes
     x <- gsub("([.].?)0+$", "\\1", x, perl = TRUE)
     x <- gsub("(.*[.])0+$", "\\10", x, perl = TRUE)
@@ -149,7 +149,7 @@ as.mic <- function(x, na.rm = FALSE) {
     ## previously unempty values now empty - should return a warning later on
     x[x.bak != "" & x == ""] <- "invalid"
     
-    # these are allowed MIC values and will become factor levels
+    # these are allowed MIC values and will become [factor] levels
     ops <- c("<", "<=", "", ">=", ">")
     lvls <- c(c(t(vapply(FUN.VALUE = character(9), ops, function(x) paste0(x, "0.00", 1:9)))),
               unique(c(t(vapply(FUN.VALUE = character(104), ops, function(x) paste0(x, sort(as.double(paste0("0.0", 
@@ -307,10 +307,8 @@ as.matrix.mic <- function(x, ...) {
 #' @method c mic
 #' @export
 #' @noRd
-c.mic <- function(x, ...) {
-  y <- unlist(lapply(list(...), as.character))
-  x <- as.character(x)
-  as.mic(c(x, y))
+c.mic <- function(...) {
+  as.mic(unlist(lapply(list(...), as.character)))
 }
 
 #' @method unique mic
@@ -347,11 +345,12 @@ hist.mic <- function(x, ...) {
 get_skimmers.mic <- function(column) {
   skimr::sfl(
     skim_type = "mic",
-    min = ~min(., na.rm = TRUE),
-    max = ~max(., na.rm = TRUE),
-    median = ~stats::median(., na.rm = TRUE),
-    n_unique = ~pm_n_distinct(., na.rm = TRUE),
-    hist_log2 = ~skimr::inline_hist(log2(stats::na.omit(.)))
+    p0 = ~stats::quantile(., probs = 0, na.rm = TRUE, names = FALSE),
+    p25 = ~stats::quantile(., probs = 0.25, na.rm = TRUE, names = FALSE),
+    p50 = ~stats::quantile(., probs = 0.5, na.rm = TRUE, names = FALSE),
+    p75 = ~stats::quantile(., probs = 0.75, na.rm = TRUE, names = FALSE),
+    p100 = ~stats::quantile(., probs = 1, na.rm = TRUE, names = FALSE),
+    hist = ~skimr::inline_hist(log2(stats::na.omit(.)), 5)
   )
 }
 

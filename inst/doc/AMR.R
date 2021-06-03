@@ -74,8 +74,11 @@ data <- data %>%
   mutate(bacteria = as.mo(bacteria))
 
 ## ----transform abx------------------------------------------------------------
+is.rsi.eligible(data)
+colnames(data)[is.rsi.eligible(data)]
+
 data <- data %>%
-  mutate_at(vars(AMX:GEN), as.rsi)
+  mutate(across(where(is.rsi.eligible), as.rsi))
 
 ## ----eucast, warning = FALSE, message = FALSE---------------------------------
 data <- eucast_rules(data, col_mo = "bacteria", rules = "all")
@@ -88,59 +91,15 @@ data <- data %>%
 
 ## ----1st isolate--------------------------------------------------------------
 data <- data %>% 
-  mutate(first = first_isolate())
+  mutate(first = first_isolate(info = TRUE))
 
 ## ----1st isolate filter-------------------------------------------------------
 data_1st <- data %>% 
   filter(first == TRUE)
 
-## ----1st isolate filter 2, eval = FALSE---------------------------------------
-#  data_1st <- data %>%
-#    filter_first_isolate()
-
-## ---- echo = FALSE, message = FALSE, warning = FALSE, results = 'asis'--------
-weighted_df <- data %>%
-  filter(bacteria == as.mo("Escherichia coli")) %>% 
-  # only most prevalent patient
-  filter(patient_id == top_freq(freq(., patient_id), 1)[1]) %>% 
-  arrange(date) %>%
-  select(date, patient_id, bacteria, AMX:GEN, first) %>% 
-  # maximum of 10 rows
-  .[1:min(10, nrow(.)),] %>% 
-  mutate(isolate = row_number()) %>% 
-  select(isolate, everything())
-
-## ---- echo = FALSE, message = FALSE, warning = FALSE, results = 'asis'--------
-weighted_df %>% 
-  knitr::kable(align = "c")
-
-## ----1st weighted, warning = FALSE--------------------------------------------
-data <- data %>% 
-  mutate(keyab = key_antibiotics()) %>% 
-  mutate(first_weighted = first_isolate())
-
-## ---- echo = FALSE, message = FALSE, warning = FALSE, results = 'asis'--------
-weighted_df2 <- data %>%
-  filter(bacteria == as.mo("Escherichia coli")) %>% 
-  # only most prevalent patient
-  filter(patient_id == top_freq(freq(., patient_id), 1)[1]) %>% 
-  arrange(date) %>%
-  select(date, patient_id, bacteria, AMX:GEN, first, first_weighted) %>% 
-  # maximum of 10 rows
-  .[1:min(10, nrow(.)),] %>% 
-  mutate(isolate = row_number()) %>% 
-  select(isolate, everything())
-
-weighted_df2 %>% 
-  knitr::kable(align = "c")
-
-## ----1st isolate filter 3, results = 'hide', message = FALSE, warning = FALSE----
+## ----1st isolate filter 2-----------------------------------------------------
 data_1st <- data %>% 
-  filter_first_weighted_isolate()
-
-## -----------------------------------------------------------------------------
-data_1st <- data_1st %>% 
-  select(-c(first, keyab))
+  filter_first_isolate()
 
 ## ----preview data set 3, eval = FALSE-----------------------------------------
 #  head(data_1st)
@@ -158,6 +117,16 @@ knitr::kable(head(data_1st), align = "c")
 data_1st %>% 
   freq(genus, species, header = TRUE)
 
+## ----bug_drg 2a, eval = FALSE-------------------------------------------------
+#  data_1st %>%
+#    filter(any(aminoglycosides() == "R"))
+
+## ----bug_drg 2b, echo = FALSE, results = 'asis'-------------------------------
+knitr::kable(data_1st %>% 
+               filter(any(aminoglycosides() == "R")) %>% 
+               head(),
+             align = "c")
+
 ## ----bug_drg 1a, eval = FALSE-------------------------------------------------
 #  data_1st %>%
 #    bug_drug_combinations() %>%
@@ -169,14 +138,14 @@ knitr::kable(data_1st %>%
                head(),
              align = "c")
 
-## ----bug_drg 2a, eval = FALSE-------------------------------------------------
+## ----bug_drg 3a, eval = FALSE-------------------------------------------------
 #  data_1st %>%
-#    select(bacteria, fluoroquinolones()) %>%
+#    select(bacteria, aminoglycosides()) %>%
 #    bug_drug_combinations()
 
-## ----bug_drg 2b, echo = FALSE, results = 'asis'-------------------------------
+## ----bug_drg 3b, echo = FALSE, results = 'asis'-------------------------------
 knitr::kable(data_1st %>% 
-               select(bacteria, fluoroquinolones()) %>% 
+               select(bacteria, aminoglycosides()) %>% 
                bug_drug_combinations(),
              align = "c")
 

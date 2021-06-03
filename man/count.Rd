@@ -43,7 +43,7 @@ count_df(
 \arguments{
 \item{...}{one or more vectors (or columns) with antibiotic interpretations. They will be transformed internally with \code{\link[=as.rsi]{as.rsi()}} if needed.}
 
-\item{only_all_tested}{(for combination therapies, i.e. using more than one variable for \code{...}): a logical to indicate that isolates must be tested for all antibiotics, see section \emph{Combination Therapy} below}
+\item{only_all_tested}{(for combination therapies, i.e. using more than one variable for \code{...}): a \link{logical} to indicate that isolates must be tested for all antibiotics, see section \emph{Combination Therapy} below}
 
 \item{data}{a \link{data.frame} containing columns with class \code{\link{rsi}} (see \code{\link[=as.rsi]{as.rsi()}})}
 
@@ -51,9 +51,9 @@ count_df(
 
 \item{language}{language of the returned text, defaults to system language (see \code{\link[=get_locale]{get_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
-\item{combine_SI}{a logical to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant). This used to be the argument \code{combine_IR}, but this now follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. Default is \code{TRUE}.}
+\item{combine_SI}{a \link{logical} to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant). This used to be the argument \code{combine_IR}, but this now follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. Default is \code{TRUE}.}
 
-\item{combine_IR}{a logical to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. I+R (susceptible vs. non-susceptible). This is outdated, see argument \code{combine_SI}.}
+\item{combine_IR}{a \link{logical} to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. I+R (susceptible vs. non-susceptible). This is outdated, see argument \code{combine_SI}.}
 }
 \value{
 An \link{integer}
@@ -92,7 +92,7 @@ A microorganism is categorised as \emph{Susceptible, standard dosing regimen}, w
 A microorganism is categorised as \emph{Susceptible, Increased exposure} when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.
 }
 
-This AMR package honours this new insight. Use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
+This AMR package honours this (new) insight. Use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
 }
 
 \section{Combination Therapy}{
@@ -128,7 +128,7 @@ Using \code{only_all_tested} has no impact when only using one antibiotic as inp
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -157,7 +157,7 @@ n_rsi(example_isolates$AMX)
 count_susceptible(example_isolates$AMX)
 susceptibility(example_isolates$AMX) * n_rsi(example_isolates$AMX)
 
-
+\donttest{
 if (require("dplyr")) {
   example_isolates \%>\%
     group_by(hospital_id) \%>\%
@@ -190,6 +190,7 @@ if (require("dplyr")) {
     select(hospital_id, AMX, CIP) \%>\%
     group_by(hospital_id) \%>\%
     count_df(translate = FALSE)
+}
 }
 }
 \seealso{

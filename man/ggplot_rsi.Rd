@@ -80,15 +80,15 @@ labels_rsi_count(
 
 \item{facet}{variable to split plots by, either \code{"interpretation"} (default) or \code{"antibiotic"} or a grouping variable}
 
-\item{breaks}{numeric vector of positions}
+\item{breaks}{a \link{numeric} vector of positions}
 
-\item{limits}{numeric vector of length two providing limits of the scale, use \code{NA} to refer to the existing minimum or maximum}
+\item{limits}{a \link{numeric} vector of length two providing limits of the scale, use \code{NA} to refer to the existing minimum or maximum}
 
 \item{translate_ab}{a column name of the \link{antibiotics} data set to translate the antibiotic abbreviations to, using \code{\link[=ab_property]{ab_property()}}}
 
-\item{combine_SI}{a logical to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant). This used to be the argument \code{combine_IR}, but this now follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. Default is \code{TRUE}.}
+\item{combine_SI}{a \link{logical} to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant). This used to be the argument \code{combine_IR}, but this now follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. Default is \code{TRUE}.}
 
-\item{combine_IR}{a logical to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. I+R (susceptible vs. non-susceptible). This is outdated, see argument \code{combine_SI}.}
+\item{combine_IR}{a \link{logical} to indicate whether all values of I and R must be merged into one, so the output only consists of S vs. I+R (susceptible vs. non-susceptible). This is outdated, see argument \code{combine_SI}.}
 
 \item{minimum}{the minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see \emph{Source}.}
 
@@ -150,10 +150,11 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
+\donttest{
 if (require("ggplot2") & require("dplyr")) {
  
   # get antimicrobial results for drugs against a UTI:
@@ -201,35 +202,34 @@ if (require("ggplot2") & require("dplyr")) {
     ggplot() +
     geom_col(aes(x = x, y = y, fill = z)) +
     scale_rsi_colours(Value4 = "S", Value5 = "I", Value6 = "R")
+  
+  # resistance of ciprofloxacine per age group
+  example_isolates \%>\%
+    mutate(first_isolate = first_isolate()) \%>\%
+    filter(first_isolate == TRUE,
+           mo == as.mo("E. coli")) \%>\%
+    # age_groups() is also a function in this AMR package:
+    group_by(age_group = age_groups(age)) \%>\%
+    select(age_group,
+           CIP) \%>\%
+    ggplot_rsi(x = "age_group")
+  
+  # a shorter version which also adjusts data label colours:
+  example_isolates \%>\%
+    select(AMX, NIT, FOS, TMP, CIP) \%>\%
+    ggplot_rsi(colours = FALSE)
+
+
+  # it also supports groups (don't forget to use the group var on `x` or `facet`):
+  example_isolates \%>\%
+    select(hospital_id, AMX, NIT, FOS, TMP, CIP) \%>\%
+    group_by(hospital_id) \%>\%
+    ggplot_rsi(x = "hospital_id",
+               facet = "antibiotic",
+               nrow = 1,
+               title = "AMR of Anti-UTI Drugs Per Hospital",
+               x.title = "Hospital",
+               datalabels = FALSE)
 }
-  
-\donttest{
-# resistance of ciprofloxacine per age group
-example_isolates \%>\%
-  mutate(first_isolate = first_isolate(.)) \%>\%
-  filter(first_isolate == TRUE,
-         mo == as.mo("E. coli")) \%>\%
-  # age_groups() is also a function in this AMR package:
-  group_by(age_group = age_groups(age)) \%>\%
-  select(age_group,
-         CIP) \%>\%
-  ggplot_rsi(x = "age_group")
-  
-# a shorter version which also adjusts data label colours:
-example_isolates \%>\%
-  select(AMX, NIT, FOS, TMP, CIP) \%>\%
-  ggplot_rsi(colours = FALSE)
-
-
-# it also supports groups (don't forget to use the group var on `x` or `facet`):
-example_isolates \%>\%
-  select(hospital_id, AMX, NIT, FOS, TMP, CIP) \%>\%
-  group_by(hospital_id) \%>\%
-  ggplot_rsi(x = "hospital_id",
-             facet = "antibiotic",
-             nrow = 1,
-             title = "AMR of Anti-UTI Drugs Per Hospital",
-             x.title = "Hospital",
-             datalabels = FALSE)
 }
 }

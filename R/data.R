@@ -71,7 +71,7 @@
 #'
 #' WHONET 2019 software: <http://www.whonet.org/software.html>
 #'
-#' European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: <http://ec.europa.eu/health/documents/community-register/html/atc.htm>
+#' European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: <https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm>
 #' @inheritSection AMR Reference Data Publicly Available
 #' @inheritSection WHOCC WHOCC
 #' @inheritSection AMR Read more on Our Website!
@@ -98,7 +98,7 @@
 #' @details 
 #' Please note that entries are only based on the Catalogue of Life and the LPSN (see below). Since these sources incorporate entries based on (recent) publications in the International Journal of Systematic and Evolutionary Microbiology (IJSEM), it can happen that the year of publication is sometimes later than one might expect.
 #' 
-#' For example, *Staphylococcus pettenkoferi* was described for the first time in Diagnostic Microbiology and Infectious Disease in 2002 (\doi{10.1016/s0732-8893(02)00399-1}), but it was not before 2007 that a publication in IJSEM followed (\doi{10.1099/ijs.0.64381-0}). Consequently, the AMR package returns 2007 for `mo_year("S. pettenkoferi")`.
+#' For example, *Staphylococcus pettenkoferi* was described for the first time in Diagnostic Microbiology and Infectious Disease in 2002 (\doi{10.1016/s0732-8893(02)00399-1}), but it was not before 2007 that a publication in IJSEM followed (\doi{10.1099/ijs.0.64381-0}). Consequently, the `AMR` package returns 2007 for `mo_year("S. pettenkoferi")`.
 #' 
 #' ## Manual additions
 #' For convenience, some entries were added manually:
@@ -178,9 +178,9 @@
 #' @format A [data.frame] with `r format(nrow(example_isolates), big.mark = ",")` observations and `r ncol(example_isolates)` variables:
 #' - `date`\cr date of receipt at the laboratory
 #' - `hospital_id`\cr ID of the hospital, from A to D
-#' - `ward_icu`\cr logical to determine if ward is an intensive care unit
-#' - `ward_clinical`\cr logical to determine if ward is a regular clinical ward
-#' - `ward_outpatient`\cr logical to determine if ward is an outpatient clinic
+#' - `ward_icu`\cr [logical] to determine if ward is an intensive care unit
+#' - `ward_clinical`\cr [logical] to determine if ward is a regular clinical ward
+#' - `ward_outpatient`\cr [logical] to determine if ward is an outpatient clinic
 #' - `age`\cr age of the patient
 #' - `gender`\cr gender of the patient
 #' - `patient_id`\cr ID of the patient
@@ -217,8 +217,8 @@
 #' - `Sex`\cr Fictitious gender of patient
 #' - `Age`\cr Fictitious age of patient
 #' - `Age category`\cr Age group, can also be looked up using [age_groups()]
-#' - `Date of admission`\cr Date of hospital admission
-#' - `Specimen date`\cr Date when specimen was received at laboratory
+#' - `Date of admission`\cr [Date] of hospital admission
+#' - `Specimen date`\cr [Date] when specimen was received at laboratory
 #' - `Specimen type`\cr Specimen type or group
 #' - `Specimen type (Numeric)`\cr Translation of `"Specimen type"`
 #' - `Reason`\cr Reason of request with Differential Diagnosis
@@ -231,7 +231,7 @@
 #' - `MRSA screening test`\cr Microorganism is possible MRSA?
 #' - `Inducible clindamycin resistance`\cr Clindamycin can be induced?
 #' - `Comment`\cr Other comments
-#' - `Date of data entry`\cr Date this data was entered in WHONET
+#' - `Date of data entry`\cr [Date] this data was entered in WHONET
 #' - `AMP_ND10:CIP_EE`\cr `r sum(vapply(FUN.VALUE = logical(1), WHONET, is.rsi))` different antibiotics. You can lookup the abbreviations in the [antibiotics] data set, or use e.g. [`ab_name("AMP")`][ab_name()] to get the official name immediately. Before analysis, you should transform this to a valid antibiotic class, using [as.rsi()].
 #' @inheritSection AMR Reference Data Publicly Available
 #' @inheritSection AMR Read more on Our Website!
@@ -239,7 +239,7 @@
 
 #' Data Set for R/SI Interpretation
 #'
-#' Data set to interpret MIC and disk diffusion to R/SI values. Included guidelines are CLSI (`r min(as.integer(gsub("[^0-9]", "", subset(rsi_translation, guideline %like% "CLSI")$guideline)))`-`r max(as.integer(gsub("[^0-9]", "", subset(rsi_translation, guideline %like% "CLSI")$guideline)))`) and EUCAST (`r min(as.integer(gsub("[^0-9]", "", subset(rsi_translation, guideline %like% "EUCAST")$guideline)))`-`r max(as.integer(gsub("[^0-9]", "", subset(rsi_translation, guideline %like% "EUCAST")$guideline)))`). Use [as.rsi()] to transform MICs or disks measurements to R/SI values.
+#' Data set containing reference data to interpret MIC and disk diffusion to R/SI values, according to international guidelines. Currently implemented guidelines are EUCAST (`r min(as.integer(gsub("[^0-9]", "", subset(rsi_translation, guideline %like% "EUCAST")$guideline)))`-`r max(as.integer(gsub("[^0-9]", "", subset(rsi_translation, guideline %like% "EUCAST")$guideline)))`) and CLSI (`r min(as.integer(gsub("[^0-9]", "", subset(rsi_translation, guideline %like% "CLSI")$guideline)))`-`r max(as.integer(gsub("[^0-9]", "", subset(rsi_translation, guideline %like% "CLSI")$guideline)))`). Use [as.rsi()] to transform MICs or disks measurements to R/SI values.
 #' @format A [data.frame] with `r format(nrow(rsi_translation), big.mark = ",")` observations and `r ncol(rsi_translation)` variables:
 #' - `guideline`\cr Name of the guideline
 #' - `method`\cr Either `r vector_or(rsi_translation$method)`
@@ -250,7 +250,7 @@
 #' - `disk_dose`\cr Dose of the used disk diffusion method
 #' - `breakpoint_S`\cr Lowest MIC value or highest number of millimetres that leads to "S"
 #' - `breakpoint_R`\cr Highest MIC value or lowest number of millimetres that leads to "R"
-#' - `uti`\cr A logical value (`TRUE`/`FALSE`) to indicate whether the rule applies to a urinary tract infection (UTI)
+#' - `uti`\cr A [logical] value (`TRUE`/`FALSE`) to indicate whether the rule applies to a urinary tract infection (UTI)
 #' @details The repository of this `AMR` package contains a file comprising this exact data set: <https://github.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt>. This file **allows for machine reading EUCAST and CLSI guidelines**, which is almost impossible with the Excel and PDF files distributed by EUCAST and CLSI. The file is updated automatically.
 #' @inheritSection AMR Reference Data Publicly Available
 #' @inheritSection AMR Read more on Our Website!
@@ -269,11 +269,13 @@
 #' @inheritSection AMR Reference Data Publicly Available
 #' @inheritSection AMR Read more on Our Website!
 #' @examples
+#' \donttest{
 #' if (require("dplyr")) {
 #'   intrinsic_resistant %>%
 #'     filter(antibiotic == "Vancomycin", microorganism %like% "Enterococcus") %>% 
 #'     pull(microorganism)
 #'   # [1] "Enterococcus casseliflavus" "Enterococcus gallinarum"
+#' }
 #' }
 "intrinsic_resistant"
 

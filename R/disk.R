@@ -29,7 +29,7 @@
 #' @inheritSection lifecycle Stable Lifecycle
 #' @rdname as.disk
 #' @param x vector
-#' @param na.rm a logical indicating whether missing values should be removed
+#' @param na.rm a [logical] indicating whether missing values should be removed
 #' @details Interpret disk values as RSI values with [as.rsi()]. It supports guidelines from EUCAST and CLSI.
 #' @return An [integer] with additional class [`disk`]
 #' @aliases disk
@@ -85,7 +85,7 @@ as.disk <- function(x, na.rm = FALSE) {
                fixed = TRUE)
       x_clean <- gsub(remove, "", x, ignore.case = TRUE, fixed = fixed)
       # remove everything that is not a number or dot
-      as.numeric(gsub("[^0-9.]+", "", x_clean))
+      as.double(gsub("[^0-9.]+", "", x_clean))
     }
     
     # round up and make it an integer
@@ -182,11 +182,8 @@ print.disk <- function(x, ...) {
 #' @method c disk
 #' @export
 #' @noRd
-c.disk <- function(x, ...) {
-  y <- NextMethod()
-  y <- as.disk(y)
-  attributes(y) <- attributes(x)
-  y
+c.disk <- function(...) {
+  as.disk(unlist(lapply(list(...), as.character)))
 }
 
 #' @method unique disk
@@ -205,7 +202,7 @@ get_skimmers.disk <- function(column) {
     min = ~min(as.double(.), na.rm = TRUE),
     max = ~max(as.double(.), na.rm = TRUE),
     median = ~stats::median(as.double(.), na.rm = TRUE),
-    n_unique = ~pm_n_distinct(., na.rm = TRUE),
+    n_unique = ~length(unique(stats::na.omit(.))),
     hist = ~skimr::inline_hist(stats::na.omit(as.double(.)))
   )
 }

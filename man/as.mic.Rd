@@ -11,12 +11,12 @@ as.mic(x, na.rm = FALSE)
 is.mic(x)
 }
 \arguments{
-\item{x}{character or numeric vector}
+\item{x}{a \link{character} or \link{numeric} vector}
 
-\item{na.rm}{a logical indicating whether missing values should be removed}
+\item{na.rm}{a \link{logical} indicating whether missing values should be removed}
 }
 \value{
-Ordered \link{factor} with additional class \code{\link{mic}}, that in mathematical operations acts as decimal numbers. Bare in mind that the outcome of any mathematical operation on MICs will return a numeric value.
+Ordered \link{factor} with additional class \code{\link{mic}}, that in mathematical operations acts as decimal numbers. Bare in mind that the outcome of any mathematical operation on MICs will return a \link{numeric} value.
 }
 \description{
 This ransforms vectors to a new class \code{\link{mic}}, which treats the input as decimal numbers, while maintaining operators (such as ">=") and only allowing valid MIC values known to the field of (medical) microbiology.
@@ -24,7 +24,7 @@ This ransforms vectors to a new class \code{\link{mic}}, which treats the input 
 \details{
 To interpret MIC values as RSI values, use \code{\link[=as.rsi]{as.rsi()}} on MIC values. It supports guidelines from EUCAST and CLSI.
 
-This class for MIC values is a quite a special data type: formally it is an ordered factor with valid MIC values as factor levels (to make sure only valid MIC values are retained), but for any mathematical operation it acts as decimal numbers:\preformatted{x <- random_mic(10)
+This class for MIC values is a quite a special data type: formally it is an ordered \link{factor} with valid MIC values as \link{factor} levels (to make sure only valid MIC values are retained), but for any mathematical operation it acts as decimal numbers:\preformatted{x <- random_mic(10)
 x
 #> Class <mic>
 #>  [1] 16     1      8      8      64     >=128  0.0625 32     32     16
@@ -39,7 +39,7 @@ median(x)
 #> [1] 26
 }
 
-This makes it possible to maintain operators that often come with MIC values, such ">=" and "<=", even when filtering using numeric values in data analysis, e.g.:\preformatted{x[x > 4]
+This makes it possible to maintain operators that often come with MIC values, such ">=" and "<=", even when filtering using \link{numeric} values in data analysis, e.g.:\preformatted{x[x > 4]
 #> Class <mic>
 #> [1] 16    8     8     64    >=128 32    32    16
 
@@ -66,7 +66,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{
@@ -76,7 +76,7 @@ is.mic(mic_data)
 # this can also coerce combined MIC/RSI values:
 as.mic("<=0.002; S") # will return <=0.002
 
-# mathematical processing treats MICs as numeric values
+# mathematical processing treats MICs as [numeric] values
 fivenum(mic_data)
 quantile(mic_data)
 all(mic_data < 512)

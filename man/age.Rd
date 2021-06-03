@@ -7,13 +7,13 @@
 age(x, reference = Sys.Date(), exact = FALSE, na.rm = FALSE, ...)
 }
 \arguments{
-\item{x}{date(s), will be coerced with \code{\link[=as.POSIXlt]{as.POSIXlt()}}}
+\item{x}{date(s), \link{character} (vectors) will be coerced with \code{\link[=as.POSIXlt]{as.POSIXlt()}}}
 
-\item{reference}{reference date(s) (defaults to today), will be coerced with \code{\link[=as.POSIXlt]{as.POSIXlt()}}}
+\item{reference}{reference date(s) (defaults to today), \link{character} (vectors) will be coerced with \code{\link[=as.POSIXlt]{as.POSIXlt()}}}
 
-\item{exact}{a logical to indicate whether age calculation should be exact, i.e. with decimals. It divides the number of days of \href{https://en.wikipedia.org/wiki/Year-to-date}{year-to-date} (YTD) of \code{x} by the number of days in the year of \code{reference} (either 365 or 366).}
+\item{exact}{a \link{logical} to indicate whether age calculation should be exact, i.e. with decimals. It divides the number of days of \href{https://en.wikipedia.org/wiki/Year-to-date}{year-to-date} (YTD) of \code{x} by the number of days in the year of \code{reference} (either 365 or 366).}
 
-\item{na.rm}{a logical to indicate whether missing values should be removed}
+\item{na.rm}{a \link{logical} to indicate whether missing values should be removed}
 
 \item{...}{arguments passed on to \code{\link[=as.POSIXlt]{as.POSIXlt()}}, such as \code{origin}}
 }
@@ -25,6 +25,8 @@ Calculates age in years based on a reference date, which is the sytem date at de
 }
 \details{
 Ages below 0 will be returned as \code{NA} with a warning. Ages above 120 will only give a warning.
+
+This function vectorises over both \code{x} and \code{reference}, meaning that either can have a length of 1 while the other argument has a larger length.
 }
 \section{Stable Lifecycle}{
 
@@ -36,7 +38,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{

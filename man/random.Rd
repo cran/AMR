@@ -16,11 +16,11 @@ random_rsi(size, prob_RSI = c(0.33, 0.33, 0.33), ...)
 \arguments{
 \item{size}{desired size of the returned vector}
 
-\item{mo}{any character that can be coerced to a valid microorganism code with \code{\link[=as.mo]{as.mo()}}}
+\item{mo}{any \link{character} that can be coerced to a valid microorganism code with \code{\link[=as.mo]{as.mo()}}}
 
-\item{ab}{any character that can be coerced to a valid antimicrobial agent code with \code{\link[=as.ab]{as.ab()}}}
+\item{ab}{any \link{character} that can be coerced to a valid antimicrobial agent code with \code{\link[=as.ab]{as.ab()}}}
 
-\item{...}{extension for future versions, not used at the moment}
+\item{...}{ignored, only in place to allow future extensions}
 
 \item{prob_RSI}{a vector of length 3: the probabilities for R (1st value), S (2nd value) and I (3rd value)}
 }
@@ -45,7 +45,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{

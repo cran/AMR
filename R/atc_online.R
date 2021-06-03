@@ -27,7 +27,7 @@
 #'
 #' Gets data from the WHO to determine properties of an ATC (e.g. an antibiotic), such as the name, defined daily dose (DDD) or standard unit.
 #' @inheritSection lifecycle Stable Lifecycle
-#' @param atc_code a character or character vector with ATC code(s) of antibiotic(s)
+#' @param atc_code a [character] or [character] vector with ATC code(s) of antibiotic(s)
 #' @param property property of an ATC code. Valid values are `"ATC"`, `"Name"`, `"DDD"`, `"U"` (`"unit"`), `"Adm.R"`, `"Note"` and `groups`. For this last option, all hierarchical groups of an ATC code will be returned, see *Examples*.
 #' @param administration type of administration when using `property = "Adm.R"`, see *Details*
 #' @param url url of website of the WHOCC. The sign `%s` can be used as a placeholder for ATC codes.
@@ -56,7 +56,7 @@
 #' - `"TU"` = thousand units
 #' - `"MU"` = million units
 #' - `"mmol"` = millimole
-#' - `"ml"` = milliliter (e.g. eyedrops)
+#' - `"ml"` = millilitre (e.g. eyedrops)
 #' 
 #' **N.B. This function requires an internet connection and only works if the following packages are installed: `curl`, `rvest`, `xml2`.**
 #' @export
@@ -65,13 +65,15 @@
 #' @source <https://www.whocc.no/atc_ddd_alterations__cumulative/ddd_alterations/abbrevations/>
 #' @examples
 #' \donttest{
-#' # oral DDD (Defined Daily Dose) of amoxicillin
-#' atc_online_property("J01CA04", "DDD", "O")
+#' if (requireNamespace("curl") && requireNamespace("rvest") && requireNamespace("xml2")) { 
+#'   # oral DDD (Defined Daily Dose) of amoxicillin
+#'   atc_online_property("J01CA04", "DDD", "O")
 #' 
-#' # parenteral DDD (Defined Daily Dose) of amoxicillin
-#' atc_online_property("J01CA04", "DDD", "P")
+#'   # parenteral DDD (Defined Daily Dose) of amoxicillin
+#'   atc_online_property("J01CA04", "DDD", "P")
 #'
-#' atc_online_property("J01CA04", property = "groups") # search hierarchical groups of amoxicillin
+#'   atc_online_property("J01CA04", property = "groups") # search hierarchical groups of amoxicillin
+#' }
 #' }
 atc_online_property <- function(atc_code,
                                 property,

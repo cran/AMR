@@ -22,7 +22,7 @@ Split ages into age groups defined by the \code{split} argument. This allows for
 \details{
 To split ages, the input for the \code{split_at} argument can be:
 \itemize{
-\item A numeric vector. A value of e.g. \code{c(10, 20)} will split \code{x} on 0-9, 10-19 and 20+. A value of only \code{50} will split \code{x} on 0-49 and 50+.
+\item A \link{numeric} vector. A value of e.g. \code{c(10, 20)} will split \code{x} on 0-9, 10-19 and 20+. A value of only \code{50} will split \code{x} on 0-49 and 50+.
 The default is to split on young children (0-11), youth (12-24), young adults (25-54), middle-aged adults (55-74) and elderly (75+).
 \item A character:
 \itemize{
@@ -43,7 +43,7 @@ If the unlying code needs breaking changes, they will occur gradually. For examp
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \examples{

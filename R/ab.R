@@ -27,9 +27,9 @@
 #'
 #' Use this function to determine the antibiotic code of one or more antibiotics. The data set [antibiotics] will be searched for abbreviations, official names and synonyms (brand names).
 #' @inheritSection lifecycle Stable Lifecycle
-#' @param x character vector to determine to antibiotic ID
-#' @param flag_multiple_results logical to indicate whether a note should be printed to the console that probably more than one antibiotic code or name can be retrieved from a single input value.
-#' @param info logical to indicate whether a progress bar should be printed
+#' @param x a [character] vector to determine to antibiotic ID
+#' @param flag_multiple_results a [logical] to indicate whether a note should be printed to the console that probably more than one antibiotic code or name can be retrieved from a single input value.
+#' @param info a [logical] to indicate whether a progress bar should be printed, defaults to `TRUE` only in interactive mode
 #' @param ... arguments passed on to internal functions
 #' @rdname as.ab
 #' @inheritSection WHOCC WHOCC
@@ -50,7 +50,7 @@
 #'
 #' WHONET 2019 software: \url{http://www.whonet.org/software.html}
 #'
-#' European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{http://ec.europa.eu/health/documents/community-register/html/atc.htm}
+#' European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 #' @aliases ab
 #' @return A [character] [vector] with additional class [`ab`]
 #' @seealso 
@@ -82,7 +82,7 @@
 #' # they use as.ab() internally:
 #' ab_name("J01FA01")    # "Erythromycin"
 #' ab_name("eryt")       # "Erythromycin"
-#' 
+#' \donttest{
 #' if (require("dplyr")) {
 #' 
 #'   # you can quickly rename <rsi> columns using dplyr >= 1.0.0:
@@ -90,7 +90,8 @@
 #'     rename_with(as.ab, where(is.rsi))
 #'    
 #' }
-as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
+#' }
+as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
   meet_criteria(x, allow_class = c("character", "numeric", "integer", "factor"), allow_NA = TRUE)
   meet_criteria(flag_multiple_results, allow_class = "logical", has_length = 1)
   meet_criteria(info, allow_class = "logical", has_length = 1)
@@ -155,7 +156,7 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
   }
   
   if (initial_search == TRUE) {
-    progress <- progress_ticker(n = length(x), n_min = ifelse(isTRUE(info), 25, length(x) + 1)) # start if n >= 25
+    progress <- progress_ticker(n = length(x), n_min = 25, print = info) # start if n >= 25
     on.exit(close(progress))
   }
   
@@ -169,8 +170,6 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
       next
     }
     if (identical(x[i], "") |
-        # no short names:
-        nchar(x[i]) <= 2 |
         # prevent "bacteria" from coercing to TMP, since Bacterial is a brand name of it:
         identical(tolower(x[i]), "bacteria")) {
       x_unknown <- c(x_unknown, x_bak[x[i] == x_bak_clean][1])
@@ -238,7 +237,8 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
     
     # exact abbreviation
     abbr_found <- unlist(lapply(AB_lookup$generalised_abbreviations,
-                                function(s) x[i] %in% s))
+                                # require at least 2 characters for abbreviations
+                                function(s) x[i] %in% s & nchar(x[i]) >= 2))
     found <- antibiotics$ab[abbr_found == TRUE]
     if (length(found) > 0) {
       x_new[i] <- note_if_more_than_one_found(found, i, from_text)
@@ -389,7 +389,7 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
       
       # first 5 except for cephalosporins, then first 7 (those cephalosporins all start quite the same!)
       found <- suppressWarnings(as.ab(substr(x[i], 1, 5), initial_search = FALSE))
-      if (!is.na(found) && !ab_group(found, initial_search = FALSE) %like% "cephalosporins") {
+      if (!is.na(found) && ab_group(found, initial_search = FALSE) %unlike% "cephalosporins") {
         x_new[i] <- note_if_more_than_one_found(found, i, from_text)
         next
       }
@@ -477,7 +477,6 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = TRUE, ...) {
   if (length(x_unknown) > 0 & fast_mode == FALSE) {
     warning_("These values could not be coerced to a valid antimicrobial ID: ",
              vector_and(x_unknown), ".",
-             ".",
              call = FALSE)
   }
   
@@ -552,7 +551,7 @@ as.data.frame.ab <- function(x, ...) {
 "[<-.ab" <- function(i, j, ..., value) {
   y <- NextMethod()
   attributes(y) <- attributes(i)
-  class_integrity_check(y, "antimicrobial code", antibiotics$ab)
+  return_after_integrity_check(y, "antimicrobial code", antibiotics$ab)
 }
 #' @method [[<- ab
 #' @export
@@ -560,15 +559,16 @@ as.data.frame.ab <- function(x, ...) {
 "[[<-.ab" <- function(i, j, ..., value) {
   y <- NextMethod()
   attributes(y) <- attributes(i)
-  class_integrity_check(y, "antimicrobial code", antibiotics$ab)
+  return_after_integrity_check(y, "antimicrobial code", antibiotics$ab)
 }
 #' @method c ab
 #' @export
 #' @noRd
-c.ab <- function(x, ...) {
+c.ab <- function(...) {
+  x <- list(...)[[1L]]
   y <- NextMethod()
   attributes(y) <- attributes(x)
-  class_integrity_check(y, "antimicrobial code", antibiotics$ab)
+  return_after_integrity_check(y, "antimicrobial code", antibiotics$ab)
 }
 
 #' @method unique ab

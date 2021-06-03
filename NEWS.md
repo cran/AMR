@@ -1,5 +1,85 @@
-# AMR 1.6.0
+# `AMR` 1.7.1
 
+### New
+* Support for CLSI 2020 guideline for interpreting MICs and disk diffusion values (using `as.rsi()`)
+
+### Changed
+* `bug_drug_combinations()` now supports grouping using the `dplyr` package
+* As requested by CRAN administrators: decreased package size by 3 MB in costs of a slower loading time of the package
+
+
+# `AMR` 1.7.0
+
+### Breaking change
+* All antibiotic class selectors (such as `carbapenems()`, `aminoglycosides()`) can now be used for filtering as well, making all their accompanying `filter_*()` functions redundant (such as `filter_carbapenems()`, `filter_aminoglycosides()`). These functions are now deprecated and will be removed in a next release.
+  ```r
+  # select columns with results for carbapenems
+  example_isolates[, carbapenems()]           # base R
+  example_isolates %>% select(carbapenems())  # dplyr
+  
+  # filter rows for resistance in any carbapenem
+  example_isolates[any(carbapenems() == "R"), ]                  # base R
+  example_isolates %>% filter(any(carbapenems() == "R"))         # dplyr
+  example_isolates %>% filter(if_any(carbapenems(), ~.x == "R")) # dplyr (formal)
+  
+  # filter rows for resistance in all carbapenems
+  example_isolates[all(carbapenems() == "R"), ]           # base R
+  example_isolates[carbapenems() == "R", ]
+  example_isolates %>% filter(all(carbapenems() == "R"))  # dplyr
+  example_isolates %>% filter(carbapenems() == "R")
+  ```
+
+### New
+* Function `custom_eucast_rules()` that brings support for custom AMR rules in `eucast_rules()`
+* Function `italicise_taxonomy()` to make taxonomic names within a string italic, with support for markdown and ANSI
+* Support for all four methods to determine first isolates as summarised by Hindler *et al.* (doi: [10.1086/511864](https://doi.org/10.1086/511864)): isolate-based, patient-based, episode-based and phenotype-based. The last method is now the default.
+  * The `first_isolate()` function gained the argument `method` that has to be "phenotype-based", "episode-based", "patient-based", or "isolate-based". The old behaviour is equal to "episode-based". The new default is "phenotype-based" if antimicrobial test results are available, and "episode-based" otherwise. This new default will yield slightly more isolates for selection (which is a good thing).
+  * Since fungal isolates can also be selected, the functions `key_antibiotics()` and `key_antibiotics_equal()` are now deprecated in favour of the `key_antimicrobials()` and `antimicrobials_equal()` functions. Also, the new `all_antimicrobials()` function works like the old `key_antibiotics()` function, but includes any column with antimicrobial test results. Using `key_antimicrobials()` still only selects six preferred antibiotics for Gram-negatives, six for Gram-positives, and six universal antibiotics. It has a new `antifungal` argument to set antifungal agents (antimycotics).
+  * Using `type == "points"` in the `first_isolate()` function for phenotype-based selection will now consider all antimicrobial drugs in the data set, using the new `all_antimicrobials()`
+  * The `first_isolate()` function can now take a vector of values for `col_keyantibiotics` and can have an episode length of `Inf`
+  * Since the phenotype-based method is the new default, `filter_first_isolate()` renders the `filter_first_weighted_isolate()` function redundant. For this reason, `filter_first_weighted_isolate()` is now deprecated.
+  * The documentation of the `first_isolate()` and `key_antimicrobials()` functions has been completely rewritten.
+* Function `betalactams()` as additional antbiotic column selector and function `filter_betalactams()` as additional antbiotic column filter. The group of betalactams consists of all carbapenems, cephalosporins and penicillins.
+* A `ggplot()` method for `resistance_predict()` 
+
+
+### Changed
+* Custom MDRO guidelines (`mdro()`, `custom_mdro_guideline()`):
+  * Custom MDRO guidelines can now be combined with other custom MDRO guidelines using `c()`
+  * Fix for applying the rules; in previous versions, rows were interpreted according to the last matched rule. Now, rows are interpreted according to the first matched rule
+* Fix for `age_groups()` for persons aged zero
+* The `example_isolates` data set now contains some (fictitious) zero-year old patients
+* Fix for minor translation errors
+* Printing of microbial codes in a `data.frame` or `tibble` now gives a warning if the data contains old microbial codes (from a previous AMR package version)
+* Extended the `like()` functions:
+  * Now checks if `pattern` is a *valid* regular expression
+  * Added `%unlike%` and `%unlike_case%` (as negations of the existing `%like%` and `%like_case%`). This greatly improves readability:
+    ```r
+    if (!grepl("EUCAST", guideline)) ...
+    # same:
+    if (guideline %unlike% "EUCAST") ...
+    ```
+  * Altered the RStudio addin, so it now iterates over `%like%` -> `%unlike%` -> `%like_case%` -> `%unlike_case%` if you keep pressing your keyboard shortcut
+* Fixed an installation error on R-3.0
+* Added `info` argument to `as.mo()` to turn on/off the progress bar
+* Fixed a bug where `col_mo` in some functions (esp. `eucast_rules()` and `mdro()`) could not be a column name of the `microorganisms` data set as it would throw an error
+* Fix for transforming numeric values to RSI (`as.rsi()`) when the `vctrs` package is loaded (i.e., when using tidyverse)
+* Colour fix for using `barplot()` on an RSI class
+* Added 25 common system codes for bacteria to the `microorganisms.codes` data set
+* Added 16 common system codes for antimicrobial agents to the `antibiotics` data set
+* Fix for using `skimr::skim()` on classes `mo`, `mic` and `disk` when using the just released `dplyr` v1.0.6
+* Updated `skimr::skim()` usage for MIC values to also include 25th and 75th percentiles
+* Fix for plotting missing MIC/disk diffusion values
+* Updated join functions to always use `dplyr` join functions if the `dplyr` package is installed - now also preserving grouped variables
+* Antibiotic class selectors (such as `cephalosporins()`) now maintain the column order from the original data
+* Fix for selecting columns using `fluoroquinolones()`
+* `age()` now vectorises over both `x` and `reference`
+
+### Other
+* All unit tests are now processed by the `tinytest` package, instead of the `testthat` package. The `testthat` package unfortunately requires tons of dependencies that are also heavy and only usable for recent R versions, disallowing developers to test a package under any R 3.* version. On the contrary, the `tinytest` package is very lightweight and dependency-free.
+
+
+# `AMR` 1.6.0
 
 ### New
 * Support for EUCAST Clinical Breakpoints v11.0 (2021), effective in the `eucast_rules()` function and in `as.rsi()` to interpret MIC and disk diffusion values. This is now the default guideline in this package.
@@ -59,7 +139,7 @@
   ```
 
 ### Changed
-* Updated the bacterial taxonomy to 3 March 2021 (using [LSPN](https://lpsn.dsmz.de))
+* Updated the bacterial taxonomy to 3 March 2021 (using [LPSN](https://lpsn.dsmz.de))
   * Added 3,372 new species and 1,523 existing species became synomyms
   * The URL of a bacterial species (`mo_url()`) will now lead to https://lpsn.dsmz.de
 * Big update for plotting classes `rsi`, `<mic>`, and `<disk>`:
@@ -93,7 +173,7 @@
 * Loading the package (i.e., `library(AMR)`) now is ~50 times faster than before, in costs of package size (which increased by ~3 MB)
 
 
-# AMR 1.5.0
+# `AMR` 1.5.0
 
 ### New
 * Functions `get_episode()` and `is_new_episode()` to determine (patient) episodes which are not necessarily based on microorganisms. The `get_episode()` function returns the index number of the episode per group, while the `is_new_episode()` function returns values `TRUE`/`FALSE` to indicate whether an item in a vector is the start of a new episode. They also support `dplyr`s grouping (i.e. using `group_by()`):
@@ -170,7 +250,7 @@
 * Added CodeFactor as a continuous code review to this package: <https://www.codefactor.io/repository/github/msberends/amr/>
 * Added Dr. Rogier Schade as contributor
 
-# AMR 1.4.0
+# `AMR` 1.4.0
 
 ### New
 * Support for 'EUCAST Expert Rules' / 'EUCAST Intrinsic Resistance and Unusual Phenotypes' version 3.2 of May 2020. With this addition to the previously implemented version 3.1 of 2016, the `eucast_rules()` function can now correct for more than 180 different antibiotics and the `mdro()` function can determine multidrug resistance based on more than 150 different antibiotics. All previously implemented versions of the EUCAST rules are now maintained and kept available in this package. The `eucast_rules()` function consequently gained the arguments `version_breakpoints` (at the moment defaults to v10.0, 2020) and `version_expertrules` (at the moment defaults to v3.2, 2020). The `example_isolates` data set now also reflects the change from v3.1 to v3.2. The `mdro()` function now accepts `guideline == "EUCAST3.1"` and `guideline == "EUCAST3.2"`.
@@ -242,7 +322,7 @@
 * Removed unnecessary references to the `base` package
 * Added packages that could be useful for some functions to the `Suggests` field of the `DESCRIPTION` file
 
-# AMR 1.3.0
+# `AMR` 1.3.0
 
 ### New
 * Function `ab_from_text()` to retrieve antimicrobial drug names, doses and forms of administration from clinical texts in e.g. health care records, which also corrects for misspelling since it uses `as.ab()` internally
@@ -295,7 +375,7 @@
 ### Other
 * Moved primary location of this project from GitLab to [GitHub](https://github.com/msberends/AMR), giving us native support for automated syntax checking without being dependent on external services such as AppVeyor and Travis CI.
 
-# AMR 1.2.0
+# `AMR` 1.2.0
 
 ### Breaking 
 * Removed code dependency on all other R packages, making this package fully independent of the development process of others. This is a major code change, but will probably not be noticeable by most users.
@@ -333,7 +413,7 @@
 * Removed previously deprecated function `p.symbol()` - it was replaced with `p_symbol()`
 * Removed function `read.4d()`, that was only useful for reading data from an old test database.
 
-# AMR 1.1.0
+# `AMR` 1.1.0
 
 ### New
 * Support for easy principal component analysis for AMR, using the new `pca()` function 
@@ -355,7 +435,7 @@
 * Support for the upcoming `dplyr` version 1.0.0
 * More robust assigning for classes `rsi` and `mic`
 
-# AMR 1.0.1
+# `AMR` 1.0.1
 
 ### Changed
 * Fixed important floating point error for some MIC comparisons in EUCAST 2020 guideline
@@ -371,7 +451,7 @@
 * Added `uti` (as abbreviation of urinary tract infections) as argument to `as.rsi()`, so interpretation of MIC values and disk zones can be made dependent on isolates specifically from UTIs
 * Info printing in functions `eucast_rules()`, `first_isolate()`, `mdro()` and `resistance_predict()` will now at default only print when R is in an interactive mode (i.e. not in RMarkdown)
 
-# AMR 1.0.0
+# `AMR` 1.0.0
 
 This software is now out of beta and considered stable. Nonetheless, this package will be developed continually.
 
@@ -419,7 +499,7 @@ This software is now out of beta and considered stable. Nonetheless, this packag
 * Full support for the upcoming R 4.0
 * Removed unnecessary `AMR::` calls
 
-# AMR 0.9.0
+# `AMR` 0.9.0
 
 ### Breaking
 * Adopted Adeolu *et al.* (2016), [PMID 27620848](https:/pubmed.ncbi.nlm.nih.gov/27620848/) for the `microorganisms` data set, which means that the new order Enterobacterales now consists of a part of the existing family Enterobacteriaceae, but that this family has been split into other families as well (like *Morganellaceae* and *Yersiniaceae*). Although published in 2016, this information is not yet in the Catalogue of Life version of 2019. All MDRO determinations with `mdro()` will now use the Enterobacterales order for all guidelines before 2016 that were dependent on the Enterobacteriaceae family.
@@ -485,7 +565,7 @@ This software is now out of beta and considered stable. Nonetheless, this packag
 * Change dependency on `clean` to `cleaner`, as this package was renamed accordingly upon CRAN request
 * Added Dr. Sofia Ny as contributor
 
-# AMR 0.8.0
+# `AMR` 0.8.0
 
 ### Breaking
 * Determination of first isolates now **excludes** all 'unknown' microorganisms at default, i.e. microbial code `"UNKNOWN"`. They can be included with the new argument `include_unknown`:
@@ -614,7 +694,7 @@ This software is now out of beta and considered stable. Nonetheless, this packag
 * Added Prof. Dr. Casper Albers as doctoral advisor and added Dr. Judith Fonville, Eric Hazenberg, Dr. Bart Meijer, Dr. Dennis Souverein and Annick Lenglet as contributors
 * Cleaned the coding style of every single syntax line in this package with the help of the `lintr` package
 
-# AMR 0.7.1
+# `AMR` 0.7.1
 
 #### New
 * Function `rsi_df()` to transform a `data.frame` to a data set containing only the microbial interpretation (S, I, R), the antibiotic, the percentage of S/I/R and the number of available isolates. This is a convenient combination of the existing functions `count_df()` and `portion_df()` to immediately show resistance percentages and number of available isolates:
@@ -675,7 +755,7 @@ This software is now out of beta and considered stable. Nonetheless, this packag
 #### Other
 * Fixed a note thrown by CRAN tests
 
-# AMR 0.7.0
+# `AMR` 0.7.0
 
 #### New
 * Support for translation of disk diffusion and MIC values to RSI values (i.e. antimicrobial interpretations). Supported guidelines are EUCAST (2011 to 2019) and CLSI (2011 to 2019). Use `as.rsi()` on an MIC value (created with `as.mic()`), a disk diffusion value (created with the new `as.disk()`) or on a complete date set containing columns with MIC or disk diffusion values.
@@ -733,13 +813,13 @@ This software is now out of beta and considered stable. Nonetheless, this packag
 #### Other
 * Support for R 3.6.0 and later by providing support for [staged install](https://developer.r-project.org/Blog/public/2019/02/14/staged-install/index.html)
 
-# AMR 0.6.1
+# `AMR` 0.6.1
 
 #### Changed
 * Fixed a critical bug when using `eucast_rules()` with `verbose = TRUE`
 * Coercion of microbial IDs are now written to the package namespace instead of the user's home folder, to comply with the CRAN policy
 
-# AMR 0.6.0
+# `AMR` 0.6.0
 
 **New website!**
 
@@ -835,7 +915,7 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
   * Emphasised in manual that penicillin is meant as benzylpenicillin (ATC [J01CE01](https://www.whocc.no/atc_ddd_index/?code=J01CE01))
   * New info is returned when running this function, stating exactly what has been changed or added. Use `eucast_rules(..., verbose = TRUE)` to get a data set with all changed per bug and drug combination.
 * Removed data sets `microorganisms.oldDT`, `microorganisms.prevDT`, `microorganisms.unprevDT` and `microorganismsDT` since they were no longer needed and only contained info already available in the `microorganisms` data set
-* Added 65 antibiotics to the `antibiotics` data set, from the [Pharmaceuticals Community Register](http://ec.europa.eu/health/documents/community-register/html/atc.htm) of the European Commission
+* Added 65 antibiotics to the `antibiotics` data set, from the [Pharmaceuticals Community Register](https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm) of the European Commission
 * Removed columns `atc_group1_nl` and `atc_group2_nl` from the `antibiotics` data set
 * Functions `atc_ddd()` and `atc_groups()` have been renamed `atc_online_ddd()` and `atc_online_groups()`. The old functions are deprecated and will be removed in a future version.
 * Function `guess_mo()` is now deprecated in favour of `as.mo()` and will be removed in future versions
@@ -932,7 +1012,7 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
 #### Other
 * Updated licence text to emphasise GPL 2.0 and that this is an R package.
 
-# AMR 0.5.0
+# `AMR` 0.5.0
 
 #### New
 * Repository moved to GitLab
@@ -1015,7 +1095,7 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
 * Updated vignettes to comply with README
 
 
-# AMR 0.4.0
+# `AMR` 0.4.0
 
 #### New
 * The data set `microorganisms` now contains **all microbial taxonomic data from ITIS** (kingdoms Bacteria, Fungi and Protozoa), the Integrated Taxonomy Information System, available via https://itis.gov. The data set now contains more than 18,000 microorganisms with all known bacteria, fungi and protozoa according ITIS with genus, species, subspecies, family, order, class, phylum and subkingdom. The new data set `microorganisms.old` contains all previously known taxonomic names from those kingdoms.
@@ -1126,7 +1206,7 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
 #### Other
 * More unit tests to ensure better integrity of functions
 
-# AMR 0.3.0
+# `AMR` 0.3.0
 
 #### New
 * **BREAKING**: `rsi_df` was removed in favour of new functions `portion_R`, `portion_IR`, `portion_I`, `portion_SI` and `portion_S` to selectively calculate resistance or susceptibility. These functions are 20 to 30 times faster than the old `rsi` function. The old function still works, but is deprecated.
@@ -1196,7 +1276,7 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
   * Windows: https://ci.appveyor.com/project/msberends/amr
 * Added thesis advisors to DESCRIPTION file
 
-# AMR 0.2.0
+# `AMR` 0.2.0
 
 #### New
 * Full support for Windows, Linux and macOS
@@ -1231,7 +1311,7 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
 * Added build tests for Linux and macOS using Travis CI (https://travis-ci.org/msberends/AMR)
 * Added line coverage checking using CodeCov (https://codecov.io/gh/msberends/AMR/tree/master/R)
 
-# AMR 0.1.1
+# `AMR` 0.1.1
 
 * `EUCAST_rules` applies for amoxicillin even if ampicillin is missing
 * Edited column names to comply with GLIMS, the laboratory information system
@@ -1239,6 +1319,6 @@ We've got a new website: [https://msberends.gitlab.io/AMR](https://msberends.git
 * Renamed 'Daily Defined Dose' to 'Defined Daily Dose'
 * Added barplots for `rsi` and `mic` classes
 
-# AMR 0.1.0
+# `AMR` 0.1.0
 
 * First submission to CRAN.

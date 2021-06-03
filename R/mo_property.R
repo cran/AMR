@@ -27,7 +27,7 @@
 #'
 #' Use these functions to return a specific property of a microorganism based on the latest accepted taxonomy. All input values will be evaluated internally with [as.mo()], which makes it possible to use microbial abbreviations, codes and names as input. See *Examples*.
 #' @inheritSection lifecycle Stable Lifecycle
-#' @param x any character (vector) that can be coerced to a valid microorganism code with [as.mo()]. Can be left blank for auto-guessing the column containing microorganism codes if used in a data set, see *Examples*.
+#' @param x any [character] (vector) that can be coerced to a valid microorganism code with [as.mo()]. Can be left blank for auto-guessing the column containing microorganism codes if used in a data set, see *Examples*.
 #' @param property one of the column names of the [microorganisms] data set: `r vector_or(colnames(microorganisms), sort = FALSE, quotes = TRUE)`, or must be `"shortname"`
 #' @param language language of the returned text, defaults to system language (see [get_locale()]) and can be overwritten by setting the option `AMR_locale`, e.g. `options(AMR_locale = "de")`, see [translate]. Also used to translate text like "no growth". Use `language = NULL` or `language = ""` to prevent translation.
 #' @param ... other arguments passed on to [as.mo()], such as 'allow_uncertain' and 'ignore_pattern'
@@ -152,6 +152,7 @@
 #' mo_is_yeast(c("Candida", "E. coli"))      # TRUE, FALSE
 #' 
 #' # gram stains and intrinsic resistance can also be used as a filter in dplyr verbs
+#' \donttest{
 #' if (require("dplyr")) {
 #'   example_isolates %>%
 #'     filter(mo_is_gram_positive())
@@ -167,6 +168,7 @@
 #' #   SNOMED codes, and URL to the online database
 #' mo_info("E. coli")
 #' }
+#' }
 mo_name <- function(x, language = get_locale(), ...) {
   if (missing(x)) {
     # this tries to find the data and an <mo> column
@@ -178,7 +180,7 @@ mo_name <- function(x, language = get_locale(), ...) {
   translate_AMR(mo_validate(x = x, property = "fullname", language = language, ...),
                 language = language,
                 only_unknown = FALSE,
-                affect_mo_name = TRUE)
+                only_affect_mo_names = TRUE)
 }
 
 #' @rdname mo_property
@@ -220,7 +222,7 @@ mo_shortname <- function(x, language = get_locale(), ...) {
   
   shortnames[is.na(x.mo)] <- NA_character_
   load_mo_failures_uncertainties_renamed(metadata)
-  translate_AMR(shortnames, language = language, only_unknown = FALSE, affect_mo_name = TRUE)
+  translate_AMR(shortnames, language = language, only_unknown = FALSE, only_affect_mo_names = TRUE)
 }
 
 #' @rdname mo_property
@@ -723,20 +725,13 @@ mo_validate <- function(x, property, language, ...) {
     # special case for mo_* functions where class is already <mo>
     return(MO_lookup[match(x, MO_lookup$mo), property, drop = TRUE])
   }
-
+  
   # try to catch an error when inputting an invalid argument
   # so the 'call.' can be set to FALSE
   tryCatch(x[1L] %in% MO_lookup[1, property, drop = TRUE],
            error = function(e) stop(e$message, call. = FALSE))
-  
-  if (is.mo(x)
-      & !Becker %in% c(TRUE, "all")
-      & !Lancefield %in% c(TRUE, "all")) {
-    # this will not reset mo_uncertainties and mo_failures
-    # because it's already a valid MO
-    x <- exec_as.mo(x, property = property, initial_search = FALSE, language = language, ...)
-  } else if (!all(x %in% MO_lookup[, property, drop = TRUE])
-             | has_Becker_or_Lancefield) {
+
+  if (!all(x[!is.na(x)] %in% MO_lookup[, property, drop = TRUE]) | has_Becker_or_Lancefield) {
     x <- exec_as.mo(x, property = property, language = language, ...)
   }
   

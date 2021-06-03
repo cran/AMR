@@ -3,9 +3,9 @@
 \docType{data}
 \name{microorganisms.codes}
 \alias{microorganisms.codes}
-\title{Data Set with 5,580 Common Microorganism Codes}
+\title{Data Set with 5,605 Common Microorganism Codes}
 \format{
-A \link{data.frame} with 5,580 observations and 2 variables:
+A \link{data.frame} with 5,605 observations and 2 variables:
 \itemize{
 \item \code{code}\cr Commonly used code of a microorganism
 \item \code{mo}\cr ID of the microorganism in the \link{microorganisms} data set
@@ -32,7 +32,7 @@ This package contains the complete taxonomic tree of almost all microorganisms (
 
 \section{Read more on Our Website!}{
 
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}. As we would like to better understand the backgrounds and needs of our users, please \href{https://msberends.github.io/AMR/survey.html}{participate in our survey}!
+On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
 }
 
 \seealso{
