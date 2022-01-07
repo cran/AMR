@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -38,7 +38,7 @@ if (utf8_supported && !is_latex) {
   pkg_env$info_icon <- "i"
 }
 
-.onLoad <- function(libname, pkgname) {
+.onLoad <- function(...) {
   # Support for tibble headers (type_sum) and tibble columns content (pillar_shaft)
   # without the need to depend on other packages. This was suggested by the 
   # developers of the vctrs package: 
@@ -56,15 +56,35 @@ if (utf8_supported && !is_latex) {
   # Support for frequency tables from the cleaner package
   s3_register("cleaner::freq", "mo")
   s3_register("cleaner::freq", "rsi")
-  # Support from skim() from the skimr package
-  s3_register("skimr::get_skimmers", "mo")
-  s3_register("skimr::get_skimmers", "rsi")
-  s3_register("skimr::get_skimmers", "mic")
-  s3_register("skimr::get_skimmers", "disk")
-  s3_register("ggplot2::ggplot", "rsi")
-  s3_register("ggplot2::ggplot", "mic")
-  s3_register("ggplot2::ggplot", "disk")
-  s3_register("ggplot2::ggplot", "resistance_predict")
+  # Support for skim() from the skimr package
+  if (pkg_is_available("skimr", also_load = FALSE, min_version = "2.0.0")) {
+    s3_register("skimr::get_skimmers", "mo")
+    s3_register("skimr::get_skimmers", "rsi")
+    s3_register("skimr::get_skimmers", "mic")
+    s3_register("skimr::get_skimmers", "disk")
+  }
+  # Support for autoplot() from the ggplot2 package
+  s3_register("ggplot2::autoplot", "rsi")
+  s3_register("ggplot2::autoplot", "mic")
+  s3_register("ggplot2::autoplot", "disk")
+  s3_register("ggplot2::autoplot", "resistance_predict")
+  # Support for fortify from the ggplot2 package
+  s3_register("ggplot2::fortify", "rsi")
+  s3_register("ggplot2::fortify", "mic")
+  s3_register("ggplot2::fortify", "disk")
+  # Support vctrs package for use in e.g. dplyr verbs
+  s3_register("vctrs::vec_ptype2", "ab.character")
+  s3_register("vctrs::vec_ptype2", "character.ab")
+  s3_register("vctrs::vec_cast", "character.ab")
+  s3_register("vctrs::vec_ptype2", "mo.character")
+  s3_register("vctrs::vec_ptype2", "character.mo")
+  s3_register("vctrs::vec_cast", "character.mo")
+  s3_register("vctrs::vec_ptype2", "ab_selector.character")
+  s3_register("vctrs::vec_ptype2", "character.ab_selector")
+  s3_register("vctrs::vec_cast", "character.ab_selector")
+  s3_register("vctrs::vec_ptype2", "disk.integer")
+  s3_register("vctrs::vec_ptype2", "integer.disk")
+  s3_register("vctrs::vec_cast", "integer.disk")
   
   # if mo source exists, fire it up (see mo_source())
   try({
@@ -75,13 +95,18 @@ if (utf8_supported && !is_latex) {
   
   
   # reference data - they have additional columns compared to `antibiotics` and `microorganisms` to improve speed
+  # they cannott be part of R/sysdata.rda since CRAN thinks it would make the package too large (+3 MB)
   assign(x = "AB_lookup", value = create_AB_lookup(), envir = asNamespace("AMR"))
   assign(x = "MO_lookup", value = create_MO_lookup(), envir = asNamespace("AMR"))
   assign(x = "MO.old_lookup", value = create_MO.old_lookup(), envir = asNamespace("AMR"))
   # for mo_is_intrinsic_resistant() - saves a lot of time when executed on this vector
   assign(x = "INTRINSIC_R", value = create_intr_resistance(), envir = asNamespace("AMR"))
+  
+  # for building the website, only print first 5 rows of a data set
+  # if (Sys.getenv("IN_PKGDOWN") != "" && !interactive()) {
+  #   ...
+  # }
 }
-
 
 # Helper functions --------------------------------------------------------
 
@@ -142,6 +167,5 @@ create_MO.old_lookup <- function() {
 
 create_intr_resistance <- function() {
   # for mo_is_intrinsic_resistant() - saves a lot of time when executed on this vector
-  paste(AMR::microorganisms[match(AMR::intrinsic_resistant$microorganism, AMR::microorganisms$fullname), "mo", drop = TRUE],
-        AMR::antibiotics[match(AMR::intrinsic_resistant$antibiotic, AMR::antibiotics$name), "ab", drop = TRUE])
+  paste(AMR::intrinsic_resistant$mo, AMR::intrinsic_resistant$ab)
 }

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -23,9 +23,26 @@
 # how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
+# these are allowed MIC values and will become [factor] levels
+ops <- c("<", "<=", "", ">=", ">")
+valid_mic_levels <- c(c(t(vapply(FUN.VALUE = character(9), ops,
+                                 function(x) paste0(x, "0.00", 1:9)))),
+                      unique(c(t(vapply(FUN.VALUE = character(104), ops,
+                                        function(x) paste0(x, sort(as.double(paste0("0.0", 
+                                                                                    sort(c(1:99, 125, 128, 256, 512, 625)))))))))),
+                      unique(c(t(vapply(FUN.VALUE = character(103), ops,
+                                        function(x) paste0(x, sort(as.double(paste0("0.", 
+                                                                                    c(1:99, 125, 128, 256, 512))))))))),
+                      c(t(vapply(FUN.VALUE = character(10), ops,
+                                 function(x) paste0(x, sort(c(1:9, 1.5)))))),
+                      c(t(vapply(FUN.VALUE = character(45), ops,
+                                 function(x) paste0(x, c(10:98)[9:98 %% 2 == TRUE])))),
+                      c(t(vapply(FUN.VALUE = character(16), ops,
+                                 function(x) paste0(x, sort(c(2 ^ c(7:11), 80 * c(2:12))))))))
+
 #' Transform Input to Minimum Inhibitory Concentrations (MIC)
 #'
-#' This ransforms vectors to a new class [`mic`], which treats the input as decimal numbers, while maintaining operators (such as ">=") and only allowing valid MIC values known to the field of (medical) microbiology.
+#' This transforms vectors to a new class [`mic`], which treats the input as decimal numbers, while maintaining operators (such as ">=") and only allowing valid MIC values known to the field of (medical) microbiology.
 #' @inheritSection lifecycle Stable Lifecycle
 #' @rdname as.mic
 #' @param x a [character] or [numeric] vector
@@ -117,6 +134,8 @@ as.mic <- function(x, na.rm = FALSE) {
     # transform Unicode for >= and <=
     x <- gsub("\u2264", "<=", x, fixed = TRUE)
     x <- gsub("\u2265", ">=", x, fixed = TRUE)
+    # remove other invalid characters
+    x <- gsub("[^a-zA-Z0-9.><= ]+", "", x, perl = TRUE)
     # remove space between operator and number ("<= 0.002" -> "<=0.002")
     x <- gsub("(<|=|>) +", "\\1", x, perl = TRUE)
     # transform => to >= and =< to <=
@@ -141,27 +160,14 @@ as.mic <- function(x, na.rm = FALSE) {
     x[x %like% "[.]"] <- gsub("0+$", "", x[x %like% "[.]"])
     # never end with dot
     x <- gsub("[.]$", "", x, perl = TRUE)
-    # force to be character
-    x <- as.character(x)
     # trim it
     x <- trimws(x)
     
     ## previously unempty values now empty - should return a warning later on
     x[x.bak != "" & x == ""] <- "invalid"
     
-    # these are allowed MIC values and will become [factor] levels
-    ops <- c("<", "<=", "", ">=", ">")
-    lvls <- c(c(t(vapply(FUN.VALUE = character(9), ops, function(x) paste0(x, "0.00", 1:9)))),
-              unique(c(t(vapply(FUN.VALUE = character(104), ops, function(x) paste0(x, sort(as.double(paste0("0.0", 
-                                                                                 sort(c(1:99, 125, 128, 256, 512, 625)))))))))),
-              unique(c(t(vapply(FUN.VALUE = character(103), ops, function(x) paste0(x, sort(as.double(paste0("0.", 
-                                                                                 c(1:99, 125, 128, 256, 512))))))))),
-              c(t(vapply(FUN.VALUE = character(10), ops, function(x) paste0(x, sort(c(1:9, 1.5)))))),
-              c(t(vapply(FUN.VALUE = character(45), ops, function(x) paste0(x, c(10:98)[9:98 %% 2 == TRUE])))),
-              c(t(vapply(FUN.VALUE = character(15), ops, function(x) paste0(x, sort(c(2 ^ c(7:10), 80 * c(2:12))))))))
-    
     na_before <- x[is.na(x) | x == ""] %pm>% length()
-    x[!x %in% lvls] <- NA
+    x[!x %in% valid_mic_levels] <- NA
     na_after <- x[is.na(x) | x == ""] %pm>% length()
     
     if (na_before != na_after) {
@@ -175,7 +181,7 @@ as.mic <- function(x, na.rm = FALSE) {
                list_missing, call = FALSE)
     }
     
-    set_clean_class(factor(x, levels = lvls, ordered = TRUE),
+    set_clean_class(factor(x, levels = valid_mic_levels, ordered = TRUE),
                     new_class =  c("mic", "ordered", "factor"))
   }
 }
@@ -188,6 +194,12 @@ all_valid_mics <- function(x) {
                     error = function(e) NA)
   !any(is.na(x_mic)) && !all(is.na(x))
 }
+
+#' @rdname as.mic
+#' @details `NA_mic_` is a missing value of the new `<mic>` class.
+#' @export
+NA_mic_ <- set_clean_class(factor(NA, levels = valid_mic_levels, ordered = TRUE),
+                           new_class =  c("mic", "ordered", "factor"))
 
 #' @rdname as.mic
 #' @export
@@ -320,6 +332,15 @@ unique.mic <- function(x, incomparables = FALSE, ...) {
   y
 }
 
+#' @method rep mic
+#' @export
+#' @noRd
+rep.mic <- function(x, ...) {
+  y <- NextMethod()
+  attributes(y) <- attributes(x)
+  y
+}
+
 #' @method sort mic
 #' @export
 #' @noRd
@@ -337,7 +358,7 @@ sort.mic <- function(x, decreasing = FALSE, ...) {
 #' @export
 #' @noRd
 hist.mic <- function(x, ...) {
-  warning_("Use `plot()` or `ggplot()` for optimal plotting of MIC values", call = FALSE)
+  warning_("Use `plot()` or ggplot2's `autoplot()` for optimal plotting of MIC values", call = FALSE)
   hist(log2(x))
 }
 
@@ -607,6 +628,12 @@ cummin.mic <- function(x) {
 
 # Ops (see ?groupGeneric) -----------------------------------------------
 
+is_greater <- function(el) {
+  el %like_case% ">[0-9]"
+}
+is_lower <- function(el) {
+  el %like_case% "<[0-9]"
+}
 
 #' @method + mic
 #' @export
@@ -718,6 +745,12 @@ cummin.mic <- function(x) {
 #' @noRd
 `>.mic` <- function(e1, e2) {
   as.double(e1) > as.double(e2)
+  # doesn't work...
+  # nolint start
+  # as.double(e1) > as.double(e2) |
+  #   (as.double(e1) == as.double(e2) & is_lower(e2) & !is_lower(e1)) |
+  #   (as.double(e1) == as.double(e2) & is_greater(e1) & !is_greater(e2))
+  # nolint end
 }
 
 # Summary (see ?groupGeneric) -------------------------------------------

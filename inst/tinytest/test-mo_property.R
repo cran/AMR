@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -29,11 +29,19 @@ expect_equal(mo_phylum("Escherichia coli"), "Proteobacteria")
 expect_equal(mo_class("Escherichia coli"), "Gammaproteobacteria")
 expect_equal(mo_order("Escherichia coli"), "Enterobacterales")
 expect_equal(mo_family("Escherichia coli"), "Enterobacteriaceae")
+expect_equal(mo_fullname("Escherichia coli"), "Escherichia coli")
 expect_equal(mo_genus("Escherichia coli"), "Escherichia")
+expect_equal(mo_name("Escherichia coli"), "Escherichia coli")
+expect_equal(mo_shortname("Escherichia coli"), "E. coli")
+expect_equal(mo_shortname("Escherichia"), "Escherichia")
+expect_equal(mo_shortname("Staphylococcus aureus"), "S. aureus")
+expect_equal(mo_shortname("Staphylococcus aureus", Becker = TRUE), "S. aureus")
+expect_equal(mo_shortname("Staphylococcus aureus", Becker = "all", language = "en"), "CoPS")
+expect_equal(mo_shortname("Streptococcus agalactiae"), "S. agalactiae")
+expect_equal(mo_shortname("Streptococcus agalactiae", Lancefield = TRUE), "GBS")
+
 expect_equal(mo_species("Escherichia coli"), "coli")
 expect_equal(mo_subspecies("Escherichia coli"), "")
-expect_equal(mo_fullname("Escherichia coli"), "Escherichia coli")
-expect_equal(mo_name("Escherichia coli"), "Escherichia coli")
 expect_equal(mo_type("Escherichia coli", language = "en"), "Bacteria")
 expect_equal(mo_gramstain("Escherichia coli", language = "en"), "Gram-negative")
 expect_inherits(mo_taxonomy("Escherichia coli"), "list")
@@ -51,14 +59,6 @@ expect_inherits(mo_info(c("Escherichia coli", "Staphylococcus aureus")), "list")
 expect_equal(mo_ref("Escherichia coli"), "Castellani et al., 1919")
 expect_equal(mo_authors("Escherichia coli"), "Castellani et al.")
 expect_equal(mo_year("Escherichia coli"), 1919)
-
-expect_equal(mo_shortname("Escherichia coli"), "E. coli")
-expect_equal(mo_shortname("Escherichia"), "Escherichia")
-expect_equal(mo_shortname("Staphylococcus aureus"), "S. aureus")
-expect_equal(mo_shortname("Staphylococcus aureus", Becker = TRUE), "S. aureus")
-expect_equal(mo_shortname("Staphylococcus aureus", Becker = "all", language = "en"), "CoPS")
-expect_equal(mo_shortname("Streptococcus agalactiae"), "S. agalactiae")
-expect_equal(mo_shortname("Streptococcus agalactiae", Lancefield = TRUE), "GBS")
 
 expect_true(mo_url("Candida albicans") %like% "catalogueoflife.org")
 expect_true(mo_url("Escherichia coli") %like% "lpsn.dsmz.de")
@@ -92,6 +92,8 @@ expect_identical(mo_property("Escherichia coli", property = "genus"),
                  mo_genus("Escherichia coli"))
 expect_identical(mo_property("Escherichia coli", property = "species"),
                  mo_species("Escherichia coli"))
+expect_identical(mo_property("Escherichia coli", property = "species_id"),
+                 mo_lpsn("Escherichia coli"))
 
 expect_identical(suppressWarnings(mo_ref("Chlamydia psittaci")), "Page, 1968")
 expect_identical(mo_ref("Chlamydophila psittaci"), "Everett et al., 1999")
@@ -119,11 +121,11 @@ expect_equal(mo_is_intrinsic_resistant(c("Escherichia coli", "Staphylococcus aur
 # with reference data
 expect_equal(mo_name("test", reference_df = data.frame(col1 = "test", mo = "B_ESCHR_COLI")), 
              "Escherichia coli")
-if (AMR:::pkg_is_available("dplyr")) {
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
   expect_equal(example_isolates %>% filter(mo_is_gram_negative()) %>% nrow(),
-               730)
+               730, tolerance = 0.5)
   expect_equal(example_isolates %>% filter(mo_is_gram_positive()) %>% nrow(),
-               1238)
+               1238, tolerance = 0.5)
   expect_equal(example_isolates %>% filter(mo_is_intrinsic_resistant(ab = "Vancomycin")) %>% nrow(),
-               710)
+               710, tolerance = 0.5)
 }

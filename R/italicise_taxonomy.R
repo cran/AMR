@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -26,7 +26,7 @@
 #' Italicise Taxonomic Families, Genera, Species, Subspecies
 #' 
 #' According to the binomial nomenclature, the lowest four taxonomic levels (family, genus, species, subspecies) should be printed in italic. This function finds taxonomic names within strings and makes them italic.
-#' @inheritSection lifecycle Maturing Lifecycle
+#' @inheritSection lifecycle Stable Lifecycle
 #' @param string a [character] (vector)
 #' @param type type of conversion of the taxonomic names, either "markdown" or "ansi", see *Details*
 #' @details 
@@ -44,11 +44,11 @@
 #' cat(italicise_taxonomy("An overview of S. aureus isolates", type = "ansi"))
 #' 
 #' # since ggplot2 supports no markdown (yet), use
-#' # italicise_taxonomy() and the `ggtext` pkg for titles:
+#' # italicise_taxonomy() and the `ggtext` package for titles:
 #' \donttest{
 #' if (require("ggplot2") && require("ggtext")) {
-#'   ggplot(example_isolates$AMC,
-#'          title = italicise_taxonomy("Amoxi/clav in E. coli")) +
+#'   autoplot(example_isolates$AMC,
+#'            title = italicise_taxonomy("Amoxi/clav in E. coli")) +
 #'     theme(plot.title = ggtext::element_markdown())
 #' }
 #' }

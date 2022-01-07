@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -143,7 +143,7 @@ expect_identical(as.character(as.mo("S. sanguinis",   Lancefield = TRUE)),  "B_S
 expect_identical(as.character(as.mo("S. salivarius",  Lancefield = FALSE)), "B_STRPT_SLVR")
 expect_identical(as.character(as.mo("S. salivarius",  Lancefield = TRUE)),  "B_STRPT_GRPK") # group K
 
-if (AMR:::pkg_is_available("dplyr")) {
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
   # select with one column
   expect_identical(
     example_isolates[1:10, ] %>%
@@ -207,7 +207,7 @@ expect_equal(suppressWarnings(as.character(as.mo("staaur extratest", allow_uncer
 expect_message(as.mo("e coli extra_text", allow_uncertain = TRUE))
 expect_equal(suppressMessages(as.character(as.mo("unexisting aureus", allow_uncertain = 3))), "B_STPHY_AURS")
 expect_equal(suppressMessages(as.character(as.mo("unexisting staphy", allow_uncertain = 3))), "B_STPHY_COPS")
-expect_equal(suppressMessages(as.character(as.mo(c("s aur THISISATEST", "Staphylococcus aureus unexisting"), allow_uncertain = 3))), c("B_STPHY_AURS_ANRB", "B_STPHY_AURS_ANRB"))
+expect_equal(suppressMessages(as.character(as.mo(c("s aure THISISATEST", "Staphylococcus aureus unexisting"), allow_uncertain = 3))), c("B_STPHY_AURS_AURS", "B_STPHY_AURS_AURS"))
 
 # predefined reference_df
 expect_equal(as.character(as.mo("TestingOwnID",
@@ -240,8 +240,8 @@ x <- as.mo("S. aur")
 expect_stdout(print(mo_uncertainties()))
 
 # Salmonella (City) are all actually Salmonella enterica spp (City)
-expect_equal(suppressMessages(mo_name(c("Salmonella Goettingen", "Salmonella Typhimurium", "Salmonella Group A"))),
-             c("Salmonella enterica", "Salmonella enterica", "Salmonella"))
+expect_equal(suppressMessages(as.mo(c("Salmonella Goettingen", "Salmonella Typhimurium", "Salmonella Group A"))),
+             as.mo(c("Salmonella enterica", "Salmonella enterica", "Salmonella")))
 
 # no virusses
 expect_equal(as.character(as.mo("Virus")), NA_character_)
@@ -272,7 +272,7 @@ expect_equal(as.character(as.mo(c("meningococ", "gonococ", "pneumococ"))),
 expect_equal(suppressWarnings(as.character(as.mo(c("yeasts", "fungi")))), 
              c("F_YEAST", "F_FUNGUS"))
 
-if (AMR:::pkg_is_available("dplyr")) {
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
   # print tibble
   expect_stdout(print(tibble(mo = as.mo("B_ESCHR_COLI"))))
 }

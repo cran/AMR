@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -25,9 +25,9 @@
 
 #' Get ATC Properties from WHOCC Website
 #'
-#' Gets data from the WHO to determine properties of an ATC (e.g. an antibiotic), such as the name, defined daily dose (DDD) or standard unit.
+#' Gets data from the WHOCC website to determine properties of an Anatomical Therapeutic Chemical (ATC) (e.g. an antibiotic), such as the name, defined daily dose (DDD) or standard unit.
 #' @inheritSection lifecycle Stable Lifecycle
-#' @param atc_code a [character] or [character] vector with ATC code(s) of antibiotic(s)
+#' @param atc_code a [character] (vector) with ATC code(s) of antibiotics, will be coerced with [as.ab()] and [ab_atc()] internally if not a valid ATC code
 #' @param property property of an ATC code. Valid values are `"ATC"`, `"Name"`, `"DDD"`, `"U"` (`"unit"`), `"Adm.R"`, `"Note"` and `groups`. For this last option, all hierarchical groups of an ATC code will be returned, see *Examples*.
 #' @param administration type of administration when using `property = "Adm.R"`, see *Details*
 #' @param url url of website of the WHOCC. The sign `%s` can be used as a placeholder for ATC codes.
@@ -68,6 +68,7 @@
 #' if (requireNamespace("curl") && requireNamespace("rvest") && requireNamespace("xml2")) { 
 #'   # oral DDD (Defined Daily Dose) of amoxicillin
 #'   atc_online_property("J01CA04", "DDD", "O")
+#'   atc_online_ddd(ab_atc("amox"))
 #' 
 #'   # parenteral DDD (Defined Daily Dose) of amoxicillin
 #'   atc_online_property("J01CA04", "DDD", "P")
@@ -81,7 +82,7 @@ atc_online_property <- function(atc_code,
                                 url = "https://www.whocc.no/atc_ddd_index/?code=%s&showdescription=no",
                                 url_vet = "https://www.whocc.no/atcvet/atcvet_index/?code=%s&showdescription=no") {
   meet_criteria(atc_code, allow_class = "character")
-  meet_criteria(property, allow_class = "character", has_length = 1, is_in = c("ATC", "Name", "DDD", "U", "Adm.R", "Note", "groups"), ignore.case = TRUE)
+  meet_criteria(property, allow_class = "character", has_length = 1, is_in = c("ATC", "Name", "DDD", "U", "unit", "Adm.R", "Note", "groups"), ignore.case = TRUE)
   meet_criteria(administration, allow_class = "character", has_length = 1)
   meet_criteria(url, allow_class = "character", has_length = 1, looks_like = "https?://")
   meet_criteria(url_vet, allow_class = "character", has_length = 1, looks_like = "https?://")
@@ -97,8 +98,8 @@ atc_online_property <- function(atc_code,
   
   check_dataset_integrity()
   
-  if (!all(atc_code %in% antibiotics)) {
-    atc_code <- as.character(ab_atc(atc_code))
+  if (!all(atc_code %in% unlist(antibiotics$atc))) {
+    atc_code <- as.character(ab_atc(atc_code, only_first = TRUE))
   }
   
   if (!has_internet()) {
@@ -108,12 +109,11 @@ atc_online_property <- function(atc_code,
     return(rep(NA, length(atc_code)))
   }
   
-  # also allow unit as property
-  if (property %like% "unit") {
-    property <- "U"
-  }
-  
   property <- tolower(property)
+  # also allow unit as property
+  if (property == "unit") {
+    property <- "u"
+  }
   if (property == "ddd") {
     returnvalue <- rep(NA_real_, length(atc_code))
   } else if (property == "groups") {
@@ -138,15 +138,21 @@ atc_online_property <- function(atc_code,
     atc_url <- sub("%s", atc_code[i], atc_url, fixed = TRUE)
     
     if (property == "groups") {
-      tbl <- read_html(atc_url) %pm>%
-        html_node("#content") %pm>%
-        html_children() %pm>%
-        html_node("a")
+      out <- tryCatch(
+        read_html(atc_url) %pm>%
+          html_node("#content") %pm>%
+          html_children() %pm>%
+          html_node("a"), 
+        error = function(e) NULL)
+      if (is.null(out)) {
+        message_("Connection to ", atc_url, " failed.")
+        return(rep(NA, length(atc_code)))
+      }
       
       # get URLS of items
-      hrefs <- tbl %pm>% html_attr("href")
+      hrefs <- out %pm>% html_attr("href")
       # get text of items
-      texts <- tbl %pm>% html_text()
+      texts <- out %pm>% html_text()
       # select only text items where URL like "code="
       texts <- texts[grepl("?code=", tolower(hrefs), fixed = TRUE)]
       # last one is antibiotics, skip it
@@ -154,15 +160,21 @@ atc_online_property <- function(atc_code,
       returnvalue <- c(list(texts), returnvalue)
       
     } else {
-      tbl <- read_html(atc_url) %pm>%
-        html_nodes("table") %pm>%
-        html_table(header = TRUE) %pm>%
-        as.data.frame(stringsAsFactors = FALSE)
+      out <- tryCatch(
+        read_html(atc_url) %pm>%
+          html_nodes("table") %pm>%
+          html_table(header = TRUE) %pm>%
+          as.data.frame(stringsAsFactors = FALSE), 
+        error = function(e) NULL)
+      if (is.null(out)) {
+        message_("Connection to ", atc_url, " failed.")
+        return(rep(NA, length(atc_code)))
+      }
       
       # case insensitive column names
-      colnames(tbl) <- gsub("^atc.*", "atc", tolower(colnames(tbl)))
+      colnames(out) <- gsub("^atc.*", "atc", tolower(colnames(out)))
       
-      if (length(tbl) == 0) {
+      if (length(out) == 0) {
         warning_("ATC not found: ", atc_code[i], ". Please check ", atc_url, ".", call = FALSE)
         returnvalue[i] <- NA
         next
@@ -170,15 +182,15 @@ atc_online_property <- function(atc_code,
       
       if (property %in% c("atc", "name")) {
         # ATC and name are only in first row
-        returnvalue[i] <- tbl[1, property]
+        returnvalue[i] <- out[1, property]
       } else {
-        if (!"adm.r" %in% colnames(tbl) | is.na(tbl[1, "adm.r"])) {
+        if (!"adm.r" %in% colnames(out) | is.na(out[1, "adm.r"])) {
           returnvalue[i] <- NA
           next
         } else {
-          for (j in seq_len(nrow(tbl))) {
-            if (tbl[j, "adm.r"] == administration) {
-              returnvalue[i] <- tbl[j, property]
+          for (j in seq_len(nrow(out))) {
+            if (out[j, "adm.r"] == administration) {
+              returnvalue[i] <- out[j, property]
             }
           }
         }
@@ -205,4 +217,11 @@ atc_online_groups <- function(atc_code, ...) {
 atc_online_ddd <- function(atc_code, ...) {
   meet_criteria(atc_code, allow_class = "character")
   atc_online_property(atc_code = atc_code, property = "ddd", ...)
+}
+
+#' @rdname atc_online
+#' @export
+atc_online_ddd_units <- function(atc_code, ...) {
+  meet_criteria(atc_code, allow_class = "character")
+  atc_online_property(atc_code = atc_code, property = "unit", ...)
 }

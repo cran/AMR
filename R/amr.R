@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -61,7 +61,7 @@
 #' Matthijs S. Berends \cr
 #' m.s.berends \[at\] umcg \[dot\] nl \cr
 #' University of Groningen
-#' Department of Medical Microbiology and Infection Prevention
+#' Department of Medical Microbiology and Infection Prevention \cr
 #' University Medical Center Groningen \cr
 #' Post Office Box 30001 \cr
 #' 9700 RB Groningen \cr

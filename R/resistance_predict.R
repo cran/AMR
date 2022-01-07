@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -23,10 +23,11 @@
 # how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Predict antimicrobial resistance
+#' Predict Antimicrobial Resistance
 #'
 #' Create a prediction model to predict antimicrobial resistance for the next years on statistical solid ground. Standard errors (SE) will be returned as columns `se_min` and `se_max`. See *Examples* for a real live example.
 #' @inheritSection lifecycle Stable Lifecycle
+#' @param object model data to be plotted
 #' @param col_ab column name of `x` containing antimicrobial interpretations (`"R"`, `"I"` and `"S"`)
 #' @param col_date column name of the date, will be used to calculate years if this column doesn't consist of years already, defaults to the first column of with a date class
 #' @param year_min lowest year to use in the prediction model, dafaults to the lowest year in `col_date`
@@ -99,9 +100,9 @@
 #'                        info = FALSE,
 #'                        minimum = 15)
 #'                        
-#'   ggplot(data)
+#'   autoplot(data)
 #'
-#'   ggplot(as.data.frame(data),
+#'   ggplot(data,
 #'          aes(x = year)) +
 #'     geom_col(aes(y = value),
 #'              fill = "grey75") +
@@ -143,7 +144,7 @@ resistance_predict <- function(x,
   meet_criteria(info, allow_class = "logical", has_length = 1)
   
   stop_if(is.null(model), 'choose a regression model with the `model` argument, e.g. resistance_predict(..., model = "binomial")')
-
+  
   dots <- unlist(list(...))
   if (length(dots) != 0) {
     # backwards compatibility with old arguments
@@ -321,7 +322,7 @@ plot.resistance_predict <- function(x, main = paste("Resistance Prediction of", 
   } else {
     ylab <- "%IR"
   }
-
+  
   plot(x = x$year,
        y = x$value,
        ylim = c(0, 1),
@@ -349,20 +350,6 @@ plot.resistance_predict <- function(x, main = paste("Resistance Prediction of", 
          y = subset(x, is.na(observations))$value,
          pch = 19,
          col = "grey40")
-}
-
-
-#' @method ggplot resistance_predict
-#' @rdname resistance_predict
-# will be exported using s3_register() in R/zzz.R
-ggplot.resistance_predict <- function(x,
-                               main = paste("Resistance Prediction of", x_name),
-                               ribbon = TRUE,
-                               ...) {
-  x_name <- paste0(ab_name(attributes(x)$ab), " (", attributes(x)$ab, ")")
-  meet_criteria(main, allow_class = "character", has_length = 1)
-  meet_criteria(ribbon, allow_class = "logical", has_length = 1)
-  ggplot_rsi_predict(x = x, main = main, ribbon = ribbon, ...)
 }
 
 #' @rdname resistance_predict
@@ -406,4 +393,24 @@ ggplot_rsi_predict <- function(x,
                         size = 2,
                         colour = "grey40")
   p
+}
+
+#' @method autoplot resistance_predict
+#' @rdname resistance_predict
+# will be exported using s3_register() in R/zzz.R
+autoplot.resistance_predict <- function(object,
+                                        main = paste("Resistance Prediction of", x_name),
+                                        ribbon = TRUE,
+                                        ...) {
+  x_name <- paste0(ab_name(attributes(object)$ab), " (", attributes(object)$ab, ")")
+  meet_criteria(main, allow_class = "character", has_length = 1)
+  meet_criteria(ribbon, allow_class = "logical", has_length = 1)
+  ggplot_rsi_predict(x = object, main = main, ribbon = ribbon, ...)
+}
+
+#' @method fortify resistance_predict
+#' @noRd
+# will be exported using s3_register() in R/zzz.R
+fortify.resistance_predict <- function(model, data, ...) {
+  as.data.frame(model)
 }

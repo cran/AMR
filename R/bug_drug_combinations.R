@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -25,7 +25,7 @@
 
 #' Determine Bug-Drug Combinations
 #' 
-#' Determine antimicrobial resistance (AMR) of all bug-drug combinations in your data set where at least 30 (default) isolates are available per species. Use [format()] on the result to prettify it to a publicable/printable format, see *Examples*.
+#' Determine antimicrobial resistance (AMR) of all bug-drug combinations in your data set where at least 30 (default) isolates are available per species. Use [format()] on the result to prettify it to a publishable/printable format, see *Examples*.
 #' @inheritSection lifecycle Stable Lifecycle
 #' @inheritParams eucast_rules
 #' @param combine_IR a [logical] to indicate whether values R and I should be summed
@@ -81,7 +81,7 @@ bug_drug_combinations <- function(x,
   unique_mo <- sort(unique(x[, col_mo, drop = TRUE]))
   
   # select only groups and antibiotics
-  if (inherits(x.bak, "grouped_df")) {
+  if (is_null_or_grouped_tbl(x.bak)) {
     data_has_groups <- TRUE
     groups <- setdiff(names(attributes(x.bak)$groups), ".rows")
     x <- x[, c(groups, col_mo, colnames(x)[vapply(FUN.VALUE = logical(1), x, is.rsi)]), drop = FALSE]
@@ -113,7 +113,7 @@ bug_drug_combinations <- function(x,
         data.frame(S = m["S", ], I = m["I", ], R = m["R", ], stringsAsFactors = FALSE)
       })
       merged <- do.call(rbind, pivot)
-      out_group <- data.frame(mo = unique_mo[i],
+      out_group <- data.frame(mo = rep(unique_mo[i], NROW(merged)),
                               ab = rownames(merged),
                               S = merged$S,
                               I = merged$I,
@@ -162,7 +162,7 @@ bug_drug_combinations <- function(x,
 #' @rdname bug_drug_combinations
 format.bug_drug_combinations <- function(x,
                                          translate_ab = "name (ab, atc)",
-                                         language = get_locale(),
+                                         language = get_AMR_locale(),
                                          minimum = 30,
                                          combine_SI = TRUE,
                                          combine_IR = FALSE,
@@ -218,7 +218,7 @@ format.bug_drug_combinations <- function(x,
       ab_txt[i] <- gsub("group", ab_group(ab[i], language = language), ab_txt[i])
       ab_txt[i] <- gsub("atc_group1", ab_atc_group1(ab[i], language = language), ab_txt[i])
       ab_txt[i] <- gsub("atc_group2", ab_atc_group2(ab[i], language = language), ab_txt[i])
-      ab_txt[i] <- gsub("atc", ab_atc(ab[i]), ab_txt[i])
+      ab_txt[i] <- gsub("atc", ab_atc(ab[i], only_first = TRUE), ab_txt[i])
       ab_txt[i] <- gsub("name", ab_name(ab[i], language = language), ab_txt[i])
       ab_txt[i]
     }

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -167,12 +167,14 @@ resistance <- function(...,
                        minimum = 30,
                        as_percent = FALSE,
                        only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = "R",
-           minimum = minimum,
-           as_percent = as_percent,
-           only_all_tested = only_all_tested,
-           only_count = FALSE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = "R",
+             minimum = minimum,
+             as_percent = as_percent,
+             only_all_tested = only_all_tested,
+             only_count = FALSE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname proportion
@@ -181,12 +183,14 @@ susceptibility <- function(...,
                            minimum = 30,
                            as_percent = FALSE,
                            only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = c("S", "I"),
-           minimum = minimum,
-           as_percent = as_percent,
-           only_all_tested = only_all_tested,
-           only_count = FALSE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = c("S", "I"),
+             minimum = minimum,
+             as_percent = as_percent,
+             only_all_tested = only_all_tested,
+             only_count = FALSE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname proportion
@@ -195,12 +199,14 @@ proportion_R <- function(...,
                          minimum = 30,
                          as_percent = FALSE,
                          only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = "R",
-           minimum = minimum,
-           as_percent = as_percent,
-           only_all_tested = only_all_tested,
-           only_count = FALSE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = "R",
+             minimum = minimum,
+             as_percent = as_percent,
+             only_all_tested = only_all_tested,
+             only_count = FALSE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname proportion
@@ -209,12 +215,14 @@ proportion_IR <- function(...,
                           minimum = 30,
                           as_percent = FALSE,
                           only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = c("I", "R"),
-           minimum = minimum,
-           as_percent = as_percent,
-           only_all_tested = only_all_tested,
-           only_count = FALSE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = c("I", "R"),
+             minimum = minimum,
+             as_percent = as_percent,
+             only_all_tested = only_all_tested,
+             only_count = FALSE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname proportion
@@ -223,12 +231,14 @@ proportion_I <- function(...,
                          minimum = 30,
                          as_percent = FALSE,
                          only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = "I",
-           minimum = minimum,
-           as_percent = as_percent,
-           only_all_tested = only_all_tested,
-           only_count = FALSE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = "I",
+             minimum = minimum,
+             as_percent = as_percent,
+             only_all_tested = only_all_tested,
+             only_count = FALSE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname proportion
@@ -237,12 +247,14 @@ proportion_SI <- function(...,
                           minimum = 30,
                           as_percent = FALSE,
                           only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = c("S", "I"),
-           minimum = minimum,
-           as_percent = as_percent,
-           only_all_tested = only_all_tested,
-           only_count = FALSE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = c("S", "I"),
+             minimum = minimum,
+             as_percent = as_percent,
+             only_all_tested = only_all_tested,
+             only_count = FALSE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname proportion
@@ -251,30 +263,34 @@ proportion_S <- function(...,
                          minimum = 30,
                          as_percent = FALSE,
                          only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = "S",
-           minimum = minimum,
-           as_percent = as_percent,
-           only_all_tested = only_all_tested,
-           only_count = FALSE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = "S",
+             minimum = minimum,
+             as_percent = as_percent,
+             only_all_tested = only_all_tested,
+             only_count = FALSE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname proportion
 #' @export
 proportion_df <- function(data,
                           translate_ab = "name",
-                          language = get_locale(),
+                          language = get_AMR_locale(),
                           minimum = 30,
                           as_percent = FALSE,
                           combine_SI = TRUE,
                           combine_IR = FALSE) {
-  rsi_calc_df(type = "proportion",
-              data = data,
-              translate_ab = translate_ab,
-              language = language,
-              minimum = minimum,
-              as_percent = as_percent,
-              combine_SI = combine_SI,
-              combine_IR = combine_IR,
-              combine_SI_missing = missing(combine_SI))
+  tryCatch(
+    rsi_calc_df(type = "proportion",
+                data = data,
+                translate_ab = translate_ab,
+                language = language,
+                minimum = minimum,
+                as_percent = as_percent,
+                combine_SI = combine_SI,
+                combine_IR = combine_IR,
+                combine_SI_missing = missing(combine_SI)),
+    error = function(e) stop_(e$message, call = -5))
 }

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -44,12 +44,12 @@ expect_silent(plot(as.disk(c(10, 20, 40))))
 expect_silent(plot(as.disk(c(10, 20, 40)), expand = FALSE))
 expect_silent(plot(as.disk(c(10, 20, 40)), mo = "esco", ab = "cipr"))
 if (AMR:::pkg_is_available("ggplot2")) {
-  expect_inherits(ggplot(as.disk(c(10, 20, 40))), "gg")
-  expect_inherits(ggplot(as.disk(c(10, 20, 40)), expand = FALSE), "gg")
-  expect_inherits(ggplot(as.disk(c(10, 20, 40)), mo = "esco", ab = "cipr"), "gg")
+  expect_inherits(autoplot(as.disk(c(10, 20, 40))), "gg")
+  expect_inherits(autoplot(as.disk(c(10, 20, 40)), expand = FALSE), "gg")
+  expect_inherits(autoplot(as.disk(c(10, 20, 40)), mo = "esco", ab = "cipr"), "gg")
 }
 expect_stdout(print(as.disk(12)))
 
-if (AMR:::pkg_is_available("dplyr")) {
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
   expect_stdout(print(tibble(d = as.disk(12))))
 }

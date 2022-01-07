@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -120,6 +120,12 @@ all_valid_disks <- function(x) {
 }
 
 #' @rdname as.disk
+#' @details `NA_disk_` is a missing value of the new `<disk>` class.
+#' @export
+NA_disk_ <- set_clean_class(as.integer(NA_real_),
+                            new_class = c("disk", "integer"))
+
+#' @rdname as.disk
 #' @export
 is.disk <- function(x) {
   inherits(x, "disk")
@@ -190,6 +196,15 @@ c.disk <- function(...) {
 #' @export
 #' @noRd
 unique.disk <- function(x, incomparables = FALSE, ...) {
+  y <- NextMethod()
+  attributes(y) <- attributes(x)
+  y
+}
+
+#' @method rep disk
+#' @export
+#' @noRd
+rep.disk <- function(x, ...) {
   y <- NextMethod()
   attributes(y) <- attributes(x)
   y

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -23,8 +23,9 @@
 # how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-# Check if these function still exist in the package (all are in Suggests field)
-# Since GitHub Action runs every night, we will get emailed when a dependency fails based on this unit test
+# Check if these functions still exist in their package (all are in Suggests field)
+# Since GitHub Actions runs every night, we will get emailed when a dependency fails based on this unit test
+
 # functions used by import_fn()
 import_functions <- c(
   "anti_join" = "dplyr",
@@ -41,6 +42,7 @@ import_functions <- c(
   "insertText" = "rstudioapi",
   "left_join" = "dplyr",
   "new_pillar_shaft_simple" = "pillar",
+  "progress_bar" = "progress",
   "read_html" = "xml2",
   "right_join" = "dplyr",
   "semi_join" = "dplyr",
@@ -50,17 +52,23 @@ import_functions <- c(
 call_functions <- c(
   # cleaner
   "freq.default" = "cleaner",
-  # skimr
-  "inline_hist" = "skimr",
-  "sfl" = "skimr",
-  # set_mo_source
+  # readxl
   "read_excel" = "readxl",
-  # ggplot_rsi
+  # ggplot2
+  "aes" = "ggplot2",
   "aes_string" = "ggplot2",
+  "arrow" = "ggplot2",
+  "autoplot" = "ggplot2",
   "element_blank" = "ggplot2",
   "element_line" = "ggplot2",
   "element_text" = "ggplot2",
+  "expand_limits" = "ggplot2",
   "facet_wrap" = "ggplot2",
+  "geom_errorbar" = "ggplot2",
+  "geom_path" = "ggplot2",
+  "geom_point" = "ggplot2",
+  "geom_ribbon" = "ggplot2",
+  "geom_segment" = "ggplot2",
   "geom_text" = "ggplot2",
   "ggplot" = "ggplot2",
   "labs" = "ggplot2",
@@ -70,39 +78,35 @@ call_functions <- c(
   "scale_y_continuous" = "ggplot2",
   "theme" = "ggplot2",
   "theme_minimal" = "ggplot2",
-  # ggplot_pca
-  "aes" = "ggplot2",
-  "arrow" = "ggplot2",
-  "element_blank" = "ggplot2",
-  "element_line" = "ggplot2",
-  "element_text" = "ggplot2",
-  "expand_limits" = "ggplot2",
-  "geom_path" = "ggplot2",
-  "geom_point" = "ggplot2",
-  "geom_segment" = "ggplot2",
-  "geom_text" = "ggplot2",
-  "ggplot" = "ggplot2",
-  "labs" = "ggplot2",
-  "theme" = "ggplot2",
-  "theme_minimal" = "ggplot2",
   "unit" = "ggplot2",
   "xlab" = "ggplot2",
-  "ylab" = "ggplot2",
-  # resistance_predict
-  "aes" = "ggplot2",
-  "geom_errorbar" = "ggplot2",
-  "geom_point" = "ggplot2",
-  "geom_ribbon" = "ggplot2",
-  "ggplot" = "ggplot2",
-  "labs" = "ggplot2"
+  "ylab" = "ggplot2"
+)
+if (AMR:::pkg_is_available("skimr", also_load = FALSE, min_version = "2.0.0")) {
+  call_functions <- c(call_functions,
+                      # skimr
+                      "inline_hist" = "skimr",
+                      "sfl" = "skimr")
+}
+
+extended_functions <- c(
+  "freq" = "cleaner",
+  "autoplot" = "ggplot2",
+  "pillar_shaft" = "pillar",
+  "get_skimmers" = "skimr",
+  "type_sum" = "tibble",
+  "vec_cast" = "vctrs",
+  "vec_ptype2" = "vctrs"
 )
 
-import_functions <- c(import_functions, call_functions)
+import_functions <- c(import_functions, call_functions, extended_functions)
 for (i in seq_len(length(import_functions))) {
   fn <- names(import_functions)[i]
   pkg <- unname(import_functions[i])
   # function should exist in foreign pkg namespace
-  if (AMR:::pkg_is_available(pkg, also_load = FALSE)) {
+  if (AMR:::pkg_is_available(pkg,
+                             also_load = FALSE,
+                             min_version = if (pkg == "dplyr") "1.0.0" else NULL)) {
     tst <- !is.null(AMR:::import_fn(name = fn, pkg = pkg, error_on_fail = FALSE))
     expect_true(tst,
                 info = ifelse(tst,

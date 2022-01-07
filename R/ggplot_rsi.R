@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -123,8 +123,7 @@
 #'            mo == as.mo("E. coli")) %>%
 #'     # age_groups() is also a function in this AMR package:
 #'     group_by(age_group = age_groups(age)) %>%
-#'     select(age_group,
-#'            CIP) %>%
+#'     select(age_group, CIP) %>%
 #'     ggplot_rsi(x = "age_group")
 #'   
 #'   # a shorter version which also adjusts data label colours:
@@ -135,6 +134,8 @@
 #'
 #'   # it also supports groups (don't forget to use the group var on `x` or `facet`):
 #'   example_isolates %>%
+#'     filter(mo_is_gram_negative()) %>% 
+#'     # select only UTI-specific drugs
 #'     select(hospital_id, AMX, NIT, FOS, TMP, CIP) %>%
 #'     group_by(hospital_id) %>%
 #'     ggplot_rsi(x = "hospital_id",
@@ -157,7 +158,7 @@ ggplot_rsi <- function(data,
                        combine_SI = TRUE,
                        combine_IR = FALSE,
                        minimum = 30,
-                       language = get_locale(),
+                       language = get_AMR_locale(),
                        nrow = NULL,
                        colours = c(S = "#3CAEA3",
                                    SI = "#3CAEA3",
@@ -268,7 +269,7 @@ geom_rsi <- function(position = NULL,
                      fill = "interpretation",
                      translate_ab = "name",
                      minimum = 30,
-                     language = get_locale(),
+                     language = get_AMR_locale(),
                      combine_SI = TRUE,
                      combine_IR = FALSE,
                      ...)  {
@@ -370,7 +371,6 @@ scale_rsi_colours <- function(...,
                               aesthetics = "fill") {
   stop_ifnot_installed("ggplot2")
   meet_criteria(aesthetics, allow_class = "character", is_in = c("alpha", "colour", "color", "fill", "linetype", "shape", "size"))
-  
   # behaviour until AMR pkg v1.5.0 and also when coming from ggplot_rsi()
   if ("colours" %in% names(list(...))) {
     original_cols <- c(S = "#3CAEA3",
@@ -379,22 +379,25 @@ scale_rsi_colours <- function(...,
                        IR = "#ED553B",
                        R = "#ED553B")
     colours <- replace(original_cols, names(list(...)$colours), list(...)$colours)
-    return(ggplot2::scale_fill_manual(values = colours))
+    # limits = force is needed in ggplot2 3.3.4 and 3.3.5, see here;
+    # https://github.com/tidyverse/ggplot2/issues/4511#issuecomment-866185530
+    return(ggplot2::scale_fill_manual(values = colours, limits = force))
   }
   if (identical(unlist(list(...)), FALSE)) {
     return(invisible())
   }
   
   names_susceptible <- c("S", "SI", "IS", "S+I", "I+S", "susceptible", "Susceptible",
-                         unique(translations_file[which(translations_file$pattern == "Susceptible"),
+                         unique(TRANSLATIONS[which(TRANSLATIONS$pattern == "Susceptible"),
                                                   "replacement", drop = TRUE]))
-  names_incr_exposure <- c("I", "intermediate", "increased exposure", "incr. exposure", "Increased exposure", "Incr. exposure",
-                           unique(translations_file[which(translations_file$pattern == "Intermediate"),
+  names_incr_exposure <- c("I", "intermediate", "increased exposure", "incr. exposure",
+                           "Increased exposure", "Incr. exposure", "Susceptible, incr. exp.",
+                           unique(TRANSLATIONS[which(TRANSLATIONS$pattern == "Intermediate"),
                                                     "replacement", drop = TRUE]),
-                           unique(translations_file[which(translations_file$pattern == "Incr. exposure"),
+                           unique(TRANSLATIONS[which(TRANSLATIONS$pattern == "Susceptible, incr. exp."),
                                                     "replacement", drop = TRUE]))
   names_resistant <- c("R", "IR", "RI", "R+I", "I+R", "resistant", "Resistant",
-                       unique(translations_file[which(translations_file$pattern == "Resistant"), 
+                       unique(TRANSLATIONS[which(TRANSLATIONS$pattern == "Resistant"), 
                                                 "replacement", drop = TRUE]))
   
   susceptible <- rep("#3CAEA3", length(names_susceptible))
@@ -411,7 +414,9 @@ scale_rsi_colours <- function(...,
   dots[dots == "I"] <- "#F6D55C"
   dots[dots == "R"] <- "#ED553B"
   cols <- replace(original_cols, names(dots), dots)
-  ggplot2::scale_discrete_manual(aesthetics = aesthetics, values = cols)
+  # limits = force is needed in ggplot2 3.3.4 and 3.3.5, see here;
+  # https://github.com/tidyverse/ggplot2/issues/4511#issuecomment-866185530
+  ggplot2::scale_discrete_manual(aesthetics = aesthetics, values = cols, limits = force)
 }
 
 #' @rdname ggplot_rsi
@@ -433,7 +438,7 @@ labels_rsi_count <- function(position = NULL,
                              x = "antibiotic",
                              translate_ab = "name",
                              minimum = 30,
-                             language = get_locale(),
+                             language = get_AMR_locale(),
                              combine_SI = TRUE,
                              combine_IR = FALSE,
                              datalabels.size = 3,

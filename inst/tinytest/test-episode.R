@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -35,8 +35,12 @@ test_df <- rbind(
 
 expect_equal(get_episode(test_df$date, 365),
              c(1, 1, 2, 2, 2, 3, 3, 4, 1, 2, 2, 2, 3))
+expect_equal(get_episode(test_df$date[which(test_df$patient_id == "A")], 365),
+             c(1, 1, 2, 2, 2, 2, 3, 4))
+expect_equal(get_episode(test_df$date[which(test_df$patient_id == "B")], 365),
+             c(1, 2, 2, 2, 3))
 
-if (AMR:::pkg_is_available("dplyr")) {
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
   expect_identical(test_df %>% group_by(patient_id) %>% mutate(f = is_new_episode(date, 365)) %>% pull(f),
                    c(TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE))
   

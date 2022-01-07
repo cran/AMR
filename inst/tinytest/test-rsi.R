@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -34,7 +34,9 @@ expect_inherits(unique(x[1], x[9]), "rsi")
 pdf(NULL) # prevent Rplots.pdf being created
 expect_silent(barplot(as.rsi(c("S", "I", "R"))))
 expect_silent(plot(as.rsi(c("S", "I", "R"))))
-if (AMR:::pkg_is_available("ggplot2")) expect_inherits(ggplot(as.rsi(c("S", "I", "R"))), "gg")
+if (AMR:::pkg_is_available("ggplot2")) {
+  expect_inherits(autoplot(as.rsi(c("S", "I", "R"))), "gg")
+}
 expect_stdout(print(as.rsi(c("S", "I", "R"))))
 expect_equal(as.character(as.rsi(c(1:3))), c("S", "I", "R"))
 expect_equal(suppressWarnings(as.logical(as.rsi("INVALID VALUE"))), NA)
@@ -49,7 +51,7 @@ expect_identical(as.logical(lapply(example_isolates, is.rsi.eligible)),
 expect_error(as.rsi.mic(as.mic(16)))
 expect_error(as.rsi.disk(as.disk(16)))
 expect_error(get_guideline("this one does not exist"))
-if (AMR:::pkg_is_available("dplyr")) {
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
   # 40 rsi columns
   expect_equal(example_isolates %>%
                  mutate_at(vars(PEN:RIF), as.character) %>%
@@ -64,7 +66,7 @@ if (AMR:::pkg_is_available("dplyr")) {
 if (AMR:::pkg_is_available("skimr")) {
   expect_inherits(skim(example_isolates),
                   "data.frame")
-  if (AMR:::pkg_is_available("dplyr")) {
+  if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
     expect_inherits(example_isolates %>%
                       mutate(m = as.mic(2),
                              d = as.disk(20)) %>% 
@@ -94,7 +96,7 @@ expect_equal(as.rsi(as.mic(2), "E. coli", "ampicillin", guideline = "EUCAST 2020
              as.rsi("S"))
 expect_equal(as.rsi(as.mic(32), "E. coli", "ampicillin", guideline = "EUCAST 2020"),
              as.rsi("R"))
-if (AMR:::pkg_is_available("dplyr")) {
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
   expect_true(suppressWarnings(example_isolates %>%
                                  mutate(amox_mic = as.mic(2)) %>%
                                  select(mo, amox_mic) %>%
@@ -121,7 +123,7 @@ expect_equal(as.character(
          ab = "ERY",
          guideline = "CLSI")),
   "R")
-if (AMR:::pkg_is_available("dplyr")) {
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
   expect_true(example_isolates %>%
                 mutate(amox_disk = as.disk(15)) %>%
                 select(mo, amox_disk) %>%

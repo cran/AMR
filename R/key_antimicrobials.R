@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -142,7 +142,7 @@ key_antimicrobials <- function(x = NULL,
   
   # force regular data.frame, not a tibble or data.table
   x <- as.data.frame(x, stringsAsFactors = FALSE)
-  cols <- get_column_abx(x, info = FALSE, only_rsi_columns = only_rsi_columns)
+  cols <- get_column_abx(x, info = FALSE, only_rsi_columns = only_rsi_columns, fn = "key_antimicrobials")
   
   # try to find columns based on type
   # -- mo
@@ -171,13 +171,12 @@ key_antimicrobials <- function(x = NULL,
     
     if (values_new_length < values_old_length &
         any(filter, na.rm = TRUE) &
-        message_not_thrown_before(paste0("key_antimicrobials.", name))) {
+        message_not_thrown_before("key_antimicrobials", name)) {
       warning_(ifelse(values_new_length == 0,
                       "No columns available ",
                       paste0("Only using ", values_new_length, " out of ", values_old_length, " defined columns ")),
                "as key antimicrobials for ", name, "s. See ?key_antimicrobials.",
                call = FALSE)
-      remember_thrown_message(paste0("key_antimicrobials.", name))
     }
     
     generate_antimcrobials_string(x[which(filter), c(universal, values), drop = FALSE])
@@ -239,7 +238,8 @@ all_antimicrobials <- function(x = NULL,
   
   # force regular data.frame, not a tibble or data.table
   x <- as.data.frame(x, stringsAsFactors = FALSE)
-  cols <- get_column_abx(x, only_rsi_columns = only_rsi_columns, info = FALSE, sort = FALSE)
+  cols <- get_column_abx(x, only_rsi_columns = only_rsi_columns, info = FALSE,
+                         sort = FALSE, fn = "all_antimicrobials")
   
   generate_antimcrobials_string(x[ , cols, drop = FALSE])
 }
@@ -251,16 +251,16 @@ generate_antimcrobials_string <- function(df) {
   if (NROW(df) == 0) {
     return(character(0))
   }
-  out <- tryCatch(
+  tryCatch({
     do.call(paste0,
             lapply(as.list(df),
                    function(x) {
                      x <- toupper(as.character(x))
                      x[!x %in% c("R", "S", "I")] <- "."
                      paste(x)
-                   })),
-    error = function(e) rep(strrep(".", NCOL(df)), NROW(df)))
-  out
+                   }))
+  },
+  error = function(e) rep(strrep(".", NCOL(df)), NROW(df)))
 }
 
 #' @rdname key_antimicrobials
@@ -280,10 +280,20 @@ antimicrobials_equal <- function(y,
   stop_ifnot(length(y) == length(z), "length of `y` and `z` must be equal")
 
   key2rsi <- function(val) {
-    as.double(as.rsi(gsub(".", NA_character_, unlist(strsplit(val, "")), fixed = TRUE)))
+    val <- strsplit(val, "")[[1L]]
+    val.int <- rep(NA_real_, length(val))
+    val.int[val == "S"] <- 1
+    val.int[val == "I"] <- 2
+    val.int[val == "R"] <- 3
+    val.int
   }
-  y <- lapply(y, key2rsi)
-  z <- lapply(z, key2rsi)
+  # only run on uniques
+  uniq <- unique(c(y, z))
+  uniq_list <- lapply(uniq, key2rsi)
+  names(uniq_list) <- uniq
+  
+  y <- uniq_list[match(y, names(uniq_list))]
+  z <- uniq_list[match(z, names(uniq_list))]
   
   determine_equality <- function(a, b, type, points_threshold, ignore_I) {
     if (length(a) != length(b)) {

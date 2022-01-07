@@ -24,6 +24,7 @@
 \alias{mo_ref}
 \alias{mo_authors}
 \alias{mo_year}
+\alias{mo_lpsn}
 \alias{mo_rank}
 \alias{mo_taxonomy}
 \alias{mo_synonyms}
@@ -31,66 +32,68 @@
 \alias{mo_url}
 \title{Get Properties of a Microorganism}
 \usage{
-mo_name(x, language = get_locale(), ...)
+mo_name(x, language = get_AMR_locale(), ...)
 
-mo_fullname(x, language = get_locale(), ...)
+mo_fullname(x, language = get_AMR_locale(), ...)
 
-mo_shortname(x, language = get_locale(), ...)
+mo_shortname(x, language = get_AMR_locale(), ...)
 
-mo_subspecies(x, language = get_locale(), ...)
+mo_subspecies(x, language = get_AMR_locale(), ...)
 
-mo_species(x, language = get_locale(), ...)
+mo_species(x, language = get_AMR_locale(), ...)
 
-mo_genus(x, language = get_locale(), ...)
+mo_genus(x, language = get_AMR_locale(), ...)
 
-mo_family(x, language = get_locale(), ...)
+mo_family(x, language = get_AMR_locale(), ...)
 
-mo_order(x, language = get_locale(), ...)
+mo_order(x, language = get_AMR_locale(), ...)
 
-mo_class(x, language = get_locale(), ...)
+mo_class(x, language = get_AMR_locale(), ...)
 
-mo_phylum(x, language = get_locale(), ...)
+mo_phylum(x, language = get_AMR_locale(), ...)
 
-mo_kingdom(x, language = get_locale(), ...)
+mo_kingdom(x, language = get_AMR_locale(), ...)
 
-mo_domain(x, language = get_locale(), ...)
+mo_domain(x, language = get_AMR_locale(), ...)
 
-mo_type(x, language = get_locale(), ...)
+mo_type(x, language = get_AMR_locale(), ...)
 
-mo_gramstain(x, language = get_locale(), ...)
+mo_gramstain(x, language = get_AMR_locale(), ...)
 
-mo_is_gram_negative(x, language = get_locale(), ...)
+mo_is_gram_negative(x, language = get_AMR_locale(), ...)
 
-mo_is_gram_positive(x, language = get_locale(), ...)
+mo_is_gram_positive(x, language = get_AMR_locale(), ...)
 
-mo_is_yeast(x, language = get_locale(), ...)
+mo_is_yeast(x, language = get_AMR_locale(), ...)
 
-mo_is_intrinsic_resistant(x, ab, language = get_locale(), ...)
+mo_is_intrinsic_resistant(x, ab, language = get_AMR_locale(), ...)
 
-mo_snomed(x, language = get_locale(), ...)
+mo_snomed(x, language = get_AMR_locale(), ...)
 
-mo_ref(x, language = get_locale(), ...)
+mo_ref(x, language = get_AMR_locale(), ...)
 
-mo_authors(x, language = get_locale(), ...)
+mo_authors(x, language = get_AMR_locale(), ...)
 
-mo_year(x, language = get_locale(), ...)
+mo_year(x, language = get_AMR_locale(), ...)
 
-mo_rank(x, language = get_locale(), ...)
+mo_lpsn(x, language = get_AMR_locale(), ...)
 
-mo_taxonomy(x, language = get_locale(), ...)
+mo_rank(x, language = get_AMR_locale(), ...)
 
-mo_synonyms(x, language = get_locale(), ...)
+mo_taxonomy(x, language = get_AMR_locale(), ...)
 
-mo_info(x, language = get_locale(), ...)
+mo_synonyms(x, language = get_AMR_locale(), ...)
 
-mo_url(x, open = FALSE, language = get_locale(), ...)
+mo_info(x, language = get_AMR_locale(), ...)
 
-mo_property(x, property = "fullname", language = get_locale(), ...)
+mo_url(x, open = FALSE, language = get_AMR_locale(), ...)
+
+mo_property(x, property = "fullname", language = get_AMR_locale(), ...)
 }
 \arguments{
 \item{x}{any \link{character} (vector) that can be coerced to a valid microorganism code with \code{\link[=as.mo]{as.mo()}}. Can be left blank for auto-guessing the column containing microorganism codes if used in a data set, see \emph{Examples}.}
 
-\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_locale]{get_locale()}}) and can be overwritten by setting the option \code{AMR_locale}, e.g. \code{options(AMR_locale = "de")}, see \link{translate}. Also used to translate text like "no growth". Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can be overwritten by setting the option \code{AMR_locale}, e.g. \code{options(AMR_locale = "de")}, see \link{translate}. Also used to translate text like "no growth". Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
 \item{...}{other arguments passed on to \code{\link[=as.mo]{as.mo()}}, such as 'allow_uncertain' and 'ignore_pattern'}
 
@@ -124,24 +127,24 @@ The short name - \code{\link[=mo_shortname]{mo_shortname()}} - almost always ret
 
 Since the top-level of the taxonomy is sometimes referred to as 'kingdom' and sometimes as 'domain', the functions \code{\link[=mo_kingdom]{mo_kingdom()}} and \code{\link[=mo_domain]{mo_domain()}} return the exact same results.
 
-The Gram stain - \code{\link[=mo_gramstain]{mo_gramstain()}} - will be determined based on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002, \href{https://pubmed.ncbi.nlm.nih.gov/11837318}{PMID 11837318}), who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive - all other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value \code{NA}. Functions \code{\link[=mo_is_gram_negative]{mo_is_gram_negative()}} and \code{\link[=mo_is_gram_positive]{mo_is_gram_positive()}} always return \code{TRUE} or \code{FALSE} (except when the input is \code{NA} or the MO code is \code{UNKNOWN}), thus always return \code{FALSE} for species outside the taxonomic kingdom of Bacteria.
+The Gram stain - \code{\link[=mo_gramstain]{mo_gramstain()}} - will be determined based on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002, \href{https://pubmed.ncbi.nlm.nih.gov/11837318}{PMID 11837318}), who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive, except for members of the class Negativicutes which are Gram-negative. Members of other bacterial phyla are all considered Gram-negative. Species outside the kingdom of Bacteria will return a value \code{NA}. Functions \code{\link[=mo_is_gram_negative]{mo_is_gram_negative()}} and \code{\link[=mo_is_gram_positive]{mo_is_gram_positive()}} always return \code{TRUE} or \code{FALSE} (except when the input is \code{NA} or the MO code is \code{UNKNOWN}), thus always return \code{FALSE} for species outside the taxonomic kingdom of Bacteria.
 
 Determination of yeasts - \code{\link[=mo_is_yeast]{mo_is_yeast()}} - will be based on the taxonomic kingdom and class. \emph{Budding yeasts} are fungi of the phylum Ascomycetes, class Saccharomycetes (also called Hemiascomycetes). \emph{True yeasts} are aggregated into the underlying order Saccharomycetales. Thus, for all microorganisms that are fungi and member of the taxonomic class Saccharomycetes, the function will return \code{TRUE}. It returns \code{FALSE} otherwise (except when the input is \code{NA} or the MO code is \code{UNKNOWN}).
 
-Intrinsic resistance - \code{\link[=mo_is_intrinsic_resistant]{mo_is_intrinsic_resistant()}} - will be determined based on the \link{intrinsic_resistant} data set, which is based on \href{https://www.eucast.org/expert_rules_and_intrinsic_resistance/}{'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes' v3.2} (2020). The \code{\link[=mo_is_intrinsic_resistant]{mo_is_intrinsic_resistant()}} functions can be vectorised over arguments \code{x} (input for microorganisms) and over \code{ab} (input for antibiotics).
+Intrinsic resistance - \code{\link[=mo_is_intrinsic_resistant]{mo_is_intrinsic_resistant()}} - will be determined based on the \link{intrinsic_resistant} data set, which is based on \href{https://www.eucast.org/expert_rules_and_intrinsic_resistance/}{'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes' v3.3} (2021). The \code{\link[=mo_is_intrinsic_resistant]{mo_is_intrinsic_resistant()}} functions can be vectorised over arguments \code{x} (input for microorganisms) and over \code{ab} (input for antibiotics).
 
 All output \link[=translate]{will be translated} where possible.
 
 The function \code{\link[=mo_url]{mo_url()}} will return the direct URL to the online database entry, which also shows the scientific reference of the concerned species.
 
-SNOMED codes - \code{\link[=mo_snomed]{mo_snomed()}} - are from the US Edition of SNOMED CT from 1 September 2020. See the \link{microorganisms} data set for more info.
+SNOMED codes - \code{\link[=mo_snomed]{mo_snomed()}} - are from the US Edition of SNOMED CT from 1 September 2020. See \emph{Source} and the \link{microorganisms} data set for more info.
 }
 \section{Stable Lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Matching Score for Microorganisms}{
@@ -162,13 +165,15 @@ where:
 
 The grouping into human pathogenic prevalence (\eqn{p}) is based on experience from several microbiological laboratories in the Netherlands in conjunction with international reports on pathogen prevalence. \strong{Group 1} (most prevalent microorganisms) consists of all microorganisms where the taxonomic class is Gammaproteobacteria or where the taxonomic genus is \emph{Enterococcus}, \emph{Staphylococcus} or \emph{Streptococcus}. This group consequently contains all common Gram-negative bacteria, such as \emph{Pseudomonas} and \emph{Legionella} and all species within the order Enterobacterales. \strong{Group 2} consists of all microorganisms where the taxonomic phylum is Proteobacteria, Firmicutes, Actinobacteria or Sarcomastigophora, or where the taxonomic genus is \emph{Absidia}, \emph{Acremonium}, \emph{Actinotignum}, \emph{Alternaria}, \emph{Anaerosalibacter}, \emph{Apophysomyces}, \emph{Arachnia}, \emph{Aspergillus}, \emph{Aureobacterium}, \emph{Aureobasidium}, \emph{Bacteroides}, \emph{Basidiobolus}, \emph{Beauveria}, \emph{Blastocystis}, \emph{Branhamella}, \emph{Calymmatobacterium}, \emph{Candida}, \emph{Capnocytophaga}, \emph{Catabacter}, \emph{Chaetomium}, \emph{Chryseobacterium}, \emph{Chryseomonas}, \emph{Chrysonilia}, \emph{Cladophialophora}, \emph{Cladosporium}, \emph{Conidiobolus}, \emph{Cryptococcus}, \emph{Curvularia}, \emph{Exophiala}, \emph{Exserohilum}, \emph{Flavobacterium}, \emph{Fonsecaea}, \emph{Fusarium}, \emph{Fusobacterium}, \emph{Hendersonula}, \emph{Hypomyces}, \emph{Koserella}, \emph{Lelliottia}, \emph{Leptosphaeria}, \emph{Leptotrichia}, \emph{Malassezia}, \emph{Malbranchea}, \emph{Mortierella}, \emph{Mucor}, \emph{Mycocentrospora}, \emph{Mycoplasma}, \emph{Nectria}, \emph{Ochroconis}, \emph{Oidiodendron}, \emph{Phoma}, \emph{Piedraia}, \emph{Pithomyces}, \emph{Pityrosporum}, \emph{Prevotella}, \emph{Pseudallescheria}, \emph{Rhizomucor}, \emph{Rhizopus}, \emph{Rhodotorula}, \emph{Scolecobasidium}, \emph{Scopulariopsis}, \emph{Scytalidium}, \emph{Sporobolomyces}, \emph{Stachybotrys}, \emph{Stomatococcus}, \emph{Treponema}, \emph{Trichoderma}, \emph{Trichophyton}, \emph{Trichosporon}, \emph{Tritirachium} or \emph{Ureaplasma}. \strong{Group 3} consists of all other microorganisms.
 
+All characters in \eqn{x} and \eqn{n} are ignored that are other than A-Z, a-z, 0-9, spaces and parentheses.
+
 All matches are sorted descending on their matching score and for all user input values, the top match will be returned. This will lead to the effect that e.g., \code{"E. coli"} will return the microbial ID of \emph{Escherichia coli} (\eqn{m = 0.688}, a highly prevalent microorganism found in humans) and not \emph{Entamoeba coli} (\eqn{m = 0.079}, a less prevalent microorganism in humans), although the latter would alphabetically come first.
 }
 
 \section{Catalogue of Life}{
 
 \if{html}{\figure{logo_col.png}{options: height=40px style=margin-bottom:5px} \cr}
-This package contains the complete taxonomic tree of almost all microorganisms (~70,000 species) from the authoritative and comprehensive Catalogue of Life (CoL, \url{http://www.catalogueoflife.org}). The CoL is the most comprehensive and authoritative global index of species currently available. Nonetheless, we supplemented the CoL data with data from the List of Prokaryotic names with Standing in Nomenclature (LPSN, \href{https://lpsn.dsmz.de}{lpsn.dsmz.de}). This supplementation is needed until the \href{https://github.com/CatalogueOfLife/general}{CoL+ project} is finished, which we await.
+This package contains the complete taxonomic tree of almost all microorganisms (~71,000 species) from the authoritative and comprehensive Catalogue of Life (CoL, \url{http://www.catalogueoflife.org}). The CoL is the most comprehensive and authoritative global index of species currently available. Nonetheless, we supplemented the CoL data with data from the List of Prokaryotic names with Standing in Nomenclature (LPSN, \href{https://lpsn.dsmz.de}{lpsn.dsmz.de}). This supplementation is needed until the \href{https://github.com/CatalogueOfLife/general}{CoL+ project} is finished, which we await.
 
 \link[=catalogue_of_life]{Click here} for more information about the included taxa. Check which versions of the CoL and LPSN were included in this package with \code{\link[=catalogue_of_life_version]{catalogue_of_life_version()}}.
 }
@@ -176,12 +181,12 @@ This package contains the complete taxonomic tree of almost all microorganisms (
 \section{Source}{
 
 \enumerate{
-\item Becker K \emph{et al.} \strong{Coagulase-Negative Staphylococci}. 2014. Clin Microbiol Rev. 27(4): 870–926; \doi{10.1128/CMR.00109-13}
+\item Becker K \emph{et al.} \strong{Coagulase-Negative Staphylococci}. 2014. Clin Microbiol Rev. 27(4): 870-926; \doi{10.1128/CMR.00109-13}
 \item Becker K \emph{et al.} \strong{Implications of identifying the recently defined members of the \emph{S. aureus} complex, \emph{S. argenteus} and \emph{S. schweitzeri}: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).} 2019. Clin Microbiol Infect; \doi{10.1016/j.cmi.2019.02.028}
 \item Becker K \emph{et al.} \strong{Emergence of coagulase-negative staphylococci} 2020. Expert Rev Anti Infect Ther. 18(4):349-366; \doi{10.1080/14787210.2020.1730813}
-\item Lancefield RC \strong{A serological differentiation of human and other groups of hemolytic streptococci}. 1933. J Exp Med. 57(4): 571–95; \doi{10.1084/jem.57.4.571}
+\item Lancefield RC \strong{A serological differentiation of human and other groups of hemolytic streptococci}. 1933. J Exp Med. 57(4): 571-95; \doi{10.1084/jem.57.4.571}
 \item Catalogue of Life: 2019 Annual Checklist, \url{http://www.catalogueoflife.org}
-\item List of Prokaryotic names with Standing in Nomenclature (March 2021), \doi{10.1099/ijsem.0.004332}
+\item List of Prokaryotic names with Standing in Nomenclature (5 October 2021), \doi{10.1099/ijsem.0.004332}
 \item US Edition of SNOMED CT from 1 September 2020, retrieved from the Public Health Information Network Vocabulary Access and Distribution System (PHIN VADS), OID 2.16.840.1.114222.4.11.1009, version 12; url: \url{https://phinvads.cdc.gov/vads/ViewValueSet.action?oid=2.16.840.1.114222.4.11.1009}
 }
 }
@@ -224,6 +229,7 @@ mo_synonyms("E. coli")        # get previously accepted taxonomic names
 mo_ref("E. coli")             # "Castellani et al., 1919"
 mo_authors("E. coli")         # "Castellani et al."
 mo_year("E. coli")            # 1919
+mo_lpsn("E. coli")            # 776057 (LPSN record ID)
 
 # abbreviations known in the field -----------------------------------------
 mo_genus("MRSA")              # "Staphylococcus"
@@ -299,5 +305,5 @@ mo_info("E. coli")
 }
 }
 \seealso{
-\link{microorganisms}
+Data set \link{microorganisms}
 }

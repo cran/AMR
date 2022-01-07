@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -23,7 +23,7 @@
 # how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-if (AMR:::pkg_is_available("dplyr")) {
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
   expect_stdout(AMX_R <- example_isolates %>%
                   filter(mo == "B_ESCHR_COLI") %>%
                   rsi_predict(col_ab = "AMX",
@@ -45,7 +45,7 @@ pdf(NULL) # prevent Rplots.pdf being created
 expect_silent(plot(x))
 if (AMR:::pkg_is_available("ggplot2")) {
   expect_silent(ggplot_rsi_predict(x))
-  expect_silent(ggplot(x))
+  expect_silent(autoplot(x))
   expect_error(ggplot_rsi_predict(example_isolates))
 }
 expect_stdout(rsi_predict(x = subset(example_isolates, mo == "B_ESCHR_COLI"),

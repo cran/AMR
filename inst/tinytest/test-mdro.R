@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -30,6 +30,8 @@ expect_error(mdro(example_isolates, col_mo = "invalid", info = TRUE))
 
 expect_stdout(suppressMessages(suppressWarnings(mdro(example_isolates, info = TRUE))))
 expect_stdout(suppressMessages(suppressWarnings(mdro(example_isolates, "eucast3.1", info = TRUE))))
+expect_stdout(suppressMessages(suppressWarnings(mdro(example_isolates, "eucast3.2", info = TRUE))))
+expect_stdout(suppressMessages(suppressWarnings(mdro(example_isolates, "eucast3.3", info = TRUE))))
 expect_stdout(outcome <- suppressMessages(suppressWarnings(eucast_exceptional_phenotypes(example_isolates, info = TRUE))))
 # check class
 expect_identical(class(outcome), c("ordered", "factor"))
@@ -40,7 +42,7 @@ expect_identical(class(outcome), c("ordered", "factor"))
 
 # example_isolates should have these finding using Dutch guidelines
 expect_equal(as.double(table(outcome)),
-             c(1970, 24, 6)) # 1970 neg, 24 unconfirmed, 6 pos
+             c(1954, 24, 6)) # 1954 neg, 24 unconfirmed, 6 pos, rest is NA
 
 expect_equal(brmo(example_isolates, info = FALSE),
              mdro(example_isolates, guideline = "BRMO", info = FALSE))
@@ -232,7 +234,7 @@ expect_warning(mdro(example_isolates,
                     info = FALSE))
 
 # print groups
-if (AMR:::pkg_is_available("dplyr")) {
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
   expect_stdout(x <- mdro(example_isolates %>% group_by(hospital_id), info = TRUE))
   expect_stdout(x <- mdro(example_isolates %>% group_by(hospital_id), guideline = custom, info = TRUE))
 }

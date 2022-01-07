@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -27,7 +27,7 @@
 #' 
 #' These functions determine which items in a vector can be considered (the start of) a new episode, based on the argument `episode_days`. This can be used to determine clinical episodes for any epidemiological analysis. The [get_episode()] function returns the index number of the episode per group, while the [is_new_episode()] function returns values `TRUE`/`FALSE` to indicate whether an item in a vector is the start of a new episode.
 #' @inheritSection lifecycle Stable Lifecycle
-#' @param x vector of dates (class `Date` or `POSIXt`)
+#' @param x vector of dates (class `Date` or `POSIXt`), will be sorted internally to determine episodes
 #' @param episode_days required episode length in days, can also be less than a day or `Inf`, see *Details*
 #' @param ... ignored, only in place to allow future extensions
 #' @details 
@@ -105,11 +105,11 @@
 #' }
 #' }
 get_episode <- function(x, episode_days, ...) {
-  meet_criteria(x, allow_class = c("Date", "POSIXt"))
+  meet_criteria(x, allow_class = c("Date", "POSIXt"), allow_NA = TRUE)
   meet_criteria(episode_days, allow_class = c("numeric", "integer"), has_length = 1, is_positive = TRUE, is_finite = FALSE)
   
-  exec_episode(type = "sequential",
-               x = x, 
+  exec_episode(x = x, 
+               type = "sequential",
                episode_days = episode_days,
                ... = ...)
 }
@@ -117,27 +117,27 @@ get_episode <- function(x, episode_days, ...) {
 #' @rdname get_episode
 #' @export
 is_new_episode <- function(x, episode_days, ...) {
-  meet_criteria(x, allow_class = c("Date", "POSIXt"))
+  meet_criteria(x, allow_class = c("Date", "POSIXt"), allow_NA = TRUE)
   meet_criteria(episode_days, allow_class = c("numeric", "integer"), has_length = 1, is_positive = TRUE, is_finite = FALSE)
   
-  exec_episode(type = "logical",
-               x = x, 
+  exec_episode(x = x, 
+               type = "logical",
                episode_days = episode_days,
                ... = ...)
 }
 
-exec_episode <- function(type, x, episode_days, ...) {
+exec_episode <- function(x, type, episode_days, ...) {
   x <- as.double(as.POSIXct(x)) # as.POSIXct() required for Date classes
   # since x is now in seconds, get seconds from episode_days as well
   episode_seconds <- episode_days * 60 * 60 * 24
   
-  if (length(x) == 1) {
+  if (length(x) == 1) { # this will also match 1 NA, which is fine
     if (type == "logical") {
       return(TRUE)
     } else if (type == "sequential") {
       return(1)
     }
-  } else if (length(x) == 2) {
+  } else if (length(x) == 2 && !all(is.na(x))) {
     if (max(x) - min(x) >= episode_seconds) {
       if (type == "logical") {
         return(c(TRUE, TRUE))
@@ -155,7 +155,7 @@ exec_episode <- function(type, x, episode_days, ...) {
   
   # I asked on StackOverflow:
   # https://stackoverflow.com/questions/42122245/filter-one-row-every-year
-  exec <- function(x, episode_seconds) {
+  run_episodes <- function(x, episode_seconds) {
     indices <- integer()
     start <- x[1]
     ind <- 1
@@ -181,11 +181,8 @@ exec_episode <- function(type, x, episode_days, ...) {
     }
   }
   
-  df <- data.frame(x = x,
-                   y = seq_len(length(x))) %pm>%
-    pm_arrange(x)
-  df$new <- exec(df$x, episode_seconds)
-  df %pm>%
-    pm_arrange(y) %pm>%
-    pm_pull(new)
+  ord <- order(x)
+  out <- run_episodes(x[ord], episode_seconds)[order(ord)]
+  out[is.na(x) & ord != 1] <- NA # every NA but the first must remain NA
+  out
 }

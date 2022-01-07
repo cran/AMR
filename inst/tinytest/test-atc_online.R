@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -30,5 +30,6 @@ if (AMR:::pkg_is_available("curl", also_load = FALSE) &&
   expect_true(length(atc_online_groups(ab_atc("AMX"))) >= 1)
   expect_equal(atc_online_ddd(ab_atc("AMX"), administration = "O"), 1.5)
   expect_equal(atc_online_ddd(ab_atc("AMX"), administration = "P"), 3)
-  expect_warning(atc_online_ddd(ab_atc("Novobiocin"), administration = "P"))
+  expect_equal(atc_online_ddd_units("AMX", administration = "P"), "g")
+  
 }

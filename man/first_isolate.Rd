@@ -3,12 +3,12 @@
 \name{first_isolate}
 \alias{first_isolate}
 \alias{filter_first_isolate}
-\title{Determine First (Weighted) Isolates}
+\title{Determine First Isolates}
 \source{
 Methodology of this function is strictly based on:
 \itemize{
 \item \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 4th Edition}, 2014, \emph{Clinical and Laboratory Standards Institute (CLSI)}. \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
-\item Hindler JF and Stelling J (2007). \strong{Analysis and Presentation of Cumulative Antibiograms: A New Consensus Guideline from the Clinical and Laboratory Standards Institute.} Clinical Infectious Diseases, 44(6), 867–873. \doi{10.1086/511864}
+\item Hindler JF and Stelling J (2007). \strong{Analysis and Presentation of Cumulative Antibiograms: A New Consensus Guideline from the Clinical and Laboratory Standards Institute.} Clinical Infectious Diseases, 44(6), 867-873. \doi{10.1086/511864}
 }
 }
 \usage{
@@ -60,7 +60,7 @@ filter_first_isolate(
 
 \item{col_icu}{column name of the logicals (\code{TRUE}/\code{FALSE}) whether a ward or department is an Intensive Care Unit (ICU)}
 
-\item{col_keyantimicrobials}{(only useful when \code{method = "phenotype-based"}) column name of the key antimicrobials to determine first (weighted) isolates, see \code{\link[=key_antimicrobials]{key_antimicrobials()}}. Defaults to the first column that starts with 'key' followed by 'ab' or 'antibiotics' or 'antimicrobials' (case insensitive). Use \code{col_keyantimicrobials = FALSE} to prevent this. Can also be the output of \code{\link[=key_antimicrobials]{key_antimicrobials()}}.}
+\item{col_keyantimicrobials}{(only useful when \code{method = "phenotype-based"}) column name of the key antimicrobials to determine first isolates, see \code{\link[=key_antimicrobials]{key_antimicrobials()}}. Defaults to the first column that starts with 'key' followed by 'ab' or 'antibiotics' or 'antimicrobials' (case insensitive). Use \code{col_keyantimicrobials = FALSE} to prevent this. Can also be the output of \code{\link[=key_antimicrobials]{key_antimicrobials()}}.}
 
 \item{episode_days}{episode in days after which a genus/species combination will be determined as 'first isolate' again. The default of 365 days is based on the guideline by CLSI, see \emph{Source}.}
 
@@ -90,7 +90,7 @@ filter_first_isolate(
 A \code{\link{logical}} vector
 }
 \description{
-Determine first (weighted) isolates of all microorganisms of every patient per episode and (if needed) per specimen type. These functions support all four methods as summarised by Hindler \emph{et al.} in 2007 (\doi{10.1086/511864}). To determine patient episodes not necessarily based on microorganisms, use \code{\link[=is_new_episode]{is_new_episode()}} that also supports grouping with the \code{dplyr} package.
+Determine first isolates of all microorganisms of every patient per episode and (if needed) per specimen type. These functions support all four methods as summarised by Hindler \emph{et al.} in 2007 (\doi{10.1086/511864}). To determine patient episodes not necessarily based on microorganisms, use \code{\link[=is_new_episode]{is_new_episode()}} that also supports grouping with the \code{dplyr} package.
 }
 \details{
 To conduct epidemiological analyses on antimicrobial resistance data, only so-called first isolates should be included to prevent overestimation and underestimation of antimicrobial resistance. Different methods can be used to do so, see below.
@@ -147,9 +147,9 @@ This is the most common method to correct for duplicate isolates. Patients are c
 
 This is a more reliable method, since it also \emph{weighs} the antibiogram (antimicrobial test results) yielding so-called 'first weighted isolates'. There are two different methods to weigh the antibiogram:
 \enumerate{
-\item Using \code{type = "points"} and argument \code{points_threshold}
+\item Using \code{type = "points"} and argument \code{points_threshold} (default)
 
-This method weighs \emph{all} antimicrobial agents available in the data set. Any difference from I to S or R (or vice versa) counts as 0.5 points, a difference from S to R (or vice versa) counts as 1 point. When the sum of points exceeds \code{points_threshold}, which defaults to \code{2}, an isolate will be selected as a first weighted isolate.
+This method weighs \emph{all} antimicrobial agents available in the data set. Any difference from I to S or R (or vice versa) counts as \code{0.5} points, a difference from S to R (or vice versa) counts as \code{1} point. When the sum of points exceeds \code{points_threshold}, which defaults to \code{2}, an isolate will be selected as a first weighted isolate.
 
 All antimicrobials are internally selected using the \code{\link[=all_antimicrobials]{all_antimicrobials()}} function. The output of this function does not need to be passed to the \code{\link[=first_isolate]{first_isolate()}} function.
 \item Using \code{type = "keyantimicrobials"} and argument \code{ignore_I}
@@ -169,7 +169,7 @@ The default method is phenotype-based (using \code{type = "points"}) and episode
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Read more on Our Website!}{
@@ -181,11 +181,8 @@ On our website \url{https://msberends.github.io/AMR/} you can find \href{https:/
 # `example_isolates` is a data set available in the AMR package.
 # See ?example_isolates.
 
-example_isolates[first_isolate(example_isolates), ]
-\donttest{
-# faster way, only works in R 3.2 and later:
 example_isolates[first_isolate(), ]
-
+\donttest{
 # get all first Gram-negatives
 example_isolates[which(first_isolate() & mo_is_gram_negative()), ]
 

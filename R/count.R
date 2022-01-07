@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -82,6 +82,12 @@
 #'               n1 = count_all(CIP),  # the actual total; sum of all three
 #'               n2 = n_rsi(CIP),      # same - analogous to n_distinct
 #'               total = n())          # NOT the number of tested isolates!
+#'               
+#'   # Number of available isolates for a whole antibiotic class
+#'   # (i.e., in this data set columns GEN, TOB, AMK, KAN)
+#'   example_isolates %>%
+#'     group_by(hospital_id) %>%
+#'     summarise(across(aminoglycosides(), n_rsi))
 #'  
 #'   # Count co-resistance between amoxicillin/clav acid and gentamicin,
 #'   # so we can see that combination therapy does a lot more than mono therapy.
@@ -108,81 +114,95 @@
 #' }
 #' }
 count_resistant <- function(..., only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = "R",
-           only_all_tested = only_all_tested,
-           only_count = TRUE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = "R",
+             only_all_tested = only_all_tested,
+             only_count = TRUE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname count
 #' @export
 count_susceptible <- function(..., only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = c("S", "I"),
-           only_all_tested = only_all_tested,
-           only_count = TRUE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = c("S", "I"),
+             only_all_tested = only_all_tested,
+             only_count = TRUE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname count
 #' @export
 count_R <- function(..., only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = "R",
-           only_all_tested = only_all_tested,
-           only_count = TRUE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = "R",
+             only_all_tested = only_all_tested,
+             only_count = TRUE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname count
 #' @export
 count_IR <- function(..., only_all_tested = FALSE) {
-  if (message_not_thrown_before("count_IR")) {
-    warning_("Using count_IR() is discouraged; use count_resistant() instead to not consider \"I\" being resistant.", call = FALSE)
-    remember_thrown_message("count_IR")
+  if (message_not_thrown_before("count_IR", entire_session = TRUE)) {
+    message_("Using `count_IR()` is discouraged; use `count_resistant()` instead to not consider \"I\" being resistant. This note will be shown once for this session.", as_note = FALSE)
   }
-  rsi_calc(...,
-           ab_result = c("I", "R"),
-           only_all_tested = only_all_tested,
-           only_count = TRUE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = c("I", "R"),
+             only_all_tested = only_all_tested,
+             only_count = TRUE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname count
 #' @export
 count_I <- function(..., only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = "I",
-           only_all_tested = only_all_tested,
-           only_count = TRUE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = "I",
+             only_all_tested = only_all_tested,
+             only_count = TRUE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname count
 #' @export
 count_SI <- function(..., only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = c("S", "I"),
-           only_all_tested = only_all_tested,
-           only_count = TRUE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = c("S", "I"),
+             only_all_tested = only_all_tested,
+             only_count = TRUE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname count
 #' @export
 count_S <- function(..., only_all_tested = FALSE) {
-  if (message_not_thrown_before("count_S")) {
-    warning_("Using count_S() is discouraged; use count_susceptible() instead to also consider \"I\" being susceptible.", call = FALSE)
-    remember_thrown_message("count_S")
+  if (message_not_thrown_before("count_S", entire_session = TRUE)) {
+    message_("Using `count_S()` is discouraged; use `count_susceptible()` instead to also consider \"I\" being susceptible. This note will be shown once for this session.", as_note = FALSE)
   }
-  rsi_calc(...,
-           ab_result = "S",
-           only_all_tested = only_all_tested,
-           only_count = TRUE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = "S",
+             only_all_tested = only_all_tested,
+             only_count = TRUE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname count
 #' @export
 count_all <- function(..., only_all_tested = FALSE) {
-  rsi_calc(...,
-           ab_result = c("S", "I", "R"),
-           only_all_tested = only_all_tested,
-           only_count = TRUE)
+  tryCatch(
+    rsi_calc(...,
+             ab_result = c("S", "I", "R"),
+             only_all_tested = only_all_tested,
+             only_count = TRUE),
+    error = function(e) stop_(e$message, call = -5))
 }
 
 #' @rdname count
@@ -193,14 +213,16 @@ n_rsi <- count_all
 #' @export
 count_df <- function(data,
                      translate_ab = "name",
-                     language = get_locale(),
+                     language = get_AMR_locale(),
                      combine_SI = TRUE,
                      combine_IR = FALSE) {
-  rsi_calc_df(type = "count",
-              data = data,
-              translate_ab = translate_ab,
-              language = language,
-              combine_SI = combine_SI,
-              combine_IR = combine_IR,
-              combine_SI_missing = missing(combine_SI))
+  tryCatch(
+    rsi_calc_df(type = "count",
+                data = data,
+                translate_ab = translate_ab,
+                language = language,
+                combine_SI = combine_SI,
+                combine_IR = combine_IR,
+                combine_SI_missing = missing(combine_SI)),
+    error = function(e) stop_(e$message, call = -5))
 }

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -27,7 +27,7 @@
 #' @export
 rsi_df <- function(data,
                    translate_ab = "name",
-                   language = get_locale(),
+                   language = get_AMR_locale(),
                    minimum = 30,
                    as_percent = FALSE,
                    combine_SI = TRUE,

@@ -4,22 +4,22 @@
 \name{antibiotics}
 \alias{antibiotics}
 \alias{antivirals}
-\title{Data Sets with 558 Antimicrobials}
+\title{Data Sets with 566 Antimicrobial Drugs}
 \format{
-\subsection{For the \link{antibiotics} data set: a \link{data.frame} with 456 observations and 14 variables:}{
+\subsection{For the \link{antibiotics} data set: a \link{data.frame} with 464 observations and 14 variables:}{
 \itemize{
 \item \code{ab}\cr Antibiotic ID as used in this package (such as \code{AMC}), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available
-\item \code{atc}\cr ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC, like \code{J01CR02}
 \item \code{cid}\cr Compound ID as found in PubChem
 \item \code{name}\cr Official name as used by WHONET/EARS-Net or the WHO
 \item \code{group}\cr A short and concise group name, based on WHONET and WHOCC definitions
+\item \code{atc}\cr ATC codes (Anatomical Therapeutic Chemical) as defined by the WHOCC, like \code{J01CR02}
 \item \code{atc_group1}\cr Official pharmacological subgroup (3rd level ATC code) as defined by the WHOCC, like \code{"Macrolides, lincosamides and streptogramins"}
 \item \code{atc_group2}\cr Official chemical subgroup (4th level ATC code) as defined by the WHOCC, like \code{"Macrolides"}
 \item \code{abbr}\cr List of abbreviations as used in many countries, also for antibiotic susceptibility testing (AST)
 \item \code{synonyms}\cr Synonyms (often trade names) of a drug, as found in PubChem based on their compound ID
-\item \code{oral_ddd}\cr Defined Daily Dose (DDD), oral treatment
+\item \code{oral_ddd}\cr Defined Daily Dose (DDD), oral treatment, currently available for 170 drugs
 \item \code{oral_units}\cr Units of \code{oral_ddd}
-\item \code{iv_ddd}\cr Defined Daily Dose (DDD), parenteral treatment
+\item \code{iv_ddd}\cr Defined Daily Dose (DDD), parenteral (intravenous) treatment, currently available for 145 drugs
 \item \code{iv_units}\cr Units of \code{iv_ddd}
 \item \code{loinc}\cr All LOINC codes (Logical Observation Identifiers Names and Codes) associated with the name of the antimicrobial agent. Use \code{\link[=ab_loinc]{ab_loinc()}} to retrieve them quickly, see \code{\link[=ab_property]{ab_property()}}.
 }
@@ -27,7 +27,7 @@
 
 \subsection{For the \link{antivirals} data set: a \link{data.frame} with 102 observations and 9 variables:}{
 \itemize{
-\item \code{atc}\cr ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC
+\item \code{atc}\cr ATC codes (Anatomical Therapeutic Chemical) as defined by the WHOCC
 \item \code{cid}\cr Compound ID as found in PubChem
 \item \code{name}\cr Official name as used by WHONET/EARS-Net or the WHO
 \item \code{atc_group}\cr Official pharmacological subgroup (3rd level ATC code) as defined by the WHOCC
@@ -44,8 +44,6 @@ An object of class \code{data.frame} with 102 rows and 9 columns.
 \source{
 World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology (WHOCC): \url{https://www.whocc.no/atc_ddd_index/}
 
-WHONET 2019 software: \url{http://www.whonet.org/software.html}
-
 European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 }
 \usage{
@@ -54,24 +52,24 @@ antibiotics
 antivirals
 }
 \description{
-Two data sets containing all antibiotics/antimycotics and antivirals. Use \code{\link[=as.ab]{as.ab()}} or one of the \code{\link[=ab_property]{ab_*}} functions to retrieve values from the \link{antibiotics} data set. Three identifiers are included in this data set: an antibiotic ID (\code{ab}, primarily used in this package) as defined by WHONET/EARS-Net, an ATC code (\code{atc}) as defined by the WHO, and a Compound ID (\code{cid}) as found in PubChem. Other properties in this data set are derived from one or more of these codes.
+Two data sets containing all antibiotics/antimycotics and antivirals. Use \code{\link[=as.ab]{as.ab()}} or one of the \code{\link[=ab_property]{ab_*}} functions to retrieve values from the \link{antibiotics} data set. Three identifiers are included in this data set: an antibiotic ID (\code{ab}, primarily used in this package) as defined by WHONET/EARS-Net, an ATC code (\code{atc}) as defined by the WHO, and a Compound ID (\code{cid}) as found in PubChem. Other properties in this data set are derived from one or more of these codes. Note that some drugs have multiple ATC codes.
 }
 \details{
 Properties that are based on an ATC code are only available when an ATC is available. These properties are: \code{atc_group1}, \code{atc_group2}, \code{oral_ddd}, \code{oral_units}, \code{iv_ddd} and \code{iv_units}.
 
-Synonyms (i.e. trade names) are derived from the Compound ID (\code{cid}) and consequently only available where a CID is available.
+Synonyms (i.e. trade names) were derived from the Compound ID (\code{cid}) and consequently only available where a CID is available.
 \subsection{Direct download}{
 
 These data sets are available as 'flat files' for use even without \R - you can find the files here:
 \itemize{
-\item \url{https://github.com/msberends/AMR/raw/master/data-raw/antibiotics.txt}
-\item \url{https://github.com/msberends/AMR/raw/master/data-raw/antivirals.txt}
+\item \url{https://github.com/msberends/AMR/raw/main/data-raw/antibiotics.txt}
+\item \url{https://github.com/msberends/AMR/raw/main/data-raw/antivirals.txt}
 }
 
 Files in \R format (with preserved data structure) can be found here:
 \itemize{
-\item \url{https://github.com/msberends/AMR/raw/master/data/antibiotics.rda}
-\item \url{https://github.com/msberends/AMR/raw/master/data/antivirals.rda}
+\item \url{https://github.com/msberends/AMR/raw/main/data/antibiotics.rda}
+\item \url{https://github.com/msberends/AMR/raw/main/data/antivirals.rda}
 }
 }
 }

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -23,28 +23,28 @@
 # how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Data Sets with `r format(nrow(antibiotics) + nrow(antivirals), big.mark = ",")` Antimicrobials
+#' Data Sets with `r format(nrow(antibiotics) + nrow(antivirals), big.mark = ",")` Antimicrobial Drugs
 #'
-#' Two data sets containing all antibiotics/antimycotics and antivirals. Use [as.ab()] or one of the [`ab_*`][ab_property()] functions to retrieve values from the [antibiotics] data set. Three identifiers are included in this data set: an antibiotic ID (`ab`, primarily used in this package) as defined by WHONET/EARS-Net, an ATC code (`atc`) as defined by the WHO, and a Compound ID (`cid`) as found in PubChem. Other properties in this data set are derived from one or more of these codes.
+#' Two data sets containing all antibiotics/antimycotics and antivirals. Use [as.ab()] or one of the [`ab_*`][ab_property()] functions to retrieve values from the [antibiotics] data set. Three identifiers are included in this data set: an antibiotic ID (`ab`, primarily used in this package) as defined by WHONET/EARS-Net, an ATC code (`atc`) as defined by the WHO, and a Compound ID (`cid`) as found in PubChem. Other properties in this data set are derived from one or more of these codes. Note that some drugs have multiple ATC codes.
 #' @format
 #' ## For the [antibiotics] data set: a [data.frame] with `r nrow(antibiotics)` observations and `r ncol(antibiotics)` variables:
 #' - `ab`\cr Antibiotic ID as used in this package (such as `AMC`), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available
-#' - `atc`\cr ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC, like `J01CR02`
 #' - `cid`\cr Compound ID as found in PubChem
 #' - `name`\cr Official name as used by WHONET/EARS-Net or the WHO
 #' - `group`\cr A short and concise group name, based on WHONET and WHOCC definitions
+#' - `atc`\cr ATC codes (Anatomical Therapeutic Chemical) as defined by the WHOCC, like `J01CR02`
 #' - `atc_group1`\cr Official pharmacological subgroup (3rd level ATC code) as defined by the WHOCC, like `"Macrolides, lincosamides and streptogramins"`
 #' - `atc_group2`\cr Official chemical subgroup (4th level ATC code) as defined by the WHOCC, like `"Macrolides"`
 #' - `abbr`\cr List of abbreviations as used in many countries, also for antibiotic susceptibility testing (AST)
 #' - `synonyms`\cr Synonyms (often trade names) of a drug, as found in PubChem based on their compound ID
-#' - `oral_ddd`\cr Defined Daily Dose (DDD), oral treatment
+#' - `oral_ddd`\cr Defined Daily Dose (DDD), oral treatment, currently available for `r sum(!is.na(antibiotics$oral_ddd))` drugs
 #' - `oral_units`\cr Units of `oral_ddd`
-#' - `iv_ddd`\cr Defined Daily Dose (DDD), parenteral treatment
+#' - `iv_ddd`\cr Defined Daily Dose (DDD), parenteral (intravenous) treatment, currently available for `r sum(!is.na(antibiotics$iv_ddd))` drugs
 #' - `iv_units`\cr Units of `iv_ddd`
 #' - `loinc`\cr All LOINC codes (Logical Observation Identifiers Names and Codes) associated with the name of the antimicrobial agent. Use [ab_loinc()] to retrieve them quickly, see [ab_property()].
 #' 
 #' ## For the [antivirals] data set: a [data.frame] with `r nrow(antivirals)` observations and `r ncol(antivirals)` variables:
-#' - `atc`\cr ATC code (Anatomical Therapeutic Chemical) as defined by the WHOCC
+#' - `atc`\cr ATC codes (Anatomical Therapeutic Chemical) as defined by the WHOCC
 #' - `cid`\cr Compound ID as found in PubChem
 #' - `name`\cr Official name as used by WHONET/EARS-Net or the WHO
 #' - `atc_group`\cr Official pharmacological subgroup (3rd level ATC code) as defined by the WHOCC
@@ -55,21 +55,19 @@
 #' - `iv_units`\cr Units of `iv_ddd`
 #' @details Properties that are based on an ATC code are only available when an ATC is available. These properties are: `atc_group1`, `atc_group2`, `oral_ddd`, `oral_units`, `iv_ddd` and `iv_units`.
 #'
-#' Synonyms (i.e. trade names) are derived from the Compound ID (`cid`) and consequently only available where a CID is available.
+#' Synonyms (i.e. trade names) were derived from the Compound ID (`cid`) and consequently only available where a CID is available.
 #' 
 #' ## Direct download
 #' These data sets are available as 'flat files' for use even without \R - you can find the files here:
 #' 
-#' * <https://github.com/msberends/AMR/raw/master/data-raw/antibiotics.txt>
-#' * <https://github.com/msberends/AMR/raw/master/data-raw/antivirals.txt>
+#' * <https://github.com/msberends/AMR/raw/main/data-raw/antibiotics.txt>
+#' * <https://github.com/msberends/AMR/raw/main/data-raw/antivirals.txt>
 #' 
 #' Files in \R format (with preserved data structure) can be found here:
 #' 
-#' * <https://github.com/msberends/AMR/raw/master/data/antibiotics.rda>
-#' * <https://github.com/msberends/AMR/raw/master/data/antivirals.rda>
+#' * <https://github.com/msberends/AMR/raw/main/data/antibiotics.rda>
+#' * <https://github.com/msberends/AMR/raw/main/data/antivirals.rda>
 #' @source World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology (WHOCC): <https://www.whocc.no/atc_ddd_index/>
-#'
-#' WHONET 2019 software: <http://www.whonet.org/software.html>
 #'
 #' European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: <https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm>
 #' @inheritSection AMR Reference Data Publicly Available
@@ -83,7 +81,7 @@
 
 #' Data Set with `r format(nrow(microorganisms), big.mark = ",")` Microorganisms
 #'
-#' A data set containing the microbial taxonomy, last updated in `r CATALOGUE_OF_LIFE$yearmonth_LPSN`, of six kingdoms from the Catalogue of Life (CoL) and the List of Prokaryotic names with Standing in Nomenclature (LPSN). MO codes can be looked up using [as.mo()].
+#' A data set containing the full microbial taxonomy (**last updated: `r CATALOGUE_OF_LIFE$yearmonth_LPSN`**) of `r nr2char(length(unique(microorganisms$kingdom[!microorganisms$kingdom %like% "unknown"])))` kingdoms from the Catalogue of Life (CoL) and the List of Prokaryotic names with Standing in Nomenclature (LPSN). MO codes can be looked up using [as.mo()].
 #' @inheritSection catalogue_of_life Catalogue of Life
 #' @format A [data.frame] with `r format(nrow(microorganisms), big.mark = ",")` observations and `r ncol(microorganisms)` variables:
 #' - `mo`\cr ID of microorganism as used by this package
@@ -105,20 +103,21 @@
 #' 
 #' - 11 entries of *Streptococcus* (beta-haemolytic: groups A, B, C, D, F, G, H, K and unspecified; other: viridans, milleri)
 #' - 2 entries of *Staphylococcus* (coagulase-negative (CoNS) and coagulase-positive (CoPS))
-#' - 3 entries of *Trichomonas* (*Trichomonas vaginalis*, and its family and genus)
-#' - 1 entry of *Candida* (*Candida krusei*), that is not (yet) in the Catalogue of Life
-#' - 1 entry of *Blastocystis* (*Blastocystis hominis*), although it officially does not exist (Noel *et al.* 2005, PMID 15634993)
+#' - 3 entries of *Trichomonas* (*T. vaginalis*, and its family and genus)
+#' - 1 entry of *Candida* (*C.  krusei*), that is not (yet) in the Catalogue of Life
+#' - 1 entry of *Blastocystis* (*B.  hominis*), although it officially does not exist (Noel *et al.* 2005, PMID 15634993)
+#' - 1 entry of *Moraxella* (*M. catarrhalis*), which was formally named *Branhamella catarrhalis* (Catlin, 1970) though this change was never accepted within the field of clinical microbiology
 #' - 5 other 'undefined' entries (unknown, unknown Gram negatives, unknown Gram positives, unknown yeast and unknown fungus)
 #' - 6 families under the Enterobacterales order, according to Adeolu *et al.* (2016, PMID 27620848), that are not (yet) in the Catalogue of Life
 #' 
 #' ## Direct download
 #' This data set is available as 'flat file' for use even without \R - you can find the file here:
 #' 
-#' * <https://github.com/msberends/AMR/raw/master/data-raw/microorganisms.txt>
+#' * <https://github.com/msberends/AMR/raw/main/data-raw/microorganisms.txt>
 #' 
 #' The file in \R format (with preserved data structure) can be found here:
 #' 
-#' * <https://github.com/msberends/AMR/raw/master/data/microorganisms.rda>
+#' * <https://github.com/msberends/AMR/raw/main/data/microorganisms.rda>
 #' @section About the Records from LPSN (see *Source*):
 #' The List of Prokaryotic names with Standing in Nomenclature (LPSN) provides comprehensive information on the nomenclature of prokaryotes. LPSN is a free to use service founded by Jean P. Euzeby in 1997 and later on maintained by Aidan C. Parte.
 #' 
@@ -131,8 +130,8 @@
 #' List of Prokaryotic names with Standing in Nomenclature (`r CATALOGUE_OF_LIFE$yearmonth_LPSN`) as currently implemented in this `AMR` package:
 #' 
 #' * Parte, A.C., Sarda Carbasse, J., Meier-Kolthoff, J.P., Reimer, L.C. and Goker, M. (2020). List of Prokaryotic names with Standing in Nomenclature (LPSN) moves to the DSMZ. International Journal of Systematic and Evolutionary Microbiology, 70, 5607-5612; \doi{10.1099/ijsem.0.004332}
-#' * Parte, A.C. (2018). LPSN — List of Prokaryotic names with Standing in Nomenclature (bacterio.net), 20 years on. International Journal of Systematic and Evolutionary Microbiology, 68, 1825-1829; \doi{10.1099/ijsem.0.002786}
-#' * Parte, A.C. (2014). LPSN — List of Prokaryotic names with Standing in Nomenclature. Nucleic Acids Research, 42, Issue D1, D613–D616; \doi{10.1093/nar/gkt1111}
+#' * Parte, A.C. (2018). LPSN - List of Prokaryotic names with Standing in Nomenclature (bacterio.net), 20 years on. International Journal of Systematic and Evolutionary Microbiology, 68, 1825-1829; \doi{10.1099/ijsem.0.002786}
+#' * Parte, A.C. (2014). LPSN - List of Prokaryotic names with Standing in Nomenclature. Nucleic Acids Research, 42, Issue D1, D613-D616; \doi{10.1093/nar/gkt1111}
 #' * Euzeby, J.P. (1997). List of Bacterial Names with Standing in Nomenclature: a Folder Available on the Internet. International Journal of Systematic Bacteriology, 47, 590-592; \doi{10.1099/00207713-47-2-590}
 #' 
 #' `r SNOMED_VERSION$current_source` as currently implemented in this `AMR` package:
@@ -154,7 +153,7 @@
 #' - `prevalence`\cr Prevalence of the microorganism, see [as.mo()]
 #' @source Catalogue of Life: Annual Checklist (public online taxonomic database), <http://www.catalogueoflife.org> (check included annual version with [catalogue_of_life_version()]).
 #' 
-#' Parte, A.C. (2018). LPSN — List of Prokaryotic names with Standing in Nomenclature (bacterio.net), 20 years on. International Journal of Systematic and Evolutionary Microbiology, 68, 1825-1829; \doi{10.1099/ijsem.0.002786}
+#' Parte, A.C. (2018). LPSN - List of Prokaryotic names with Standing in Nomenclature (bacterio.net), 20 years on. International Journal of Systematic and Evolutionary Microbiology, 68, 1825-1829; \doi{10.1099/ijsem.0.002786}
 #' @inheritSection AMR Reference Data Publicly Available
 #' @inheritSection AMR Read more on Our Website!
 #' @seealso [as.mo()] [mo_property()] [microorganisms]
@@ -245,13 +244,14 @@
 #' - `method`\cr Either `r vector_or(rsi_translation$method)`
 #' - `site`\cr Body site, e.g. "Oral" or "Respiratory"
 #' - `mo`\cr Microbial ID, see [as.mo()]
+#' - `rank_index`\cr Taxonomic rank index of `mo` from 1 (subspecies/infraspecies) to 5 (unknown microorganism)
 #' - `ab`\cr Antibiotic ID, see [as.ab()]
 #' - `ref_tbl`\cr Info about where the guideline rule can be found
 #' - `disk_dose`\cr Dose of the used disk diffusion method
 #' - `breakpoint_S`\cr Lowest MIC value or highest number of millimetres that leads to "S"
 #' - `breakpoint_R`\cr Highest MIC value or lowest number of millimetres that leads to "R"
 #' - `uti`\cr A [logical] value (`TRUE`/`FALSE`) to indicate whether the rule applies to a urinary tract infection (UTI)
-#' @details The repository of this `AMR` package contains a file comprising this exact data set: <https://github.com/msberends/AMR/blob/master/data-raw/rsi_translation.txt>. This file **allows for machine reading EUCAST and CLSI guidelines**, which is almost impossible with the Excel and PDF files distributed by EUCAST and CLSI. The file is updated automatically.
+#' @details The repository of this `AMR` package contains a file comprising this exact data set: <https://github.com/msberends/AMR/blob/main/data-raw/rsi_translation.txt>. This file **allows for machine reading EUCAST and CLSI guidelines**, which is almost impossible with the Excel and PDF files distributed by EUCAST and CLSI. The file is updated automatically and the `mo` and `ab` columns have been transformed to contain the full official names instead of codes.
 #' @inheritSection AMR Reference Data Publicly Available
 #' @inheritSection AMR Read more on Our Website!
 #' @seealso [intrinsic_resistant]
@@ -261,20 +261,22 @@
 #'
 #' Data set containing defined intrinsic resistance by EUCAST of all bug-drug combinations.
 #' @format A [data.frame] with `r format(nrow(intrinsic_resistant), big.mark = ",")` observations and `r ncol(intrinsic_resistant)` variables:
-#' - `microorganism`\cr Name of the microorganism
-#' - `antibiotic`\cr Name of the antibiotic drug
-#' @details The repository of this `AMR` package contains a file comprising this exact data set: <https://github.com/msberends/AMR/blob/master/data-raw/intrinsic_resistant.txt>. This file **allows for machine reading EUCAST guidelines about intrinsic resistance**, which is almost impossible with the Excel and PDF files distributed by EUCAST. The file is updated automatically.
+#' - `mo`\cr Microorganism ID
+#' - `ab`\cr Antibiotic ID
+#' @details The repository of this `AMR` package contains a file comprising this data set with full taxonomic and antibiotic names: <https://github.com/msberends/AMR/blob/main/data-raw/intrinsic_resistant.txt>. This file **allows for machine reading EUCAST guidelines about intrinsic resistance**, which is almost impossible with the Excel and PDF files distributed by EUCAST. The file is updated automatically.
 #' 
-#' This data set is based on `r format_eucast_version_nr(3.2)`.
+#' This data set is based on `r format_eucast_version_nr(3.3)`.
 #' @inheritSection AMR Reference Data Publicly Available
 #' @inheritSection AMR Read more on Our Website!
 #' @examples
 #' \donttest{
 #' if (require("dplyr")) {
 #'   intrinsic_resistant %>%
-#'     filter(antibiotic == "Vancomycin", microorganism %like% "Enterococcus") %>% 
-#'     pull(microorganism)
-#'   # [1] "Enterococcus casseliflavus" "Enterococcus gallinarum"
+#'     mutate(mo = mo_name(mo),
+#'            ab = ab_name(mo))
+#'     filter(ab == "Vancomycin" & mo %like% "Enterococcus") %>% 
+#'     pull(mo)
+#'   #> [1] "Enterococcus casseliflavus" "Enterococcus gallinarum"
 #' }
 #' }
 "intrinsic_resistant"

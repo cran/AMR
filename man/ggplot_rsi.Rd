@@ -22,7 +22,7 @@ ggplot_rsi(
   combine_SI = TRUE,
   combine_IR = FALSE,
   minimum = 30,
-  language = get_locale(),
+  language = get_AMR_locale(),
   nrow = NULL,
   colours = c(S = "#3CAEA3", SI = "#3CAEA3", I = "#F6D55C", IR = "#ED553B", R =
     "#ED553B"),
@@ -43,7 +43,7 @@ geom_rsi(
   fill = "interpretation",
   translate_ab = "name",
   minimum = 30,
-  language = get_locale(),
+  language = get_AMR_locale(),
   combine_SI = TRUE,
   combine_IR = FALSE,
   ...
@@ -62,7 +62,7 @@ labels_rsi_count(
   x = "antibiotic",
   translate_ab = "name",
   minimum = 30,
-  language = get_locale(),
+  language = get_AMR_locale(),
   combine_SI = TRUE,
   combine_IR = FALSE,
   datalabels.size = 3,
@@ -92,7 +92,7 @@ labels_rsi_count(
 
 \item{minimum}{the minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see \emph{Source}.}
 
-\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_locale]{get_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
 \item{nrow}{(when using \code{facet}) number of rows}
 
@@ -145,7 +145,7 @@ At default, the names of antibiotics will be shown on the plots using \code{\lin
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Read more on Our Website!}{
@@ -210,8 +210,7 @@ if (require("ggplot2") & require("dplyr")) {
            mo == as.mo("E. coli")) \%>\%
     # age_groups() is also a function in this AMR package:
     group_by(age_group = age_groups(age)) \%>\%
-    select(age_group,
-           CIP) \%>\%
+    select(age_group, CIP) \%>\%
     ggplot_rsi(x = "age_group")
   
   # a shorter version which also adjusts data label colours:
@@ -222,6 +221,8 @@ if (require("ggplot2") & require("dplyr")) {
 
   # it also supports groups (don't forget to use the group var on `x` or `facet`):
   example_isolates \%>\%
+    filter(mo_is_gram_negative()) \%>\% 
+    # select only UTI-specific drugs
     select(hospital_id, AMX, NIT, FOS, TMP, CIP) \%>\%
     group_by(hospital_id) \%>\%
     ggplot_rsi(x = "hospital_id",

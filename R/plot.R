@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -25,18 +25,17 @@
 
 #' Plotting for Classes `rsi`, `mic` and `disk`
 #' 
-#' Functions to plot classes `rsi`, `mic` and `disk`, with support for base R and `ggplot2`.
+#' Functions to plot classes `rsi`, `mic` and `disk`, with support for base \R and `ggplot2`.
 #' @inheritSection lifecycle Stable Lifecycle
 #' @inheritSection AMR Read more on Our Website!
-#' @param x,data MIC values created with [as.mic()] or disk diffusion values created with [as.disk()]
-#' @param mapping aesthetic mappings to use for [`ggplot()`][ggplot2::ggplot()]
-#' @param main,title title of the plot
-#' @param xlab,ylab axis title
+#' @param x,object values created with [as.mic()], [as.disk()] or [as.rsi()] (or their `random_*` variants, such as [random_mic()])
 #' @param mo any (vector of) text that can be coerced to a valid microorganism code with [as.mo()]
 #' @param ab any (vector of) text that can be coerced to a valid antimicrobial code with [as.ab()]
 #' @param guideline interpretation guideline to use, defaults to the latest included EUCAST guideline, see *Details*
+#' @param main,title title of the plot
+#' @param xlab,ylab axis title
 #' @param colours_RSI colours to use for filling in the bars, must be a vector of three values (in the order R, S and I). The default colours are colour-blind friendly.
-#' @param language language to be used to translate 'Susceptible', 'Increased exposure'/'Intermediate' and 'Resistant', defaults to system language (see [get_locale()]) and can be overwritten by setting the option `AMR_locale`, e.g. `options(AMR_locale = "de")`, see [translate]. Use `language = NULL` or `language = ""` to prevent translation.
+#' @param language language to be used to translate 'Susceptible', 'Increased exposure'/'Intermediate' and 'Resistant', defaults to system language (see [get_AMR_locale()]) and can be overwritten by setting the option `AMR_locale`, e.g. `options(AMR_locale = "de")`, see [translate]. Use `language = NULL` or `language = ""` to prevent translation.
 #' @param expand a [logical] to indicate whether the range on the x axis should be expanded between the lowest and highest value. For MIC values, intermediate values will be factors of 2 starting from the highest MIC value. For disk diameters, the whole diameter range will be filled.
 #' @details
 #' The interpretation of "I" will be named "Increased exposure" for all EUCAST guidelines since 2019, and will be named "Intermediate" in all other cases.
@@ -46,8 +45,10 @@
 #' Simply using `"CLSI"` or `"EUCAST"` as input will automatically select the latest version of that guideline.
 #' @name plot
 #' @rdname plot
-#' @return The `ggplot` functions return a [`ggplot`][ggplot2::ggplot()] model that is extendible with any `ggplot2` function.
-#' @param ... arguments passed on to [as.rsi()]
+#' @return The `autoplot()` functions return a [`ggplot`][ggplot2::ggplot()] model that is extendible with any `ggplot2` function.
+#' 
+#' The `fortify()` functions return a [data.frame] as an extension for usage in the [ggplot2::ggplot()] function.
+#' @param ... arguments passed on to methods
 #' @examples 
 #' some_mic_values <- random_mic(size = 100)
 #' some_disk_values <- random_disk(size = 100, mo = "Escherichia coli", ab = "cipro")
@@ -63,9 +64,9 @@
 #' 
 #' \donttest{
 #' if (require("ggplot2")) {
-#'   ggplot(some_mic_values)
-#'   ggplot(some_disk_values, mo = "Escherichia coli", ab = "cipro")
-#'   ggplot(some_rsi_values)
+#'   autoplot(some_mic_values)
+#'   autoplot(some_disk_values, mo = "Escherichia coli", ab = "cipro")
+#'   autoplot(some_rsi_values)
 #' }
 #' }
 NULL
@@ -75,22 +76,22 @@ NULL
 #' @export
 #' @rdname plot
 plot.mic <- function(x,
-                     main = paste("MIC values of", deparse(substitute(x))),
-                     ylab = "Frequency",
-                     xlab = "Minimum Inhibitory Concentration (mg/L)",
                      mo = NULL,
                      ab = NULL,
                      guideline = "EUCAST",
+                     main = paste("MIC values of", deparse(substitute(x))),
+                     ylab = "Frequency",
+                     xlab = "Minimum Inhibitory Concentration (mg/L)",
                      colours_RSI = c("#ED553B", "#3CAEA3", "#F6D55C"),
-                     language = get_locale(),
+                     language = get_AMR_locale(),
                      expand = TRUE,
                      ...) {
-  meet_criteria(main, allow_class = "character", has_length = 1, allow_NULL = TRUE)
-  meet_criteria(ylab, allow_class = "character", has_length = 1)
-  meet_criteria(xlab, allow_class = "character", has_length = 1)
   meet_criteria(mo, allow_class = c("mo", "character"), allow_NULL = TRUE)
   meet_criteria(ab, allow_class = c("ab", "character"), allow_NULL = TRUE)
   meet_criteria(guideline, allow_class = "character", has_length = 1)
+  meet_criteria(main, allow_class = "character", has_length = 1, allow_NULL = TRUE)
+  meet_criteria(ylab, allow_class = "character", has_length = 1)
+  meet_criteria(xlab, allow_class = "character", has_length = 1)
   meet_criteria(colours_RSI, allow_class = "character", has_length = c(1, 3))
   meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
   meet_criteria(expand, allow_class = "logical", has_length = 1)
@@ -145,6 +146,7 @@ plot.mic <- function(x,
       legend_txt <- c(legend_txt, "Resistant")
       legend_col <- c(legend_col, colours_RSI[1])
     }
+    
     legend("top",
            x.intersp = 0.5,
            legend = translate_AMR(legend_txt, language = language),
@@ -161,14 +163,14 @@ plot.mic <- function(x,
 #' @export
 #' @noRd
 barplot.mic <- function(height,
-                        main = paste("MIC values of", deparse(substitute(height))),
-                        ylab = "Frequency",
-                        xlab = "Minimum Inhibitory Concentration (mg/L)",
                         mo = NULL,
                         ab = NULL,
                         guideline = "EUCAST",
+                        main = paste("MIC values of", deparse(substitute(height))),
+                        ylab = "Frequency",
+                        xlab = "Minimum Inhibitory Concentration (mg/L)",
                         colours_RSI = c("#ED553B", "#3CAEA3", "#F6D55C"),
-                        language = get_locale(),
+                        language = get_AMR_locale(),
                         expand = TRUE,
                         ...) {
   meet_criteria(main, allow_class = "character", has_length = 1, allow_NULL = TRUE)
@@ -202,28 +204,27 @@ barplot.mic <- function(height,
        ...)
 }
 
-#' @method ggplot mic
+#' @method autoplot mic
 #' @rdname plot
 # will be exported using s3_register() in R/zzz.R
-ggplot.mic <- function(data,
-                       mapping = NULL,
-                       title = paste("MIC values of", deparse(substitute(data))),
-                       ylab = "Frequency",
-                       xlab = "Minimum Inhibitory Concentration (mg/L)",
-                       mo = NULL,
-                       ab = NULL,
-                       guideline = "EUCAST",
-                       colours_RSI = c("#ED553B", "#3CAEA3", "#F6D55C"),
-                       language = get_locale(),
-                       expand = TRUE,
-                       ...) {
+autoplot.mic <- function(object,
+                         mo = NULL,
+                         ab = NULL,
+                         guideline = "EUCAST",
+                         title = paste("MIC values of", deparse(substitute(object))),
+                         ylab = "Frequency",
+                         xlab = "Minimum Inhibitory Concentration (mg/L)",
+                         colours_RSI = c("#ED553B", "#3CAEA3", "#F6D55C"),
+                         language = get_AMR_locale(),
+                         expand = TRUE,
+                         ...) {
   stop_ifnot_installed("ggplot2")
-  meet_criteria(title, allow_class = "character", allow_NULL = TRUE)
-  meet_criteria(ylab, allow_class = "character", has_length = 1)
-  meet_criteria(xlab, allow_class = "character", has_length = 1)
   meet_criteria(mo, allow_class = c("mo", "character"), allow_NULL = TRUE)
   meet_criteria(ab, allow_class = c("ab", "character"), allow_NULL = TRUE)
   meet_criteria(guideline, allow_class = "character", has_length = 1)
+  meet_criteria(title, allow_class = "character", allow_NULL = TRUE)
+  meet_criteria(ylab, allow_class = "character", has_length = 1)
+  meet_criteria(xlab, allow_class = "character", has_length = 1)
   meet_criteria(colours_RSI, allow_class = "character", has_length = c(1, 3))
   meet_criteria(language, has_length = 1, is_in = c(LANGUAGES_SUPPORTED, ""), allow_NULL = TRUE, allow_NA = TRUE)
   meet_criteria(expand, allow_class = "logical", has_length = 1)
@@ -243,7 +244,7 @@ ggplot.mic <- function(data,
     title <- gsub(" +", " ", paste0(title, collapse = " "))
   }
   
-  x <- plot_prepare_table(data, expand = expand)
+  x <- plot_prepare_table(object, expand = expand)
   cols_sub <- plot_colours_subtitle_guideline(x = x, 
                                               mo = mo, 
                                               ab = ab,
@@ -262,22 +263,20 @@ ggplot.mic <- function(data,
                     levels = translate_AMR(c("Susceptible", plot_name_of_I(cols_sub$guideline), "Resistant"),
                                            language = language),
                     ordered = TRUE)
-  if (!is.null(mapping)) {
-    p <- ggplot2::ggplot(df, mapping = mapping)
-  } else {
-    p <- ggplot2::ggplot(df)
-  }
+  p <- ggplot2::ggplot(df)
   
   if (any(colours_RSI %in% cols_sub$cols)) {
     vals <- c("Resistant" = colours_RSI[1],
               "Susceptible" = colours_RSI[2],
-              "Incr. exposure" = colours_RSI[3],
+              "Susceptible, incr. exp." = colours_RSI[3],
               "Intermediate" = colours_RSI[3])
     names(vals) <- translate_AMR(names(vals), language = language)
     p <- p +
       ggplot2::geom_col(ggplot2::aes(x = mic, y = count, fill = cols)) + 
+      # limits = force is needed because of a ggplot2 >= 3.3.4 bug (#4511)
       ggplot2::scale_fill_manual(values = vals,
-                                 name = NULL)
+                                 name = NULL,
+                                 limits = force)
   } else {
     p <- p +
       ggplot2::geom_col(ggplot2::aes(x = mic, y = count))
@@ -285,6 +284,14 @@ ggplot.mic <- function(data,
   
   p +
     ggplot2::labs(title = title, x = xlab, y = ylab, subtitle = cols_sub$sub)
+}
+
+#' @method fortify mic
+#' @rdname plot
+# will be exported using s3_register() in R/zzz.R
+fortify.mic <- function(object, ...) {
+  stats::setNames(as.data.frame(plot_prepare_table(object, expand = FALSE)),
+                  c("x", "y"))
 }
 
 #' @method plot disk
@@ -299,7 +306,7 @@ plot.disk <- function(x,
                       ab = NULL,
                       guideline = "EUCAST",
                       colours_RSI = c("#ED553B", "#3CAEA3", "#F6D55C"),
-                      language = get_locale(),
+                      language = get_AMR_locale(),
                       expand = TRUE,
                       ...) {
   meet_criteria(main, allow_class = "character", has_length = 1, allow_NULL = TRUE)
@@ -386,7 +393,7 @@ barplot.disk <- function(height,
                          ab = NULL,
                          guideline = "EUCAST",
                          colours_RSI = c("#ED553B", "#3CAEA3", "#F6D55C"),
-                         language = get_locale(),
+                         language = get_AMR_locale(),
                          expand = TRUE,
                          ...) {
   meet_criteria(main, allow_class = "character", has_length = 1, allow_NULL = TRUE)
@@ -420,21 +427,20 @@ barplot.disk <- function(height,
        ...)
 }
 
-#' @method ggplot disk
+#' @method autoplot disk
 #' @rdname plot
 # will be exported using s3_register() in R/zzz.R
-ggplot.disk <- function(data,
-                        mapping = NULL,
-                        title = paste("Disk zones of", deparse(substitute(data))),
-                        ylab = "Frequency",
-                        xlab = "Disk diffusion diameter (mm)",
-                        mo = NULL,
-                        ab = NULL,
-                        guideline = "EUCAST",
-                        colours_RSI = c("#ED553B", "#3CAEA3", "#F6D55C"),
-                        language = get_locale(),
-                        expand = TRUE,
-                        ...) {
+autoplot.disk <- function(object,
+                          mo = NULL,
+                          ab = NULL,
+                          title = paste("Disk zones of", deparse(substitute(object))),
+                          ylab = "Frequency",
+                          xlab = "Disk diffusion diameter (mm)",
+                          guideline = "EUCAST",
+                          colours_RSI = c("#ED553B", "#3CAEA3", "#F6D55C"),
+                          language = get_AMR_locale(),
+                          expand = TRUE,
+                          ...) {
   stop_ifnot_installed("ggplot2")
   meet_criteria(title, allow_class = "character", allow_NULL = TRUE)
   meet_criteria(ylab, allow_class = "character", has_length = 1)
@@ -461,7 +467,7 @@ ggplot.disk <- function(data,
     title <- gsub(" +", " ", paste0(title, collapse = " "))
   }
   
-  x <- plot_prepare_table(data, expand = expand)
+  x <- plot_prepare_table(object, expand = expand)
   cols_sub <- plot_colours_subtitle_guideline(x = x,
                                               mo = mo,
                                               ab = ab,
@@ -481,22 +487,20 @@ ggplot.disk <- function(data,
                     levels = translate_AMR(c("Susceptible", plot_name_of_I(cols_sub$guideline), "Resistant"),
                                            language = language),
                     ordered = TRUE)
-  if (!is.null(mapping)) {
-    p <- ggplot2::ggplot(df, mapping = mapping)
-  } else {
-    p <- ggplot2::ggplot(df)
-  }
+  p <- ggplot2::ggplot(df)
   
   if (any(colours_RSI %in% cols_sub$cols)) {
     vals <- c("Resistant" = colours_RSI[1],
               "Susceptible" = colours_RSI[2],
-              "Incr. exposure" = colours_RSI[3],
+              "Susceptible, incr. exp." = colours_RSI[3],
               "Intermediate" = colours_RSI[3])
     names(vals) <- translate_AMR(names(vals), language = language)
     p <- p +
       ggplot2::geom_col(ggplot2::aes(x = disk, y = count, fill = cols)) + 
+      # limits = force is needed because of a ggplot2 >= 3.3.4 bug (#4511)
       ggplot2::scale_fill_manual(values = vals,
-                                 name = NULL)
+                                 name = NULL,
+                                 limits = force)
   } else {
     p <- p +
       ggplot2::geom_col(ggplot2::aes(x = disk, y = count))
@@ -504,6 +508,14 @@ ggplot.disk <- function(data,
   
   p +
     ggplot2::labs(title = title, x = xlab, y = ylab, subtitle = cols_sub$sub)
+}
+
+#' @method fortify disk
+#' @rdname plot
+# will be exported using s3_register() in R/zzz.R
+fortify.disk <- function(object, ...) {
+  stats::setNames(as.data.frame(plot_prepare_table(object, expand = FALSE)),
+                  c("x", "y"))
 }
 
 #' @method plot rsi
@@ -568,7 +580,7 @@ barplot.rsi <- function(height,
                         xlab = "Antimicrobial Interpretation",
                         ylab = "Frequency",
                         colours_RSI = c("#ED553B", "#3CAEA3", "#F6D55C"),
-                        language = get_locale(),
+                        language = get_AMR_locale(),
                         expand = TRUE,
                         ...) {
   meet_criteria(xlab, allow_class = "character", has_length = 1)
@@ -604,17 +616,16 @@ barplot.rsi <- function(height,
   axis(2, seq(0, max(x)))
 }
 
-#' @method ggplot rsi
+#' @method autoplot rsi
 #' @rdname plot
 # will be exported using s3_register() in R/zzz.R
-ggplot.rsi <- function(data,
-                       mapping = NULL,
-                       title = paste("Resistance Overview of", deparse(substitute(data))),
-                       xlab = "Antimicrobial Interpretation",
-                       ylab = "Frequency",
-                       colours_RSI = c("#ED553B", "#3CAEA3", "#F6D55C"),
-                       language = get_locale(),
-                       ...) {
+autoplot.rsi <- function(object,
+                         title = paste("Resistance Overview of", deparse(substitute(object))),
+                         xlab = "Antimicrobial Interpretation",
+                         ylab = "Frequency",
+                         colours_RSI = c("#ED553B", "#3CAEA3", "#F6D55C"),
+                         language = get_AMR_locale(),
+                         ...) {
   stop_ifnot_installed("ggplot2")
   meet_criteria(title, allow_class = "character", allow_NULL = TRUE)
   meet_criteria(ylab, allow_class = "character", has_length = 1)
@@ -640,21 +651,25 @@ ggplot.rsi <- function(data,
     colours_RSI <- rep(colours_RSI, 3)
   }
   
-  df <- as.data.frame(table(data), stringsAsFactors = TRUE)
+  df <- as.data.frame(table(object), stringsAsFactors = TRUE)
   colnames(df) <- c("rsi", "count")
-  if (!is.null(mapping)) {
-    p <- ggplot2::ggplot(df, mapping = mapping)
-  } else {
-    p <- ggplot2::ggplot(df)
-  }
-  
-  p +
+  ggplot2::ggplot(df) +
     ggplot2::geom_col(ggplot2::aes(x = rsi, y = count, fill = rsi)) + 
+    # limits = force is needed because of a ggplot2 >= 3.3.4 bug (#4511)
     ggplot2::scale_fill_manual(values = c("R" = colours_RSI[1],
                                           "S" = colours_RSI[2],
-                                          "I" = colours_RSI[3])) +
+                                          "I" = colours_RSI[3]),
+                               limits = force) +
     ggplot2::labs(title = title, x = xlab, y = ylab) +
     ggplot2::theme(legend.position = "none")
+}
+
+#' @method fortify rsi
+#' @rdname plot
+# will be exported using s3_register() in R/zzz.R
+fortify.rsi <- function(object, ...) {
+  stats::setNames(as.data.frame(table(object)),
+                  c("x", "y"))
 }
 
 plot_prepare_table <- function(x, expand) {
@@ -663,6 +678,7 @@ plot_prepare_table <- function(x, expand) {
   if (is.mic(x)) {
     if (expand == TRUE) {
       # expand range for MIC by adding factors of 2 from lowest to highest so all MICs in between also print
+      valid_lvls <- levels(x)
       extra_range <- max(x) / 2
       while (min(extra_range) / 2 > min(x)) {
         extra_range <- c(min(extra_range) / 2, extra_range)
@@ -671,7 +687,7 @@ plot_prepare_table <- function(x, expand) {
       extra_range <- rep(0, length(extra_range))
       names(extra_range) <- nms
       x <- table(droplevels(x, as.mic = FALSE))
-      extra_range <- extra_range[!names(extra_range) %in% names(x)]
+      extra_range <- extra_range[!names(extra_range) %in% names(x) & names(extra_range) %in% valid_lvls]
       x <- as.table(c(x, extra_range))
     } else {
       x <- table(droplevels(x, as.mic = FALSE))
@@ -696,7 +712,7 @@ plot_prepare_table <- function(x, expand) {
 plot_name_of_I <- function(guideline) {
   if (guideline %unlike% "CLSI" && as.double(gsub("[^0-9]+", "", guideline)) >= 2019) {
     # interpretation since 2019
-    "Incr. exposure"
+    "Susceptible, incr. exp."
   } else {
     # interpretation until 2019
     "Intermediate"

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -27,6 +27,9 @@ expect_true(as.mic(8) == as.mic("8"))
 expect_true(as.mic("1") > as.mic("<=0.0625"))
 expect_true(as.mic("1") < as.mic(">=32"))
 expect_true(is.mic(as.mic(8)))
+# expect_true(as.mic(1024) < as.mic(">1024"))
+# expect_true(as.mic("<1024") > as.mic("1024"))
+
 
 expect_equal(as.double(as.mic(">=32")), 32)
 expect_equal(as.numeric(as.mic(">=32")), 32)
@@ -50,15 +53,15 @@ expect_silent(plot(as.mic(c(1, 2, 4, 8))))
 expect_silent(plot(as.mic(c(1, 2, 4, 8)), expand = FALSE))
 expect_silent(plot(as.mic(c(1, 2, 4, 8)), mo = "esco", ab = "cipr"))
 if (AMR:::pkg_is_available("ggplot2")) {
-  expect_inherits(ggplot(as.mic(c(1, 2, 4, 8))), "gg")
-  expect_inherits(ggplot(as.mic(c(1, 2, 4, 8)), expand = FALSE), "gg")
-  expect_inherits(ggplot(as.mic(c(1, 2, 4, 8, 32)), mo = "esco", ab = "cipr"), "gg")
+  expect_inherits(autoplot(as.mic(c(1, 2, 4, 8))), "gg")
+  expect_inherits(autoplot(as.mic(c(1, 2, 4, 8)), expand = FALSE), "gg")
+  expect_inherits(autoplot(as.mic(c(1, 2, 4, 8, 32)), mo = "esco", ab = "cipr"), "gg")
 }
 expect_stdout(print(as.mic(c(1, 2, 4, 8))))
 
 expect_inherits(summary(as.mic(c(2, 8))), c("summaryDefault", "table"))
 
-if (AMR:::pkg_is_available("dplyr")) {
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
   expect_stdout(print(tibble(m = as.mic(2:4))))
 }
 

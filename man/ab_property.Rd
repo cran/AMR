@@ -3,23 +3,23 @@
 \name{ab_property}
 \alias{ab_property}
 \alias{ab_name}
-\alias{ab_atc}
-\alias{ATC}
 \alias{ab_cid}
 \alias{ab_synonyms}
 \alias{ab_tradenames}
 \alias{ab_group}
+\alias{ab_atc}
+\alias{ATC}
 \alias{ab_atc_group1}
 \alias{ab_atc_group2}
 \alias{ab_loinc}
 \alias{ab_ddd}
+\alias{ab_ddd_units}
 \alias{ab_info}
 \alias{ab_url}
+\alias{set_ab_names}
 \title{Get Properties of an Antibiotic}
 \usage{
-ab_name(x, language = get_locale(), tolower = FALSE, ...)
-
-ab_atc(x, ...)
+ab_name(x, language = get_AMR_locale(), tolower = FALSE, ...)
 
 ab_cid(x, ...)
 
@@ -27,44 +27,61 @@ ab_synonyms(x, ...)
 
 ab_tradenames(x, ...)
 
-ab_group(x, language = get_locale(), ...)
+ab_group(x, language = get_AMR_locale(), ...)
 
-ab_atc_group1(x, language = get_locale(), ...)
+ab_atc(x, only_first = FALSE, ...)
 
-ab_atc_group2(x, language = get_locale(), ...)
+ab_atc_group1(x, language = get_AMR_locale(), ...)
+
+ab_atc_group2(x, language = get_AMR_locale(), ...)
 
 ab_loinc(x, ...)
 
-ab_ddd(x, administration = "oral", units = FALSE, ...)
+ab_ddd(x, administration = "oral", ...)
 
-ab_info(x, language = get_locale(), ...)
+ab_ddd_units(x, administration = "oral", ...)
+
+ab_info(x, language = get_AMR_locale(), ...)
 
 ab_url(x, open = FALSE, ...)
 
-ab_property(x, property = "name", language = get_locale(), ...)
+ab_property(x, property = "name", language = get_AMR_locale(), ...)
+
+set_ab_names(
+  data,
+  ...,
+  property = "name",
+  language = get_AMR_locale(),
+  snake_case = NULL
+)
 }
 \arguments{
 \item{x}{any (vector of) text that can be coerced to a valid antibiotic code with \code{\link[=as.ab]{as.ab()}}}
 
-\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_locale]{get_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
 \item{tolower}{a \link{logical} to indicate whether the first \link{character} of every output should be transformed to a lower case \link{character}. This will lead to e.g. "polymyxin B" and not "polymyxin b".}
 
-\item{...}{other arguments passed on to \code{\link[=as.ab]{as.ab()}}}
+\item{...}{in case of \code{\link[=set_ab_names]{set_ab_names()}} and \code{data} is a \link{data.frame}: variables to select (supports tidy selection such as \code{column1:column4}), otherwise other arguments passed on to \code{\link[=as.ab]{as.ab()}}}
+
+\item{only_first}{a \link{logical} to indicate whether only the first ATC code must be returned, with giving preference to J0-codes (i.e., the antimicrobial drug group)}
 
 \item{administration}{way of administration, either \code{"oral"} or \code{"iv"}}
 
-\item{units}{a \link{logical} to indicate whether the units instead of the DDDs itself must be returned, see \emph{Examples}}
-
 \item{open}{browse the URL using \code{\link[utils:browseURL]{utils::browseURL()}}}
 
-\item{property}{one of the column names of one of the \link{antibiotics} data set}
+\item{property}{one of the column names of one of the \link{antibiotics} data set: \code{vector_or(colnames(antibiotics), sort = FALSE)}.}
+
+\item{data}{a \link{data.frame} of which the columns need to be renamed, or a \link{character} vector of column names}
+
+\item{snake_case}{a \link{logical} to indicate whether the names should be in so-called \href{https://en.wikipedia.org/wiki/Snake_case}{snake case}: in lower case and all spaces/slashes replaced with an underscore (\verb{_})}
 }
 \value{
 \itemize{
 \item An \link{integer} in case of \code{\link[=ab_cid]{ab_cid()}}
-\item A named \link{list} in case of \code{\link[=ab_info]{ab_info()}} and multiple \code{\link[=ab_synonyms]{ab_synonyms()}}/\code{\link[=ab_tradenames]{ab_tradenames()}}
+\item A named \link{list} in case of \code{\link[=ab_info]{ab_info()}} and multiple \code{\link[=ab_atc]{ab_atc()}}/\code{\link[=ab_synonyms]{ab_synonyms()}}/\code{\link[=ab_tradenames]{ab_tradenames()}}
 \item A \link{double} in case of \code{\link[=ab_ddd]{ab_ddd()}}
+\item A \link{data.frame} in case of \code{\link[=set_ab_names]{set_ab_names()}}
 \item A \link{character} in all other cases
 }
 }
@@ -75,20 +92,20 @@ Use these functions to return a specific property of an antibiotic from the \lin
 All output \link[=translate]{will be translated} where possible.
 
 The function \code{\link[=ab_url]{ab_url()}} will return the direct URL to the official WHO website. A warning will be returned if the required ATC code is not available.
+
+The function \code{\link[=set_ab_names]{set_ab_names()}} is a special column renaming function for \link{data.frame}s. It renames columns names that resemble antimicrobial drugs. It always makes sure that the new column names are unique. If \code{property = "atc"} is set, preference is given to ATC codes from the J-group.
 }
 \section{Stable Lifecycle}{
 
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Source}{
 
 World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://www.whocc.no/atc_ddd_index/}
-
-WHONET 2019 software: \url{http://www.whonet.org/software.html}
 
 European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 }
@@ -106,7 +123,7 @@ On our website \url{https://msberends.github.io/AMR/} you can find \href{https:/
 \examples{
 # all properties:
 ab_name("AMX")       # "Amoxicillin"
-ab_atc("AMX")        # J01CA04 (ATC code from the WHO)
+ab_atc("AMX")        # "J01CA04" (ATC code from the WHO)
 ab_cid("AMX")        # 33613 (Compound ID from PubChem)
 ab_synonyms("AMX")   # a list with brand names of amoxicillin
 ab_tradenames("AMX") # same
@@ -121,10 +138,10 @@ ab_name(x = c("AMC", "PLB"),
         tolower = TRUE)       # "amoxicillin/clavulanic acid" "polymyxin B"
 
 # defined daily doses (DDD)
-ab_ddd("AMX", "oral")               #  1
-ab_ddd("AMX", "oral", units = TRUE) # "g"
-ab_ddd("AMX", "iv")                 #  1
-ab_ddd("AMX", "iv", units = TRUE)   # "g"
+ab_ddd("AMX", "oral")       #  1.5
+ab_ddd_units("AMX", "oral") # "g"
+ab_ddd("AMX", "iv")         #  3
+ab_ddd_units("AMX", "iv")   # "g"
 
 ab_info("AMX")       # all properties as a list
 
@@ -141,6 +158,33 @@ ab_atc("ceftriaxon")
 ab_atc("cephtriaxone")
 ab_atc("cephthriaxone")
 ab_atc("seephthriaaksone")
+
+# use set_ab_names() for renaming columns
+colnames(example_isolates)
+colnames(set_ab_names(example_isolates))
+colnames(set_ab_names(example_isolates, NIT:VAN))
+\donttest{
+if (require("dplyr")) {
+  example_isolates \%>\%
+    set_ab_names()
+    
+  # this does the same:
+  example_isolates \%>\%
+    rename_with(set_ab_names)
+  
+  # set_ab_names() works with any AB property:
+  example_isolates \%>\%
+    set_ab_names(property = "atc")
+    
+ example_isolates \%>\%
+   set_ab_names(where(is.rsi)) \%>\%
+   colnames()
+   
+ example_isolates \%>\%
+   set_ab_names(NIT:VAN) \%>\%
+   colnames()
+}
+}
 }
 \seealso{
 \link{antibiotics}

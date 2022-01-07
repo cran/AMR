@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -69,7 +69,7 @@
 #' # get isolates whose name start with 'Ent' or 'ent'
 #' example_isolates[which(mo_name(example_isolates$mo) %like% "^ent"), ]
 #' \donttest{
-#' # faster way, only works in R 3.2 and later:
+#' # faster way, since mo_name() is context-aware:
 #' example_isolates[which(mo_name() %like% "^ent"), ]
 #' 
 #' if (require("dplyr")) {
@@ -124,31 +124,23 @@ like <- function(x, pattern, ignore.case = TRUE) {
 #' @rdname like
 #' @export
 "%like%" <- function(x, pattern) {
-  meet_criteria(x, allow_NA = TRUE)
-  meet_criteria(pattern, allow_NA = FALSE)
   like(x, pattern, ignore.case = TRUE)
 }
 
 #' @rdname like
 #' @export
 "%unlike%" <- function(x, pattern) {
-  meet_criteria(x, allow_NA = TRUE)
-  meet_criteria(pattern, allow_NA = FALSE)
   !like(x, pattern, ignore.case = TRUE)
 }
 
 #' @rdname like
 #' @export
 "%like_case%" <- function(x, pattern) {
-  meet_criteria(x, allow_NA = TRUE)
-  meet_criteria(pattern, allow_NA = FALSE)
   like(x, pattern, ignore.case = FALSE)
 }
 
 #' @rdname like
 #' @export
 "%unlike_case%" <- function(x, pattern) {
-  meet_criteria(x, allow_NA = TRUE)
-  meet_criteria(pattern, allow_NA = FALSE)
   !like(x, pattern, ignore.case = FALSE)
 }

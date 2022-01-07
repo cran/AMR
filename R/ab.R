@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -33,7 +33,7 @@
 #' @param ... arguments passed on to internal functions
 #' @rdname as.ab
 #' @inheritSection WHOCC WHOCC
-#' @details All entries in the [antibiotics] data set have three different identifiers: a human readable EARS-Net code (column `ab`, used by ECDC and WHONET), an ATC code (column `atc`, used by WHO), and a CID code (column `cid`, Compound ID, used by PubChem). The data set contains more than 5,000 official brand names from many different countries, as found in PubChem.
+#' @details All entries in the [antibiotics] data set have three different identifiers: a human readable EARS-Net code (column `ab`, used by ECDC and WHONET), an ATC code (column `atc`, used by WHO), and a CID code (column `cid`, Compound ID, used by PubChem). The data set contains more than 5,000 official brand names from many different countries, as found in PubChem. Not that some drugs contain multiple ATC codes.
 #' 
 #' All these properties will be searched for the user input. The [as.ab()] can correct for different forms of misspelling:
 #' 
@@ -47,8 +47,6 @@
 #' Note: the [as.ab()] and [`ab_*`][ab_property()] functions may use very long regular expression to match brand names of antimicrobial agents. This may fail on some systems.
 #' @section Source:
 #' World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://www.whocc.no/atc_ddd_index/}
-#'
-#' WHONET 2019 software: \url{http://www.whonet.org/software.html}
 #'
 #' European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 #' @aliases ab
@@ -101,6 +99,11 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
   if (is.ab(x)) {
     return(x)
   }
+  if (all(x %in% c(AB_lookup$ab, NA))) {
+    # all valid AB codes, but not yet right class
+    return(set_clean_class(x,
+                           new_class = c("ab", "character")))
+  }
   
   initial_search <- is.null(list(...)$initial_search)
   already_regex <- isTRUE(list(...)$already_regex)
@@ -110,28 +113,12 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
   x <- toupper(x)
   x_nonNA <- x[!is.na(x)]
   
-  if (all(x_nonNA %in% antibiotics$ab, na.rm = TRUE)) {
-    # all valid AB codes, but not yet right class
-    return(set_clean_class(x,
-                           new_class = c("ab", "character")))
-  }
-  if (all(x_nonNA %in% toupper(antibiotics$name), na.rm = TRUE)) {
-    # all valid AB names
-    out <- antibiotics$ab[match(x, toupper(antibiotics$name))]
-    out[is.na(x)] <- NA_character_
-    return(out)
-  }
-  if (all(x_nonNA %in% antibiotics$atc, na.rm = TRUE)) {
-    # all valid ATC codes
-    out <- antibiotics$ab[match(x, antibiotics$atc)]
-    out[is.na(x)] <- NA_character_
-    return(out)
-  }
-  
   # remove diacritics
   x <- iconv(x, from = "UTF-8", to = "ASCII//TRANSLIT")
   x <- gsub('"', "", x, fixed = TRUE)
-  x <- gsub("(specimen|specimen date|specimen_date|spec_date|^dates?$)", "", x, ignore.case = TRUE, perl = TRUE)
+  x <- gsub("(specimen|specimen date|specimen_date|spec_date|gender|^dates?$)", "", x, ignore.case = TRUE, perl = TRUE)
+  # penicillin is a special case: we call it so, but then mean benzylpenicillin
+  x[x %like_case% "^PENICILLIN" & x %unlike_case% "[ /+-]"] <- "benzylpenicillin"
   x_bak_clean <- x
   if (already_regex == FALSE) {
     x_bak_clean <- generalise_antibiotic_name(x_bak_clean)
@@ -144,8 +131,8 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
   note_if_more_than_one_found <- function(found, index, from_text) {
     if (initial_search == TRUE & isTRUE(length(from_text) > 1)) {
       abnames <- ab_name(from_text, tolower = TRUE, initial_search = FALSE)
-      if (ab_name(found[1L], language = NULL) %like% "clavulanic acid") {
-        abnames <- abnames[!abnames == "clavulanic acid"]
+      if (ab_name(found[1L], language = NULL) %like% "(clavulanic acid|avibactam)") {
+        abnames <- abnames[!abnames %in% c("clavulanic acid", "avibactam")]
       }
       if (length(abnames) > 1) {
         message_("More than one result was found for item ", index, ": ",
@@ -155,13 +142,29 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
     found[1L]
   }
   
-  if (initial_search == TRUE) {
-    progress <- progress_ticker(n = length(x), n_min = 25, print = info) # start if n >= 25
+  # Fill in names, AB codes, CID codes and ATC codes directly (`x` is already clean and uppercase)
+  known_names <- x %in% AB_lookup$generalised_name
+  x_new[known_names] <- AB_lookup$ab[match(x[known_names], AB_lookup$generalised_name)]
+  known_codes_ab <- x %in% AB_lookup$ab
+  known_codes_atc <- vapply(FUN.VALUE = logical(1), x, function(x_) x_ %in% unlist(AB_lookup$atc), USE.NAMES = FALSE)
+  known_codes_cid <- x %in% AB_lookup$cid
+  x_new[known_codes_ab] <- AB_lookup$ab[match(x[known_codes_ab], AB_lookup$ab)]
+  x_new[known_codes_atc] <- AB_lookup$ab[vapply(FUN.VALUE = integer(1),
+                                                x[known_codes_atc],
+                                                function(x_) which(vapply(FUN.VALUE = logical(1),
+                                                                          AB_lookup$atc,
+                                                                          function(atc) x_ %in% atc))[1L],
+                                                USE.NAMES = FALSE)]
+  x_new[known_codes_cid] <- AB_lookup$ab[match(x[known_codes_cid], AB_lookup$cid)]
+  already_known <- known_names | known_codes_ab | known_codes_atc | known_codes_cid
+  
+  if (initial_search == TRUE & sum(already_known) < length(x)) {
+    progress <- progress_ticker(n = sum(!already_known), n_min = 25, print = info) # start if n >= 25
     on.exit(close(progress))
   }
   
-  for (i in seq_len(length(x))) {
-
+  for (i in which(!already_known)) {
+    
     if (initial_search == TRUE) {
       progress$tick()
     }
@@ -186,34 +189,6 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
     # old code for phenoxymethylpenicillin (Peni V)
     if (x[i] == "PNV") {
       x_new[i] <- "PHN"
-      next
-    }
-    
-    # exact name
-    found <- antibiotics[which(AB_lookup$generalised_name == x[i]), ]$ab
-    if (length(found) > 0) {
-      x_new[i] <- found[1L]
-      next
-    }
-    
-    # exact AB code
-    found <- antibiotics[which(antibiotics$ab == x[i]), ]$ab
-    if (length(found) > 0) {
-      x_new[i] <- note_if_more_than_one_found(found, i, from_text)
-      next
-    }
-    
-    # exact ATC code
-    found <- antibiotics[which(antibiotics$atc == x[i]), ]$ab
-    if (length(found) > 0) {
-      x_new[i] <- note_if_more_than_one_found(found, i, from_text)
-      next
-    }
-    
-    # exact CID code
-    found <- antibiotics[which(antibiotics$cid == x[i]), ]$ab
-    if (length(found) > 0) {
-      x_new[i] <- note_if_more_than_one_found(found, i, from_text)
       next
     }
     
@@ -245,6 +220,16 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
       next
     }
     
+    # length of input is quite long, and Levenshtein distance is only max 2
+    if (nchar(x[i]) >= 10) {
+      levenshtein <- as.double(utils::adist(x[i], AB_lookup$generalised_name))
+      if (any(levenshtein <= 2)) {
+        found <- AB_lookup$ab[which(levenshtein <= 2)]
+        x_new[i] <- note_if_more_than_one_found(found, i, from_text)
+        next
+      }
+    }
+    
     # allow characters that resemble others, but only continue when having more than 3 characters
     if (nchar(x[i]) <= 3) {
       x_unknown <- c(x_unknown, x_bak[x[i] == x_bak_clean][1])
@@ -252,6 +237,7 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
     }
     x_spelling <- x[i]
     if (already_regex == FALSE) {
+      
       x_spelling <- gsub("[IY]+", "[IY]+", x_spelling, perl = TRUE)
       x_spelling <- gsub("(C|K|Q|QU|S|Z|X|KS)+", "(C|K|Q|QU|S|Z|X|KS)+", x_spelling, perl = TRUE)
       x_spelling <- gsub("(PH|F|V)+", "(PH|F|V)+", x_spelling, perl = TRUE)
@@ -260,7 +246,7 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
       x_spelling <- gsub("E+", "E+", x_spelling, perl = TRUE)
       x_spelling <- gsub("O+", "O+", x_spelling, perl = TRUE)
       # allow any ending of -in/-ine and -im/-ime
-      x_spelling <- gsub("(\\[IY\\]\\+(N|M)|\\[IY\\]\\+(N|M)E\\+)$", "[IY]+(N|M)E*", x_spelling, perl = TRUE)
+      x_spelling <- gsub("(\\[IY\\]\\+(N|M)|\\[IY\\]\\+(N|M)E\\+?)$", "[IY]+(N|M)E*", x_spelling, perl = TRUE)
       # allow any ending of -ol/-ole
       x_spelling <- gsub("(O\\+L|O\\+LE\\+)$", "O+LE*", x_spelling, perl = TRUE)
       # allow any ending of -on/-one
@@ -296,7 +282,7 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
       x_new[i] <- note_if_more_than_one_found(found, i, from_text)
       next
     }
-    
+
     # INITIAL SEARCH - More uncertain results ----
 
     if (initial_search == TRUE && fast_mode == FALSE) {
@@ -325,9 +311,9 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
                                    function(y) {
                                      for (i in seq_len(length(y))) {
                                        for (lang in LANGUAGES_SUPPORTED[LANGUAGES_SUPPORTED != "en"]) {
-                                         y[i] <- ifelse(tolower(y[i]) %in% tolower(translations_file[, lang, drop = TRUE]),
-                                                        translations_file[which(tolower(translations_file[, lang, drop = TRUE]) == tolower(y[i]) &
-                                                                                  !isFALSE(translations_file$fixed)), "pattern"],
+                                         y[i] <- ifelse(tolower(y[i]) %in% tolower(TRANSLATIONS[, lang, drop = TRUE]),
+                                                        TRANSLATIONS[which(tolower(TRANSLATIONS[, lang, drop = TRUE]) == tolower(y[i]) &
+                                                                                  !isFALSE(TRANSLATIONS$fixed)), "pattern"],
                                                         y[i])
                                        }
                                      }
@@ -461,14 +447,14 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
     x_unknown <- c(x_unknown, x_bak[x[i] == x_bak_clean][1])
   }
   
-  if (initial_search == TRUE) {
+  if (initial_search == TRUE & sum(already_known) < length(x)) {
     close(progress)
   }
   
   # take failed ATC codes apart from rest
   x_unknown_ATCs <- x_unknown[x_unknown %like% "[A-Z][0-9][0-9][A-Z][A-Z][0-9][0-9]"]
   x_unknown <- x_unknown[!x_unknown %in% x_unknown_ATCs]
-  if (length(x_unknown_ATCs) > 0) {
+  if (length(x_unknown_ATCs) > 0 & fast_mode == FALSE) {
     warning_("These ATC codes are not (yet) in the antibiotics data set: ",
              vector_and(x_unknown_ATCs), ".",
              call = FALSE)
@@ -479,11 +465,8 @@ as.ab <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
              vector_and(x_unknown), ".",
              call = FALSE)
   }
-  
-  x_result <- data.frame(x = x_bak_clean, stringsAsFactors = FALSE) %pm>%
-    pm_left_join(data.frame(x = x, x_new = x_new, stringsAsFactors = FALSE), by = "x") %pm>%
-    pm_pull(x_new)
-  
+
+  x_result <- x_new[match(x_bak_clean, x)]
   if (length(x_result) == 0) {
     x_result <- NA_character_
   }
@@ -575,6 +558,15 @@ c.ab <- function(...) {
 #' @export
 #' @noRd
 unique.ab <- function(x, incomparables = FALSE, ...) {
+  y <- NextMethod()
+  attributes(y) <- attributes(x)
+  y
+}
+
+#' @method rep ab
+#' @export
+#' @noRd
+rep.ab <- function(x, ...) {
   y <- NextMethod()
   attributes(y) <- attributes(x)
   y

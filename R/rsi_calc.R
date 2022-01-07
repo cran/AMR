@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -27,7 +27,7 @@ dots2vars <- function(...) {
   # this function is to give more informative output about 
   # variable names in count_* and proportion_* functions
   dots <- substitute(list(...))
-  vector_and(as.character(dots)[2:length(dots)], quotes = FALSE)
+  as.character(dots)[2:length(dots)]
 }
 
 rsi_calc <- function(...,
@@ -152,7 +152,6 @@ rsi_calc <- function(...,
                "  your_data %>% mutate_if(is.rsi.eligible, as.rsi)\n",
                "  your_data %>% mutate(across(where(is.rsi.eligible), as.rsi))",
                call = FALSE)
-      remember_thrown_message("rsi_calc")
     }
   }
   
@@ -163,8 +162,30 @@ rsi_calc <- function(...,
   if (denominator < minimum) {
     if (data_vars != "") {
       data_vars <- paste(" for", data_vars)
+      # also add group name if used in dplyr::group_by()
+      cur_group <- import_fn("cur_group", "dplyr", error_on_fail = FALSE)
+      if (!is.null(cur_group)) {
+        group_df <- tryCatch(cur_group(), error = function(e) data.frame())
+        if (NCOL(group_df) > 0) {
+          # transform factors to characters
+          group <- vapply(FUN.VALUE = character(1), group_df, function(x) {
+            if (is.numeric(x)) {
+              format(x)
+            } else if (is.logical(x)) {
+              as.character(x)
+            } else {
+              paste0('"', x, '"')
+            }
+          })
+          data_vars <- paste0(data_vars, " in group: ", paste0(names(group), " = ", group, collapse = ", "))
+        }
+      }
     }
-    warning_("Introducing NA: only ", denominator, " results available", data_vars, " (`minimum` = ", minimum, ").", call = FALSE)
+    warning_("Introducing NA: ",
+             ifelse(denominator == 0, "no", paste("only", denominator)),
+             " results available",
+             data_vars,
+             " (`minimum` = ", minimum, ").", call = FALSE)
     fraction <- NA_real_
   } else {
     fraction <- numerator / denominator
@@ -181,7 +202,7 @@ rsi_calc <- function(...,
 rsi_calc_df <- function(type, # "proportion", "count" or "both"
                         data,
                         translate_ab = "name",
-                        language = get_locale(),
+                        language = get_AMR_locale(),
                         minimum = 30,
                         as_percent = FALSE,
                         combine_SI = TRUE,
@@ -206,7 +227,7 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
   translate_ab <- get_translate_ab(translate_ab)
   
   # select only groups and antibiotics
-  if (inherits(data, "grouped_df")) {
+  if (is_null_or_grouped_tbl(data)) {
     data_has_groups <- TRUE
     groups <- setdiff(names(attributes(data)$groups), ".rows")
     data <- data[, c(groups, colnames(data)[vapply(FUN.VALUE = logical(1), data, is.rsi)]), drop = FALSE]
@@ -323,6 +344,7 @@ rsi_calc_df <- function(type, # "proportion", "count" or "both"
   } 
   
   rownames(out) <- NULL
+  class(out) <- c("rsi_df", class(out))
   out
 }
 

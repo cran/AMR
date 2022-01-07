@@ -4,9 +4,9 @@
 \alias{resistance_predict}
 \alias{rsi_predict}
 \alias{plot.resistance_predict}
-\alias{ggplot.resistance_predict}
 \alias{ggplot_rsi_predict}
-\title{Predict antimicrobial resistance}
+\alias{autoplot.resistance_predict}
+\title{Predict Antimicrobial Resistance}
 \usage{
 resistance_predict(
   x,
@@ -40,10 +40,15 @@ rsi_predict(
 
 \method{plot}{resistance_predict}(x, main = paste("Resistance Prediction of", x_name), ...)
 
-\method{ggplot}{resistance_predict}(x, main = paste("Resistance Prediction of", x_name), ribbon = TRUE, ...)
-
 ggplot_rsi_predict(
   x,
+  main = paste("Resistance Prediction of", x_name),
+  ribbon = TRUE,
+  ...
+)
+
+\method{autoplot}{resistance_predict}(
+  object,
   main = paste("Resistance Prediction of", x_name),
   ribbon = TRUE,
   ...
@@ -77,6 +82,8 @@ ggplot_rsi_predict(
 \item{main}{title of the plot}
 
 \item{ribbon}{a \link{logical} to indicate whether a ribbon should be shown (default) or error bars}
+
+\item{object}{model data to be plotted}
 }
 \value{
 A \link{data.frame} with extra class \code{\link{resistance_predict}} with columns:
@@ -108,7 +115,7 @@ Valid options for the statistical model (argument \code{model}) are:
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Interpretation of R and S/I}{
@@ -119,7 +126,7 @@ In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST)
 A microorganism is categorised as \emph{Resistant} when there is a high likelihood of therapeutic failure even when there is increased exposure. Exposure is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
 \item \strong{S = Susceptible}\cr
 A microorganism is categorised as \emph{Susceptible, standard dosing regimen}, when there is a high likelihood of therapeutic success using a standard dosing regimen of the agent.
-\item \strong{I = Increased exposure, but still susceptible}\cr
+\item \strong{I = Susceptible, Increased exposure}\cr
 A microorganism is categorised as \emph{Susceptible, Increased exposure} when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.
 }
 
@@ -166,9 +173,9 @@ if (require("dplyr") & require("ggplot2")) {
                        info = FALSE,
                        minimum = 15)
                        
-  ggplot(data)
+  autoplot(data)
 
-  ggplot(as.data.frame(data),
+  ggplot(data,
          aes(x = year)) +
     geom_col(aes(y = value),
              fill = "grey75") +

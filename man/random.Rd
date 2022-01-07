@@ -7,14 +7,14 @@
 \alias{random_rsi}
 \title{Random MIC Values/Disk Zones/RSI Generation}
 \usage{
-random_mic(size, mo = NULL, ab = NULL, ...)
+random_mic(size = NULL, mo = NULL, ab = NULL, ...)
 
-random_disk(size, mo = NULL, ab = NULL, ...)
+random_disk(size = NULL, mo = NULL, ab = NULL, ...)
 
-random_rsi(size, prob_RSI = c(0.33, 0.33, 0.33), ...)
+random_rsi(size = NULL, prob_RSI = c(0.33, 0.33, 0.33), ...)
 }
 \arguments{
-\item{size}{desired size of the returned vector}
+\item{size}{desired size of the returned vector. If used in a \link{data.frame} call or \code{dplyr} verb, will get the current (group) size if left blank.}
 
 \item{mo}{any \link{character} that can be coerced to a valid microorganism code with \code{\link[=as.mo]{as.mo()}}}
 
@@ -22,7 +22,7 @@ random_rsi(size, prob_RSI = c(0.33, 0.33, 0.33), ...)
 
 \item{...}{ignored, only in place to allow future extensions}
 
-\item{prob_RSI}{a vector of length 3: the probabilities for R (1st value), S (2nd value) and I (3rd value)}
+\item{prob_RSI}{a vector of length 3: the probabilities for "R" (1st value), "S" (2nd value) and "I" (3rd value)}
 }
 \value{
 class \verb{<mic>} for \code{\link[=random_mic]{random_mic()}} (see \code{\link[=as.mic]{as.mic()}}) and class \verb{<disk>} for \code{\link[=random_disk]{random_disk()}} (see \code{\link[=as.disk]{as.disk()}})
@@ -31,7 +31,7 @@ class \verb{<mic>} for \code{\link[=random_mic]{random_mic()}} (see \code{\link[
 These functions can be used for generating random MIC values and disk diffusion diameters, for AMR data analysis practice. By providing a microorganism and antimicrobial agent, the generated results will reflect reality as much as possible.
 }
 \details{
-The base R function \code{\link[=sample]{sample()}} is used for generating values.
+The base \R function \code{\link[=sample]{sample()}} is used for generating values.
 
 Generated values are based on the latest EUCAST guideline implemented in the \link{rsi_translation} data set. To create specific generated values per bug or drug, set the \code{mo} and/or \code{ab} argument.
 }
@@ -40,7 +40,7 @@ Generated values are based on the latest EUCAST guideline implemented in the \li
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Read more on Our Website!}{

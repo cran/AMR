@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -35,7 +35,7 @@ expect_equal(proportion_R(example_isolates$AMX) + proportion_I(example_isolates$
 expect_equal(proportion_S(example_isolates$AMX) + proportion_I(example_isolates$AMX),
              proportion_SI(example_isolates$AMX))
 
-if (AMR:::pkg_is_available("dplyr")) {
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
   expect_equal(example_isolates %>% proportion_SI(AMC),
                0.7626397,
                tolerance = 0.0001)

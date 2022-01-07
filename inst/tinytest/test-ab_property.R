@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -24,7 +24,7 @@
 # ==================================================================== #
 
 expect_identical(ab_name("AMX", language = NULL), "Amoxicillin")
-expect_identical(as.character(ab_atc("AMX")), "J01CA04")
+expect_identical(ab_atc("AMX"), "J01CA04")
 expect_identical(ab_cid("AMX"), as.integer(33613))
 
 expect_inherits(ab_tradenames("AMX"), "character")
@@ -41,9 +41,10 @@ expect_identical(ab_name(21319, language = NULL), "Flucloxacillin")
 expect_identical(ab_name("J01CF05", language = NULL), "Flucloxacillin")
 
 expect_identical(ab_ddd("AMX", "oral"), 1.5)
-expect_identical(ab_ddd("AMX", "oral", units = TRUE), "g")
+expect_warning(ab_ddd("AMX", "oral", units = TRUE)) # old behaviour
+expect_identical(ab_ddd_units("AMX", "iv"), "g")
 expect_identical(ab_ddd("AMX", "iv"), 3)
-expect_identical(ab_ddd("AMX", "iv", units = TRUE), "g")
+expect_identical(ab_ddd_units("AMX", "iv"), "g")
 
 expect_identical(ab_name(x = c("AMC", "PLB"), language = NULL), c("Amoxicillin/clavulanic acid", "Polymyxin B"))
 expect_identical(ab_name(x = c("AMC", "PLB"), tolower = TRUE, language = NULL),
@@ -61,3 +62,20 @@ expect_equal(ab_loinc("ampicillin"),
 
 expect_true(ab_url("AMX") %like% "whocc.no")
 expect_warning(ab_url("ASP"))
+
+expect_identical(colnames(set_ab_names(example_isolates[, 20:25])),
+                 c("cefoxitin", "cefotaxime", "ceftazidime", "ceftriaxone", "gentamicin", "tobramycin"))
+expect_identical(colnames(set_ab_names(example_isolates[, 20:25], language = "nl", snake_case = FALSE)),
+                 c("Cefoxitine", "Cefotaxim", "Ceftazidim", "Ceftriaxon", "Gentamicine", "Tobramycine"))
+expect_identical(colnames(set_ab_names(example_isolates[, 20:25], property = "atc")),
+                 c("J01DC01", "J01DD01", "J01DD02", "J01DD04", "J01GB03", "J01GB01"))
+
+if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0")) {
+  expect_identical(example_isolates %>% set_ab_names(),
+                   example_isolates %>% rename_with(set_ab_names))
+  expect_true(all(c("SXT", "nitrofurantoin", "fosfomycin", "linezolid", "ciprofloxacin",
+                    "moxifloxacin", "vancomycin", "TEC") %in%
+                    (example_isolates %>%
+                       set_ab_names(NIT:VAN) %>%
+                       colnames())))
+}

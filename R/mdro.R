@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -51,7 +51,11 @@
 #'
 #'   Magiorakos AP, Srinivasan A *et al.* "Multidrug-resistant, extensively drug-resistant and pandrug-resistant bacteria: an international expert proposal for interim standard definitions for acquired resistance." Clinical Microbiology and Infection (2012) ([link](https://www.clinicalmicrobiologyandinfection.com/article/S1198-743X(14)61632-3/fulltext))
 #' 
-#' * `guideline = "EUCAST3.2"` (or simply `guideline = "EUCAST"`)
+#' * `guideline = "EUCAST3.3"` (or simply `guideline = "EUCAST"`)
+#'
+#'   The European international guideline - EUCAST Expert Rules Version 3.3 "Intrinsic Resistance and Unusual Phenotypes" ([link](https://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/2021/Intrinsic_Resistance_and_Unusual_Phenotypes_Tables_v3.3_20211018.pdf))
+#'   
+#' * `guideline = "EUCAST3.2"`
 #'
 #'   The European international guideline - EUCAST Expert Rules Version 3.2 "Intrinsic Resistance and Unusual Phenotypes" ([link](https://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/2020/Intrinsic_Resistance_and_Unusual_Phenotypes_Tables_v3.2_20200225.pdf))
 #' 
@@ -72,7 +76,6 @@
 #'   The Dutch national guideline - Rijksinstituut voor Volksgezondheid en Milieu "WIP-richtlijn BRMO (Bijzonder Resistente Micro-Organismen) (ZKH)" ([link](https://www.rivm.nl/wip-richtlijn-brmo-bijzonder-resistente-micro-organismen-zkh))
 #' 
 #' Please suggest your own (country-specific) guidelines by letting us know: <https://github.com/msberends/AMR/issues/new>.
-#' 
 #' 
 #' @section Using Custom Guidelines:
 #' 
@@ -187,13 +190,9 @@ mdro <- function(x = NULL,
   check_dataset_integrity()
   
   info.bak <- info
-  if (message_not_thrown_before("mdro")) {
-    remember_thrown_message("mdro")
-  } else {
-    # don't thrown info's more than once per call
-    info <- FALSE
-  }
-  
+  # don't thrown info's more than once per call
+  info <- message_not_thrown_before("mdro")
+
   if (interactive() & verbose == TRUE & info == TRUE) {
     txt <- paste0("WARNING: In Verbose mode, the mdro() function does not return the MDRO results, but instead returns a data set in logbook form with extensive info about which isolates would be MDRO-positive, or why they are not.",
                   "\n\nThis may overwrite your existing data if you use e.g.:",
@@ -252,7 +251,7 @@ mdro <- function(x = NULL,
     if (info == TRUE) {
       txt <- paste0("Determining MDROs based on custom rules",
                     ifelse(isTRUE(attributes(guideline)$as_factor),
-                           paste0(", resulting in [factor] levels: ", paste0(attributes(guideline)$values, collapse = " < ")),
+                           paste0(", resulting in factor levels: ", paste0(attributes(guideline)$values, collapse = " < ")),
                            ""),
                     ".")
       txt <- word_wrap(txt)
@@ -287,7 +286,7 @@ mdro <- function(x = NULL,
   }
   if (guideline == "eucast") {
     # turn into latest EUCAST guideline
-    guideline <- "eucast3.2"
+    guideline <- "eucast3.3"
   }
   if (guideline == "nl") {
     guideline <- "brmo"
@@ -295,7 +294,7 @@ mdro <- function(x = NULL,
   if (guideline == "de") {
     guideline <- "mrgn"
   }
-  stop_ifnot(guideline %in% c("brmo", "mrgn", "eucast3.1", "eucast3.2", "tb", "cmi2012"),
+  stop_ifnot(guideline %in% c("brmo", "mrgn", "eucast3.1", "eucast3.2", "eucast3.3", "tb", "cmi2012"),
              "invalid guideline: ", guideline.bak)
   guideline <- list(code = guideline)
   
@@ -329,8 +328,15 @@ mdro <- function(x = NULL,
   } else if (guideline$code == "eucast3.2") {
     guideline$name <- "EUCAST Expert Rules, \"Intrinsic Resistance and Unusual Phenotypes\""
     guideline$author <- "EUCAST (European Committee on Antimicrobial Susceptibility Testing)"
-    guideline$version <- "3.2, 2020"
+    guideline$version <- "3.2, February 2020"
     guideline$source_url <- "https://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/2020/Intrinsic_Resistance_and_Unusual_Phenotypes_Tables_v3.2_20200225.pdf"
+    guideline$type <- "EUCAST Unusual Phenotypes"
+    
+  } else if (guideline$code == "eucast3.3") {
+    guideline$name <- "EUCAST Expert Rules, \"Intrinsic Resistance and Unusual Phenotypes\""
+    guideline$author <- "EUCAST (European Committee on Antimicrobial Susceptibility Testing)"
+    guideline$version <- "3.3, October 2021"
+    guideline$source_url <- "https://www.eucast.org/fileadmin/src/media/PDFs/EUCAST_files/Expert_Rules/2021/Intrinsic_Resistance_and_Unusual_Phenotypes_Tables_v3.3_20211018.pdf"
     guideline$type <- "EUCAST Unusual Phenotypes"
     
   } else if (guideline$code == "tb") {
@@ -478,6 +484,7 @@ mdro <- function(x = NULL,
                               verbose = verbose,
                               info = info,
                               only_rsi_columns = only_rsi_columns,
+                              fn = "mdro",
                               ...)
   } else if (guideline$code == "eucast3.2") {
     cols_ab <- get_column_abx(x = x,
@@ -506,6 +513,36 @@ mdro <- function(x = NULL,
                               verbose = verbose,
                               info = info,
                               only_rsi_columns = only_rsi_columns,
+                              fn = "mdro",
+                              ...)
+  } else if (guideline$code == "eucast3.3") {
+    cols_ab <- get_column_abx(x = x,
+                              soft_dependencies = c("AMP",
+                                                    "AMX",
+                                                    "CIP",
+                                                    "DAL",
+                                                    "DAP",
+                                                    "ERV",
+                                                    "FDX",
+                                                    "GEN",
+                                                    "LNZ",
+                                                    "MEM",
+                                                    "MTR",
+                                                    "OMC",
+                                                    "ORI",
+                                                    "PEN",
+                                                    "QDA",
+                                                    "RIF",
+                                                    "TEC",
+                                                    "TGC",
+                                                    "TLV",
+                                                    "TOB",
+                                                    "TZD",
+                                                    "VAN"),
+                              verbose = verbose,
+                              info = info,
+                              only_rsi_columns = only_rsi_columns,
+                              fn = "mdro",
                               ...)
   } else if (guideline$code == "tb") {
     cols_ab <- get_column_abx(x = x,
@@ -520,6 +557,7 @@ mdro <- function(x = NULL,
                               verbose = verbose,
                               info = info,
                               only_rsi_columns = only_rsi_columns,
+                              fn = "mdro",
                               ...)
   } else if (guideline$code == "mrgn") {
     cols_ab <- get_column_abx(x = x,
@@ -532,13 +570,22 @@ mdro <- function(x = NULL,
                               verbose = verbose,
                               info = info,
                               only_rsi_columns = only_rsi_columns,
+                              fn = "mdro",
                               ...)
   } else {
     cols_ab <- get_column_abx(x = x,
                               verbose = verbose,
                               info = info,
                               only_rsi_columns = only_rsi_columns,
+                              fn = "mdro",
                               ...)
+  }
+  if (!"AMP" %in% names(cols_ab) & "AMX" %in% names(cols_ab)) {
+    # ampicillin column is missing, but amoxicillin is available
+    if (info == TRUE) {
+      message_("Using column '", cols_ab[names(cols_ab) == "AMX"], "' as input for ampicillin since many EUCAST rules depend on it.")
+    }
+    cols_ab <- c(cols_ab, c(AMP = unname(cols_ab[names(cols_ab) == "AMX"])))
   }
 
   # nolint start
@@ -742,7 +789,8 @@ mdro <- function(x = NULL,
       x[rows, "columns_nonsusceptible"] <<- vapply(FUN.VALUE = character(1),
                                                    rows, 
                                                    function(row, group_vct = cols) {
-                                                     cols_nonsus <- vapply(FUN.VALUE = logical(1), x[row, group_vct, drop = FALSE], 
+                                                     cols_nonsus <- vapply(FUN.VALUE = logical(1),
+                                                                           x[row, group_vct, drop = FALSE], 
                                                                            function(y) y %in% search_result)
                                                      paste(sort(c(unlist(strsplit(x[row, "columns_nonsusceptible", drop = TRUE], ", ")),
                                                                   names(cols_nonsus)[cols_nonsus])), 
@@ -756,17 +804,20 @@ mdro <- function(x = NULL,
       }
       x_transposed <- as.list(as.data.frame(t(x[, cols, drop = FALSE]),
                                             stringsAsFactors = FALSE))
-      row_filter <- vapply(FUN.VALUE = logical(1), x_transposed, function(y) search_function(y %in% search_result, na.rm = TRUE))
-      row_filter <- x[which(row_filter), "row_number", drop = TRUE]
-      rows <- rows[rows %in% row_filter]
-      x[rows, "MDRO"] <<- to
-      x[rows, "reason"] <<- paste0(any_all, 
-                                   " of the required antibiotics ",
-                                   ifelse(any_all == "any", "is", "are"),
-                                   " R",
-                                   ifelse(!isTRUE(combine_SI), " or I", ""))
+      rows_affected <- vapply(FUN.VALUE = logical(1),
+                              x_transposed,
+                              function(y) search_function(y %in% search_result, na.rm = TRUE))
+      rows_affected <- x[which(rows_affected), "row_number", drop = TRUE]
+      rows_to_change <- rows[rows %in% rows_affected]
+      x[rows_to_change, "MDRO"] <<- to
+      x[rows_to_change, "reason"] <<- paste0(any_all, 
+                                             " of the required antibiotics ",
+                                             ifelse(any_all == "any", "is", "are"),
+                                             " R",
+                                             ifelse(!isTRUE(combine_SI), " or I", ""))
     }
   }
+  
   trans_tbl2 <- function(txt, rows, lst) {
     if (info == TRUE) {
       message_(txt, "...", appendLF = FALSE, as_note = FALSE)
@@ -1164,10 +1215,80 @@ mdro <- function(x = NULL,
               which(x$genus == "Streptococcus" & x$species == "pneumoniae"),
               c(carbapenems, VAN, TEC, TLV, DAL, ORI, DAP, LNZ, TZD, QDA, TGC, ERV, OMC, RIF),
               "any")
-    streps <- MO_lookup[which(MO_lookup$genus == "Streptococcus"), "mo", drop = TRUE]
-    streps_ABCG <- streps[as.mo(streps, Lancefield = TRUE) %in% c("B_STRPT_GRPA", "B_STRPT_GRPB", "B_STRPT_GRPC", "B_STRPT_GRPG")]
     trans_tbl(3, # Sr. groups A/B/C/G
-              which(x$mo %in% streps_ABCG),
+              which(x$mo %in% MO_STREP_ABCG),
+              c(PEN, cephalosporins, VAN, TEC, TLV, DAL, ORI, DAP, LNZ, TZD, QDA, TGC, ERV, OMC),
+              "any")
+    trans_tbl(3,
+              which(x$genus == "Enterococcus"),
+              c(DAP, LNZ, TGC, ERV, OMC, TEC),
+              "any")
+    trans_tbl(3,
+              which(x$genus == "Enterococcus" & x$species == "faecalis"),
+              c(AMP, AMX),
+              "any")
+    # Table 8
+    trans_tbl(3,
+              which(x$genus == "Bacteroides"),
+              MTR,
+              "any")
+    trans_tbl(3,
+              which(x$genus == "Clostridium" & x$species == "difficile"),
+              c(MTR, VAN, FDX),
+              "any")
+  }
+  
+  if (guideline$code == "eucast3.3") {
+    # EUCAST 3.3 --------------------------------------------------------------
+    # note: this guideline is equal to EUCAST 3.2 - no MDRO insights changed
+    # Table 6
+    trans_tbl(3,
+              which((x$order == "Enterobacterales" &
+                       !x$family == "Morganellaceae" & 
+                       !(x$genus == "Serratia" & x$species == "marcescens"))
+                    | (x$genus == "Pseudomonas" & x$species == "aeruginosa")
+                    | x$genus == "Acinetobacter"),
+              COL,
+              "all")
+    trans_tbl(3,
+              which(x$genus == "Salmonella" & x$species == "Typhi"),
+              c(carbapenems),
+              "any")
+    trans_tbl(3,
+              which(x$genus == "Haemophilus" & x$species == "influenzae"),
+              c(cephalosporins_3rd, carbapenems, fluoroquinolones),
+              "any")
+    trans_tbl(3,
+              which(x$genus == "Moraxella" & x$species == "catarrhalis"),
+              c(cephalosporins_3rd, fluoroquinolones),
+              "any")
+    trans_tbl(3,
+              which(x$genus == "Neisseria" & x$species == "meningitidis"),
+              c(cephalosporins_3rd, fluoroquinolones),
+              "any")
+    trans_tbl(3,
+              which(x$genus == "Neisseria" & x$species == "gonorrhoeae"),
+              SPT,
+              "any")
+    # Table 7
+    trans_tbl(3,
+              which(x$genus == "Staphylococcus" & x$species == "aureus"),
+              c(VAN, TEC, TLV, DAL, ORI, DAP, LNZ, TZD, QDA, TGC, ERV, OMC),
+              "any")
+    trans_tbl(3,
+              which(x$mo %in% MO_CONS), # coagulase-negative Staphylococcus
+              c(VAN, TLV, DAL, ORI, DAP, LNZ, TZD, QDA, TGC, ERV, OMC),
+              "any")
+    trans_tbl(3,
+              which(x$genus == "Corynebacterium"),
+              c(VAN, TEC, TLV, DAL, ORI, DAP, LNZ, TZD, QDA, TGC),
+              "any")
+    trans_tbl(3,
+              which(x$genus == "Streptococcus" & x$species == "pneumoniae"),
+              c(carbapenems, VAN, TEC, TLV, DAL, ORI, DAP, LNZ, TZD, QDA, TGC, ERV, OMC, RIF),
+              "any")
+    trans_tbl(3, # Sr. groups A/B/C/G
+              which(x$mo %in% MO_STREP_ABCG),
               c(PEN, cephalosporins, VAN, TEC, TLV, DAL, ORI, DAP, LNZ, TZD, QDA, TGC, ERV, OMC),
               "any")
     trans_tbl(3,
@@ -1386,16 +1507,6 @@ mdro <- function(x = NULL,
     x$reason <- "PDR/MDR/XDR criteria were met"
   }
   
-  if (info.bak == TRUE) {
-    cat(group_msg)
-    if (sum(!is.na(x$MDRO)) == 0) {
-      cat(font_bold(paste0("=> Found 0 MDROs since no isolates are covered by the guideline")))
-    } else {
-      cat(font_bold(paste0("=> Found ", sum(x$MDRO %in% c(2:5), na.rm = TRUE), " ", guideline$type, " out of ", sum(!is.na(x$MDRO)), 
-                           " isolates (", trimws(percentage(sum(x$MDRO %in% c(2:5), na.rm = TRUE) / sum(!is.na(x$MDRO)))), ")\n")))
-    }
-  }
-  
   # some more info on negative results
   if (verbose == TRUE) {
     if (guideline$code == "cmi2012") {
@@ -1410,13 +1521,37 @@ mdro <- function(x = NULL,
     }
   }
   
+  if (info.bak == TRUE) {
+    cat(group_msg)
+    if (sum(!is.na(x$MDRO)) == 0) {
+      cat(font_bold(paste0("=> Found 0 MDROs since no isolates are covered by the guideline")))
+    } else {
+      cat(font_bold(paste0("=> Found ", sum(x$MDRO %in% c(2:5), na.rm = TRUE), " ", guideline$type, " out of ", sum(!is.na(x$MDRO)), 
+                           " isolates (", trimws(percentage(sum(x$MDRO %in% c(2:5), na.rm = TRUE) / sum(!is.na(x$MDRO)))), ")")))
+    }
+  }
+  
+  # Fill in blanks ----
+  # for rows that have no results
+  x_transposed <- as.list(as.data.frame(t(x[, cols_ab, drop = FALSE]),
+                                        stringsAsFactors = FALSE))
+  rows_empty <- which(vapply(FUN.VALUE = logical(1),
+                             x_transposed,
+                             function(y) all(is.na(y))))
+  if (length(rows_empty) > 0) {
+    cat(font_italic(paste0(" (", length(rows_empty), " isolates had no test results)\n")))
+    x[rows_empty, "MDRO"] <- NA
+    x[rows_empty, "reason"] <- "none of the antibiotics have test results"
+  } else {
+    cat("\n")
+  }
+  
   # Results ----
   if (guideline$code == "cmi2012") {
     if (any(x$MDRO == -1, na.rm = TRUE)) {
-      if (message_not_thrown_before("mdro.availability")) {
+      if (message_not_thrown_before("mdro", "availability")) {
         warning_("NA introduced for isolates where the available percentage of antimicrobial classes was below ",
                  percentage(pct_required_classes), " (set with `pct_required_classes`)", call = FALSE)
-        remember_thrown_message("mdro.availability")
       }
       # set these -1s to NA
       x[which(x$MDRO == -1), "MDRO"] <- NA_integer_

@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -60,6 +60,9 @@ expect_equal(as.character(as.ab(c("mreopenem", "co-maoxiclav"))),
              c("MEM", "AMC"))
 
 expect_message(as.ab("cipro mero"))
+
+# based on Levenshtein distance
+expect_identical(ab_name("ceftazidim/avibactam", language = NULL), "Ceftazidime/avibactam")
 
 # assigning and subsetting
 x <- antibiotics$ab

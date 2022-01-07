@@ -34,7 +34,7 @@ proportion_S(..., minimum = 30, as_percent = FALSE, only_all_tested = FALSE)
 proportion_df(
   data,
   translate_ab = "name",
-  language = get_locale(),
+  language = get_AMR_locale(),
   minimum = 30,
   as_percent = FALSE,
   combine_SI = TRUE,
@@ -44,7 +44,7 @@ proportion_df(
 rsi_df(
   data,
   translate_ab = "name",
-  language = get_locale(),
+  language = get_AMR_locale(),
   minimum = 30,
   as_percent = FALSE,
   combine_SI = TRUE,
@@ -64,7 +64,7 @@ rsi_df(
 
 \item{translate_ab}{a column name of the \link{antibiotics} data set to translate the antibiotic abbreviations to, using \code{\link[=ab_property]{ab_property()}}}
 
-\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_locale]{get_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
 \item{combine_SI}{a \link{logical} to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant). This used to be the argument \code{combine_IR}, but this now follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. Default is \code{TRUE}.}
 
@@ -123,7 +123,7 @@ Using \code{only_all_tested} has no impact when only using one antibiotic as inp
 \if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:5px} \cr}
 The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
 
-If the unlying code needs breaking changes, they will occur gradually. For example, a argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
+If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit an message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
 }
 
 \section{Interpretation of R and S/I}{
@@ -134,7 +134,7 @@ In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST)
 A microorganism is categorised as \emph{Resistant} when there is a high likelihood of therapeutic failure even when there is increased exposure. Exposure is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
 \item \strong{S = Susceptible}\cr
 A microorganism is categorised as \emph{Susceptible, standard dosing regimen}, when there is a high likelihood of therapeutic success using a standard dosing regimen of the agent.
-\item \strong{I = Increased exposure, but still susceptible}\cr
+\item \strong{I = Susceptible, Increased exposure}\cr
 A microorganism is categorised as \emph{Susceptible, Increased exposure} when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.
 }
 

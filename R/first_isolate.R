@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       # 
@@ -23,9 +23,9 @@
 # how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
 # ==================================================================== #
 
-#' Determine First (Weighted) Isolates
+#' Determine First Isolates
 #'
-#' Determine first (weighted) isolates of all microorganisms of every patient per episode and (if needed) per specimen type. These functions support all four methods as summarised by Hindler *et al.* in 2007 (\doi{10.1086/511864}). To determine patient episodes not necessarily based on microorganisms, use [is_new_episode()] that also supports grouping with the `dplyr` package.
+#' Determine first isolates of all microorganisms of every patient per episode and (if needed) per specimen type. These functions support all four methods as summarised by Hindler *et al.* in 2007 (\doi{10.1086/511864}). To determine patient episodes not necessarily based on microorganisms, use [is_new_episode()] that also supports grouping with the `dplyr` package.
 #' @inheritSection lifecycle Stable Lifecycle
 #' @param x a [data.frame] containing isolates. Can be left blank for automatic determination, see *Examples*.
 #' @param col_date column name of the result date (or date that is was received on the lab), defaults to the first column with a date class
@@ -34,7 +34,7 @@
 #' @param col_testcode column name of the test codes. Use `col_testcode = NULL` to **not** exclude certain test codes (such as test codes for screening). In that case `testcodes_exclude` will be ignored.
 #' @param col_specimen column name of the specimen type or group
 #' @param col_icu column name of the logicals (`TRUE`/`FALSE`) whether a ward or department is an Intensive Care Unit (ICU)
-#' @param col_keyantimicrobials (only useful when `method = "phenotype-based"`) column name of the key antimicrobials to determine first (weighted) isolates, see [key_antimicrobials()]. Defaults to the first column that starts with 'key' followed by 'ab' or 'antibiotics' or 'antimicrobials' (case insensitive). Use `col_keyantimicrobials = FALSE` to prevent this. Can also be the output of [key_antimicrobials()].
+#' @param col_keyantimicrobials (only useful when `method = "phenotype-based"`) column name of the key antimicrobials to determine first isolates, see [key_antimicrobials()]. Defaults to the first column that starts with 'key' followed by 'ab' or 'antibiotics' or 'antimicrobials' (case insensitive). Use `col_keyantimicrobials = FALSE` to prevent this. Can also be the output of [key_antimicrobials()].
 #' @param episode_days episode in days after which a genus/species combination will be determined as 'first isolate' again. The default of 365 days is based on the guideline by CLSI, see *Source*. 
 #' @param testcodes_exclude a [character] vector with test codes that should be excluded (case-insensitive)
 #' @param icu_exclude a [logical] to indicate whether ICU isolates should be excluded (rows with value `TRUE` in the column set with `col_icu`)
@@ -102,9 +102,9 @@
 #' 
 #' This is a more reliable method, since it also *weighs* the antibiogram (antimicrobial test results) yielding so-called 'first weighted isolates'. There are two different methods to weigh the antibiogram:
 #' 
-#' 1. Using `type = "points"` and argument `points_threshold`
+#' 1. Using `type = "points"` and argument `points_threshold` (default)
 #' 
-#'    This method weighs *all* antimicrobial agents available in the data set. Any difference from I to S or R (or vice versa) counts as 0.5 points, a difference from S to R (or vice versa) counts as 1 point. When the sum of points exceeds `points_threshold`, which defaults to `2`, an isolate will be selected as a first weighted isolate.
+#'    This method weighs *all* antimicrobial agents available in the data set. Any difference from I to S or R (or vice versa) counts as `0.5` points, a difference from S to R (or vice versa) counts as `1` point. When the sum of points exceeds `points_threshold`, which defaults to `2`, an isolate will be selected as a first weighted isolate.
 #'    
 #'    All antimicrobials are internally selected using the [all_antimicrobials()] function. The output of this function does not need to be passed to the [first_isolate()] function.
 #' 
@@ -125,17 +125,14 @@
 #' 
 #' - **M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 4th Edition**, 2014, *Clinical and Laboratory Standards Institute (CLSI)*. <https://clsi.org/standards/products/microbiology/documents/m39/>.
 #' 
-#' - Hindler JF and Stelling J (2007). **Analysis and Presentation of Cumulative Antibiograms: A New Consensus Guideline from the Clinical and Laboratory Standards Institute.** Clinical Infectious Diseases, 44(6), 867–873. \doi{10.1086/511864}
+#' - Hindler JF and Stelling J (2007). **Analysis and Presentation of Cumulative Antibiograms: A New Consensus Guideline from the Clinical and Laboratory Standards Institute.** Clinical Infectious Diseases, 44(6), 867-873. \doi{10.1086/511864}
 #' @inheritSection AMR Read more on Our Website!
 #' @examples
 #' # `example_isolates` is a data set available in the AMR package.
 #' # See ?example_isolates.
 #' 
-#' example_isolates[first_isolate(example_isolates), ]
-#' \donttest{
-#' # faster way, only works in R 3.2 and later:
 #' example_isolates[first_isolate(), ]
-#' 
+#' \donttest{
 #' # get all first Gram-negatives
 #' example_isolates[which(first_isolate() & mo_is_gram_negative()), ]
 #'
@@ -221,7 +218,7 @@ first_isolate <- function(x = NULL,
   meet_criteria(col_icu, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
   # method
   method <- coerce_method(method)
-  meet_criteria(method, allow_class = "character", has_length = 1, is_in = c("phenotype-based", "episode-based", "patient-based", "isolate-based", "p", "e", "i"))
+  meet_criteria(method, allow_class = "character", has_length = 1, is_in = c("phenotype-based", "episode-based", "patient-based", "isolate-based"))
   # key antimicrobials
   if (length(col_keyantimicrobials) > 1) {
     meet_criteria(col_keyantimicrobials, allow_class = "character", has_length = nrow(x))
@@ -241,7 +238,7 @@ first_isolate <- function(x = NULL,
   meet_criteria(testcodes_exclude, allow_class = "character", allow_NULL = TRUE)
   meet_criteria(icu_exclude, allow_class = "logical", has_length = 1)
   meet_criteria(specimen_group, allow_class = "character", has_length = 1, allow_NULL = TRUE)
-  meet_criteria(type, allow_class = "character", has_length = 1)
+  meet_criteria(type, allow_class = "character", has_length = 1, is_in = c("points", "keyantimicrobials"))
   meet_criteria(ignore_I, allow_class = "logical", has_length = 1)
   meet_criteria(points_threshold, allow_class = c("numeric", "integer"), has_length = 1, is_positive = TRUE, is_finite = TRUE)
   meet_criteria(info, allow_class = "logical", has_length = 1)
@@ -253,21 +250,21 @@ first_isolate <- function(x = NULL,
   
   any_col_contains_rsi <- any(vapply(FUN.VALUE = logical(1), 
                                      X = x, 
-                                     FUN = function(x) any(as.character(x) %in% c("R", "S", "I"), na.rm = TRUE),
+                                     # check only first 10,000 rows
+                                     FUN = function(x) any(as.character(x[1:10000]) %in% c("R", "S", "I"), na.rm = TRUE),
                                      USE.NAMES = FALSE))
   if (method == "phenotype-based" & !any_col_contains_rsi) {
     method <- "episode-based"
   }
-  if (info == TRUE & message_not_thrown_before("first_isolate.method")) {
-    message_(paste0("Determining first isolates using the '", font_bold(method), "' method",
+  if (info == TRUE & message_not_thrown_before("first_isolate", "method")) {
+    message_(paste0("Determining first isolates ",
                     ifelse(method %in% c("episode-based", "phenotype-based"),
                            ifelse(is.infinite(episode_days),
-                                  " without a specified episode length",
-                                  paste(" and an episode length of", episode_days, "days")),
+                                  "without a specified episode length",
+                                  paste("using an episode length of", episode_days, "days")),
                            "")),
              as_note = FALSE,
              add_fn = font_black)
-    remember_thrown_message("first_isolate.method")
   }
   
   # try to find columns based on type
@@ -363,11 +360,10 @@ first_isolate <- function(x = NULL,
     testcodes_exclude <- NULL
   }
   # remove testcodes
-  if (!is.null(testcodes_exclude) & info == TRUE & message_not_thrown_before("first_isolate.excludingtestcodes")) {
-    message_("Excluding test codes: ", toString(paste0("'", testcodes_exclude, "'")),
+  if (!is.null(testcodes_exclude) & info == TRUE & message_not_thrown_before("first_isolate", "excludingtestcodes")) {
+    message_("Excluding test codes: ", vector_and(testcodes_exclude, quotes = TRUE),
              add_fn = font_black,
              as_note = FALSE)
-    remember_thrown_message("first_isolate.excludingtestcodes")
   }
   
   if (is.null(col_specimen)) {
@@ -377,11 +373,10 @@ first_isolate <- function(x = NULL,
   # filter on specimen group and keyantibiotics when they are filled in
   if (!is.null(specimen_group)) {
     check_columns_existance(col_specimen, x)
-    if (info == TRUE & message_not_thrown_before("first_isolate.excludingspecimen")) {
+    if (info == TRUE & message_not_thrown_before("first_isolate", "excludingspecimen")) {
       message_("Excluding other than specimen group '", specimen_group, "'",
                add_fn = font_black,
                as_note = FALSE)
-      remember_thrown_message("first_isolate.excludingspecimen")
     }
   }
   if (!is.null(col_keyantimicrobials)) {
@@ -449,21 +444,8 @@ first_isolate <- function(x = NULL,
                                !is.na(x$newvar_mo)), , drop = FALSE])
   
   # Analysis of first isolate ----
-  x$other_pat_or_mo <- ifelse(x$newvar_patient_id == pm_lag(x$newvar_patient_id) &
-                                x$newvar_genus_species == pm_lag(x$newvar_genus_species),
-                              FALSE,
-                              TRUE)
-  x$episode_group <- paste(x$newvar_patient_id, x$newvar_genus_species)
-  x$more_than_episode_ago <- unlist(lapply(split(x$newvar_date,
-                                                 x$episode_group), 
-                                           is_new_episode,
-                                           episode_days = episode_days),
-                                    use.names = FALSE)
-  
-  weighted.notice <- ""
   if (!is.null(col_keyantimicrobials)) {
-    weighted.notice <- "weighted "
-    if (info == TRUE & message_not_thrown_before("first_isolate.type")) {
+    if (info == TRUE & message_not_thrown_before("first_isolate", "type")) {
       if (type == "keyantimicrobials") {
         message_("Basing inclusion on key antimicrobials, ",
                  ifelse(ignore_I == FALSE, "not ", ""),
@@ -477,23 +459,35 @@ first_isolate <- function(x = NULL,
                  add_fn = font_black,
                  as_note = FALSE)
       }
-      remember_thrown_message("first_isolate.type")
     }
-    type_param <- type
-    
+  }
+  
+  x$other_pat_or_mo <- ifelse(x$newvar_patient_id == pm_lag(x$newvar_patient_id) &
+                                x$newvar_genus_species == pm_lag(x$newvar_genus_species),
+                              FALSE,
+                              TRUE)
+  
+  x$episode_group <- paste(x$newvar_patient_id, x$newvar_genus_species)
+  x$more_than_episode_ago <- unlist(lapply(split(x$newvar_date,
+                                                 x$episode_group),
+                                           exec_episode, # this will skip meet_criteria() in is_new_episode(), saving time
+                                           type = "logical",
+                                           episode_days = episode_days),
+                                    use.names = FALSE)
+  
+  if (!is.null(col_keyantimicrobials)) {
+    # with key antibiotics
     x$other_key_ab <- !antimicrobials_equal(y = x$newvar_key_ab,
                                             z = pm_lag(x$newvar_key_ab),
-                                            type = type_param,
+                                            type = type,
                                             ignore_I = ignore_I,
                                             points_threshold = points_threshold)
-    # with key antibiotics
     x$newvar_first_isolate <- pm_if_else(x$newvar_row_index_sorted >= row.start &
                                            x$newvar_row_index_sorted <= row.end &
                                            x$newvar_genus_species != "" & 
                                            (x$other_pat_or_mo | x$more_than_episode_ago | x$other_key_ab),
                                          TRUE,
                                          FALSE)
-    
   } else {
     # no key antibiotics
     x$newvar_first_isolate <- pm_if_else(x$newvar_row_index_sorted >= row.start &
@@ -575,7 +569,7 @@ first_isolate <- function(x = NULL,
   }
   
   # arrange back according to original sorting again
-  x <- x[order(x$newvar_row_index), ]
+  x <- x[order(x$newvar_row_index), , drop = FALSE]
   rownames(x) <- NULL
   
   if (info == TRUE) {
@@ -590,16 +584,16 @@ first_isolate <- function(x = NULL,
     }
     # mark up number of found
     n_found <- format(n_found, big.mark = big.mark, decimal.mark = decimal.mark)
-    if (p_found_total != p_found_scope) {
-      msg_txt <- paste0("=> Found ",
-                        font_bold(paste0(n_found, " first ", weighted.notice, "isolates")),
-                        " (", method, ", ", p_found_scope, " within scope and ", p_found_total, " of total where a microbial ID was available)")
-    } else {
-      msg_txt <- paste0("=> Found ",
-                        font_bold(paste0(n_found, " first ", weighted.notice, "isolates")),
-                        " (", method, ", ", p_found_total, " of total where a microbial ID was available)")
-    }
-    message_(msg_txt, add_fn = font_black, as_note = FALSE)
+    message_(paste0("=> Found ",
+                    font_bold(paste0(n_found,
+                                     ifelse(method == "isolate-based", "", paste0(" '", method, "'")),
+                                     " first isolates")),
+                    " (",
+                    ifelse(p_found_total != p_found_scope,
+                           paste0(p_found_scope, " within scope and "),
+                           ""),
+                    p_found_total, " of total where a microbial ID was available)"),
+             add_fn = font_black, as_note = FALSE)
   }
   
   x$newvar_first_isolate
@@ -626,7 +620,7 @@ filter_first_isolate <- function(x = NULL,
   meet_criteria(col_mo, allow_class = "character", has_length = 1, allow_NULL = TRUE, is_in = colnames(x))
   meet_criteria(episode_days, allow_class = c("numeric", "integer"), has_length = 1, is_positive = TRUE, is_finite = FALSE)
   method <- coerce_method(method)
-  meet_criteria(method, allow_class = "character", has_length = 1, is_in = c("phenotype-based", "episode-based", "patient-based", "isolate-based", "p", "e", "i"))
+  meet_criteria(method, allow_class = "character", has_length = 1, is_in = c("phenotype-based", "episode-based", "patient-based", "isolate-based"))
   
   subset(x, first_isolate(x = x,
                           col_date = col_date,
@@ -644,7 +638,7 @@ coerce_method <- function(method) {
   method <- tolower(as.character(method[1L]))
   method[method %like% "^(p$|pheno)"] <- "phenotype-based"
   method[method %like% "^(e$|episode)"] <- "episode-based"
-  method[method %like% "^patient"] <- "patient-based"
+  method[method %like% "^pat"] <- "patient-based"
   method[method %like% "^(i$|iso)"] <- "isolate-based"
   method
 }

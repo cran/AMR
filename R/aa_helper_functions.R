@@ -6,7 +6,7 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # LICENCE                                                              #
-# (c) 2018-2021 Berends MS, Luz CF et al.                              #
+# (c) 2018-2022 Berends MS, Luz CF et al.                              #
 # Developed at the University of Groningen, the Netherlands, in        #
 # collaboration with non-profit organisations Certe Medical            #
 # Diagnostics & Advice, and University Medical Center Groningen.       #
@@ -53,15 +53,87 @@ pm_left_join <- function(x, y, by = NULL, suffix = c(".x", ".y")) {
   merged
 }
 
-quick_case_when <- function(...) {
-  vectors <- list(...)
-  split <- lapply(vectors, function(x) unlist(strsplit(paste(deparse(x), collapse = ""), "~", fixed = TRUE)))
-  for (i in seq_len(length(vectors))) {
-    if (eval(parse(text = split[[i]][1]), envir = parent.frame())) {
-      return(eval(parse(text = split[[i]][2]), envir = parent.frame()))
+# support where() like tidyverse:
+# adapted from https://github.com/nathaneastwood/poorman/blob/52eb6947e0b4430cd588976ed8820013eddf955f/R/where.R#L17-L32
+where <- function(fn) {
+  if (!is.function(fn)) {
+    stop(pm_deparse_var(fn), " is not a valid predicate function.")
+  }
+  preds <- unlist(lapply(
+    pm_select_env$.data,
+    function(x, fn) {
+      do.call("fn", list(x))
+    },
+    fn
+  ))
+  if (!is.logical(preds)) stop("`where()` must be used with functions that return `TRUE` or `FALSE`.")
+  data_cols <- pm_select_env$get_colnames()
+  cols <- data_cols[preds]
+  which(data_cols %in% cols)
+}
+
+# copied and slightly rewritten from poorman under same license (2021-10-15)
+quick_case_when <- function (...) {
+  fs <- list(...)
+  lapply(fs, function(x) if (class(x) != "formula") 
+    stop("`case_when()` requires formula inputs."))
+  n <- length(fs)
+  if (n == 0L) 
+    stop("No cases provided.")
+  
+  validate_case_when_length <- function (query, value, fs) {
+    lhs_lengths <- lengths(query)
+    rhs_lengths <- lengths(value)
+    all_lengths <- unique(c(lhs_lengths, rhs_lengths))
+    if (length(all_lengths) <= 1L) 
+      return(all_lengths[[1L]])
+    non_atomic_lengths <- all_lengths[all_lengths != 1L]
+    len <- non_atomic_lengths[[1L]]
+    if (length(non_atomic_lengths) == 1L) 
+      return(len)
+    inconsistent_lengths <- non_atomic_lengths[-1L]
+    lhs_problems <- lhs_lengths %in% inconsistent_lengths
+    rhs_problems <- rhs_lengths %in% inconsistent_lengths
+    problems <- lhs_problems | rhs_problems
+    if (any(problems)) {
+      stop("The following formulas must be length ", len, " or 1, not ", 
+           paste(inconsistent_lengths, collapse = ", "), ".\n    ", 
+           paste(fs[problems], collapse = "\n    "),
+           call. = FALSE)
     }
   }
-  return(NA)
+  
+  replace_with <- function (x, i, val, arg_name) {
+    if (is.null(val)) 
+      return(x)
+    i[is.na(i)] <- FALSE
+    if (length(val) == 1L) {
+      x[i] <- val
+    }
+    else {
+      x[i] <- val[i]
+    }
+    x
+  }
+  
+  query <- vector("list", n)
+  value <- vector("list", n)
+  default_env <- parent.frame()
+  for (i in seq_len(n)) {
+    query[[i]] <- eval(fs[[i]][[2]], envir = default_env)
+    value[[i]] <- eval(fs[[i]][[3]], envir = default_env)
+    if (!is.logical(query[[i]])) 
+      stop(fs[[i]][[2]], " does not return a `logical` vector.")
+  }
+  m <- validate_case_when_length(query, value, fs)
+  out <- value[[1]][rep(NA_integer_, m)]
+  replaced <- rep(FALSE, m)
+  for (i in seq_len(n)) {
+    out <- replace_with(out, query[[i]] & !replaced, value[[i]], 
+                        NULL)
+    replaced <- replaced | (query[[i]] & !is.na(query[[i]]))
+  }
+  out
 }
 
 # No export, no Rd
@@ -122,20 +194,19 @@ check_dataset_integrity <- function() {
   data_in_globalenv <- ls(envir = globalenv())
   overwritten <- data_in_pkg[data_in_pkg %in% data_in_globalenv]
   # exception for example_isolates
-  overwritten <- overwritten[overwritten != "example_isolates"]
+  overwritten <- overwritten[overwritten %unlike% "example_isolates"]
   if (length(overwritten) > 0) {
     if (length(overwritten) > 1) {
       plural <- c("s are", "", "s")
     } else {
       plural <- c(" is", "s", "")
     }
-    if (message_not_thrown_before("dataset_overwritten")) {
+    if (message_not_thrown_before("check_dataset_integrity", overwritten)) {
       warning_("The following data set", plural[1],
                " overwritten by your global environment and prevent", plural[2], 
                " the AMR package from working correctly: ",
                vector_and(overwritten, quotes = "'"),
                ".\nPlease rename your object", plural[3], ".", call = FALSE)
-      remember_thrown_message("dataset_overwritten")
     }
   }
   # check if other packages did not overwrite our data sets
@@ -170,65 +241,73 @@ search_type_in_df <- function(x, type, info = TRUE) {
 
   # remove attributes from other packages
   x <- as.data.frame(x, stringsAsFactors = FALSE)
-  colnames(x) <- trimws(colnames(x))
+  colnames_formatted <- tolower(generalise_antibiotic_name(colnames(x)))
 
   # -- mo
   if (type == "mo") {
     if (any(vapply(FUN.VALUE = logical(1), x, is.mo))) {
-      found <- sort(colnames(x)[vapply(FUN.VALUE = logical(1), x, is.mo)])[1]
-    } else if ("mo" %in% colnames(x) &
-               suppressWarnings(
-                 all(x$mo %in% c(NA, microorganisms$mo)))) {
+      # take first <mo> column
+      found <- colnames(x)[vapply(FUN.VALUE = logical(1), x, is.mo)]
+    } else if ("mo" %in% colnames_formatted &
+               suppressWarnings(all(x$mo %in% c(NA, microorganisms$mo)))) {
       found <- "mo"
-    } else if (any(colnames(x) %like% "^(mo|microorganism|organism|bacteria|ba[ck]terie)s?$")) {
-      found <- sort(colnames(x)[colnames(x) %like% "^(mo|microorganism|organism|bacteria|ba[ck]terie)s?$"])[1]
-    } else if (any(colnames(x) %like% "^(microorganism|organism|bacteria|ba[ck]terie)")) {
-      found <- sort(colnames(x)[colnames(x) %like% "^(microorganism|organism|bacteria|ba[ck]terie)"])[1]
-    } else if (any(colnames(x) %like% "species")) {
-      found <- sort(colnames(x)[colnames(x) %like% "species"])[1]
+    } else if (any(colnames_formatted %like_case% "^(mo|microorganism|organism|bacteria|ba[ck]terie)s?$")) {
+      found <- sort(colnames(x)[colnames_formatted %like_case% "^(mo|microorganism|organism|bacteria|ba[ck]terie)s?$"])
+    } else if (any(colnames_formatted %like_case% "^(microorganism|organism|bacteria|ba[ck]terie)")) {
+      found <- sort(colnames(x)[colnames_formatted %like_case% "^(microorganism|organism|bacteria|ba[ck]terie)"])
+    } else if (any(colnames_formatted %like_case% "species")) {
+      found <- sort(colnames(x)[colnames_formatted %like_case% "species"])
     }
 
   }
   # -- key antibiotics
   if (type %in% c("keyantibiotics", "keyantimicrobials")) {
-    if (any(colnames(x) %like% "^key.*(ab|antibiotics|antimicrobials)")) {
-      found <- sort(colnames(x)[colnames(x) %like% "^key.*(ab|antibiotics|antimicrobials)"])[1]
+    if (any(colnames_formatted %like_case% "^key.*(ab|antibiotics|antimicrobials)")) {
+      found <- sort(colnames(x)[colnames_formatted %like_case% "^key.*(ab|antibiotics|antimicrobials)"])
     }
   }
   # -- date
   if (type == "date") {
-    if (any(colnames(x) %like% "^(specimen date|specimen_date|spec_date)")) {
+    if (any(colnames_formatted %like_case% "^(specimen date|specimen_date|spec_date)")) {
       # WHONET support
-      found <- sort(colnames(x)[colnames(x) %like% "^(specimen date|specimen_date|spec_date)"])[1]
+      found <- sort(colnames(x)[colnames_formatted %like_case% "^(specimen date|specimen_date|spec_date)"])
       if (!any(class(pm_pull(x, found)) %in% c("Date", "POSIXct"))) {
         stop(font_red(paste0("Found column '", font_bold(found), "' to be used as input for `col_", type,
                              "`, but this column contains no valid dates. Transform its values to valid dates first.")),
              call. = FALSE)
       }
+      
     } else if (any(vapply(FUN.VALUE = logical(1), x, function(x) inherits(x, c("Date", "POSIXct"))))) {
-      found <- sort(colnames(x)[vapply(FUN.VALUE = logical(1), x, function(x) inherits(x, c("Date", "POSIXct")))])[1]
+      # take first <Date> column
+      found <- colnames(x)[vapply(FUN.VALUE = logical(1), x, function(x) inherits(x, c("Date", "POSIXct")))]
     }
   }
   # -- patient id
   if (type == "patient_id") {
-    if (any(colnames(x) %like% "^(identification |patient|patid)")) {
-      found <- sort(colnames(x)[colnames(x) %like% "^(identification |patient|patid)"])[1]
+    crit1 <- colnames_formatted %like_case% "^(patient|patid)"
+    if (any(crit1)) {
+      found <- colnames(x)[crit1]
+    } else {
+      crit2 <- colnames_formatted %like_case% "(identification |patient|pat.*id)"
+      if (any(crit2)) {
+        found <- colnames(x)[crit2]
+      }
     }
   }
   # -- specimen
   if (type == "specimen") {
-    if (any(colnames(x) %like% "(specimen type|spec_type)")) {
-      found <- sort(colnames(x)[colnames(x) %like% "(specimen type|spec_type)"])[1]
-    } else if (any(colnames(x) %like% "^(specimen)")) {
-      found <- sort(colnames(x)[colnames(x) %like% "^(specimen)"])[1]
+    if (any(colnames_formatted %like_case% "(specimen type|spec_type)")) {
+      found <- sort(colnames(x)[colnames_formatted %like_case% "(specimen type|spec_type)"])
+    } else if (any(colnames_formatted %like_case% "^(specimen)")) {
+      found <- sort(colnames(x)[colnames_formatted %like_case% "^(specimen)"])
     }
   }
   # -- UTI (urinary tract infection)
   if (type == "uti") {
-    if (any(colnames(x) == "uti")) {
-      found <- colnames(x)[colnames(x) == "uti"][1]
-    } else if (any(colnames(x) %like% "(urine|urinary)")) {
-      found <- sort(colnames(x)[colnames(x) %like% "(urine|urinary)"])[1]
+    if (any(colnames_formatted == "uti")) {
+      found <- colnames(x)[colnames_formatted == "uti"]
+    } else if (any(colnames_formatted %like_case% "(urine|urinary)")) {
+      found <- sort(colnames(x)[colnames_formatted %like_case% "(urine|urinary)"])
     }
     if (!is.null(found)) {
       # this column should contain logicals
@@ -241,14 +320,15 @@ search_type_in_df <- function(x, type, info = TRUE) {
     }
   }
   
+  found <- found[1]
+  
   if (!is.null(found) & info == TRUE) {
-    if (message_not_thrown_before(fn = paste0("search_", type))) {
+    if (message_not_thrown_before("search_in_type", type)) {
       msg <- paste0("Using column '", font_bold(found), "' as input for `col_", type, "`.")
-      if (type %in% c("keyantibiotics", "specimen")) {
+      if (type %in% c("keyantibiotics", "keyantimicrobials", "specimen")) {
         msg <- paste(msg, "Use", font_bold(paste0("col_", type), "= FALSE"), "to prevent this.")
       }
       message_(msg)
-      remember_thrown_message(fn = paste0("search_", type))
     }
   }
   found
@@ -288,11 +368,14 @@ stop_ifnot_installed <- function(package) {
   return(invisible())
 }
 
-pkg_is_available <- function(pkg, also_load = TRUE) {
+pkg_is_available <- function(pkg, also_load = TRUE, min_version = NULL) {
   if (also_load == TRUE) {
-    out <- suppressWarnings(require(pkg, character.only = TRUE, warn.conflicts = FALSE, quietly = TRUE))
+    out <- suppressWarnings(require(pkg, character.only = TRUE, warn.conflicts = FALSE))
   } else {
     out <- requireNamespace(pkg, quietly = TRUE)
+  }
+  if (!is.null(min_version)) {
+    out <- out && utils::packageVersion(pkg) >= min_version
   }
   isTRUE(out)
 }
@@ -389,6 +472,9 @@ word_wrap <- function(...,
   
   # format backticks
   msg <- gsub("(`.+?`)", font_grey_bg("\\1"), msg)
+  
+  # clean introduced whitespace between fullstops
+  msg <- gsub("[.] +[.]", "..", msg)
   
   msg
 }
@@ -506,12 +592,12 @@ dataset_UTF8_to_ASCII <- function(df) {
 
 # for eucast_rules() and mdro(), creates markdown output with URLs and names
 create_eucast_ab_documentation <- function() {
-  x <- trimws(unique(toupper(unlist(strsplit(eucast_rules_file$then_change_these_antibiotics, ",")))))
+  x <- trimws(unique(toupper(unlist(strsplit(EUCAST_RULES_DF$then_change_these_antibiotics, ",")))))
   ab <- character()
   for (val in x) {
-    if (val %in% ls(envir = asNamespace("AMR"))) {
+    if (paste0("AB_", val) %in% ls(envir = asNamespace("AMR"))) {
       # antibiotic group names, as defined in data-raw/_internals.R, such as `CARBAPENEMS`
-      val <- eval(parse(text = val), envir = asNamespace("AMR"))
+      val <- eval(parse(text = paste0("AB_", val)), envir = asNamespace("AMR"))
     } else if (val %in% AB_lookup$ab) {
       # separate drugs, such as `AMX`
       val <- as.ab(val)
@@ -521,7 +607,7 @@ create_eucast_ab_documentation <- function() {
     ab <- c(ab, val)
   }
   ab <- unique(ab)
-  atcs <- ab_atc(ab)
+  atcs <- ab_atc(ab, only_first = TRUE)
   # only keep ABx with an ATC code:
   ab <- ab[!is.na(atcs)]
   ab_names <- ab_name(ab, language = NULL, tolower = TRUE)
@@ -533,7 +619,7 @@ create_eucast_ab_documentation <- function() {
   out
 }
 
-vector_or <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE, last_sep = " or ") {
+vector_or <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE, initial_captital = FALSE, last_sep = " or ") {
   # makes unique and sorts, and this also removed NAs
   v <- unique(v)
   if (isTRUE(sort)) {
@@ -549,6 +635,9 @@ vector_or <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE, last_sep =
   } else {
     quotes <- quotes[1L]
   }
+  if (isTRUE(initial_captital)) {
+    v[1] <- gsub("^([a-z])", "\\U\\1", v[1], perl = TRUE)
+  }
   if (length(v) == 1) {
     return(paste0(quotes, v, quotes))
   }
@@ -561,8 +650,9 @@ vector_or <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE, last_sep =
          last_sep, paste0(quotes, v[length(v)], quotes))
 }
 
-vector_and <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE) {
-  vector_or(v = v, quotes = quotes, reverse = reverse, sort = sort, last_sep = " and ")
+vector_and <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE, initial_captital = FALSE) {
+  vector_or(v = v, quotes = quotes, reverse = reverse, sort = sort,
+            initial_captital = initial_captital, last_sep = " and ")
 }
 
 format_class <- function(class, plural = FALSE) {
@@ -696,7 +786,7 @@ meet_criteria <- function(object,
             ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1,
                    "be a finite number",
                    "all be finite numbers"),
-            " (i.e., not be infinite)",
+            " (i.e. not be infinite)",
             call = call_depth)
   }
   if (!is.null(contains_column_class)) {
@@ -714,84 +804,42 @@ meet_criteria <- function(object,
 }
 
 get_current_data <- function(arg_name, call) {
-  # check if retrieved before, then get it from package environment
-  if (identical(unique_call_id(entire_session = FALSE), pkg_env$get_current_data.call)) {
-    return(pkg_env$get_current_data.out)
+  valid_df <- function(x) {
+    !is.null(x) && is.data.frame(x)
   }
-  
   # try dplyr::cur_data_all() first to support dplyr groups
   # only useful for e.g. dplyr::filter(), dplyr::mutate() and dplyr::summarise()
   # not useful (throws error) with e.g. dplyr::select() - but that will be caught later in this function
   cur_data_all <- import_fn("cur_data_all", "dplyr", error_on_fail = FALSE)
   if (!is.null(cur_data_all)) {
     out <- tryCatch(cur_data_all(), error = function(e) NULL)
-    if (is.data.frame(out)) {
-      out <- structure(out, type = "dplyr_cur_data_all")
-      pkg_env$get_current_data.call <- unique_call_id(entire_session = FALSE)
-      pkg_env$get_current_data.out <- out
+    if (valid_df(out)) {
       return(out)
     }
   }
-
-  if (getRversion() < "3.2") {
-    # R-3.0 and R-3.1 do not have an `x` element in the call stack, rendering this function useless
-    if (is.na(arg_name)) {
-      # like in carbapenems() etc.
-      warning_("this function can only be used in R >= 3.2", call = call)
-      return(data.frame())
-    } else {
-      # mimic a default R error, e.g. for example_isolates[which(mo_name() %like% "^ent"), ] 
-      stop_("argument `", arg_name, "` is missing with no default", call = call)
-    }
-  }
   
-  # try a (base R) method, by going over the complete system call stack with sys.frames()
-  not_set <- TRUE
-  source <- "base_R"
-  frms <- lapply(sys.frames(), function(el) {
-    if (not_set == TRUE && ".Generic" %in% names(el)) {
-      if (tryCatch(".data" %in% names(el) && is.data.frame(el$`.data`), error = function(e) FALSE)) {
-        # - - - -
-        # dplyr
-        # - - - -
-        # an element `.data` will be in the system call stack when using dplyr::select()
-        # [but not when using dplyr::filter(), dplyr::mutate() or dplyr::summarise()]
-        not_set <<- FALSE
-        source <<- "dplyr_selector"
-        el$`.data`
-      } else if (tryCatch(any(c("x", "xx") %in% names(el)), error = function(e) FALSE)) {
-        # - - - -
-        # base R
-        # - - - -
-        # an element `x` will be in this environment for only cols, e.g. `example_isolates[, carbapenems()]`
-        # an element `xx` will be in this environment for rows + cols, e.g. `example_isolates[c(1:3), carbapenems()]`
-        if (tryCatch(is.data.frame(el$xx), error = function(e) FALSE)) {
-          not_set <<- FALSE
-          el$xx
-        } else if (tryCatch(is.data.frame(el$x))) {
-          not_set <<- FALSE
-          el$x
-        } else {
-          NULL
-        }
-      } else {
-        NULL
+  # try a manual (base R) method, by going over all underlying environments with sys.frames()
+  for (env in sys.frames()) {
+    if (!is.null(env$`.Generic`)) {
+      # don't check `".Generic" %in% names(env)`, because in R < 3.2, `names(env)` is always NULL
+      
+      if (valid_df(env$`.data`)) {
+        # an element `.data` will be in the environment when using `dplyr::select()`
+        # (but not when using `dplyr::filter()`, `dplyr::mutate()` or `dplyr::summarise()`)
+        return(env$`.data`)
+        
+      } else if (valid_df(env$xx)) {
+        # an element `xx` will be in the environment for rows + cols, e.g. `example_isolates[c(1:3), carbapenems()]`
+        return(env$xx)
+        
+      } else if (valid_df(env$x)) {
+        # an element `x` will be in the environment for only cols, e.g. `example_isolates[, carbapenems()]`
+        return(env$x)
       }
-    } else {
-      NULL
     }
-  })
-  
-  # lookup the matched frame and return its value: a data.frame
-  vars_df <- tryCatch(frms[[which(!vapply(FUN.VALUE = logical(1), frms, is.null))]], error = function(e) NULL)
-  if (is.data.frame(vars_df)) {
-    out <- structure(vars_df, type = source)
-    pkg_env$get_current_data.call <- unique_call_id(entire_session = FALSE)
-    pkg_env$get_current_data.out <- out
-    return(out)
   }
   
-  # nothing worked, so:
+  # no data.frame found, so an error  must be returned:
   if (is.na(arg_name)) {
     if (isTRUE(is.numeric(call))) {
       fn <- as.character(sys.call(call + 1)[1])
@@ -803,10 +851,11 @@ get_current_data <- function(arg_name, call) {
     } else {
       examples <- ""
     }
-    stop_("this function must be used inside valid dplyr selection verbs or inside a data.frame call",
+    stop_("this function must be used inside a `dplyr` verb or `data.frame` call",
           examples,
           call = call)
   } else {
+    # mimic a base R error that the argument is missing
     stop_("argument `", arg_name, "` is missing with no default", call = call)
   }
 }
@@ -821,19 +870,19 @@ get_current_column <- function() {
     }
   }
   
-  # cur_column() doesn't always work (only allowed for conditions set by dplyr), but it's probably still possible:
-  frms <- lapply(sys.frames(), function(el) {
-    if ("i" %in% names(el)) {
-      if ("tibble_vars" %in% names(el)) {
+  # cur_column() doesn't always work (only allowed for certain conditions set by dplyr), but it's probably still possible:
+  frms <- lapply(sys.frames(), function(env) {
+    if (!is.null(env$i)) {
+      if (!is.null(env$tibble_vars)) {
         # for mutate_if()
-        el$tibble_vars[el$i]
+        env$tibble_vars[env$i]
       } else {
         # for mutate(across())
         df <- tryCatch(get_current_data(NA, 0), error = function(e) NULL)
         if (is.data.frame(df)) {
-          colnames(df)[el$i]
+          colnames(df)[env$i]
         } else {
-          el$i
+          env$i
         }
       }
     } else {
@@ -851,37 +900,51 @@ get_current_column <- function() {
 }
 
 is_null_or_grouped_tbl <- function(x) {
-  # attribute "grouped_df" might change at one point, so only set in one place; here.
+  # class "grouped_df" might change at one point, so only set in one place; here.
   is.null(x) || inherits(x, "grouped_df")
 }
 
-unique_call_id <- function(entire_session = FALSE) {
+unique_call_id <- function(entire_session = FALSE, match_fn = NULL) {
   if (entire_session == TRUE) {
-    c(envir = "session",
-      call = "session")
-  } else {
-    # combination of environment ID (like "0x7fed4ee8c848")
-    # and highest system call
-    call <- paste0(deparse(sys.calls()[[1]]), collapse = "")
-    if (!interactive() || call %like% "run_test_dir|test_all|tinytest|test_package|testthat") {
-      # unit tests will keep the same call and environment - give them a unique ID
-      call <- paste0(sample(c(c(0:9), letters[1:6]), size = 64, replace = TRUE), collapse = "")
-    }
-    c(envir = gsub("<environment: (.*)>", "\\1", utils::capture.output(sys.frames()[[1]])),
-      call = call)
+    return(c(envir = "session", call = "session"))
   }
+  
+  # combination of environment ID (such as "0x7fed4ee8c848")
+  # and relevant system call (where 'match_fn' is being called in)
+  calls <- sys.calls()
+  if (!identical(Sys.getenv("R_RUN_TINYTEST"), "true") &&
+      !any(as.character(calls[[1]]) %like_case% "run_test_dir|run_test_file|test_all|tinytest|test_package|testthat")) {
+    for (i in seq_len(length(calls))) {
+      call_clean <- gsub("[^a-zA-Z0-9_().-]", "", as.character(calls[[i]]), perl = TRUE)
+      if (any(call_clean %like% paste0(match_fn, "\\("), na.rm = TRUE)) {
+        return(c(envir = gsub("<environment: (.*)>", "\\1", utils::capture.output(sys.frames()[[1]]), perl = TRUE),
+                 call = paste0(deparse(calls[[i]]), collapse = "")))
+      }
+    }
+  }
+  c(envir = paste0(sample(c(c(0:9), letters[1:6]), size = 32, replace = TRUE), collapse = ""),
+    call = paste0(sample(c(c(0:9), letters[1:6]), size = 32, replace = TRUE), collapse = ""))
 }
 
-remember_thrown_message <- function(fn, entire_session = FALSE) {
-  # this is to prevent that messages/notes will be printed for every dplyr group
+#' @noRd
+#' @param fn name of the function as a character
+#' @param ... character elements to be pasted together as a 'salt'
+#' @param entire_session show message once per session
+message_not_thrown_before <- function(fn, ..., entire_session = FALSE) {
+  # this is to prevent that messages/notes will be printed for every dplyr group or more than once per session
   # e.g. this would show a msg 4 times: example_isolates %>% group_by(hospital_id) %>% filter(mo_is_gram_negative())
-  assign(x = paste0("thrown_msg.", fn),
-         value = unique_call_id(entire_session = entire_session),
-         envir = pkg_env)
-}
-
-message_not_thrown_before <- function(fn, entire_session = FALSE) {
-  is.null(pkg_env[[paste0("thrown_msg.", fn)]]) || !identical(pkg_env[[paste0("thrown_msg.", fn)]], unique_call_id(entire_session))
+  salt <- gsub("[^a-zA-Z0-9|_-]", "?", paste(c(...), sep = "|", collapse = "|"), perl = TRUE)
+  not_thrown_before <- is.null(pkg_env[[paste0("thrown_msg.", fn, ".", salt)]]) ||
+    !identical(pkg_env[[paste0("thrown_msg.", fn, ".", salt)]],
+               unique_call_id(entire_session = entire_session,
+                              match_fn = fn))
+  if (isTRUE(not_thrown_before)) {
+    # message was not thrown before - remember this so on the next run it will return FALSE:
+    assign(x = paste0("thrown_msg.", fn, ".", salt),
+           value = unique_call_id(entire_session = entire_session, match_fn = fn),
+           envir = pkg_env)
+  }
+  not_thrown_before
 }
 
 has_colour <- function() {
@@ -976,12 +1039,12 @@ font_grey <- function(..., collapse = " ") {
   try_colour(..., before = "\033[38;5;249m", after = "\033[39m", collapse = collapse)
 }
 font_grey_bg <- function(..., collapse = " ") {
-  if (tryCatch(rstudioapi::getThemeInfo()$dark == TRUE, error = function(e) FALSE)) {
+  if (tryCatch(import_fn("getThemeInfo", "rstudioapi", error_on_fail = FALSE)()$dark, error = function(e) FALSE)) {
     # similar to HTML #444444
     try_colour(..., before = "\033[48;5;238m", after = "\033[49m", collapse = collapse)  
   } else {
-    # similar to HTML #eeeeee
-    try_colour(..., before = "\033[48;5;254m", after = "\033[49m", collapse = collapse)
+    # similar to HTML #f0f0f0
+    try_colour(..., before = "\033[48;5;255m", after = "\033[49m", collapse = collapse)
   }
 }
 font_green_bg <- function(..., collapse = " ") {
@@ -1033,12 +1096,28 @@ progress_ticker <- function(n = 1, n_min = 0, print = TRUE, ...) {
     }
     set_clean_class(pb, new_class = "txtProgressBar")
   } else if (n >= n_min) {
-    pb <- utils::txtProgressBar(max = n, style = 3)
-    pb$tick <- function() {
-      pb$up(pb$getVal() + 1)
+    # rely on the progress package if it is available - it has a more verbose output
+    progress_bar <- import_fn("progress_bar", "progress", error_on_fail = FALSE)
+    if (!is.null(progress_bar)) {
+      # so we use progress::progress_bar
+      # a close() method was also added, see below this function
+      pb <- progress_bar$new(format = "[:bar] :percent (:current/:total)",
+                             total = n)
+    } else {
+      pb <- utils::txtProgressBar(max = n, style = 3)
+      pb$tick <- function() {
+        pb$up(pb$getVal() + 1)
+      }
     }
     pb
   }
+}
+
+#' @method close progress_bar
+#' @export
+#' @noRd
+close.progress_bar <- function(con, ...) {
+  con$terminate()
 }
 
 set_clean_class <- function(x, new_class) {
