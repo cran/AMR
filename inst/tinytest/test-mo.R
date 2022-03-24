@@ -87,8 +87,9 @@ expect_identical(
             "Sthafilokkockus aureeuzz",
             "Staphylococcus aureus",
             "MRSA",
-            "VISA")))),
-  rep("B_STPHY_AURS", 9))
+            "VISA",
+            "meth.-resis. S. aureus (MRSA)")))),
+  rep("B_STPHY_AURS", 10))
 expect_identical(
   as.character(
     as.mo(c("EHEC", "EPEC", "EIEC", "STEC", "ATEC", "UPEC"))),
@@ -200,6 +201,7 @@ expect_equal(as.character(as.mo("g aponina")), "B_GMPHS_APNN")
 expect_equal(suppressMessages(as.character(as.mo("Escherichia blattae"))), "B_SHMWL_BLTT")
 print(mo_renamed())
 expect_equal(suppressMessages(as.character(as.mo(c("E. coli", "Chlamydo psittaci")))), c("B_ESCHR_COLI", "B_CHLMY_PSTT"))
+expect_equal(suppressMessages(mo_name("eubcom")), "Clostridium combesii")
 
 # check uncertain names
 expect_equal(suppressMessages(as.character(as.mo("staaur extratest", allow_uncertain = TRUE))), "B_STPHY_AURS")
@@ -243,7 +245,7 @@ expect_stdout(print(mo_uncertainties()))
 expect_equal(suppressMessages(as.mo(c("Salmonella Goettingen", "Salmonella Typhimurium", "Salmonella Group A"))),
              as.mo(c("Salmonella enterica", "Salmonella enterica", "Salmonella")))
 
-# no virusses
+# no viruses
 expect_equal(as.character(as.mo("Virus")), NA_character_)
 
 # summary

@@ -65,7 +65,7 @@
 #' 
 #' * `guideline = "TB"`
 #'
-#'   The international guideline for multi-drug resistant tuberculosis - World Health Organization "Companion handbook to the WHO guidelines for the programmatic management of drug-resistant tuberculosis" ([link](https://www.who.int/tb/publications/pmdt_companionhandbook/en/))
+#'   The international guideline for multi-drug resistant tuberculosis - World Health Organization "Companion handbook to the WHO guidelines for the programmatic management of drug-resistant tuberculosis" ([link](https://www.who.int/publications/i/item/9789241548809))
 #' 
 #' * `guideline = "MRGN"`
 #'
@@ -240,7 +240,7 @@ mdro <- function(x = NULL,
   }
   
   if (!is.null(list(...)$country)) {
-    warning_("Using `country` is deprecated, use `guideline` instead. See ?mdro.", call = FALSE)
+    warning_("in `mdro()`: using `country` is deprecated, use `guideline` instead. See ?mdro")
     guideline <- list(...)$country
   }
   
@@ -343,7 +343,7 @@ mdro <- function(x = NULL,
     guideline$name <- "Companion handbook to the WHO guidelines for the programmatic management of drug-resistant tuberculosis"
     guideline$author <- "WHO (World Health Organization)"
     guideline$version <- "WHO/HTM/TB/2014.11, 2014"
-    guideline$source_url <- "https://www.who.int/tb/publications/pmdt_companionhandbook/en/"
+    guideline$source_url <- "https://www.who.int/publications/i/item/9789241548809"
     guideline$type <- "MDR-TB's"
     
     # support per country:
@@ -1550,8 +1550,8 @@ mdro <- function(x = NULL,
   if (guideline$code == "cmi2012") {
     if (any(x$MDRO == -1, na.rm = TRUE)) {
       if (message_not_thrown_before("mdro", "availability")) {
-        warning_("NA introduced for isolates where the available percentage of antimicrobial classes was below ",
-                 percentage(pct_required_classes), " (set with `pct_required_classes`)", call = FALSE)
+        warning_("in `mdro()`: NA introduced for isolates where the available percentage of antimicrobial classes was below ",
+                 percentage(pct_required_classes), " (set with `pct_required_classes`)")
       }
       # set these -1s to NA
       x[which(x$MDRO == -1), "MDRO"] <- NA_integer_
@@ -1709,7 +1709,7 @@ run_custom_mdro_guideline <- function(df, guideline, info) {
                       return("error")
                     })
     if (identical(qry, "error")) {
-      warning_("in custom_mdro_guideline(): rule ", i, 
+      warning_("in `custom_mdro_guideline()`: rule ", i, 
                " (`", as.character(guideline[[i]]$query), "`) was ignored because of this error message: ",
                pkg_env$err_msg,
                call = FALSE, 
