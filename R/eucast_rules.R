@@ -49,7 +49,7 @@ format_eucast_version_nr <- function(version, markdown = TRUE) {
 #' Apply EUCAST Rules
 #' 
 #' @description
-#' Apply rules for clinical breakpoints and intrinsic resistance as defined by the European Committee on Antimicrobial Susceptibility Testing (EUCAST, <https://eucast.org>), see *Source*. Use [eucast_dosage()] to get a [data.frame] with advised dosages of a certain bug-drug combination, which is based on the [dosage] data set.
+#' Apply rules for clinical breakpoints and intrinsic resistance as defined by the European Committee on Antimicrobial Susceptibility Testing (EUCAST, <https://www.eucast.org>), see *Source*. Use [eucast_dosage()] to get a [data.frame] with advised dosages of a certain bug-drug combination, which is based on the [dosage] data set.
 #' 
 #' To improve the interpretation of the antibiogram before EUCAST rules are applied, some non-EUCAST rules can applied at default, see *Details*.
 #' @inheritSection lifecycle Stable Lifecycle
@@ -620,7 +620,7 @@ eucast_rules <- function(x,
         cat(
           paste0("\n", font_grey(strrep("-", 0.95 * options()$width)), "\n",
                  word_wrap("Rules by the ", font_bold("European Committee on Antimicrobial Susceptibility Testing (EUCAST)")), "\n", 
-                 font_blue("https://eucast.org/"), "\n"))
+                 font_blue("https://www.eucast.org/"), "\n"))
         eucast_notification_shown <- TRUE
       }
       

@@ -65,7 +65,7 @@ eucast_dosage(ab, administration = "iv", version_breakpoints = 11)
 The input of \code{x}, possibly with edited values of antibiotics. Or, if \code{verbose = TRUE}, a \link{data.frame} with all original and new values of the affected bug-drug combinations.
 }
 \description{
-Apply rules for clinical breakpoints and intrinsic resistance as defined by the European Committee on Antimicrobial Susceptibility Testing (EUCAST, \url{https://eucast.org}), see \emph{Source}. Use \code{\link[=eucast_dosage]{eucast_dosage()}} to get a \link{data.frame} with advised dosages of a certain bug-drug combination, which is based on the \link{dosage} data set.
+Apply rules for clinical breakpoints and intrinsic resistance as defined by the European Committee on Antimicrobial Susceptibility Testing (EUCAST, \url{https://www.eucast.org}), see \emph{Source}. Use \code{\link[=eucast_dosage]{eucast_dosage()}} to get a \link{data.frame} with advised dosages of a certain bug-drug combination, which is based on the \link{dosage} data set.
 
 To improve the interpretation of the antibiogram before EUCAST rules are applied, some non-EUCAST rules can applied at default, see \emph{Details}.
 }

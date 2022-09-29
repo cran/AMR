@@ -1,5 +1,11 @@
-# `AMR` 1.8.1
+# `AMR` 1.8.2
 
+This is a small intermediate update to include the reference to our publication in the Journal of Statistical Software, DOI 10.18637/jss.v104.i03.
+
+A major update will be released by the end of 2022 or early 2023 to include the most recent EUCAST and CLSI guidelines, updated microbial taxonomy, and support for 16 languages.
+
+
+# `AMR` 1.8.1
 
 All functions in this package are considered to be stable. Updates to the AMR interpretation rules (such as by EUCAST and CLSI), the microbial taxonomy, and the antibiotic dosages will all be updated every 6 to 12 months.
 

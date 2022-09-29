@@ -61,3 +61,6 @@ If you have found a bug, please file a new issue at: \cr
 \url{https://github.com/msberends/AMR/issues}
 }
 
+\references{
+This package was described in the Journal of Statistical Software: \doi{10.18637/jss.v104.i03}
+}
