@@ -7,7 +7,7 @@
 \source{
 Methodology of this function is strictly based on:
 \itemize{
-\item \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 4th Edition}, 2014, \emph{Clinical and Laboratory Standards Institute (CLSI)}. \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
+\item \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 5th Edition}, 2022, \emph{Clinical and Laboratory Standards Institute (CLSI)}. \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
 \item Hindler JF and Stelling J (2007). \strong{Analysis and Presentation of Cumulative Antibiograms: A New Consensus Guideline from the Clinical and Laboratory Standards Institute.} Clinical Infectious Diseases, 44(6), 867-873. \doi{10.1086/511864}
 }
 }
@@ -31,7 +31,7 @@ first_isolate(
   points_threshold = 2,
   info = interactive(),
   include_unknown = FALSE,
-  include_untested_rsi = TRUE,
+  include_untested_sir = TRUE,
   ...
 )
 
@@ -48,19 +48,19 @@ filter_first_isolate(
 \arguments{
 \item{x}{a \link{data.frame} containing isolates. Can be left blank for automatic determination, see \emph{Examples}.}
 
-\item{col_date}{column name of the result date (or date that is was received on the lab), defaults to the first column with a date class}
+\item{col_date}{column name of the result date (or date that is was received on the lab) - the default is the first column with a date class}
 
-\item{col_patient_id}{column name of the unique IDs of the patients, defaults to the first column that starts with 'patient' or 'patid' (case insensitive)}
+\item{col_patient_id}{column name of the unique IDs of the patients - the default is the first column that starts with 'patient' or 'patid' (case insensitive)}
 
-\item{col_mo}{column name of the IDs of the microorganisms (see \code{\link[=as.mo]{as.mo()}}), defaults to the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
+\item{col_mo}{column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
 
 \item{col_testcode}{column name of the test codes. Use \code{col_testcode = NULL} to \strong{not} exclude certain test codes (such as test codes for screening). In that case \code{testcodes_exclude} will be ignored.}
 
 \item{col_specimen}{column name of the specimen type or group}
 
-\item{col_icu}{column name of the logicals (\code{TRUE}/\code{FALSE}) whether a ward or department is an Intensive Care Unit (ICU)}
+\item{col_icu}{column name of the logicals (\code{TRUE}/\code{FALSE}) whether a ward or department is an Intensive Care Unit (ICU). This can also be a \link{logical} vector with the same length as rows in \code{x}.}
 
-\item{col_keyantimicrobials}{(only useful when \code{method = "phenotype-based"}) column name of the key antimicrobials to determine first isolates, see \code{\link[=key_antimicrobials]{key_antimicrobials()}}. Defaults to the first column that starts with 'key' followed by 'ab' or 'antibiotics' or 'antimicrobials' (case insensitive). Use \code{col_keyantimicrobials = FALSE} to prevent this. Can also be the output of \code{\link[=key_antimicrobials]{key_antimicrobials()}}.}
+\item{col_keyantimicrobials}{(only useful when \code{method = "phenotype-based"}) column name of the key antimicrobials to determine first isolates, see \code{\link[=key_antimicrobials]{key_antimicrobials()}}. The default is the first column that starts with 'key' followed by 'ab' or 'antibiotics' or 'antimicrobials' (case insensitive). Use \code{col_keyantimicrobials = FALSE} to prevent this. Can also be the output of \code{\link[=key_antimicrobials]{key_antimicrobials()}}.}
 
 \item{episode_days}{episode in days after which a genus/species combination will be determined as 'first isolate' again. The default of 365 days is based on the guideline by CLSI, see \emph{Source}.}
 
@@ -78,16 +78,16 @@ filter_first_isolate(
 
 \item{points_threshold}{minimum number of points to require before differences in the antibiogram will lead to inclusion of an isolate when \code{type = "points"}, see \emph{Details}}
 
-\item{info}{a \link{logical} to indicate info should be printed, defaults to \code{TRUE} only in interactive mode}
+\item{info}{a \link{logical} to indicate info should be printed - the default is \code{TRUE} only in interactive mode}
 
 \item{include_unknown}{a \link{logical} to indicate whether 'unknown' microorganisms should be included too, i.e. microbial code \code{"UNKNOWN"}, which defaults to \code{FALSE}. For WHONET users, this means that all records with organism code \code{"con"} (\emph{contamination}) will be excluded at default. Isolates with a microbial ID of \code{NA} will always be excluded as first isolate.}
 
-\item{include_untested_rsi}{a \link{logical} to indicate whether also rows without antibiotic results are still eligible for becoming a first isolate. Use \code{include_untested_rsi = FALSE} to always return \code{FALSE} for such rows. This checks the data set for columns of class \verb{<rsi>} and consequently requires transforming columns with antibiotic results using \code{\link[=as.rsi]{as.rsi()}} first.}
+\item{include_untested_sir}{a \link{logical} to indicate whether also rows without antibiotic results are still eligible for becoming a first isolate. Use \code{include_untested_sir = FALSE} to always return \code{FALSE} for such rows. This checks the data set for columns of class \code{sir} and consequently requires transforming columns with antibiotic results using \code{\link[=as.sir]{as.sir()}} first.}
 
 \item{...}{arguments passed on to \code{\link[=first_isolate]{first_isolate()}} when using \code{\link[=filter_first_isolate]{filter_first_isolate()}}, otherwise arguments passed on to \code{\link[=key_antimicrobials]{key_antimicrobials()}} (such as \code{universal}, \code{gram_negative}, \code{gram_positive})}
 }
 \value{
-A \code{\link{logical}} vector
+A \link{logical} vector
 }
 \description{
 Determine first isolates of all microorganisms of every patient per episode and (if needed) per specimen type. These functions support all four methods as summarised by Hindler \emph{et al.} in 2007 (\doi{10.1086/511864}). To determine patient episodes not necessarily based on microorganisms, use \code{\link[=is_new_episode]{is_new_episode()}} that also supports grouping with the \code{dplyr} package.
@@ -126,6 +126,8 @@ All mentioned methods are covered in the \code{\link[=first_isolate]{first_isola
    - Any difference in key antimicrobial results \tab - \code{first_isolate(x, type = "keyantimicrobials")} \cr
 }
 
+}
+
 \subsection{Isolate-based}{
 
 This method does not require any selection, as all isolates should be included. It does, however, respect all arguments set in the \code{\link[=first_isolate]{first_isolate()}} function. For example, the default setting for \code{include_unknown} (\code{FALSE}) will omit selection of rows without a microbial ID.
@@ -149,73 +151,44 @@ This is a more reliable method, since it also \emph{weighs} the antibiogram (ant
 \enumerate{
 \item Using \code{type = "points"} and argument \code{points_threshold} (default)
 
-This method weighs \emph{all} antimicrobial agents available in the data set. Any difference from I to S or R (or vice versa) counts as \code{0.5} points, a difference from S to R (or vice versa) counts as \code{1} point. When the sum of points exceeds \code{points_threshold}, which defaults to \code{2}, an isolate will be selected as a first weighted isolate.
+This method weighs \emph{all} antimicrobial drugs available in the data set. Any difference from I to S or R (or vice versa) counts as \code{0.5} points, a difference from S to R (or vice versa) counts as \code{1} point. When the sum of points exceeds \code{points_threshold}, which defaults to \code{2}, an isolate will be selected as a first weighted isolate.
 
 All antimicrobials are internally selected using the \code{\link[=all_antimicrobials]{all_antimicrobials()}} function. The output of this function does not need to be passed to the \code{\link[=first_isolate]{first_isolate()}} function.
 \item Using \code{type = "keyantimicrobials"} and argument \code{ignore_I}
 
-This method only weighs specific antimicrobial agents, called \emph{key antimicrobials}. Any difference from S to R (or vice versa) in these key antimicrobials will select an isolate as a first weighted isolate. With \code{ignore_I = FALSE}, also differences from I to S or R (or vice versa) will lead to this.
+This method only weighs specific antimicrobial drugs, called \emph{key antimicrobials}. Any difference from S to R (or vice versa) in these key antimicrobials will select an isolate as a first weighted isolate. With \code{ignore_I = FALSE}, also differences from I to S or R (or vice versa) will lead to this.
 
 Key antimicrobials are internally selected using the \code{\link[=key_antimicrobials]{key_antimicrobials()}} function, but can also be added manually as a variable to the data and set in the \code{col_keyantimicrobials} argument. Another option is to pass the output of the \code{\link[=key_antimicrobials]{key_antimicrobials()}} function directly to the \code{col_keyantimicrobials} argument.
 }
 
 The default method is phenotype-based (using \code{type = "points"}) and episode-based (using \code{episode_days = 365}). This makes sure that every genus-species combination is selected per patient once per year, while taking into account all antimicrobial test results. If no antimicrobial test results are available in the data set, only the episode-based method is applied at default.
 }
-
 }
-}
-\section{Stable Lifecycle}{
-
-\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:"5"} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
-
-If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit a message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
-}
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
-}
-
 \examples{
 # `example_isolates` is a data set available in the AMR package.
 # See ?example_isolates.
 
-example_isolates[first_isolate(), ]
+example_isolates[first_isolate(info = TRUE), ]
 \donttest{
 # get all first Gram-negatives
-example_isolates[which(first_isolate() & mo_is_gram_negative()), ]
+example_isolates[which(first_isolate(info = FALSE) & mo_is_gram_negative()), ]
 
 if (require("dplyr")) {
   # filter on first isolates using dplyr:
   example_isolates \%>\%
-    filter(first_isolate())
- 
+    filter(first_isolate(info = TRUE))
+}
+if (require("dplyr")) {
   # short-hand version:
   example_isolates \%>\%
-    filter_first_isolate()
-    
- # grouped determination of first isolates (also prints group names):
- example_isolates \%>\%
-   group_by(hospital_id) \%>\%
-   mutate(first = first_isolate())
-  
-  # now let's see if first isolates matter:
-  A <- example_isolates \%>\%
-    group_by(hospital_id) \%>\%
-    summarise(count = n_rsi(GEN),            # gentamicin availability
-              resistance = resistance(GEN))  # gentamicin resistance
- 
-  B <- example_isolates \%>\%
-    filter_first_isolate() \%>\%               # the 1st isolate filter
-    group_by(hospital_id) \%>\%
-    summarise(count = n_rsi(GEN),            # gentamicin availability
-              resistance = resistance(GEN))  # gentamicin resistance
- 
-  # Have a look at A and B.
-  # B is more reliable because every isolate is counted only once.
-  # Gentamicin resistance in hospital D appears to be 4.2\% higher than
-  # when you (erroneously) would have used all isolates for analysis.
+    filter_first_isolate(info = FALSE)
+}
+if (require("dplyr")) {
+  # flag the first isolates per group:
+  example_isolates \%>\%
+    group_by(ward) \%>\%
+    mutate(first = first_isolate(info = TRUE)) \%>\%
+    select(ward, date, patient, mo, first)
 }
 }
 }

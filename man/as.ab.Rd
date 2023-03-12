@@ -13,9 +13,9 @@ is.ab(x)
 \arguments{
 \item{x}{a \link{character} vector to determine to antibiotic ID}
 
-\item{flag_multiple_results}{a \link{logical} to indicate whether a note should be printed to the console that probably more than one antibiotic code or name can be retrieved from a single input value.}
+\item{flag_multiple_results}{a \link{logical} to indicate whether a note should be printed to the console that probably more than one antibiotic drug code or name can be retrieved from a single input value.}
 
-\item{info}{a \link{logical} to indicate whether a progress bar should be printed, defaults to \code{TRUE} only in interactive mode}
+\item{info}{a \link{logical} to indicate whether a progress bar should be printed - the default is \code{TRUE} only in interactive mode}
 
 \item{...}{arguments passed on to internal functions}
 }
@@ -23,7 +23,7 @@ is.ab(x)
 A \link{character} \link{vector} with additional class \code{\link{ab}}
 }
 \description{
-Use this function to determine the antibiotic code of one or more antibiotics. The data set \link{antibiotics} will be searched for abbreviations, official names and synonyms (brand names).
+Use this function to determine the antibiotic drug code of one or more antibiotics. The data set \link{antibiotics} will be searched for abbreviations, official names and synonyms (brand names).
 }
 \details{
 All entries in the \link{antibiotics} data set have three different identifiers: a human readable EARS-Net code (column \code{ab}, used by ECDC and WHONET), an ATC code (column \code{atc}, used by WHO), and a CID code (column \code{cid}, Compound ID, used by PubChem). The data set contains more than 5,000 official brand names from many different countries, as found in PubChem. Not that some drugs contain multiple ATC codes.
@@ -38,7 +38,9 @@ All these properties will be searched for the user input. The \code{\link[=as.ab
 
 Use the \code{\link[=ab_property]{ab_*}} functions to get properties based on the returned antibiotic ID, see \emph{Examples}.
 
-Note: the \code{\link[=as.ab]{as.ab()}} and \code{\link[=ab_property]{ab_*}} functions may use very long regular expression to match brand names of antimicrobial agents. This may fail on some systems.
+Note: the \code{\link[=as.ab]{as.ab()}} and \code{\link[=ab_property]{ab_*}} functions may use very long regular expression to match brand names of antimicrobial drugs. This may fail on some systems.
+
+You can add your own manual codes to be considered by \code{\link[=as.ab]{as.ab()}} and all \code{\link[=ab_property]{ab_*}} functions, see \code{\link[=add_custom_antimicrobials]{add_custom_antimicrobials()}}.
 }
 \section{Source}{
 
@@ -47,17 +49,8 @@ World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodo
 European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 }
 
-\section{Stable Lifecycle}{
-
-\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:"5"} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
-
-If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit a message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
-}
-
 \section{WHOCC}{
 
-\if{html}{\figure{logo_who.png}{options: height="60" style=margin-bottom:"5"} \cr}
 This package contains \strong{all ~550 antibiotic, antimycotic and antiviral drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}).
 
 These have become the gold standard for international drug utilisation monitoring and research.
@@ -69,12 +62,7 @@ The WHOCC is located in Oslo at the Norwegian Institute of Public Health and fun
 
 \section{Reference Data Publicly Available}{
 
-All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
-}
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+All data sets in this \code{AMR} package (about microorganisms, antibiotics, SIR interpretation, EUCAST rules, etc.) are publicly and freely available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. We also provide tab-separated plain text files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
 }
 
 \examples{
@@ -87,26 +75,25 @@ as.ab("   eryt 123")
 as.ab("ERYT")
 as.ab("ERY")
 as.ab("eritromicine") # spelled wrong, yet works
-as.ab("Erythrocin")   # trade name
-as.ab("Romycin")      # trade name
+as.ab("Erythrocin") # trade name
+as.ab("Romycin") # trade name
 
 # spelling from different languages and dyslexia are no problem
 ab_atc("ceftriaxon")
-ab_atc("cephtriaxone")     # small spelling error
-ab_atc("cephthriaxone")    # or a bit more severe
+ab_atc("cephtriaxone") # small spelling error
+ab_atc("cephthriaxone") # or a bit more severe
 ab_atc("seephthriaaksone") # and even this works
 
 # use ab_* functions to get a specific properties (see ?ab_property);
 # they use as.ab() internally:
-ab_name("J01FA01")    # "Erythromycin"
-ab_name("eryt")       # "Erythromycin"
+ab_name("J01FA01")
+ab_name("eryt")
+
 \donttest{
 if (require("dplyr")) {
-
-  # you can quickly rename <rsi> columns using dplyr >= 1.0.0:
+  # you can quickly rename 'sir' columns using set_ab_names() with dplyr:
   example_isolates \%>\%
-    rename_with(as.ab, where(is.rsi))
-   
+    set_ab_names(where(is.sir), property = "atc")
 }
 }
 }

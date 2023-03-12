@@ -1,15 +1,19 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Data Analysis for R                   #
+# AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# LICENCE                                                              #
-# (c) 2018-2022 Berends MS, Luz CF et al.                              #
-# Developed at the University of Groningen, the Netherlands, in        #
-# collaboration with non-profit organisations Certe Medical            #
-# Diagnostics & Advice, and University Medical Center Groningen.       # 
+# CITE AS                                                              #
+# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
+# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
+# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# doi:10.18637/jss.v104.i03                                            #
+#                                                                      #
+# Developed at the University of Groningen and the University Medical  #
+# Center Groningen in The Netherlands, in collaboration with many      #
+# colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
@@ -28,13 +32,13 @@
 #' @description Skewness is a measure of the asymmetry of the probability distribution of a real-valued random variable about its mean.
 #'
 #' When negative ('left-skewed'): the left tail is longer; the mass of the distribution is concentrated on the right of a histogram. When positive ('right-skewed'): the right tail is longer; the mass of the distribution is concentrated on the left of a histogram. A normal distribution has a skewness of 0.
-#' @inheritSection lifecycle Stable Lifecycle
 #' @param x a vector of values, a [matrix] or a [data.frame]
 #' @param na.rm a [logical] value indicating whether `NA` values should be stripped before the computation proceeds
 #' @seealso [kurtosis()]
 #' @rdname skewness
-#' @inheritSection AMR Read more on Our Website!
 #' @export
+#' @examples
+#' skewness(runif(1000))
 skewness <- function(x, na.rm = FALSE) {
   meet_criteria(na.rm, allow_class = "logical", has_length = 1)
   UseMethod("skewness")
@@ -46,11 +50,11 @@ skewness <- function(x, na.rm = FALSE) {
 skewness.default <- function(x, na.rm = FALSE) {
   meet_criteria(na.rm, allow_class = "logical", has_length = 1)
   x <- as.vector(x)
-  if (na.rm == TRUE) {
+  if (isTRUE(na.rm)) {
     x <- x[!is.na(x)]
   }
   n <- length(x)
-  (sum((x - mean(x))^3) / n) / (sum((x - mean(x)) ^ 2) / n) ^ (3 / 2)
+  (sum((x - mean(x))^3) / n) / (sum((x - mean(x))^2) / n)^(3 / 2)
 }
 
 #' @method skewness matrix

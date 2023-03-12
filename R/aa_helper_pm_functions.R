@@ -1,15 +1,19 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Data Analysis for R                   #
+# AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# LICENCE                                                              #
-# (c) 2018-2022 Berends MS, Luz CF et al.                              #
-# Developed at the University of Groningen, the Netherlands, in        #
-# collaboration with non-profit organisations Certe Medical            #
-# Diagnostics & Advice, and University Medical Center Groningen.       # 
+# CITE AS                                                              #
+# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
+# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
+# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# doi:10.18637/jss.v104.i03                                            #
+#                                                                      #
+# Developed at the University of Groningen and the University Medical  #
+# Center Groningen in The Netherlands, in collaboration with many      #
+# colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
@@ -34,10 +38,10 @@
 #
 # All functions are prefixed with 'pm_' to make it obvious that they are dplyr substitutes.
 #
-# All code below was released under MIT license, that permits 'free of charge, to any person obtaining a 
+# All code below was released under MIT license, that permits 'free of charge, to any person obtaining a
 # copy of the software and associated documentation files (the "Software"), to deal in the Software
 # without restriction, including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software 
+# distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
 # is furnished to do so', given that a copyright notice is given in the software.
 #
 # Copyright notice on 19 September 2020, the day this code was downloaded, as found on
@@ -206,7 +210,9 @@ pm_distinct <- function(.data, ...) {
 }
 
 pm_distinct.default <- function(.data, ..., .keep_all = FALSE) {
-  if (ncol(.data) == 0L) return(.data[1, ])
+  if (ncol(.data) == 0L) {
+    return(.data[1, ])
+  }
   cols <- pm_deparse_dots(...)
   col_names <- names(cols)
   col_len <- length(cols)
@@ -336,7 +342,9 @@ pm_print.grouped_data <- function(x, ..., digits = NULL, quote = FALSE, right = 
 }
 
 pm_group_data <- function(.data) {
-  if (!pm_has_groups(.data)) return(data.frame(.rows = I(list(seq_len(nrow(.data))))))
+  if (!pm_has_groups(.data)) {
+    return(data.frame(.rows = I(list(seq_len(nrow(.data))))))
+  }
   pm_groups <- pm_get_groups(.data)
   pm_group_data_worker(.data, pm_groups)
 }
@@ -360,7 +368,9 @@ pm_group_rows <- function(.data) {
 }
 
 pm_group_indices <- function(.data) {
-  if (!pm_has_groups(.data)) return(rep(1L, nrow(.data)))
+  if (!pm_has_groups(.data)) {
+    return(rep(1L, nrow(.data)))
+  }
   pm_groups <- pm_get_groups(.data)
   res <- unique(.data[, pm_groups, drop = FALSE])
   res <- res[do.call(order, lapply(pm_groups, function(x) res[, x])), , drop = FALSE]
@@ -417,7 +427,9 @@ pm_group_keys <- function(.data) {
   pm_context$setup(.data)
   res <- pm_context$.data[, pm_context$get_colnames() %in% pm_groups, drop = FALSE]
   res <- res[!duplicated(res), , drop = FALSE]
-  if (nrow(res) == 0L) return(res)
+  if (nrow(res) == 0L) {
+    return(res)
+  }
   class(res) <- "data.frame"
   res <- res[do.call(order, lapply(pm_groups, function(x) res[, x])), , drop = FALSE]
   rownames(res) <- NULL
@@ -509,7 +521,9 @@ pm_join_message <- function(by) {
 pm_lag <- function(x, pm_n = 1L, default = NA) {
   if (inherits(x, "ts")) stop("`x` must be a vector, not a `ts` object, do you want `stats::pm_lag()`?")
   if (length(pm_n) != 1L || !is.numeric(pm_n) || pm_n < 0L) stop("`pm_n` must be a nonnegative integer scalar")
-  if (pm_n == 0L) return(x)
+  if (pm_n == 0L) {
+    return(x)
+  }
   tryCatch(
     storage.mode(default) <- typeof(x),
     warning = function(w) {
@@ -525,7 +539,9 @@ pm_lag <- function(x, pm_n = 1L, default = NA) {
 
 pm_lead <- function(x, pm_n = 1L, default = NA) {
   if (length(pm_n) != 1L || !is.numeric(pm_n) || pm_n < 0L) stop("pm_n must be a nonnegative integer scalar")
-  if (pm_n == 0L) return(x)
+  if (pm_n == 0L) {
+    return(x)
+  }
   tryCatch(
     storage.mode(default) <- typeof(x),
     warning = function(w) {
@@ -565,7 +581,9 @@ pm_mutate.grouped_data <- function(.data, ...) {
 }
 pm_n_distinct <- function(..., na.rm = FALSE) {
   res <- c(...)
-  if (is.list(res)) return(nrow(unique(as.data.frame(res, stringsAsFactors = FALSE))))
+  if (is.list(res)) {
+    return(nrow(unique(as.data.frame(res, stringsAsFactors = FALSE))))
+  }
   if (isTRUE(na.rm)) res <- res[!is.na(res)]
   length(unique(res))
 }
@@ -593,7 +611,7 @@ pm_pull <- function(.data, var = -1) {
   } else if (var_deparse %in% col_names) {
     var <- var_deparse
   }
-  .data[, var]
+  .data[, var, drop = TRUE]
 }
 pm_set_names <- function(object = nm, nm) {
   names(object) <- nm
@@ -669,15 +687,16 @@ pm_rename_with <- function(.data, .fn, .cols = pm_everything(), ...) {
   .data
 }
 pm_replace_with <- function(x, i, val, arg_name) {
-  if (is.null(val)) return(x)
+  if (is.null(val)) {
+    return(x)
+  }
   pm_check_length(val, x, arg_name)
   pm_check_type(val, x, arg_name)
   pm_check_class(val, x, arg_name)
   i[is.na(i)] <- FALSE
   if (length(val) == 1L) {
     x[i] <- val
-  }
-  else {
+  } else {
     x[i] <- val[i]
   }
   x
@@ -686,7 +705,9 @@ pm_replace_with <- function(x, i, val, arg_name) {
 pm_check_length <- function(x, y, arg_name) {
   length_x <- length(x)
   length_y <- length(y)
-  if (all(length_x %in% c(1L, length_y))) return()
+  if (all(length_x %in% c(1L, length_y))) {
+    return()
+  }
   if (length_y == 1) {
     stop(arg_name, " must be length 1, not ", paste(length_x, sep = ", "))
   } else {
@@ -697,15 +718,21 @@ pm_check_length <- function(x, y, arg_name) {
 pm_check_type <- function(x, y, arg_name) {
   x_type <- typeof(x)
   y_type <- typeof(y)
-  if (identical(x_type, y_type)) return()
+  if (identical(x_type, y_type)) {
+    return()
+  }
   stop(arg_name, " must be `", y_type, "`, not `", x_type, "`")
 }
 
 pm_check_class <- function(x, y, arg_name) {
-  if (!is.object(x)) return()
+  if (!is.object(x)) {
+    return()
+  }
   exp_classes <- class(y)
   out_classes <- class(x)
-  if (identical(out_classes, exp_classes)) return()
+  if (identical(out_classes, exp_classes)) {
+    return()
+  }
   stop(arg_name, " must have class `", exp_classes, "`, not class `", out_classes, "`")
 }
 pm_rownames_to_column <- function(.data, var = "rowname") {
@@ -827,8 +854,7 @@ pm_select_positions <- function(.data, ..., .group_pos = FALSE) {
 
 pm_eval_expr <- function(x) {
   type <- typeof(x)
-  switch(
-    type,
+  switch(type,
     "integer" = x,
     "double" = as.integer(x),
     "character" = pm_select_char(x),
@@ -864,8 +890,7 @@ pm_select_symbol <- function(expr) {
 
 pm_eval_call <- function(x) {
   type <- as.character(x[[1]])
-  switch(
-    type,
+  switch(type,
     `:` = pm_select_seq(x),
     `!` = pm_select_negate(x),
     `-` = pm_select_minus(x),
@@ -963,7 +988,7 @@ pm_summarise.default <- function(.data, ...) {
       if (is.list(x_res)) I(x_res) else x_res
     }
   )
-  res <- as.data.frame(res)
+  res <- as.data.frame(res, stringsAsFactors = FALSE)
   fn_names <- names(fns)
   colnames(res) <- if (is.null(fn_names)) fns else fn_names
   if (pm_groups_exist) res <- cbind(group, res, row.names = NULL)
@@ -1029,7 +1054,7 @@ pm_is_wholenumber <- function(x) {
   x %% 1L == 0L
 }
 
-pm_seq2 <- function (from, to) {
+pm_seq2 <- function(from, to) {
   if (length(from) != 1) stop("`from` must be length one")
   if (length(to) != 1) stop("`to` must be length one")
   if (from > to) integer() else seq.int(from, to)
@@ -1041,19 +1066,25 @@ pm_is_function <- function(x, frame) {
     warning = function(w) FALSE,
     error = function(e) FALSE
   )
-  if (isTRUE(res)) return(res)
+  if (isTRUE(res)) {
+    return(res)
+  }
   res <- tryCatch(
     is.function(eval(x)),
     warning = function(w) FALSE,
     error = function(e) FALSE
   )
-  if (isTRUE(res)) return(res)
+  if (isTRUE(res)) {
+    return(res)
+  }
   res <- tryCatch(
     is.function(eval(as.symbol(deparse(substitute(x))))),
     warning = function(w) FALSE,
     error = function(e) FALSE
   )
-  if (isTRUE(res)) return(res)
+  if (isTRUE(res)) {
+    return(res)
+  }
   FALSE
 }
 

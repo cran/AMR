@@ -1,15 +1,19 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Data Analysis for R                   #
+# AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# LICENCE                                                              #
-# (c) 2018-2022 Berends MS, Luz CF et al.                              #
-# Developed at the University of Groningen, the Netherlands, in        #
-# collaboration with non-profit organisations Certe Medical            #
-# Diagnostics & Advice, and University Medical Center Groningen.       # 
+# CITE AS                                                              #
+# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
+# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
+# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# doi:10.18637/jss.v104.i03                                            #
+#                                                                      #
+# Developed at the University of Groningen and the University Medical  #
+# Center Groningen in The Netherlands, in collaboration with many      #
+# colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
@@ -26,14 +30,15 @@
 #' Kurtosis of the Sample
 #'
 #' @description Kurtosis is a measure of the "tailedness" of the probability distribution of a real-valued random variable. A normal distribution has a kurtosis of 3 and a excess kurtosis of 0.
-#' @inheritSection lifecycle Stable Lifecycle
 #' @param x a vector of values, a [matrix] or a [data.frame]
 #' @param na.rm a [logical] to indicate whether `NA` values should be stripped before the computation proceeds
 #' @param excess a [logical] to indicate whether the *excess kurtosis* should be returned, defined as the kurtosis minus 3.
 #' @seealso [skewness()]
 #' @rdname kurtosis
-#' @inheritSection AMR Read more on Our Website!
 #' @export
+#' @examples
+#' kurtosis(rnorm(10000))
+#' kurtosis(rnorm(10000), excess = TRUE)
 kurtosis <- function(x, na.rm = FALSE, excess = FALSE) {
   meet_criteria(na.rm, allow_class = "logical", has_length = 1)
   meet_criteria(excess, allow_class = "logical", has_length = 1)
@@ -47,7 +52,7 @@ kurtosis.default <- function(x, na.rm = FALSE, excess = FALSE) {
   meet_criteria(na.rm, allow_class = "logical", has_length = 1)
   meet_criteria(excess, allow_class = "logical", has_length = 1)
   x <- as.vector(x)
-  if (na.rm == TRUE) {
+  if (isTRUE(na.rm)) {
     x <- x[!is.na(x)]
   }
   n <- length(x)

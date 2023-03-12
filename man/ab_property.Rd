@@ -56,13 +56,13 @@ set_ab_names(
 )
 }
 \arguments{
-\item{x}{any (vector of) text that can be coerced to a valid antibiotic code with \code{\link[=as.ab]{as.ab()}}}
+\item{x}{any (vector of) text that can be coerced to a valid antibiotic drug code with \code{\link[=as.ab]{as.ab()}}}
 
-\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{language}{language of the returned text - the default is the current system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
 \item{tolower}{a \link{logical} to indicate whether the first \link{character} of every output should be transformed to a lower case \link{character}. This will lead to e.g. "polymyxin B" and not "polymyxin b".}
 
-\item{...}{in case of \code{\link[=set_ab_names]{set_ab_names()}} and \code{data} is a \link{data.frame}: variables to select (supports tidy selection such as \code{column1:column4}), otherwise other arguments passed on to \code{\link[=as.ab]{as.ab()}}}
+\item{...}{in case of \code{\link[=set_ab_names]{set_ab_names()}} and \code{data} is a \link{data.frame}: columns to select (supports tidy selection such as \code{column1:column4}), otherwise other arguments passed on to \code{\link[=as.ab]{as.ab()}}}
 
 \item{only_first}{a \link{logical} to indicate whether only the first ATC code must be returned, with giving preference to J0-codes (i.e., the antimicrobial drug group)}
 
@@ -95,14 +95,6 @@ The function \code{\link[=ab_url]{ab_url()}} will return the direct URL to the o
 
 The function \code{\link[=set_ab_names]{set_ab_names()}} is a special column renaming function for \link{data.frame}s. It renames columns names that resemble antimicrobial drugs. It always makes sure that the new column names are unique. If \code{property = "atc"} is set, preference is given to ATC codes from the J-group.
 }
-\section{Stable Lifecycle}{
-
-\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:"5"} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
-
-If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit a message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
-}
-
 \section{Source}{
 
 World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://www.whocc.no/atc_ddd_index/}
@@ -112,46 +104,40 @@ European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{htt
 
 \section{Reference Data Publicly Available}{
 
-All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
-}
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+All data sets in this \code{AMR} package (about microorganisms, antibiotics, SIR interpretation, EUCAST rules, etc.) are publicly and freely available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. We also provide tab-separated plain text files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
 }
 
 \examples{
 # all properties:
-ab_name("AMX")       # "Amoxicillin"
-ab_atc("AMX")        # "J01CA04" (ATC code from the WHO)
-ab_cid("AMX")        # 33613 (Compound ID from PubChem)
-ab_synonyms("AMX")   # a list with brand names of amoxicillin
-ab_tradenames("AMX") # same
-ab_group("AMX")      # "Beta-lactams/penicillins"
-ab_atc_group1("AMX") # "Beta-lactam antibacterials, penicillins"
-ab_atc_group2("AMX") # "Penicillins with extended spectrum"
-ab_url("AMX")        # link to the official WHO page
+ab_name("AMX")
+ab_atc("AMX")
+ab_cid("AMX")
+ab_synonyms("AMX")
+ab_tradenames("AMX")
+ab_group("AMX")
+ab_atc_group1("AMX")
+ab_atc_group2("AMX")
+ab_url("AMX")
 
 # smart lowercase tranformation
-ab_name(x = c("AMC", "PLB"))  # "Amoxicillin/clavulanic acid" "Polymyxin B"
-ab_name(x = c("AMC", "PLB"),
-        tolower = TRUE)       # "amoxicillin/clavulanic acid" "polymyxin B"
+ab_name(x = c("AMC", "PLB"))
+ab_name(x = c("AMC", "PLB"), tolower = TRUE)
 
 # defined daily doses (DDD)
-ab_ddd("AMX", "oral")       #  1.5
-ab_ddd_units("AMX", "oral") # "g"
-ab_ddd("AMX", "iv")         #  3
-ab_ddd_units("AMX", "iv")   # "g"
+ab_ddd("AMX", "oral")
+ab_ddd_units("AMX", "oral")
+ab_ddd("AMX", "iv")
+ab_ddd_units("AMX", "iv")
 
-ab_info("AMX")       # all properties as a list
+ab_info("AMX") # all properties as a list
 
 # all ab_* functions use as.ab() internally, so you can go from 'any' to 'any':
-ab_atc("AMP")           # ATC code of AMP (ampicillin)
-ab_group("J01CA01")     # Drug group of ampicillins ATC code
-ab_loinc("ampicillin")  # LOINC codes of ampicillin
-ab_name("21066-6")      # "Ampicillin" (using LOINC)
-ab_name(6249)           # "Ampicillin" (using CID)
-ab_name("J01CA01")      # "Ampicillin" (using ATC)
+ab_atc("AMP")
+ab_group("J01CA01")
+ab_loinc("ampicillin")
+ab_name("21066-6")
+ab_name(6249)
+ab_name("J01CA01")
 
 # spelling from different languages and dyslexia are no problem
 ab_atc("ceftriaxon")
@@ -167,22 +153,22 @@ colnames(set_ab_names(example_isolates, NIT:VAN))
 if (require("dplyr")) {
   example_isolates \%>\%
     set_ab_names()
-    
+
   # this does the same:
   example_isolates \%>\%
     rename_with(set_ab_names)
-  
+
   # set_ab_names() works with any AB property:
   example_isolates \%>\%
     set_ab_names(property = "atc")
-    
- example_isolates \%>\%
-   set_ab_names(where(is.rsi)) \%>\%
-   colnames()
-   
- example_isolates \%>\%
-   set_ab_names(NIT:VAN) \%>\%
-   colnames()
+
+  example_isolates \%>\%
+    set_ab_names(where(is.sir)) \%>\%
+    colnames()
+
+  example_isolates \%>\%
+    set_ab_names(NIT:VAN) \%>\%
+    colnames()
 }
 }
 }

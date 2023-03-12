@@ -6,21 +6,25 @@
 \alias{mic}
 \alias{NA_mic_}
 \alias{is.mic}
+\alias{droplevels.mic}
 \title{Transform Input to Minimum Inhibitory Concentrations (MIC)}
-\format{
-An object of class \code{mic} (inherits from \code{ordered}, \code{factor}) of length 1.
-}
 \usage{
 as.mic(x, na.rm = FALSE)
 
 NA_mic_
 
 is.mic(x)
+
+\method{droplevels}{mic}(x, as.mic = FALSE, ...)
 }
 \arguments{
 \item{x}{a \link{character} or \link{numeric} vector}
 
 \item{na.rm}{a \link{logical} indicating whether missing values should be removed}
+
+\item{as.mic}{a \link{logical} to indicate whether the \code{mic} class should be kept - the default is \code{FALSE}}
+
+\item{...}{arguments passed on to methods}
 }
 \value{
 Ordered \link{factor} with additional class \code{\link{mic}}, that in mathematical operations acts as decimal numbers. Bare in mind that the outcome of any mathematical operation on MICs will return a \link{numeric} value.
@@ -29,11 +33,13 @@ Ordered \link{factor} with additional class \code{\link{mic}}, that in mathemati
 This transforms vectors to a new class \code{\link{mic}}, which treats the input as decimal numbers, while maintaining operators (such as ">=") and only allowing valid MIC values known to the field of (medical) microbiology.
 }
 \details{
-To interpret MIC values as RSI values, use \code{\link[=as.rsi]{as.rsi()}} on MIC values. It supports guidelines from EUCAST and CLSI.
+To interpret MIC values as SIR values, use \code{\link[=as.sir]{as.sir()}} on MIC values. It supports guidelines from EUCAST (2013-2022) and CLSI (2013-2022).
 
-This class for MIC values is a quite a special data type: formally it is an ordered \link{factor} with valid MIC values as \link{factor} levels (to make sure only valid MIC values are retained), but for any mathematical operation it acts as decimal numbers:\preformatted{x <- random_mic(10)
+This class for MIC values is a quite a special data type: formally it is an ordered \link{factor} with valid MIC values as \link{factor} levels (to make sure only valid MIC values are retained), but for any mathematical operation it acts as decimal numbers:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{x <- random_mic(10)
 x
-#> Class <mic>
+#> Class 'mic'
 #>  [1] 16     1      8      8      64     >=128  0.0625 32     32     16
 
 is.factor(x)
@@ -44,10 +50,12 @@ x[1] * 2
 
 median(x)
 #> [1] 26
-}
+}\if{html}{\out{</div>}}
 
-This makes it possible to maintain operators that often come with MIC values, such ">=" and "<=", even when filtering using \link{numeric} values in data analysis, e.g.:\preformatted{x[x > 4]
-#> Class <mic>
+This makes it possible to maintain operators that often come with MIC values, such ">=" and "<=", even when filtering using \link{numeric} values in data analysis, e.g.:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{x[x > 4]
+#> Class 'mic'
 #> [1] 16    8     8     64    >=128 32    32    16
 
 df <- data.frame(x, hospital = "A")
@@ -59,52 +67,58 @@ subset(df, x > 4) # or with dplyr: df \%>\% filter(x > 4)
 #> 8     32        A
 #> 9     32        A
 #> 10    16        A
-}
+}\if{html}{\out{</div>}}
 
 The following \link[=groupGeneric]{generic functions} are implemented for the MIC class: \code{!}, \code{!=}, \code{\%\%}, \code{\%/\%}, \code{&}, \code{*}, \code{+}, \code{-}, \code{/}, \code{<}, \code{<=}, \code{==}, \code{>}, \code{>=}, \code{^}, \code{|}, \code{\link[=abs]{abs()}}, \code{\link[=acos]{acos()}}, \code{\link[=acosh]{acosh()}}, \code{\link[=all]{all()}}, \code{\link[=any]{any()}}, \code{\link[=asin]{asin()}}, \code{\link[=asinh]{asinh()}}, \code{\link[=atan]{atan()}}, \code{\link[=atanh]{atanh()}}, \code{\link[=ceiling]{ceiling()}}, \code{\link[=cos]{cos()}}, \code{\link[=cosh]{cosh()}}, \code{\link[=cospi]{cospi()}}, \code{\link[=cummax]{cummax()}}, \code{\link[=cummin]{cummin()}}, \code{\link[=cumprod]{cumprod()}}, \code{\link[=cumsum]{cumsum()}}, \code{\link[=digamma]{digamma()}}, \code{\link[=exp]{exp()}}, \code{\link[=expm1]{expm1()}}, \code{\link[=floor]{floor()}}, \code{\link[=gamma]{gamma()}}, \code{\link[=lgamma]{lgamma()}}, \code{\link[=log]{log()}}, \code{\link[=log1p]{log1p()}}, \code{\link[=log2]{log2()}}, \code{\link[=log10]{log10()}}, \code{\link[=max]{max()}}, \code{\link[=mean]{mean()}}, \code{\link[=min]{min()}}, \code{\link[=prod]{prod()}}, \code{\link[=range]{range()}}, \code{\link[=round]{round()}}, \code{\link[=sign]{sign()}}, \code{\link[=signif]{signif()}}, \code{\link[=sin]{sin()}}, \code{\link[=sinh]{sinh()}}, \code{\link[=sinpi]{sinpi()}}, \code{\link[=sqrt]{sqrt()}}, \code{\link[=sum]{sum()}}, \code{\link[=tan]{tan()}}, \code{\link[=tanh]{tanh()}}, \code{\link[=tanpi]{tanpi()}}, \code{\link[=trigamma]{trigamma()}} and \code{\link[=trunc]{trunc()}}. Some functions of the \code{stats} package are also implemented: \code{\link[=median]{median()}}, \code{\link[=quantile]{quantile()}}, \code{\link[=mad]{mad()}}, \code{\link[=IQR]{IQR()}}, \code{\link[=fivenum]{fivenum()}}. Also, \code{\link[=boxplot.stats]{boxplot.stats()}} is supported. Since \code{\link[=sd]{sd()}} and \code{\link[=var]{var()}} are non-generic functions, these could not be extended. Use \code{\link[=mad]{mad()}} as an alternative, or use e.g. \code{sd(as.numeric(x))} where \code{x} is your vector of MIC values.
 
-\code{NA_mic_} is a missing value of the new \verb{<mic>} class.
+Using \code{\link[=as.double]{as.double()}} or \code{\link[=as.numeric]{as.numeric()}} on MIC values will remove the operators and return a numeric vector. Do \strong{not} use \code{\link[=as.integer]{as.integer()}} on MIC values as by the \R convention on \link{factor}s, it will return the index of the factor levels (which is often useless for regular users).
+
+Use \code{\link[=droplevels]{droplevels()}} to drop unused levels. At default, it will return a plain factor. Use \code{droplevels(..., as.mic = TRUE)} to maintain the \code{mic} class.
+
+\code{NA_mic_} is a missing value of the new \code{mic} class, analogous to e.g. base \R's \code{\link[base:NA]{NA_character_}}.
 }
-\section{Stable Lifecycle}{
-
-\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:"5"} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
-
-If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit a message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
-}
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
-}
-
 \examples{
 mic_data <- as.mic(c(">=32", "1.0", "1", "1.00", 8, "<=0.128", "8", "16", "16"))
+mic_data
 is.mic(mic_data)
 
-# this can also coerce combined MIC/RSI values:
-as.mic("<=0.002; S") # will return <=0.002
+# this can also coerce combined MIC/SIR values:
+as.mic("<=0.002; S")
 
-# mathematical processing treats MICs as [numeric] values
+# mathematical processing treats MICs as numeric values
 fivenum(mic_data)
 quantile(mic_data)
 all(mic_data < 512)
 
 # interpret MIC values
-as.rsi(x = as.mic(2),
-       mo = as.mo("S. pneumoniae"),
-       ab = "AMX",
-       guideline = "EUCAST")
-as.rsi(x = as.mic(4),
-       mo = as.mo("S. pneumoniae"),
-       ab = "AMX",
-       guideline = "EUCAST")
+as.sir(
+  x = as.mic(2),
+  mo = as.mo("Streptococcus pneumoniae"),
+  ab = "AMX",
+  guideline = "EUCAST"
+)
+as.sir(
+  x = as.mic(c(0.01, 2, 4, 8)),
+  mo = as.mo("Streptococcus pneumoniae"),
+  ab = "AMX",
+  guideline = "EUCAST"
+)
 
 # plot MIC values, see ?plot
 plot(mic_data)
 plot(mic_data, mo = "E. coli", ab = "cipro")
+
+if (require("ggplot2")) {
+  autoplot(mic_data, mo = "E. coli", ab = "cipro")
+}
+if (require("ggplot2")) {
+  autoplot(mic_data, mo = "E. coli", ab = "cipro", language = "nl") # Dutch
+}
+if (require("ggplot2")) {
+  autoplot(mic_data, mo = "E. coli", ab = "cipro", language = "uk") # Ukrainian
+}
 }
 \seealso{
-\code{\link[=as.rsi]{as.rsi()}}
+\code{\link[=as.sir]{as.sir()}}
 }
 \keyword{datasets}

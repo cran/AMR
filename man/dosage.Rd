@@ -5,14 +5,14 @@
 \alias{dosage}
 \title{Data Set with Treatment Dosages as Defined by EUCAST}
 \format{
-A \link{data.frame} with 169 observations and 9 variables:
+A \link[tibble:tibble]{tibble} with 336 observations and 9 variables:
 \itemize{
 \item \code{ab}\cr Antibiotic ID as used in this package (such as \code{AMC}), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available
-\item \code{name}\cr Official name of the antimicrobial agent as used by WHONET/EARS-Net or the WHO
-\item \code{type}\cr Type of the dosage, either "high_dosage", "standard_dosage" or "uncomplicated_uti"
+\item \code{name}\cr Official name of the antimicrobial drug as used by WHONET/EARS-Net or the WHO
+\item \code{type}\cr Type of the dosage, either "high_dosage", "standard_dosage", or "uncomplicated_uti"
 \item \code{dose}\cr Dose, such as "2 g" or "25 mg/kg"
 \item \code{dose_times}\cr Number of times a dose must be administered
-\item \code{administration}\cr Route of administration, either "im", "iv" or "oral"
+\item \code{administration}\cr Route of administration, either "im", "iv", or "oral"
 \item \code{notes}\cr Additional dosage notes
 \item \code{original_txt}\cr Original text in the PDF file of EUCAST
 \item \code{eucast_version}\cr Version number of the EUCAST Clinical Breakpoints guideline to which these dosages apply
@@ -25,16 +25,13 @@ dosage
 EUCAST breakpoints used in this package are based on the dosages in this data set. They can be retrieved with \code{\link[=eucast_dosage]{eucast_dosage()}}.
 }
 \details{
-\href{https://www.eucast.org/clinical_breakpoints/}{'EUCAST Clinical Breakpoint Tables' v11.0} (2021) are based on the dosages in this data set.
+This data set is based on \href{https://www.eucast.org/clinical_breakpoints/}{'EUCAST Clinical Breakpoint Tables' v12.0} (2022) and \href{https://www.eucast.org/clinical_breakpoints/}{'EUCAST Clinical Breakpoint Tables' v11.0} (2021).
+\subsection{Direct download}{
+
+Like all data sets in this package, this data set is publicly available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
 }
-\section{Reference Data Publicly Available}{
-
-All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
 }
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+\examples{
+dosage
 }
-
 \keyword{datasets}

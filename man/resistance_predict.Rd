@@ -2,9 +2,9 @@
 % Please edit documentation in R/resistance_predict.R
 \name{resistance_predict}
 \alias{resistance_predict}
-\alias{rsi_predict}
+\alias{sir_predict}
 \alias{plot.resistance_predict}
-\alias{ggplot_rsi_predict}
+\alias{ggplot_sir_predict}
 \alias{autoplot.resistance_predict}
 \title{Predict Antimicrobial Resistance}
 \usage{
@@ -23,7 +23,7 @@ resistance_predict(
   ...
 )
 
-rsi_predict(
+sir_predict(
   x,
   col_ab,
   col_date = NULL,
@@ -40,7 +40,7 @@ rsi_predict(
 
 \method{plot}{resistance_predict}(x, main = paste("Resistance Prediction of", x_name), ...)
 
-ggplot_rsi_predict(
+ggplot_sir_predict(
   x,
   main = paste("Resistance Prediction of", x_name),
   ribbon = TRUE,
@@ -59,17 +59,17 @@ ggplot_rsi_predict(
 
 \item{col_ab}{column name of \code{x} containing antimicrobial interpretations (\code{"R"}, \code{"I"} and \code{"S"})}
 
-\item{col_date}{column name of the date, will be used to calculate years if this column doesn't consist of years already, defaults to the first column of with a date class}
+\item{col_date}{column name of the date, will be used to calculate years if this column doesn't consist of years already - the default is the first column of with a date class}
 
 \item{year_min}{lowest year to use in the prediction model, dafaults to the lowest year in \code{col_date}}
 
-\item{year_max}{highest year to use in the prediction model, defaults to 10 years after today}
+\item{year_max}{highest year to use in the prediction model - the default is 10 years after today}
 
 \item{year_every}{unit of sequence between lowest year found in the data and \code{year_max}}
 
 \item{minimum}{minimal amount of available isolates per year to include. Years containing less observations will be estimated by the model.}
 
-\item{model}{the statistical model of choice. This could be a generalised linear regression model with binomial distribution (i.e. using `glm(..., family = binomial)``, assuming that a period of zero resistance was followed by a period of increasing resistance leading slowly to more and more resistance. See \emph{Details} for all valid options.}
+\item{model}{the statistical model of choice. This could be a generalised linear regression model with binomial distribution (i.e. using \code{glm(..., family = binomial)}, assuming that a period of zero resistance was followed by a period of increasing resistance leading slowly to more and more resistance. See \emph{Details} for all valid options.}
 
 \item{I_as_S}{a \link{logical} to indicate whether values \code{"I"} should be treated as \code{"S"} (will otherwise be treated as \code{"R"}). The default, \code{TRUE}, follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section \emph{Interpretation of S, I and R} below.}
 
@@ -110,43 +110,34 @@ Valid options for the statistical model (argument \code{model}) are:
 \item \code{"lin"} or \code{"linear"}: a linear regression model
 }
 }
-\section{Stable Lifecycle}{
+\section{Interpretation of SIR}{
 
-\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:"5"} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
-
-If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit a message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
-}
-
-\section{Interpretation of R and S/I}{
-
-In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories R and S/I as shown below (\url{https://www.eucast.org/newsiandr/}).
+In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R as shown below (\url{https://www.eucast.org/newsiandr/}):
 \itemize{
+\item \strong{S - Susceptible, standard dosing regimen}\cr
+A microorganism is categorised as "Susceptible, standard dosing regimen", when there is a high likelihood of therapeutic success using a standard dosing regimen of the agent.
+\item \strong{I - Susceptible, increased exposure} \emph{\cr
+A microorganism is categorised as "Susceptible, Increased exposure}" when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.
 \item \strong{R = Resistant}\cr
-A microorganism is categorised as \emph{Resistant} when there is a high likelihood of therapeutic failure even when there is increased exposure. Exposure is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
-\item \strong{S = Susceptible}\cr
-A microorganism is categorised as \emph{Susceptible, standard dosing regimen}, when there is a high likelihood of therapeutic success using a standard dosing regimen of the agent.
-\item \strong{I = Susceptible, Increased exposure}\cr
-A microorganism is categorised as \emph{Susceptible, Increased exposure} when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.
+A microorganism is categorised as "Resistant" when there is a high likelihood of therapeutic failure even when there is increased exposure.
+\itemize{
+\item \emph{Exposure} is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
+}
 }
 
-This AMR package honours this (new) insight. Use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
-}
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+This AMR package honours this insight. Use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
 }
 
 \examples{
-x <- resistance_predict(example_isolates, 
-                        col_ab = "AMX",
-                        year_min = 2010,
-                        model = "binomial")
+x <- resistance_predict(example_isolates,
+  col_ab = "AMX",
+  year_min = 2010,
+  model = "binomial"
+)
 plot(x)
 \donttest{
 if (require("ggplot2")) {
-  ggplot_rsi_predict(x)
+  ggplot_sir_predict(x)
 }
 
 # using dplyr:
@@ -155,7 +146,7 @@ if (require("dplyr")) {
     filter_first_isolate() \%>\%
     filter(mo_genus(mo) == "Staphylococcus") \%>\%
     resistance_predict("PEN", model = "binomial")
-  plot(x)
+  print(plot(x))
 
   # get the model from the object
   mymodel <- attributes(x)$model
@@ -163,33 +154,18 @@ if (require("dplyr")) {
 }
 
 # create nice plots with ggplot2 yourself
-if (require("dplyr") & require("ggplot2")) {
-
+if (require("dplyr") && require("ggplot2")) {
   data <- example_isolates \%>\%
     filter(mo == as.mo("E. coli")) \%>\%
-    resistance_predict(col_ab = "AMX",
-                       col_date = "date",
-                       model = "binomial",
-                       info = FALSE,
-                       minimum = 15)
-                       
+    resistance_predict(
+      col_ab = "AMX",
+      col_date = "date",
+      model = "binomial",
+      info = FALSE,
+      minimum = 15
+    )
+  head(data)
   autoplot(data)
-
-  ggplot(data,
-         aes(x = year)) +
-    geom_col(aes(y = value),
-             fill = "grey75") +
-    geom_errorbar(aes(ymin = se_min,
-                      ymax = se_max),
-                  colour = "grey50") +
-    scale_y_continuous(limits = c(0, 1),
-                       breaks = seq(0, 1, 0.1),
-                       labels = paste0(seq(0, 100, 10), "\%")) +
-    labs(title = expression(paste("Forecast of Amoxicillin Resistance in ",
-                                  italic("E. coli"))),
-         y = "\%R",
-         x = "Year") +
-    theme_minimal(base_size = 13)
 }
 }
 }

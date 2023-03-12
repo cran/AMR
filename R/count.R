@@ -1,15 +1,19 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Data Analysis for R                   #
+# AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# LICENCE                                                              #
-# (c) 2018-2022 Berends MS, Luz CF et al.                              #
-# Developed at the University of Groningen, the Netherlands, in        #
-# collaboration with non-profit organisations Certe Medical            #
-# Diagnostics & Advice, and University Medical Center Groningen.       # 
+# CITE AS                                                              #
+# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
+# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
+# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# doi:10.18637/jss.v104.i03                                            #
+#                                                                      #
+# Developed at the University of Groningen and the University Medical  #
+# Center Groningen in The Netherlands, in collaboration with many      #
+# colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
@@ -28,31 +32,30 @@
 #' @description These functions can be used to count resistant/susceptible microbial isolates. All functions support quasiquotation with pipes, can be used in `summarise()` from the `dplyr` package and also support grouped variables, see *Examples*.
 #'
 #' [count_resistant()] should be used to count resistant isolates, [count_susceptible()] should be used to count susceptible isolates.
-#' @inheritSection lifecycle Stable Lifecycle
-#' @param ... one or more vectors (or columns) with antibiotic interpretations. They will be transformed internally with [as.rsi()] if needed.
+#' @param ... one or more vectors (or columns) with antibiotic interpretations. They will be transformed internally with [as.sir()] if needed.
 #' @inheritParams proportion
-#' @inheritSection as.rsi Interpretation of R and S/I
+#' @inheritSection as.sir Interpretation of SIR
 #' @details These functions are meant to count isolates. Use the [resistance()]/[susceptibility()] functions to calculate microbial resistance/susceptibility.
-#' 
+#'
 #' The function [count_resistant()] is equal to the function [count_R()]. The function [count_susceptible()] is equal to the function [count_SI()].
 #'
-#' The function [n_rsi()] is an alias of [count_all()]. They can be used to count all available isolates, i.e. where all input antibiotics have an available result (S, I or R). Their use is equal to `n_distinct()`. Their function is equal to `count_susceptible(...) + count_resistant(...)`.
+#' The function [n_sir()] is an alias of [count_all()]. They can be used to count all available isolates, i.e. where all input antibiotics have an available result (S, I or R). Their use is equal to `n_distinct()`. Their function is equal to `count_susceptible(...) + count_resistant(...)`.
 #'
-#' The function [count_df()] takes any variable from `data` that has an [`rsi`] class (created with [as.rsi()]) and counts the number of S's, I's and R's. It also supports grouped variables. The function [rsi_df()] works exactly like [count_df()], but adds the percentage of S, I and R.
+#' The function [count_df()] takes any variable from `data` that has an [`sir`] class (created with [as.sir()]) and counts the number of S's, I's and R's. It also supports grouped variables. The function [sir_df()] works exactly like [count_df()], but adds the percentage of S, I and R.
 #' @inheritSection proportion Combination Therapy
 #' @seealso [`proportion_*`][proportion] to calculate microbial resistance and susceptibility.
 #' @return An [integer]
 #' @rdname count
 #' @name count
 #' @export
-#' @inheritSection AMR Read more on Our Website!
 #' @examples
 #' # example_isolates is a data set available in the AMR package.
-#' ?example_isolates
-#' 
-#' count_resistant(example_isolates$AMX)   # counts "R"
+#' # run ?example_isolates for more info.
+#'
+#' # base R ------------------------------------------------------------
+#' count_resistant(example_isolates$AMX) # counts "R"
 #' count_susceptible(example_isolates$AMX) # counts "S" and "I"
-#' count_all(example_isolates$AMX)         # counts "S", "I" and "R"
+#' count_all(example_isolates$AMX) # counts "S", "I" and "R"
 #'
 #' # be more specific
 #' count_S(example_isolates$AMX)
@@ -63,85 +66,94 @@
 #'
 #' # Count all available isolates
 #' count_all(example_isolates$AMX)
-#' n_rsi(example_isolates$AMX)
+#' n_sir(example_isolates$AMX)
 #'
-#' # n_rsi() is an alias of count_all().
+#' # n_sir() is an alias of count_all().
 #' # Since it counts all available isolates, you can
 #' # calculate back to count e.g. susceptible isolates.
 #' # These results are the same:
 #' count_susceptible(example_isolates$AMX)
-#' susceptibility(example_isolates$AMX) * n_rsi(example_isolates$AMX)
+#' susceptibility(example_isolates$AMX) * n_sir(example_isolates$AMX)
 #'
+#' # dplyr -------------------------------------------------------------
 #' \donttest{
 #' if (require("dplyr")) {
 #'   example_isolates %>%
-#'     group_by(hospital_id) %>%
-#'     summarise(R  = count_R(CIP),
-#'               I  = count_I(CIP),
-#'               S  = count_S(CIP),
-#'               n1 = count_all(CIP),  # the actual total; sum of all three
-#'               n2 = n_rsi(CIP),      # same - analogous to n_distinct
-#'               total = n())          # NOT the number of tested isolates!
-#'               
+#'     group_by(ward) %>%
+#'     summarise(
+#'       R = count_R(CIP),
+#'       I = count_I(CIP),
+#'       S = count_S(CIP),
+#'       n1 = count_all(CIP), # the actual total; sum of all three
+#'       n2 = n_sir(CIP), # same - analogous to n_distinct
+#'       total = n()
+#'     ) # NOT the number of tested isolates!
+#'
 #'   # Number of available isolates for a whole antibiotic class
 #'   # (i.e., in this data set columns GEN, TOB, AMK, KAN)
 #'   example_isolates %>%
-#'     group_by(hospital_id) %>%
-#'     summarise(across(aminoglycosides(), n_rsi))
-#'  
+#'     group_by(ward) %>%
+#'     summarise(across(aminoglycosides(), n_sir))
+#'
 #'   # Count co-resistance between amoxicillin/clav acid and gentamicin,
 #'   # so we can see that combination therapy does a lot more than mono therapy.
 #'   # Please mind that `susceptibility()` calculates percentages right away instead.
 #'   example_isolates %>% count_susceptible(AMC) # 1433
-#'   example_isolates %>% count_all(AMC)         # 1879
-#'  
+#'   example_isolates %>% count_all(AMC) # 1879
+#'
 #'   example_isolates %>% count_susceptible(GEN) # 1399
-#'   example_isolates %>% count_all(GEN)         # 1855
-#'  
+#'   example_isolates %>% count_all(GEN) # 1855
+#'
 #'   example_isolates %>% count_susceptible(AMC, GEN) # 1764
-#'   example_isolates %>% count_all(AMC, GEN)         # 1936
-#'  
+#'   example_isolates %>% count_all(AMC, GEN) # 1936
+#'
 #'   # Get number of S+I vs. R immediately of selected columns
 #'   example_isolates %>%
 #'     select(AMX, CIP) %>%
 #'     count_df(translate = FALSE)
-#'  
+#'
 #'   # It also supports grouping variables
 #'   example_isolates %>%
-#'     select(hospital_id, AMX, CIP) %>%
-#'     group_by(hospital_id) %>%
+#'     select(ward, AMX, CIP) %>%
+#'     group_by(ward) %>%
 #'     count_df(translate = FALSE)
 #' }
 #' }
 count_resistant <- function(..., only_all_tested = FALSE) {
   tryCatch(
-    rsi_calc(...,
-             ab_result = "R",
-             only_all_tested = only_all_tested,
-             only_count = TRUE),
-    error = function(e) stop_(e$message, call = -5))
+    sir_calc(...,
+      ab_result = "R",
+      only_all_tested = only_all_tested,
+      only_count = TRUE
+    ),
+    error = function(e) stop_(gsub("in sir_calc(): ", "", e$message, fixed = TRUE), call = -5)
+  )
 }
 
 #' @rdname count
 #' @export
 count_susceptible <- function(..., only_all_tested = FALSE) {
   tryCatch(
-    rsi_calc(...,
-             ab_result = c("S", "I"),
-             only_all_tested = only_all_tested,
-             only_count = TRUE),
-    error = function(e) stop_(e$message, call = -5))
+    sir_calc(...,
+      ab_result = c("S", "I"),
+      only_all_tested = only_all_tested,
+      only_count = TRUE
+    ),
+    error = function(e) stop_(gsub("in sir_calc(): ", "", e$message, fixed = TRUE), call = -5)
+  )
 }
 
 #' @rdname count
 #' @export
 count_R <- function(..., only_all_tested = FALSE) {
   tryCatch(
-    rsi_calc(...,
-             ab_result = "R",
-             only_all_tested = only_all_tested,
-             only_count = TRUE),
-    error = function(e) stop_(e$message, call = -5))
+    sir_calc(...,
+      ab_result = "R",
+      only_all_tested = only_all_tested,
+      only_count = TRUE
+    ),
+    error = function(e) stop_(gsub("in sir_calc(): ", "", e$message, fixed = TRUE), call = -5)
+  )
 }
 
 #' @rdname count
@@ -151,33 +163,39 @@ count_IR <- function(..., only_all_tested = FALSE) {
     message_("Using `count_IR()` is discouraged; use `count_resistant()` instead to not consider \"I\" being resistant. This note will be shown once for this session.", as_note = FALSE)
   }
   tryCatch(
-    rsi_calc(...,
-             ab_result = c("I", "R"),
-             only_all_tested = only_all_tested,
-             only_count = TRUE),
-    error = function(e) stop_(e$message, call = -5))
+    sir_calc(...,
+      ab_result = c("I", "R"),
+      only_all_tested = only_all_tested,
+      only_count = TRUE
+    ),
+    error = function(e) stop_(gsub("in sir_calc(): ", "", e$message, fixed = TRUE), call = -5)
+  )
 }
 
 #' @rdname count
 #' @export
 count_I <- function(..., only_all_tested = FALSE) {
   tryCatch(
-    rsi_calc(...,
-             ab_result = "I",
-             only_all_tested = only_all_tested,
-             only_count = TRUE),
-    error = function(e) stop_(e$message, call = -5))
+    sir_calc(...,
+      ab_result = "I",
+      only_all_tested = only_all_tested,
+      only_count = TRUE
+    ),
+    error = function(e) stop_(gsub("in sir_calc(): ", "", e$message, fixed = TRUE), call = -5)
+  )
 }
 
 #' @rdname count
 #' @export
 count_SI <- function(..., only_all_tested = FALSE) {
   tryCatch(
-    rsi_calc(...,
-             ab_result = c("S", "I"),
-             only_all_tested = only_all_tested,
-             only_count = TRUE),
-    error = function(e) stop_(e$message, call = -5))
+    sir_calc(...,
+      ab_result = c("S", "I"),
+      only_all_tested = only_all_tested,
+      only_count = TRUE
+    ),
+    error = function(e) stop_(gsub("in sir_calc(): ", "", e$message, fixed = TRUE), call = -5)
+  )
 }
 
 #' @rdname count
@@ -187,42 +205,47 @@ count_S <- function(..., only_all_tested = FALSE) {
     message_("Using `count_S()` is discouraged; use `count_susceptible()` instead to also consider \"I\" being susceptible. This note will be shown once for this session.", as_note = FALSE)
   }
   tryCatch(
-    rsi_calc(...,
-             ab_result = "S",
-             only_all_tested = only_all_tested,
-             only_count = TRUE),
-    error = function(e) stop_(e$message, call = -5))
+    sir_calc(...,
+      ab_result = "S",
+      only_all_tested = only_all_tested,
+      only_count = TRUE
+    ),
+    error = function(e) stop_(gsub("in sir_calc(): ", "", e$message, fixed = TRUE), call = -5)
+  )
 }
 
 #' @rdname count
 #' @export
 count_all <- function(..., only_all_tested = FALSE) {
   tryCatch(
-    rsi_calc(...,
-             ab_result = c("S", "I", "R"),
-             only_all_tested = only_all_tested,
-             only_count = TRUE),
-    error = function(e) stop_(e$message, call = -5))
+    sir_calc(...,
+      ab_result = c("S", "I", "R"),
+      only_all_tested = only_all_tested,
+      only_count = TRUE
+    ),
+    error = function(e) stop_(gsub("in sir_calc(): ", "", e$message, fixed = TRUE), call = -5)
+  )
 }
 
 #' @rdname count
 #' @export
-n_rsi <- count_all
+n_sir <- count_all
 
 #' @rdname count
 #' @export
 count_df <- function(data,
                      translate_ab = "name",
                      language = get_AMR_locale(),
-                     combine_SI = TRUE,
-                     combine_IR = FALSE) {
+                     combine_SI = TRUE) {
   tryCatch(
-    rsi_calc_df(type = "count",
-                data = data,
-                translate_ab = translate_ab,
-                language = language,
-                combine_SI = combine_SI,
-                combine_IR = combine_IR,
-                combine_SI_missing = missing(combine_SI)),
-    error = function(e) stop_(e$message, call = -5))
+    sir_calc_df(
+      type = "count",
+      data = data,
+      translate_ab = translate_ab,
+      language = language,
+      combine_SI = combine_SI,
+      confidence_level = 0.95 # doesn't matter, will be removed
+    ),
+    error = function(e) stop_(gsub("in sir_calc_df(): ", "", e$message, fixed = TRUE), call = -5)
+  )
 }

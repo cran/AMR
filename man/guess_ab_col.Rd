@@ -8,7 +8,7 @@ guess_ab_col(
   x = NULL,
   search_string = NULL,
   verbose = FALSE,
-  only_rsi_columns = FALSE
+  only_sir_columns = FALSE
 )
 }
 \arguments{
@@ -18,7 +18,7 @@ guess_ab_col(
 
 \item{verbose}{a \link{logical} to indicate whether additional info should be printed}
 
-\item{only_rsi_columns}{a \link{logical} to indicate whether only antibiotic columns must be detected that were transformed to class \verb{<rsi>} (see \code{\link[=as.rsi]{as.rsi()}}) on beforehand (defaults to \code{FALSE})}
+\item{only_sir_columns}{a \link{logical} to indicate whether only antibiotic columns must be detected that were transformed to class \code{sir} (see \code{\link[=as.sir]{as.sir()}}) on beforehand (default is \code{FALSE})}
 }
 \value{
 A column name of \code{x}, or \code{NULL} when no result is found.
@@ -27,47 +27,26 @@ A column name of \code{x}, or \code{NULL} when no result is found.
 This tries to find a column name in a data set based on information from the \link{antibiotics} data set. Also supports WHONET abbreviations.
 }
 \details{
-You can look for an antibiotic (trade) name or abbreviation and it will search \code{x} and the \link{antibiotics} data set for any column containing a name or code of that antibiotic. \strong{Longer columns names take precedence over shorter column names.}
+You can look for an antibiotic (trade) name or abbreviation and it will search \code{x} and the \link{antibiotics} data set for any column containing a name or code of that antibiotic.
 }
-\section{Stable Lifecycle}{
-
-\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:"5"} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
-
-If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit a message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
-}
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
-}
-
 \examples{
-df <- data.frame(amox = "S",
-                 tetr = "R")
+df <- data.frame(
+  amox = "S",
+  tetr = "R"
+)
 
 guess_ab_col(df, "amoxicillin")
-# [1] "amox"
 guess_ab_col(df, "J01AA07") # ATC code of tetracycline
-# [1] "tetr"
 
 guess_ab_col(df, "J01AA07", verbose = TRUE)
 # NOTE: Using column 'tetr' as input for J01AA07 (tetracycline).
-# [1] "tetr"
 
 # WHONET codes
-df <- data.frame(AMP_ND10 = "R",
-                 AMC_ED20 = "S")
+df <- data.frame(
+  AMP_ND10 = "R",
+  AMC_ED20 = "S"
+)
 guess_ab_col(df, "ampicillin")
-# [1] "AMP_ND10"
 guess_ab_col(df, "J01CR02")
-# [1] "AMC_ED20"
 guess_ab_col(df, as.ab("augmentin"))
-# [1] "AMC_ED20"
-
-# Longer names take precendence:
-df <- data.frame(AMP_ED2 = "S",
-                 AMP_ED20 = "S")
-guess_ab_col(df, "ampicillin")
-# [1] "AMP_ED20"
 }

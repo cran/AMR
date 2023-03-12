@@ -21,7 +21,7 @@ g.test(x, y = NULL, p = rep(1/length(x), length(x)), rescale.p = FALSE)
 \item{y}{a numeric vector; ignored if \code{x} is a matrix.  If
     \code{x} is a factor, \code{y} should be a factor of the same length.}
 
-\item{p}{a vector of probabilities of the same length of \code{x}.
+\item{p}{a vector of probabilities of the same length as \code{x}.
     An error is given if any entry of \code{p} is negative.}
 
 \item{rescale.p}{a logical scalar; if TRUE then \code{p} is rescaled
@@ -89,25 +89,16 @@ The \emph{G}-test uses the log of the ratio of two likelihoods as the test stati
 
 \eqn{G = 2 * sum(x * log(x / E))}
 
-where \code{E} are the expected values. Since this is chi-square distributed, the p value can be calculated in \R with:\preformatted{p <- stats::pchisq(G, df, lower.tail = FALSE)
-}
+where \code{E} are the expected values. Since this is chi-square distributed, the p value can be calculated in \R with:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{p <- stats::pchisq(G, df, lower.tail = FALSE)
+}\if{html}{\out{</div>}}
 
 where \code{df} are the degrees of freedom.
 
 If there are more than two categories and you want to find out which ones are significantly different from their null expectation, you can use the same method of testing each category vs. the sum of all categories, with the Bonferroni correction. You use \emph{G}-tests for each category, of course.
 }
 }
-\section{Questioning Lifecycle}{
-
-\if{html}{\figure{lifecycle_questioning.svg}{options: style=margin-bottom:"5"} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{questioning}. This function might be no longer be optimal approach, or is it questionable whether this function should be in this \code{AMR} package at all.
-}
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
-}
-
 \examples{
 # = EXAMPLE 1 =
 # Shivrain et al. (2006) crossed clearfield rice (which are resistant
@@ -119,8 +110,7 @@ On our website \url{https://msberends.github.io/AMR/} you can find \href{https:/
 # ratio.
 
 x <- c(772, 1611, 737)
-G <- g.test(x, p = c(1, 2, 1) / 4)
-# G$p.value = 0.12574.
+g.test(x, p = c(1, 2, 1) / 4)
 
 # There is no significant difference from a 1:2:1 ratio.
 # Meaning: resistance controlled by a single gene with two co-dominant
@@ -136,11 +126,9 @@ G <- g.test(x, p = c(1, 2, 1) / 4)
 
 x <- c(1752, 1895)
 g.test(x)
-# p = 0.01787343
 
 # There is a significant difference from a 1:1 ratio.
 # Meaning: there are significantly more left-billed birds.
-
 }
 \references{
 \enumerate{

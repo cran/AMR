@@ -4,9 +4,6 @@
 \alias{bug_drug_combinations}
 \alias{format.bug_drug_combinations}
 \title{Determine Bug-Drug Combinations}
-\source{
-\strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 4th Edition}, 2014, \emph{Clinical and Laboratory Standards Institute (CLSI)}. \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
-}
 \usage{
 bug_drug_combinations(x, col_mo = NULL, FUN = mo_shortname, ...)
 
@@ -16,7 +13,6 @@ bug_drug_combinations(x, col_mo = NULL, FUN = mo_shortname, ...)
   language = get_AMR_locale(),
   minimum = 30,
   combine_SI = TRUE,
-  combine_IR = FALSE,
   add_ab_group = TRUE,
   remove_intrinsic_resistant = FALSE,
   decimal.mark = getOption("OutDec"),
@@ -25,23 +21,21 @@ bug_drug_combinations(x, col_mo = NULL, FUN = mo_shortname, ...)
 )
 }
 \arguments{
-\item{x}{data with antibiotic columns, such as \code{amox}, \code{AMX} and \code{AMC}}
+\item{x}{a data set with antibiotic columns, such as \code{amox}, \code{AMX} and \code{AMC}}
 
-\item{col_mo}{column name of the IDs of the microorganisms (see \code{\link[=as.mo]{as.mo()}}), defaults to the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
+\item{col_mo}{column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
 
-\item{FUN}{the function to call on the \code{mo} column to transform the microorganism codes, defaults to \code{\link[=mo_shortname]{mo_shortname()}}}
+\item{FUN}{the function to call on the \code{mo} column to transform the microorganism codes - the default is \code{\link[=mo_shortname]{mo_shortname()}}}
 
 \item{...}{arguments passed on to \code{FUN}}
 
 \item{translate_ab}{a \link{character} of length 1 containing column names of the \link{antibiotics} data set}
 
-\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with \code{getOption("AMR_locale")}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{language}{language of the returned text - the default is the current system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
 \item{minimum}{the minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see \emph{Source}.}
 
-\item{combine_SI}{a \link{logical} to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant). This used to be the argument \code{combine_IR}, but this now follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. Default is \code{TRUE}.}
-
-\item{combine_IR}{a \link{logical} to indicate whether values R and I should be summed}
+\item{combine_SI}{a \link{logical} to indicate whether values S and I should be summed, so resistance will be based on only R - the default is \code{TRUE}}
 
 \item{add_ab_group}{a \link{logical} to indicate where the group of the antimicrobials must be included as a first column}
 
@@ -61,34 +55,30 @@ The function \code{\link[=bug_drug_combinations]{bug_drug_combinations()}} retur
 Determine antimicrobial resistance (AMR) of all bug-drug combinations in your data set where at least 30 (default) isolates are available per species. Use \code{\link[=format]{format()}} on the result to prettify it to a publishable/printable format, see \emph{Examples}.
 }
 \details{
-The function \code{\link[=format]{format()}} calculates the resistance per bug-drug combination. Use \code{combine_IR = FALSE} (default) to test R vs. S+I and \code{combine_IR = TRUE} to test R+I vs. S.
+The function \code{\link[=format]{format()}} calculates the resistance per bug-drug combination and returns a table ready for reporting/publishing. Use \code{combine_SI = TRUE} (default) to test R vs. S+I and \code{combine_SI = FALSE} to test R+I vs. S. This table can also directly be used in R Markdown / Quarto without the need for e.g. \code{\link[knitr:kable]{knitr::kable()}}.
 }
-\section{Stable Lifecycle}{
-
-\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:"5"} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
-
-If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit a message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
-}
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
-}
-
 \examples{
+# example_isolates is a data set available in the AMR package.
+# run ?example_isolates for more info.
+example_isolates
+
 \donttest{
 x <- bug_drug_combinations(example_isolates)
-x
+head(x)
 format(x, translate_ab = "name (atc)")
 
 # Use FUN to change to transformation of microorganism codes
-bug_drug_combinations(example_isolates, 
-                      FUN = mo_gramstain)
-                           
 bug_drug_combinations(example_isolates,
-                      FUN = function(x) ifelse(x == as.mo("E. coli"),
-                                               "E. coli",
-                                               "Others"))
+  FUN = mo_gramstain
+)
+
+bug_drug_combinations(example_isolates,
+  FUN = function(x) {
+    ifelse(x == as.mo("Escherichia coli"),
+      "E. coli",
+      "Others"
+    )
+  }
+)
 }
 }

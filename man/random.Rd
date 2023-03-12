@@ -4,63 +4,50 @@
 \alias{random}
 \alias{random_mic}
 \alias{random_disk}
-\alias{random_rsi}
-\title{Random MIC Values/Disk Zones/RSI Generation}
+\alias{random_sir}
+\title{Random MIC Values/Disk Zones/SIR Generation}
 \usage{
 random_mic(size = NULL, mo = NULL, ab = NULL, ...)
 
 random_disk(size = NULL, mo = NULL, ab = NULL, ...)
 
-random_rsi(size = NULL, prob_RSI = c(0.33, 0.33, 0.33), ...)
+random_sir(size = NULL, prob_SIR = c(0.33, 0.33, 0.33), ...)
 }
 \arguments{
 \item{size}{desired size of the returned vector. If used in a \link{data.frame} call or \code{dplyr} verb, will get the current (group) size if left blank.}
 
 \item{mo}{any \link{character} that can be coerced to a valid microorganism code with \code{\link[=as.mo]{as.mo()}}}
 
-\item{ab}{any \link{character} that can be coerced to a valid antimicrobial agent code with \code{\link[=as.ab]{as.ab()}}}
+\item{ab}{any \link{character} that can be coerced to a valid antimicrobial drug code with \code{\link[=as.ab]{as.ab()}}}
 
 \item{...}{ignored, only in place to allow future extensions}
 
-\item{prob_RSI}{a vector of length 3: the probabilities for "R" (1st value), "S" (2nd value) and "I" (3rd value)}
+\item{prob_SIR}{a vector of length 3: the probabilities for "S" (1st value), "I" (2nd value) and "R" (3rd value)}
 }
 \value{
-class \verb{<mic>} for \code{\link[=random_mic]{random_mic()}} (see \code{\link[=as.mic]{as.mic()}}) and class \verb{<disk>} for \code{\link[=random_disk]{random_disk()}} (see \code{\link[=as.disk]{as.disk()}})
+class \code{mic} for \code{\link[=random_mic]{random_mic()}} (see \code{\link[=as.mic]{as.mic()}}) and class \code{disk} for \code{\link[=random_disk]{random_disk()}} (see \code{\link[=as.disk]{as.disk()}})
 }
 \description{
-These functions can be used for generating random MIC values and disk diffusion diameters, for AMR data analysis practice. By providing a microorganism and antimicrobial agent, the generated results will reflect reality as much as possible.
+These functions can be used for generating random MIC values and disk diffusion diameters, for AMR data analysis practice. By providing a microorganism and antimicrobial drug, the generated results will reflect reality as much as possible.
 }
 \details{
 The base \R function \code{\link[=sample]{sample()}} is used for generating values.
 
-Generated values are based on the latest EUCAST guideline implemented in the \link{rsi_translation} data set. To create specific generated values per bug or drug, set the \code{mo} and/or \code{ab} argument.
+Generated values are based on the EUCAST 2022 guideline as implemented in the \link{clinical_breakpoints} data set. To create specific generated values per bug or drug, set the \code{mo} and/or \code{ab} argument.
 }
-\section{Stable Lifecycle}{
-
-\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:"5"} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
-
-If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit a message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
-}
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
-}
-
 \examples{
-random_mic(100)
-random_disk(100)
-random_rsi(100)
+random_mic(25)
+random_disk(25)
+random_sir(25)
 
 \donttest{
 # make the random generation more realistic by setting a bug and/or drug:
-random_mic(100, "Klebsiella pneumoniae")                 # range 0.0625-64
-random_mic(100, "Klebsiella pneumoniae", "meropenem")    # range 0.0625-16
-random_mic(100, "Streptococcus pneumoniae", "meropenem") # range 0.0625-4
+random_mic(25, "Klebsiella pneumoniae") # range 0.0625-64
+random_mic(25, "Klebsiella pneumoniae", "meropenem") # range 0.0625-16
+random_mic(25, "Streptococcus pneumoniae", "meropenem") # range 0.0625-4
 
-random_disk(100, "Klebsiella pneumoniae")                  # range 8-50
-random_disk(100, "Klebsiella pneumoniae", "ampicillin")    # range 11-17
-random_disk(100, "Streptococcus pneumoniae", "ampicillin") # range 12-27
+random_disk(25, "Klebsiella pneumoniae") # range 8-50
+random_disk(25, "Klebsiella pneumoniae", "ampicillin") # range 11-17
+random_disk(25, "Streptococcus pneumoniae", "ampicillin") # range 12-27
 }
 }

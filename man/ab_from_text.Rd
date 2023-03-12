@@ -21,11 +21,11 @@ ab_from_text(
 
 \item{collapse}{a \link{character} to pass on to \code{paste(, collapse = ...)} to only return one \link{character} per element of \code{text}, see \emph{Examples}}
 
-\item{translate_ab}{if \code{type = "drug"}: a column name of the \link{antibiotics} data set to translate the antibiotic abbreviations to, using \code{\link[=ab_property]{ab_property()}}. Defaults to \code{FALSE}. Using \code{TRUE} is equal to using "name".}
+\item{translate_ab}{if \code{type = "drug"}: a column name of the \link{antibiotics} data set to translate the antibiotic abbreviations to, using \code{\link[=ab_property]{ab_property()}}. The default is \code{FALSE}. Using \code{TRUE} is equal to using "name".}
 
 \item{thorough_search}{a \link{logical} to indicate whether the input must be extensively searched for misspelling and other faulty input values. Setting this to \code{TRUE} will take considerably more time than when using \code{FALSE}. At default, it will turn \code{TRUE} when all input elements contain a maximum of three words.}
 
-\item{info}{a \link{logical} to indicate whether a progress bar should be printed, defaults to \code{TRUE} only in interactive mode}
+\item{info}{a \link{logical} to indicate whether a progress bar should be printed - the default is \code{TRUE} only in interactive mode}
 
 \item{...}{arguments passed on to \code{\link[=as.ab]{as.ab()}}}
 }
@@ -36,7 +36,7 @@ A \link{list}, or a  \link{character} if \code{collapse} is not \code{NULL}
 Use this function on e.g. clinical texts from health care records. It returns a \link{list} with all antimicrobial drugs, doses and forms of administration found in the texts.
 }
 \details{
-This function is also internally used by \code{\link[=as.ab]{as.ab()}}, although it then only searches for the first drug name and will throw a note if more drug names could have been returned. Note: the \code{\link[=as.ab]{as.ab()}} function may use very long regular expression to match brand names of antimicrobial agents. This may fail on some systems.
+This function is also internally used by \code{\link[=as.ab]{as.ab()}}, although it then only searches for the first drug name and will throw a note if more drug names could have been returned. Note: the \code{\link[=as.ab]{as.ab()}} function may use very long regular expression to match brand names of antimicrobial drugs. This may fail on some systems.
 \subsection{Argument \code{type}}{
 
 At default, the function will search for antimicrobial drug names. All text elements will be searched for official names, ATC codes and brand names. As it uses \code{\link[=as.ab]{as.ab()}} internally, it will correct for misspelling.
@@ -57,23 +57,10 @@ With using \code{collapse}, this function will return a \link{character}:\cr
 \code{df \%>\% mutate(abx = ab_from_text(clinical_text, collapse = "|"))}
 }
 }
-\section{Stable Lifecycle}{
-
-\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:"5"} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
-
-If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit a message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
-}
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
-}
-
 \examples{
-# mind the bad spelling of amoxicillin in this line, 
+# mind the bad spelling of amoxicillin in this line,
 # straight from a true health care record:
-ab_from_text("28/03/2020 regular amoxicilliin 500mg po tds")
+ab_from_text("28/03/2020 regular amoxicilliin 500mg po tid")
 
 ab_from_text("500 mg amoxi po and 400mg cipro iv")
 ab_from_text("500 mg amoxi po and 400mg cipro iv", type = "dose")
@@ -86,22 +73,28 @@ abx <- ab_from_text("500 mg amoxi po and 400mg cipro iv")
 ab_group(abx[[1]])
 
 if (require("dplyr")) {
-  tibble(clinical_text = c("given 400mg cipro and 500 mg amox",
-                           "started on doxy iv today")) \%>\% 
-    mutate(abx_codes = ab_from_text(clinical_text),
-           abx_doses = ab_from_text(clinical_text, type = "doses"),
-           abx_admin = ab_from_text(clinical_text, type = "admin"),
-           abx_coll = ab_from_text(clinical_text, collapse = "|"),
-           abx_coll_names = ab_from_text(clinical_text,
-                                         collapse = "|",
-                                         translate_ab = "name"),
-           abx_coll_doses = ab_from_text(clinical_text,
-                                         type = "doses",
-                                         collapse = "|"),
-           abx_coll_admin = ab_from_text(clinical_text,
-                                         type = "admin",
-                                         collapse = "|"))
-
+  tibble(clinical_text = c(
+    "given 400mg cipro and 500 mg amox",
+    "started on doxy iv today"
+  )) \%>\%
+    mutate(
+      abx_codes = ab_from_text(clinical_text),
+      abx_doses = ab_from_text(clinical_text, type = "doses"),
+      abx_admin = ab_from_text(clinical_text, type = "admin"),
+      abx_coll = ab_from_text(clinical_text, collapse = "|"),
+      abx_coll_names = ab_from_text(clinical_text,
+        collapse = "|",
+        translate_ab = "name"
+      ),
+      abx_coll_doses = ab_from_text(clinical_text,
+        type = "doses",
+        collapse = "|"
+      ),
+      abx_coll_admin = ab_from_text(clinical_text,
+        type = "admin",
+        collapse = "|"
+      )
+    )
 }
 }
 }

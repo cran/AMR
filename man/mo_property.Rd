@@ -15,6 +15,8 @@
 \alias{mo_kingdom}
 \alias{mo_domain}
 \alias{mo_type}
+\alias{mo_status}
+\alias{mo_pathogenicity}
 \alias{mo_gramstain}
 \alias{mo_is_gram_negative}
 \alias{mo_is_gram_positive}
@@ -25,90 +27,265 @@
 \alias{mo_authors}
 \alias{mo_year}
 \alias{mo_lpsn}
+\alias{mo_gbif}
 \alias{mo_rank}
 \alias{mo_taxonomy}
 \alias{mo_synonyms}
+\alias{mo_current}
 \alias{mo_info}
 \alias{mo_url}
 \title{Get Properties of a Microorganism}
 \usage{
-mo_name(x, language = get_AMR_locale(), ...)
+mo_name(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_fullname(x, language = get_AMR_locale(), ...)
+mo_fullname(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_shortname(x, language = get_AMR_locale(), ...)
+mo_shortname(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_subspecies(x, language = get_AMR_locale(), ...)
+mo_subspecies(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_species(x, language = get_AMR_locale(), ...)
+mo_species(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_genus(x, language = get_AMR_locale(), ...)
+mo_genus(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_family(x, language = get_AMR_locale(), ...)
+mo_family(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_order(x, language = get_AMR_locale(), ...)
+mo_order(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_class(x, language = get_AMR_locale(), ...)
+mo_class(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_phylum(x, language = get_AMR_locale(), ...)
+mo_phylum(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_kingdom(x, language = get_AMR_locale(), ...)
+mo_kingdom(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_domain(x, language = get_AMR_locale(), ...)
+mo_domain(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_type(x, language = get_AMR_locale(), ...)
+mo_type(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_gramstain(x, language = get_AMR_locale(), ...)
+mo_status(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_is_gram_negative(x, language = get_AMR_locale(), ...)
+mo_pathogenicity(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_is_gram_positive(x, language = get_AMR_locale(), ...)
+mo_gramstain(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_is_yeast(x, language = get_AMR_locale(), ...)
+mo_is_gram_negative(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_is_intrinsic_resistant(x, ab, language = get_AMR_locale(), ...)
+mo_is_gram_positive(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_snomed(x, language = get_AMR_locale(), ...)
+mo_is_yeast(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_ref(x, language = get_AMR_locale(), ...)
+mo_is_intrinsic_resistant(
+  x,
+  ab,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_authors(x, language = get_AMR_locale(), ...)
+mo_snomed(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_year(x, language = get_AMR_locale(), ...)
+mo_ref(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_lpsn(x, language = get_AMR_locale(), ...)
+mo_authors(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_rank(x, language = get_AMR_locale(), ...)
+mo_year(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_taxonomy(x, language = get_AMR_locale(), ...)
+mo_lpsn(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_synonyms(x, language = get_AMR_locale(), ...)
+mo_gbif(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_info(x, language = get_AMR_locale(), ...)
+mo_rank(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_url(x, open = FALSE, language = get_AMR_locale(), ...)
+mo_taxonomy(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 
-mo_property(x, property = "fullname", language = get_AMR_locale(), ...)
+mo_synonyms(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
+
+mo_current(x, language = get_AMR_locale(), ...)
+
+mo_info(
+  x,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
+
+mo_url(
+  x,
+  open = FALSE,
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
+
+mo_property(
+  x,
+  property = "fullname",
+  language = get_AMR_locale(),
+  keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
+  ...
+)
 }
 \arguments{
 \item{x}{any \link{character} (vector) that can be coerced to a valid microorganism code with \code{\link[=as.mo]{as.mo()}}. Can be left blank for auto-guessing the column containing microorganism codes if used in a data set, see \emph{Examples}.}
 
-\item{language}{language of the returned text, defaults to system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can be overwritten by setting the option \code{AMR_locale}, e.g. \code{options(AMR_locale = "de")}, see \link{translate}. Also used to translate text like "no growth". Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{language}{language to translate text like "no growth", which defaults to the system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}})}
 
-\item{...}{other arguments passed on to \code{\link[=as.mo]{as.mo()}}, such as 'allow_uncertain' and 'ignore_pattern'}
+\item{keep_synonyms}{a \link{logical} to indicate if old, previously valid taxonomic names must be preserved and not be corrected to currently accepted names. The default is \code{FALSE}, which will return a note if old taxonomic names were processed. The default can be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_keep_synonyms}}, i.e. \code{options(AMR_keep_synonyms = TRUE)} or \code{options(AMR_keep_synonyms = FALSE)}.}
 
-\item{ab}{any (vector of) text that can be coerced to a valid antibiotic code with \code{\link[=as.ab]{as.ab()}}}
+\item{...}{other arguments passed on to \code{\link[=as.mo]{as.mo()}}, such as 'minimum_matching_score', 'ignore_pattern', and 'remove_from_input'}
+
+\item{ab}{any (vector of) text that can be coerced to a valid antibiotic drug code with \code{\link[=as.ab]{as.ab()}}}
 
 \item{open}{browse the URL using \code{\link[utils:browseURL]{browseURL()}}}
 
-\item{property}{one of the column names of the \link{microorganisms} data set: "mo", "fullname", "kingdom", "phylum", "class", "order", "family", "genus", "species", "subspecies", "rank", "ref", "species_id", "source", "prevalence" or "snomed", or must be \code{"shortname"}}
+\item{property}{one of the column names of the \link{microorganisms} data set: "mo", "fullname", "status", "kingdom", "phylum", "class", "order", "family", "genus", "species", "subspecies", "rank", "ref", "source", "lpsn", "lpsn_parent", "lpsn_renamed_to", "gbif", "gbif_parent", "gbif_renamed_to", "prevalence", or "snomed", or must be \code{"shortname"}}
 }
 \value{
 \itemize{
 \item An \link{integer} in case of \code{\link[=mo_year]{mo_year()}}
-\item A \link{list} in case of \code{\link[=mo_taxonomy]{mo_taxonomy()}} and \code{\link[=mo_info]{mo_info()}}
+\item An \link[=factor]{ordered factor} in case of \code{\link[=mo_pathogenicity]{mo_pathogenicity()}}
+\item A \link{list} in case of \code{\link[=mo_taxonomy]{mo_taxonomy()}}, \code{\link[=mo_synonyms]{mo_synonyms()}}, \code{\link[=mo_snomed]{mo_snomed()}} and \code{\link[=mo_info]{mo_info()}}
 \item A named \link{character} in case of \code{\link[=mo_url]{mo_url()}}
-\item A \link{numeric} in case of \code{\link[=mo_snomed]{mo_snomed()}}
 \item A \link{character} in all other cases
 }
 }
@@ -116,194 +293,173 @@ mo_property(x, property = "fullname", language = get_AMR_locale(), ...)
 Use these functions to return a specific property of a microorganism based on the latest accepted taxonomy. All input values will be evaluated internally with \code{\link[=as.mo]{as.mo()}}, which makes it possible to use microbial abbreviations, codes and names as input. See \emph{Examples}.
 }
 \details{
-All functions will return the most recently known taxonomic property according to the Catalogue of Life, except for \code{\link[=mo_ref]{mo_ref()}}, \code{\link[=mo_authors]{mo_authors()}} and \code{\link[=mo_year]{mo_year()}}. Please refer to this example, knowing that \emph{Escherichia blattae} was renamed to \emph{Shimwellia blattae} in 2010:
+All functions will, at default, \strong{not} keep old taxonomic properties, as synonyms are automatically replaced with the current taxonomy. Take for example \emph{Enterobacter aerogenes}, which was initially named in 1960 but renamed to \emph{Klebsiella aerogenes} in 2017:
 \itemize{
-\item \code{mo_name("Escherichia blattae")} will return \code{"Shimwellia blattae"} (with a message about the renaming)
-\item \code{mo_ref("Escherichia blattae")} will return \code{"Burgess et al., 1973"} (with a message about the renaming)
-\item \code{mo_ref("Shimwellia blattae")} will return \code{"Priest et al., 2010"} (without a message)
+\item \code{mo_genus("Enterobacter aerogenes")} will return \code{"Klebsiella"} (with a note about the renaming)
+\item \code{mo_genus("Enterobacter aerogenes", keep_synonyms = TRUE)} will return \code{"Enterobacter"} (with a once-per-session warning that the name is outdated)
+\item \code{mo_ref("Enterobacter aerogenes")} will return \code{"Tindall et al., 2017"} (with a note)
+\item \code{mo_ref("Enterobacter aerogenes", keep_synonyms = TRUE)} will return \code{"Hormaeche et al., 1960"} (with a warning)
 }
 
-The short name - \code{\link[=mo_shortname]{mo_shortname()}} - almost always returns the first character of the genus and the full species, like \code{"E. coli"}. Exceptions are abbreviations of staphylococci (such as \emph{"CoNS"}, Coagulase-Negative Staphylococci) and beta-haemolytic streptococci (such as \emph{"GBS"}, Group B Streptococci). Please bear in mind that e.g. \emph{E. coli} could mean \emph{Escherichia coli} (kingdom of Bacteria) as well as \emph{Entamoeba coli} (kingdom of Protozoa). Returning to the full name will be done using \code{\link[=as.mo]{as.mo()}} internally, giving priority to bacteria and human pathogens, i.e. \code{"E. coli"} will be considered \emph{Escherichia coli}. In other words, \code{mo_fullname(mo_shortname("Entamoeba coli"))} returns \code{"Escherichia coli"}.
+The short name (\code{\link[=mo_shortname]{mo_shortname()}}) returns the first character of the genus and the full species, such as \code{"E. coli"}, for species and subspecies. Exceptions are abbreviations of staphylococci (such as \emph{"CoNS"}, Coagulase-Negative Staphylococci) and beta-haemolytic streptococci (such as \emph{"GBS"}, Group B Streptococci). Please bear in mind that e.g. \emph{E. coli} could mean \emph{Escherichia coli} (kingdom of Bacteria) as well as \emph{Entamoeba coli} (kingdom of Protozoa). Returning to the full name will be done using \code{\link[=as.mo]{as.mo()}} internally, giving priority to bacteria and human pathogens, i.e. \code{"E. coli"} will be considered \emph{Escherichia coli}. As a result, \code{mo_fullname(mo_shortname("Entamoeba coli"))} returns \code{"Escherichia coli"}.
 
 Since the top-level of the taxonomy is sometimes referred to as 'kingdom' and sometimes as 'domain', the functions \code{\link[=mo_kingdom]{mo_kingdom()}} and \code{\link[=mo_domain]{mo_domain()}} return the exact same results.
 
-The Gram stain - \code{\link[=mo_gramstain]{mo_gramstain()}} - will be determined based on the taxonomic kingdom and phylum. According to Cavalier-Smith (2002, \href{https://pubmed.ncbi.nlm.nih.gov/11837318}{PMID 11837318}), who defined subkingdoms Negibacteria and Posibacteria, only these phyla are Posibacteria: Actinobacteria, Chloroflexi, Firmicutes and Tenericutes. These bacteria are considered Gram-positive, except for members of the class Negativicutes which are Gram-negative. Members of other bacterial phyla are all considered Gram-negative. Species outside the kingdom of Bacteria will return a value \code{NA}. Functions \code{\link[=mo_is_gram_negative]{mo_is_gram_negative()}} and \code{\link[=mo_is_gram_positive]{mo_is_gram_positive()}} always return \code{TRUE} or \code{FALSE} (except when the input is \code{NA} or the MO code is \code{UNKNOWN}), thus always return \code{FALSE} for species outside the taxonomic kingdom of Bacteria.
+Determination of human pathogenicity (\code{\link[=mo_pathogenicity]{mo_pathogenicity()}}) is strongly based on Bartlett \emph{et al.} (2022, \doi{10.1099/mic.0.001269}). This function returns a \link{factor} with the levels \emph{Pathogenic}, \emph{Potentially pathogenic}, \emph{Non-pathogenic}, and \emph{Unknown}.
 
-Determination of yeasts - \code{\link[=mo_is_yeast]{mo_is_yeast()}} - will be based on the taxonomic kingdom and class. \emph{Budding yeasts} are fungi of the phylum Ascomycetes, class Saccharomycetes (also called Hemiascomycetes). \emph{True yeasts} are aggregated into the underlying order Saccharomycetales. Thus, for all microorganisms that are fungi and member of the taxonomic class Saccharomycetes, the function will return \code{TRUE}. It returns \code{FALSE} otherwise (except when the input is \code{NA} or the MO code is \code{UNKNOWN}).
+Determination of the Gram stain (\code{\link[=mo_gramstain]{mo_gramstain()}}) will be based on the taxonomic kingdom and phylum. Originally, Cavalier-Smith defined the so-called subkingdoms Negibacteria and Posibacteria (2002, \href{https://pubmed.ncbi.nlm.nih.gov/11837318/}{PMID 11837318}), and only considered these phyla as Posibacteria: Actinobacteria, Chloroflexi, Firmicutes, and Tenericutes. These phyla were later renamed to Actinomycetota, Chloroflexota, Bacillota, and Mycoplasmatota (2021, \href{https://pubmed.ncbi.nlm.nih.gov/34694987/}{PMID 34694987}). Bacteria in these phyla are considered Gram-positive in this \code{AMR} package, except for members of the class Negativicutes (within phylum Bacillota) which are Gram-negative. All other bacteria are considered Gram-negative. Species outside the kingdom of Bacteria will return a value \code{NA}. Functions \code{\link[=mo_is_gram_negative]{mo_is_gram_negative()}} and \code{\link[=mo_is_gram_positive]{mo_is_gram_positive()}} always return \code{TRUE} or \code{FALSE} (or \code{NA} when the input is \code{NA} or the MO code is \code{UNKNOWN}), thus always return \code{FALSE} for species outside the taxonomic kingdom of Bacteria.
 
-Intrinsic resistance - \code{\link[=mo_is_intrinsic_resistant]{mo_is_intrinsic_resistant()}} - will be determined based on the \link{intrinsic_resistant} data set, which is based on \href{https://www.eucast.org/expert_rules_and_expected_phenotypes/}{'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes' v3.3} (2021). The \code{\link[=mo_is_intrinsic_resistant]{mo_is_intrinsic_resistant()}} functions can be vectorised over arguments \code{x} (input for microorganisms) and over \code{ab} (input for antibiotics).
+Determination of yeasts (\code{\link[=mo_is_yeast]{mo_is_yeast()}}) will be based on the taxonomic kingdom and class. \emph{Budding yeasts} are fungi of the phylum Ascomycota, class Saccharomycetes (also called Hemiascomycetes). \emph{True yeasts} are aggregated into the underlying order Saccharomycetales. Thus, for all microorganisms that are member of the taxonomic class Saccharomycetes, the function will return \code{TRUE}. It returns \code{FALSE} otherwise (or \code{NA} when the input is \code{NA} or the MO code is \code{UNKNOWN}).
 
-All output \link[=translate]{will be translated} where possible.
+Determination of intrinsic resistance (\code{\link[=mo_is_intrinsic_resistant]{mo_is_intrinsic_resistant()}}) will be based on the \link{intrinsic_resistant} data set, which is based on \href{https://www.eucast.org/expert_rules_and_expected_phenotypes/}{'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes' v3.3} (2021). The \code{\link[=mo_is_intrinsic_resistant]{mo_is_intrinsic_resistant()}} function can be vectorised over both argument \code{x} (input for microorganisms) and \code{ab} (input for antibiotics).
 
 The function \code{\link[=mo_url]{mo_url()}} will return the direct URL to the online database entry, which also shows the scientific reference of the concerned species.
 
-SNOMED codes - \code{\link[=mo_snomed]{mo_snomed()}} - are from the US Edition of SNOMED CT from 1 September 2020. See \emph{Source} and the \link{microorganisms} data set for more info.
+SNOMED codes (\code{\link[=mo_snomed]{mo_snomed()}}) are from the version of 1 July, 2021. See \emph{Source} and the \link{microorganisms} data set for more info.
+
+Old taxonomic names (so-called 'synonyms') can be retrieved with \code{\link[=mo_synonyms]{mo_synonyms()}} (which will have the scientific reference as \link[base:names]{name}), the current taxonomic name can be retrieved with \code{\link[=mo_current]{mo_current()}}. Both functions return full names.
+
+All output \link[=translate]{will be translated} where possible.
 }
-\section{Stable Lifecycle}{
-
-\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:"5"} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
-
-If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit a message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
-}
-
 \section{Matching Score for Microorganisms}{
 
-With ambiguous user input in \code{\link[=as.mo]{as.mo()}} and all the \code{\link[=mo_property]{mo_*}} functions, the returned results are chosen based on their matching score using \code{\link[=mo_matching_score]{mo_matching_score()}}. This matching score \eqn{m}, is calculated as:
-
-\ifelse{latex}{\deqn{m_{(x, n)} = \frac{l_{n} - 0.5 \cdot \min \begin{cases}l_{n} \\ \textrm{lev}(x, n)\end{cases}}{l_{n} \cdot p_{n} \cdot k_{n}}}}{\ifelse{html}{\figure{mo_matching_score.png}{options: width="300" alt="mo matching score"}}{m(x, n) = ( l_n * min(l_n, lev(x, n) ) ) / ( l_n * p_n * k_n )}}
-
-where:
-\itemize{
-\item \ifelse{html}{\out{<i>x</i> is the user input;}}{\eqn{x} is the user input;}
-\item \ifelse{html}{\out{<i>n</i> is a taxonomic name (genus, species, and subspecies);}}{\eqn{n} is a taxonomic name (genus, species, and subspecies);}
-\item \ifelse{html}{\out{<i>l<sub>n</sub></i> is the length of <i>n</i>;}}{l_n is the length of \eqn{n};}
-\item \ifelse{html}{\out{<i>lev</i> is the <a href="https://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance function</a>, which counts any insertion, deletion and substitution as 1 that is needed to change <i>x</i> into <i>n</i>;}}{lev is the Levenshtein distance function, which counts any insertion, deletion and substitution as 1 that is needed to change \eqn{x} into \eqn{n};}
-\item \ifelse{html}{\out{<i>p<sub>n</sub></i> is the human pathogenic prevalence group of <i>n</i>, as described below;}}{p_n is the human pathogenic prevalence group of \eqn{n}, as described below;}
-\item \ifelse{html}{\out{<i>k<sub>n</sub></i> is the taxonomic kingdom of <i>n</i>, set as Bacteria = 1, Fungi = 2, Protozoa = 3, Archaea = 4, others = 5.}}{l_n is the taxonomic kingdom of \eqn{n}, set as Bacteria = 1, Fungi = 2, Protozoa = 3, Archaea = 4, others = 5.}
-}
-
-The grouping into human pathogenic prevalence (\eqn{p}) is based on experience from several microbiological laboratories in the Netherlands in conjunction with international reports on pathogen prevalence. \strong{Group 1} (most prevalent microorganisms) consists of all microorganisms where the taxonomic class is Gammaproteobacteria or where the taxonomic genus is \emph{Enterococcus}, \emph{Staphylococcus} or \emph{Streptococcus}. This group consequently contains all common Gram-negative bacteria, such as \emph{Pseudomonas} and \emph{Legionella} and all species within the order Enterobacterales. \strong{Group 2} consists of all microorganisms where the taxonomic phylum is Proteobacteria, Firmicutes, Actinobacteria or Sarcomastigophora, or where the taxonomic genus is \emph{Absidia}, \emph{Acremonium}, \emph{Actinotignum}, \emph{Alternaria}, \emph{Anaerosalibacter}, \emph{Apophysomyces}, \emph{Arachnia}, \emph{Aspergillus}, \emph{Aureobacterium}, \emph{Aureobasidium}, \emph{Bacteroides}, \emph{Basidiobolus}, \emph{Beauveria}, \emph{Blastocystis}, \emph{Branhamella}, \emph{Calymmatobacterium}, \emph{Candida}, \emph{Capnocytophaga}, \emph{Catabacter}, \emph{Chaetomium}, \emph{Chryseobacterium}, \emph{Chryseomonas}, \emph{Chrysonilia}, \emph{Cladophialophora}, \emph{Cladosporium}, \emph{Conidiobolus}, \emph{Cryptococcus}, \emph{Curvularia}, \emph{Exophiala}, \emph{Exserohilum}, \emph{Flavobacterium}, \emph{Fonsecaea}, \emph{Fusarium}, \emph{Fusobacterium}, \emph{Hendersonula}, \emph{Hypomyces}, \emph{Koserella}, \emph{Lelliottia}, \emph{Leptosphaeria}, \emph{Leptotrichia}, \emph{Malassezia}, \emph{Malbranchea}, \emph{Mortierella}, \emph{Mucor}, \emph{Mycocentrospora}, \emph{Mycoplasma}, \emph{Nectria}, \emph{Ochroconis}, \emph{Oidiodendron}, \emph{Phoma}, \emph{Piedraia}, \emph{Pithomyces}, \emph{Pityrosporum}, \emph{Prevotella}, \emph{Pseudallescheria}, \emph{Rhizomucor}, \emph{Rhizopus}, \emph{Rhodotorula}, \emph{Scolecobasidium}, \emph{Scopulariopsis}, \emph{Scytalidium}, \emph{Sporobolomyces}, \emph{Stachybotrys}, \emph{Stomatococcus}, \emph{Treponema}, \emph{Trichoderma}, \emph{Trichophyton}, \emph{Trichosporon}, \emph{Tritirachium} or \emph{Ureaplasma}. \strong{Group 3} consists of all other microorganisms.
-
-All characters in \eqn{x} and \eqn{n} are ignored that are other than A-Z, a-z, 0-9, spaces and parentheses.
-
-All matches are sorted descending on their matching score and for all user input values, the top match will be returned. This will lead to the effect that e.g., \code{"E. coli"} will return the microbial ID of \emph{Escherichia coli} (\eqn{m = 0.688}, a highly prevalent microorganism found in humans) and not \emph{Entamoeba coli} (\eqn{m = 0.079}, a less prevalent microorganism in humans), although the latter would alphabetically come first.
-
-Since \code{AMR} version 1.8.1, common microorganism abbreviations are ignored in determining the matching score. These abbreviations are currently: AIEC, ATEC, BORSA, CRSM, DAEC, EAEC, EHEC, EIEC, EPEC, ETEC, GISA, MRPA, MRSA, MRSE, MSSA, MSSE, NMEC, PISP, PRSP, STEC, UPEC, VISA, VISP, VRE, VRSA and VRSP.
-}
-
-\section{Catalogue of Life}{
-
-\if{html}{\figure{logo_col.png}{options: height="40" style=margin-bottom:"5"} \cr}
-This package contains the complete taxonomic tree of almost all microorganisms (~71,000 species) from the authoritative and comprehensive Catalogue of Life (CoL, \url{http://www.catalogueoflife.org}). The CoL is the most comprehensive and authoritative global index of species currently available. Nonetheless, we supplemented the CoL data with data from the List of Prokaryotic names with Standing in Nomenclature (LPSN, \href{https://lpsn.dsmz.de}{lpsn.dsmz.de}). This supplementation is needed until the \href{https://github.com/CatalogueOfLife/general}{CoL+ project} is finished, which we await.
-
-\link[=catalogue_of_life]{Click here} for more information about the included taxa. Check which versions of the CoL and LPSN were included in this package with \code{\link[=catalogue_of_life_version]{catalogue_of_life_version()}}.
+This function uses \code{\link[=as.mo]{as.mo()}} internally, which uses an advanced algorithm to translate arbitrary user input to valid taxonomy using a so-called matching score. You can read about this public algorithm on the \link[=mo_matching_score]{MO matching score page}.
 }
 
 \section{Source}{
 
 \enumerate{
-\item Becker K \emph{et al.} \strong{Coagulase-Negative Staphylococci}. 2014. Clin Microbiol Rev. 27(4): 870-926; \doi{10.1128/CMR.00109-13}
-\item Becker K \emph{et al.} \strong{Implications of identifying the recently defined members of the \emph{S. aureus} complex, \emph{S. argenteus} and \emph{S. schweitzeri}: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).} 2019. Clin Microbiol Infect; \doi{10.1016/j.cmi.2019.02.028}
-\item Becker K \emph{et al.} \strong{Emergence of coagulase-negative staphylococci} 2020. Expert Rev Anti Infect Ther. 18(4):349-366; \doi{10.1080/14787210.2020.1730813}
-\item Lancefield RC \strong{A serological differentiation of human and other groups of hemolytic streptococci}. 1933. J Exp Med. 57(4): 571-95; \doi{10.1084/jem.57.4.571}
-\item Catalogue of Life: 2019 Annual Checklist, \url{http://www.catalogueoflife.org}
-\item List of Prokaryotic names with Standing in Nomenclature (5 October 2021), \doi{10.1099/ijsem.0.004332}
-\item US Edition of SNOMED CT from 1 September 2020, retrieved from the Public Health Information Network Vocabulary Access and Distribution System (PHIN VADS), OID 2.16.840.1.114222.4.11.1009, version 12; url: \url{https://phinvads.cdc.gov/vads/ViewValueSet.action?oid=2.16.840.1.114222.4.11.1009}
+\item Berends MS \emph{et al.} (2022). \strong{AMR: An R Package for Working with Antimicrobial Resistance Data}. \emph{Journal of Statistical Software}, 104(3), 1-31; \doi{10.18637/jss.v104.i03}
+\item Becker K \emph{et al.} (2014). \strong{Coagulase-Negative Staphylococci.} \emph{Clin Microbiol Rev.} 27(4): 870-926; \doi{10.1128/CMR.00109-13}
+\item Becker K \emph{et al.} (2019). \strong{Implications of identifying the recently defined members of the \emph{S. aureus} complex, \emph{S. argenteus} and \emph{S. schweitzeri}: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).} \emph{Clin Microbiol Infect}; \doi{10.1016/j.cmi.2019.02.028}
+\item Becker K \emph{et al.} (2020). \strong{Emergence of coagulase-negative staphylococci} \emph{Expert Rev Anti Infect Ther.} 18(4):349-366; \doi{10.1080/14787210.2020.1730813}
+\item Lancefield RC (1933). \strong{A serological differentiation of human and other groups of hemolytic streptococci}. \emph{J Exp Med.} 57(4): 571-95; \doi{10.1084/jem.57.4.571}
+\item Berends MS \emph{et al.} (2022). \strong{Trends in Occurrence and Phenotypic Resistance of Coagulase-Negative Staphylococci (CoNS) Found in Human Blood in the Northern Netherlands between 2013 and 2019} \emph{Microorganisms} 10(9), 1801; \doi{10.3390/microorganisms10091801}
+\item Parte, AC \emph{et al.} (2020). \strong{List of Prokaryotic names with Standing in Nomenclature (LPSN) moves to the DSMZ.} International Journal of Systematic and Evolutionary Microbiology, 70, 5607-5612; \doi{10.1099/ijsem.0.004332}. Accessed from \url{https://lpsn.dsmz.de} on 11 December, 2022.
+\item GBIF Secretariat (2022). GBIF Backbone Taxonomy. Checklist dataset \doi{10.15468/39omei}. Accessed from \url{https://www.gbif.org} on 11 December, 2022.
+\item Public Health Information Network Vocabulary Access and Distribution System (PHIN VADS). US Edition of SNOMED CT from 1 September 2020. Value Set Name 'Microoganism', OID 2.16.840.1.114222.4.11.1009 (v12). URL: \url{https://phinvads.cdc.gov}
+\item Bartlett A \emph{et al.} (2022). \strong{A comprehensive list of bacterial pathogens infecting humans} \emph{Microbiology} 168:001269; \doi{10.1099/mic.0.001269}
 }
 }
 
 \section{Reference Data Publicly Available}{
 
-All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
-}
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+All data sets in this \code{AMR} package (about microorganisms, antibiotics, SIR interpretation, EUCAST rules, etc.) are publicly and freely available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. We also provide tab-separated plain text files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
 }
 
 \examples{
 # taxonomic tree -----------------------------------------------------------
-mo_kingdom("E. coli")         # "Bacteria"
-mo_phylum("E. coli")          # "Proteobacteria"
-mo_class("E. coli")           # "Gammaproteobacteria"
-mo_order("E. coli")           # "Enterobacterales"
-mo_family("E. coli")          # "Enterobacteriaceae"
-mo_genus("E. coli")           # "Escherichia"
-mo_species("E. coli")         # "coli"
-mo_subspecies("E. coli")      # ""
 
-# colloquial properties ----------------------------------------------------
-mo_name("E. coli")            # "Escherichia coli"
-mo_fullname("E. coli")        # "Escherichia coli" - same as mo_name()
-mo_shortname("E. coli")       # "E. coli"
+mo_kingdom("Klebsiella pneumoniae")
+mo_phylum("Klebsiella pneumoniae")
+mo_class("Klebsiella pneumoniae")
+mo_order("Klebsiella pneumoniae")
+mo_family("Klebsiella pneumoniae")
+mo_genus("Klebsiella pneumoniae")
+mo_species("Klebsiella pneumoniae")
+mo_subspecies("Klebsiella pneumoniae")
+
+
+# full names and short names -----------------------------------------------
+
+mo_name("Klebsiella pneumoniae")
+mo_fullname("Klebsiella pneumoniae")
+mo_shortname("Klebsiella pneumoniae")
+
 
 # other properties ---------------------------------------------------------
-mo_gramstain("E. coli")       # "Gram-negative"
-mo_snomed("E. coli")          # 112283007, 116395006, ... (SNOMED codes)
-mo_type("E. coli")            # "Bacteria" (equal to kingdom, but may be translated)
-mo_rank("E. coli")            # "species"
-mo_url("E. coli")             # get the direct url to the online database entry
-mo_synonyms("E. coli")        # get previously accepted taxonomic names
+
+mo_pathogenicity("Klebsiella pneumoniae")
+mo_gramstain("Klebsiella pneumoniae")
+mo_snomed("Klebsiella pneumoniae")
+mo_type("Klebsiella pneumoniae")
+mo_rank("Klebsiella pneumoniae")
+mo_url("Klebsiella pneumoniae")
+mo_is_yeast(c("Candida", "Trichophyton", "Klebsiella"))
+
 
 # scientific reference -----------------------------------------------------
-mo_ref("E. coli")             # "Castellani et al., 1919"
-mo_authors("E. coli")         # "Castellani et al."
-mo_year("E. coli")            # 1919
-mo_lpsn("E. coli")            # 776057 (LPSN record ID)
+
+mo_ref("Klebsiella aerogenes")
+mo_authors("Klebsiella aerogenes")
+mo_year("Klebsiella aerogenes")
+mo_lpsn("Klebsiella aerogenes")
+mo_gbif("Klebsiella aerogenes")
+mo_synonyms("Klebsiella aerogenes")
+
 
 # abbreviations known in the field -----------------------------------------
-mo_genus("MRSA")              # "Staphylococcus"
-mo_species("MRSA")            # "aureus"
-mo_shortname("VISA")          # "S. aureus"
-mo_gramstain("VISA")          # "Gram-positive"
 
-mo_genus("EHEC")              # "Escherichia"
-mo_species("EHEC")            # "coli"
+mo_genus("MRSA")
+mo_species("MRSA")
+mo_shortname("VISA")
+mo_gramstain("VISA")
+
+mo_genus("EHEC")
+mo_species("EIEC")
+mo_name("UPEC")
+
 
 # known subspecies ---------------------------------------------------------
-mo_name("doylei")             # "Campylobacter jejuni doylei"
-mo_genus("doylei")            # "Campylobacter"
-mo_species("doylei")          # "jejuni"
-mo_subspecies("doylei")       # "doylei"
 
-mo_fullname("K. pneu rh")     # "Klebsiella pneumoniae rhinoscleromatis"
-mo_shortname("K. pneu rh")    # "K. pneumoniae"
+mo_fullname("K. pneu rh")
+mo_shortname("K. pneu rh")
 
 \donttest{
 # Becker classification, see ?as.mo ----------------------------------------
-mo_fullname("S. epi")                     # "Staphylococcus epidermidis"
-mo_fullname("S. epi", Becker = TRUE)      # "Coagulase-negative Staphylococcus (CoNS)"
-mo_shortname("S. epi")                    # "S. epidermidis"
-mo_shortname("S. epi", Becker = TRUE)     # "CoNS"
+
+mo_fullname("Staph epidermidis")
+mo_fullname("Staph epidermidis", Becker = TRUE)
+mo_shortname("Staph epidermidis")
+mo_shortname("Staph epidermidis", Becker = TRUE)
+
 
 # Lancefield classification, see ?as.mo ------------------------------------
-mo_fullname("S. pyo")                     # "Streptococcus pyogenes"
-mo_fullname("S. pyo", Lancefield = TRUE)  # "Streptococcus group A"
-mo_shortname("S. pyo")                    # "S. pyogenes"
-mo_shortname("S. pyo", Lancefield = TRUE) # "GAS" (='Group A Streptococci')
+
+mo_fullname("Strep agalactiae")
+mo_fullname("Strep agalactiae", Lancefield = TRUE)
+mo_shortname("Strep agalactiae")
+mo_shortname("Strep agalactiae", Lancefield = TRUE)
 
 
 # language support  --------------------------------------------------------
-mo_gramstain("E. coli", language = "de")  # "Gramnegativ"
-mo_gramstain("E. coli", language = "nl")  # "Gram-negatief"
-mo_gramstain("E. coli", language = "es")  # "Gram negativo"
 
-# mo_type is equal to mo_kingdom, but mo_kingdom will remain official
-mo_kingdom("E. coli")                     # "Bacteria" on a German system
-mo_type("E. coli")                        # "Bakterien" on a German system
-mo_type("E. coli")                        # "Bacteria" on an English system
+mo_gramstain("Klebsiella pneumoniae", language = "de") # German
+mo_gramstain("Klebsiella pneumoniae", language = "nl") # Dutch
+mo_gramstain("Klebsiella pneumoniae", language = "es") # Spanish
+mo_gramstain("Klebsiella pneumoniae", language = "el") # Greek
+mo_gramstain("Klebsiella pneumoniae", language = "uk") # Ukrainian
 
-mo_fullname("S. pyogenes",
-            Lancefield = TRUE,
-            language = "de")              # "Streptococcus Gruppe A"
-mo_fullname("S. pyogenes",
-            Lancefield = TRUE,
-            language = "nl")              # "Streptococcus groep A"
+# mo_type is equal to mo_kingdom, but mo_kingdom will remain untranslated
+mo_kingdom("Klebsiella pneumoniae")
+mo_type("Klebsiella pneumoniae")
+mo_kingdom("Klebsiella pneumoniae", language = "zh") # Chinese, no effect
+mo_type("Klebsiella pneumoniae", language = "zh") # Chinese, translated
+
+mo_fullname("S. pyogenes", Lancefield = TRUE, language = "de")
+mo_fullname("S. pyogenes", Lancefield = TRUE, language = "uk")
 
 
 # other --------------------------------------------------------------------
 
-mo_is_yeast(c("Candida", "E. coli"))      # TRUE, FALSE
-
-# gram stains and intrinsic resistance can also be used as a filter in dplyr verbs
-\donttest{
+# gram stains and intrinsic resistance can be used as a filter in dplyr verbs
 if (require("dplyr")) {
   example_isolates \%>\%
-    filter(mo_is_gram_positive())
-    
-  example_isolates \%>\%
-    filter(mo_is_intrinsic_resistant(ab = "vanco"))
+    filter(mo_is_gram_positive()) \%>\%
+    count(mo_genus(), sort = TRUE)
 }
-
+if (require("dplyr")) {
+  example_isolates \%>\%
+    filter(mo_is_intrinsic_resistant(ab = "vanco")) \%>\%
+    count(mo_genus(), sort = TRUE)
+}
 
 # get a list with the complete taxonomy (from kingdom to subspecies)
-mo_taxonomy("E. coli")
+mo_taxonomy("Klebsiella pneumoniae")
+
 # get a list with the taxonomy, the authors, Gram-stain,
-#   SNOMED codes, and URL to the online database
-mo_info("E. coli")
-}
+# SNOMED codes, and URL to the online database
+mo_info("Klebsiella pneumoniae")
 }
 }
 \seealso{

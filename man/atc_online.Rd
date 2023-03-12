@@ -59,7 +59,7 @@ Abbreviations of return values when using \code{property = "U"} (unit):
 \itemize{
 \item \code{"g"} = gram
 \item \code{"mg"} = milligram
-\item `"mcg"`` = microgram
+\item \code{"mcg"} = microgram
 \item \code{"U"} = unit
 \item \code{"TU"} = thousand units
 \item \code{"MU"} = million units
@@ -69,22 +69,9 @@ Abbreviations of return values when using \code{property = "U"} (unit):
 
 \strong{N.B. This function requires an internet connection and only works if the following packages are installed: \code{curl}, \code{rvest}, \code{xml2}.}
 }
-\section{Stable Lifecycle}{
-
-\if{html}{\figure{lifecycle_stable.svg}{options: style=margin-bottom:"5"} \cr}
-The \link[=lifecycle]{lifecycle} of this function is \strong{stable}. In a stable function, major changes are unlikely. This means that the unlying code will generally evolve by adding new arguments; removing arguments or changing the meaning of existing arguments will be avoided.
-
-If the unlying code needs breaking changes, they will occur gradually. For example, an argument will be deprecated and first continue to work, but will emit a message informing you of the change. Next, typically after at least one newly released version on CRAN, the message will be transformed to an error.
-}
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
-}
-
 \examples{
 \donttest{
-if (requireNamespace("curl") && requireNamespace("rvest") && requireNamespace("xml2")) { 
+if (requireNamespace("curl") && requireNamespace("rvest") && requireNamespace("xml2")) {
   # oral DDD (Defined Daily Dose) of amoxicillin
   atc_online_property("J01CA04", "DDD", "O")
   atc_online_ddd(ab_atc("amox"))

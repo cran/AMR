@@ -1,15 +1,19 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Data Analysis for R                   #
+# AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# LICENCE                                                              #
-# (c) 2018-2022 Berends MS, Luz CF et al.                              #
-# Developed at the University of Groningen, the Netherlands, in        #
-# collaboration with non-profit organisations Certe Medical            #
-# Diagnostics & Advice, and University Medical Center Groningen.       # 
+# CITE AS                                                              #
+# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
+# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
+# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# doi:10.18637/jss.v104.i03                                            #
+#                                                                      #
+# Developed at the University of Groningen and the University Medical  #
+# Center Groningen in The Netherlands, in collaboration with many      #
+# colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
@@ -26,88 +30,109 @@
 #' Transform Input to Disk Diffusion Diameters
 #'
 #' This transforms a vector to a new class [`disk`], which is a disk diffusion growth zone size (around an antibiotic disk) in millimetres between 6 and 50.
-#' @inheritSection lifecycle Stable Lifecycle
 #' @rdname as.disk
 #' @param x vector
 #' @param na.rm a [logical] indicating whether missing values should be removed
-#' @details Interpret disk values as RSI values with [as.rsi()]. It supports guidelines from EUCAST and CLSI.
+#' @details Interpret disk values as SIR values with [as.sir()]. It supports guidelines from EUCAST and CLSI.
+#'
+#' Disk diffusion growth zone sizes must be between 6 and 50 millimetres. Values higher than 50 but lower than 100 will be maximised to 50. All others input values outside the 6-50 range will return `NA`.
 #' @return An [integer] with additional class [`disk`]
 #' @aliases disk
 #' @export
-#' @seealso [as.rsi()]
-#' @inheritSection AMR Read more on Our Website!
+#' @seealso [as.sir()]
 #' @examples
-#' \donttest{
-#' # transform existing disk zones to the `disk` class
-#' df <- data.frame(microorganism = "E. coli",
-#'                  AMP = 20,
-#'                  CIP = 14,
-#'                  GEN = 18,
-#'                  TOB = 16)
+#' # transform existing disk zones to the `disk` class (using base R)
+#' df <- data.frame(
+#'   microorganism = "Escherichia coli",
+#'   AMP = 20,
+#'   CIP = 14,
+#'   GEN = 18,
+#'   TOB = 16
+#' )
 #' df[, 2:5] <- lapply(df[, 2:5], as.disk)
-#' # same with dplyr:
-#' # df %>% mutate(across(AMP:TOB, as.disk))
-#' 
-#' # interpret disk values, see ?as.rsi
-#' as.rsi(x = as.disk(18),
-#'        mo = "Strep pneu",  # `mo` will be coerced with as.mo()
-#'        ab = "ampicillin",  # and `ab` with as.ab()
-#'        guideline = "EUCAST")
-#'        
-#' as.rsi(df)
+#' str(df)
+#'
+#' \donttest{
+#' # transforming is easier with dplyr:
+#' if (require("dplyr")) {
+#'   df %>% mutate(across(AMP:TOB, as.disk))
 #' }
+#' }
+#'
+#' # interpret disk values, see ?as.sir
+#' as.sir(
+#'   x = as.disk(18),
+#'   mo = "Strep pneu", # `mo` will be coerced with as.mo()
+#'   ab = "ampicillin", # and `ab` with as.ab()
+#'   guideline = "EUCAST"
+#' )
+#'
+#' # interpret whole data set, pretend to be all from urinary tract infections:
+#' as.sir(df, uti = TRUE)
 as.disk <- function(x, na.rm = FALSE) {
   meet_criteria(x, allow_class = c("disk", "character", "numeric", "integer"), allow_NA = TRUE)
   meet_criteria(na.rm, allow_class = "logical", has_length = 1)
-  
+
   if (!is.disk(x)) {
     x <- unlist(x)
-    if (na.rm == TRUE) {
+    if (isTRUE(na.rm)) {
       x <- x[!is.na(x)]
     }
+    x[trimws2(x) == ""] <- NA
     x.bak <- x
-    
+
     na_before <- length(x[is.na(x)])
-    
+
     # heavily based on cleaner::clean_double():
     clean_double2 <- function(x, remove = "[^0-9.,-]", fixed = FALSE) {
-      x <- gsub(",", ".", x)
+      x <- gsub(",", ".", x, fixed = TRUE)
       # remove ending dot/comma
       x <- gsub("[,.]$", "", x)
       # only keep last dot/comma
       reverse <- function(x) vapply(FUN.VALUE = character(1), lapply(strsplit(x, NULL), rev), paste, collapse = "")
-      x <- sub("{{dot}}", ".", 
-               gsub(".", "",
-                    reverse(sub(".", "}}tod{{",
-                                reverse(x), 
-                                fixed = TRUE)),
-                    fixed = TRUE), 
-               fixed = TRUE)
+      x <- sub("{{dot}}", ".",
+        gsub(".", "",
+          reverse(sub(".", "}}tod{{",
+            reverse(x),
+            fixed = TRUE
+          )),
+          fixed = TRUE
+        ),
+        fixed = TRUE
+      )
       x_clean <- gsub(remove, "", x, ignore.case = TRUE, fixed = fixed)
       # remove everything that is not a number or dot
       as.double(gsub("[^0-9.]+", "", x_clean))
     }
-    
+
     # round up and make it an integer
     x <- as.integer(ceiling(clean_double2(x)))
-    
+
     # disks can never be less than 6 mm (size of smallest disk) or more than 50 mm
-    x[x < 6 | x > 50] <- NA_integer_
+    x[x < 6 | x > 99] <- NA_integer_
+    x[x > 50] <- 50L
     na_after <- length(x[is.na(x)])
-    
+
     if (na_before != na_after) {
       list_missing <- x.bak[is.na(x) & !is.na(x.bak)] %pm>%
         unique() %pm>%
         sort() %pm>%
         vector_and(quotes = TRUE)
-      warning_("in `as.disk()`: ", na_after - na_before, " results truncated (",
-               round(((na_after - na_before) / length(x)) * 100),
-               "%) that were invalid disk zones: ",
-               list_missing)
+      cur_col <- get_current_column()
+      warning_("in `as.disk()`: ", na_after - na_before, " result",
+        ifelse(na_after - na_before > 1, "s", ""),
+        ifelse(is.null(cur_col), "", paste0(" in column '", cur_col, "'")),
+        " truncated (",
+        round(((na_after - na_before) / length(x)) * 100),
+        "%) that were invalid disk zones: ",
+        list_missing,
+        call = FALSE
+      )
     }
   }
   set_clean_class(as.integer(x),
-                  new_class = c("disk", "integer"))
+    new_class = c("disk", "integer")
+  )
 }
 
 all_valid_disks <- function(x) {
@@ -115,15 +140,17 @@ all_valid_disks <- function(x) {
     return(FALSE)
   }
   x_disk <- tryCatch(suppressWarnings(as.disk(x[!is.na(x)])),
-                     error = function(e) NA)
-  !any(is.na(x_disk)) && !all(is.na(x))
+    error = function(e) NA
+  )
+  !anyNA(x_disk) && !all(is.na(x))
 }
 
 #' @rdname as.disk
-#' @details `NA_disk_` is a missing value of the new `<disk>` class.
+#' @details `NA_disk_` is a missing value of the new `disk` class.
 #' @export
 NA_disk_ <- set_clean_class(as.integer(NA_real_),
-                            new_class = c("disk", "integer"))
+  new_class = c("disk", "integer")
+)
 
 #' @rdname as.disk
 #' @export
@@ -147,7 +174,7 @@ type_sum.disk <- function(x, ...) {
 #' @export
 #' @noRd
 print.disk <- function(x, ...) {
-  cat("Class <disk>\n")
+  cat("Class 'disk'\n")
   print(as.integer(x), quote = FALSE)
 }
 
@@ -214,10 +241,10 @@ rep.disk <- function(x, ...) {
 get_skimmers.disk <- function(column) {
   skimr::sfl(
     skim_type = "disk",
-    min = ~min(as.double(.), na.rm = TRUE),
-    max = ~max(as.double(.), na.rm = TRUE),
-    median = ~stats::median(as.double(.), na.rm = TRUE),
-    n_unique = ~length(unique(stats::na.omit(.))),
-    hist = ~skimr::inline_hist(stats::na.omit(as.double(.)))
+    min = ~ min(as.double(.), na.rm = TRUE),
+    max = ~ max(as.double(.), na.rm = TRUE),
+    median = ~ stats::median(as.double(.), na.rm = TRUE),
+    n_unique = ~ length(unique(stats::na.omit(.))),
+    hist = ~ skimr::inline_hist(stats::na.omit(as.double(.)))
   )
 }

@@ -1,15 +1,19 @@
 # ==================================================================== #
 # TITLE                                                                #
-# Antimicrobial Resistance (AMR) Data Analysis for R                   #
+# AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
 # SOURCE                                                               #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# LICENCE                                                              #
-# (c) 2018-2022 Berends MS, Luz CF et al.                              #
-# Developed at the University of Groningen, the Netherlands, in        #
-# collaboration with non-profit organisations Certe Medical            #
-# Diagnostics & Advice, and University Medical Center Groningen.       # 
+# CITE AS                                                              #
+# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
+# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
+# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# doi:10.18637/jss.v104.i03                                            #
+#                                                                      #
+# Developed at the University of Groningen and the University Medical  #
+# Center Groningen in The Netherlands, in collaboration with many      #
+# colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
 # it for both personal and commercial purposes under the terms of the  #
@@ -26,7 +30,6 @@
 #' Get ATC Properties from WHOCC Website
 #'
 #' Gets data from the WHOCC website to determine properties of an Anatomical Therapeutic Chemical (ATC) (e.g. an antibiotic), such as the name, defined daily dose (DDD) or standard unit.
-#' @inheritSection lifecycle Stable Lifecycle
 #' @param atc_code a [character] (vector) with ATC code(s) of antibiotics, will be coerced with [as.ab()] and [ab_atc()] internally if not a valid ATC code
 #' @param property property of an ATC code. Valid values are `"ATC"`, `"Name"`, `"DDD"`, `"U"` (`"unit"`), `"Adm.R"`, `"Note"` and `groups`. For this last option, all hierarchical groups of an ATC code will be returned, see *Examples*.
 #' @param administration type of administration when using `property = "Adm.R"`, see *Details*
@@ -35,7 +38,7 @@
 #' @param ... arguments to pass on to `atc_property`
 #' @details
 #' Options for argument `administration`:
-#' 
+#'
 #' - `"Implant"` = Implant
 #' - `"Inhal"` = Inhalation
 #' - `"Instill"` = Instillation
@@ -48,28 +51,27 @@
 #' - `"V"` = vaginal
 #'
 #' Abbreviations of return values when using `property = "U"` (unit):
-#' 
+#'
 #' - `"g"` = gram
 #' - `"mg"` = milligram
-#' - `"mcg"`` = microgram
+#' - `"mcg"` = microgram
 #' - `"U"` = unit
 #' - `"TU"` = thousand units
 #' - `"MU"` = million units
 #' - `"mmol"` = millimole
 #' - `"ml"` = millilitre (e.g. eyedrops)
-#' 
+#'
 #' **N.B. This function requires an internet connection and only works if the following packages are installed: `curl`, `rvest`, `xml2`.**
 #' @export
 #' @rdname atc_online
-#' @inheritSection AMR Read more on Our Website!
 #' @source <https://www.whocc.no/atc_ddd_alterations__cumulative/ddd_alterations/abbrevations/>
 #' @examples
 #' \donttest{
-#' if (requireNamespace("curl") && requireNamespace("rvest") && requireNamespace("xml2")) { 
+#' if (requireNamespace("curl") && requireNamespace("rvest") && requireNamespace("xml2")) {
 #'   # oral DDD (Defined Daily Dose) of amoxicillin
 #'   atc_online_property("J01CA04", "DDD", "O")
 #'   atc_online_ddd(ab_atc("amox"))
-#' 
+#'
 #'   # parenteral DDD (Defined Daily Dose) of amoxicillin
 #'   atc_online_property("J01CA04", "DDD", "P")
 #'
@@ -86,7 +88,7 @@ atc_online_property <- function(atc_code,
   meet_criteria(administration, allow_class = "character", has_length = 1)
   meet_criteria(url, allow_class = "character", has_length = 1, looks_like = "https?://")
   meet_criteria(url_vet, allow_class = "character", has_length = 1, looks_like = "https?://")
-  
+
   has_internet <- import_fn("has_internet", "curl")
   html_attr <- import_fn("html_attr", "rvest")
   html_children <- import_fn("html_children", "rvest")
@@ -95,20 +97,19 @@ atc_online_property <- function(atc_code,
   html_table <- import_fn("html_table", "rvest")
   html_text <- import_fn("html_text", "rvest")
   read_html <- import_fn("read_html", "xml2")
-  
-  check_dataset_integrity()
-  
-  if (!all(atc_code %in% unlist(antibiotics$atc))) {
+
+  if (!all(atc_code %in% unlist(AMR::antibiotics$atc))) {
     atc_code <- as.character(ab_atc(atc_code, only_first = TRUE))
   }
-  
+
   if (!has_internet()) {
     message_("There appears to be no internet connection, returning NA.",
-             add_fn = font_red,
-             as_note = FALSE)
+      add_fn = font_red,
+      as_note = FALSE
+    )
     return(rep(NA, length(atc_code)))
   }
-  
+
   property <- tolower(property)
   # also allow unit as property
   if (property == "unit") {
@@ -121,12 +122,11 @@ atc_online_property <- function(atc_code,
   } else {
     returnvalue <- rep(NA_character_, length(atc_code))
   }
-  
+
   progress <- progress_ticker(n = length(atc_code), 3)
   on.exit(close(progress))
-  
+
   for (i in seq_len(length(atc_code))) {
-    
     progress$tick()
 
     if (atc_code[i] %like% "^Q") {
@@ -136,19 +136,20 @@ atc_online_property <- function(atc_code,
       atc_url <- url
     }
     atc_url <- sub("%s", atc_code[i], atc_url, fixed = TRUE)
-    
+
     if (property == "groups") {
       out <- tryCatch(
         read_html(atc_url) %pm>%
           html_node("#content") %pm>%
           html_children() %pm>%
-          html_node("a"), 
-        error = function(e) NULL)
+          html_node("a"),
+        error = function(e) NULL
+      )
       if (is.null(out)) {
         message_("Connection to ", atc_url, " failed.")
         return(rep(NA, length(atc_code)))
       }
-      
+
       # get URLS of items
       hrefs <- out %pm>% html_attr("href")
       # get text of items
@@ -158,50 +159,50 @@ atc_online_property <- function(atc_code,
       # last one is antibiotics, skip it
       texts <- texts[seq_len(length(texts)) - 1]
       returnvalue <- c(list(texts), returnvalue)
-      
     } else {
       out <- tryCatch(
         read_html(atc_url) %pm>%
           html_nodes("table") %pm>%
           html_table(header = TRUE) %pm>%
-          as.data.frame(stringsAsFactors = FALSE), 
-        error = function(e) NULL)
+          as.data.frame(stringsAsFactors = FALSE),
+        error = function(e) NULL
+      )
       if (is.null(out)) {
         message_("Connection to ", atc_url, " failed.")
         return(rep(NA, length(atc_code)))
       }
-      
+
       # case insensitive column names
       colnames(out) <- gsub("^atc.*", "atc", tolower(colnames(out)))
-      
+
       if (length(out) == 0) {
         warning_("in `atc_online_property()`: ATC not found: ", atc_code[i], ". Please check ", atc_url, ".")
         returnvalue[i] <- NA
         next
       }
-      
+
       if (property %in% c("atc", "name")) {
         # ATC and name are only in first row
-        returnvalue[i] <- out[1, property]
+        returnvalue[i] <- out[1, property, drop = TRUE]
       } else {
-        if (!"adm.r" %in% colnames(out) | is.na(out[1, "adm.r"])) {
+        if (!"adm.r" %in% colnames(out) || is.na(out[1, "adm.r", drop = TRUE])) {
           returnvalue[i] <- NA
           next
         } else {
           for (j in seq_len(nrow(out))) {
             if (out[j, "adm.r"] == administration) {
-              returnvalue[i] <- out[j, property]
+              returnvalue[i] <- out[j, property, drop = TRUE]
             }
           }
         }
       }
     }
   }
-  
-  if (property == "groups" & length(returnvalue) == 1) {
+
+  if (property == "groups" && length(returnvalue) == 1) {
     returnvalue <- returnvalue[[1]]
   }
-  
+
   returnvalue
 }
 

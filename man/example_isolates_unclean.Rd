@@ -5,29 +5,25 @@
 \alias{example_isolates_unclean}
 \title{Data Set with Unclean Data}
 \format{
-A \link{data.frame} with 3,000 observations and 8 variables:
+A \link[tibble:tibble]{tibble} with 3 000 observations and 8 variables:
 \itemize{
 \item \code{patient_id}\cr ID of the patient
 \item \code{date}\cr date of receipt at the laboratory
 \item \code{hospital}\cr ID of the hospital, from A to C
 \item \code{bacteria}\cr info about microorganism that can be transformed with \code{\link[=as.mo]{as.mo()}}, see also \link{microorganisms}
-\item \code{AMX:GEN}\cr 4 different antibiotics that have to be transformed with \code{\link[=as.rsi]{as.rsi()}}
+\item \code{AMX:GEN}\cr 4 different antibiotics that have to be transformed with \code{\link[=as.sir]{as.sir()}}
 }
 }
 \usage{
 example_isolates_unclean
 }
 \description{
-A data set containing 3,000 microbial isolates that are not cleaned up and consequently not ready for AMR data analysis. This data set can be used for practice.
+A data set containing 3 000 microbial isolates that are not cleaned up and consequently not ready for AMR data analysis. This data set can be used for practice.
 }
-\section{Reference Data Publicly Available}{
-
-All reference data sets (about microorganisms, antibiotics, R/SI interpretation, EUCAST rules, etc.) in this \code{AMR} package are publicly and freely available. We continually export our data sets to formats for use in R, SPSS, SAS, Stata and Excel. We also supply flat files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please find \href{https://msberends.github.io/AMR/articles/datasets.html}{all download links on our website}, which is automatically updated with every code change.
+\details{
+Like all data sets in this package, this data set is publicly available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
 }
-
-\section{Read more on Our Website!}{
-
-On our website \url{https://msberends.github.io/AMR/} you can find \href{https://msberends.github.io/AMR/articles/AMR.html}{a comprehensive tutorial} about how to conduct AMR data analysis, the \href{https://msberends.github.io/AMR/reference/}{complete documentation of all functions} and \href{https://msberends.github.io/AMR/articles/WHONET.html}{an example analysis using WHONET data}.
+\examples{
+example_isolates_unclean
 }
-
 \keyword{datasets}
