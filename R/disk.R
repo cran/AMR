@@ -1,15 +1,15 @@
 # ==================================================================== #
-# TITLE                                                                #
+# TITLE:                                                               #
 # AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
-# SOURCE                                                               #
+# SOURCE CODE:                                                         #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# CITE AS                                                              #
+# PLEASE CITE THIS SOFTWARE AS:                                        #
 # Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
 # (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
 # Data. Journal of Statistical Software, 104(3), 1-31.                 #
-# doi:10.18637/jss.v104.i03                                            #
+# https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
 # Center Groningen in The Netherlands, in collaboration with many      #
@@ -70,7 +70,7 @@
 #' # interpret whole data set, pretend to be all from urinary tract infections:
 #' as.sir(df, uti = TRUE)
 as.disk <- function(x, na.rm = FALSE) {
-  meet_criteria(x, allow_class = c("disk", "character", "numeric", "integer"), allow_NA = TRUE)
+  meet_criteria(x, allow_NA = TRUE)
   meet_criteria(na.rm, allow_class = "logical", has_length = 1)
 
   if (!is.disk(x)) {

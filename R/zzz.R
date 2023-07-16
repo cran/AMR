@@ -1,15 +1,15 @@
 # ==================================================================== #
-# TITLE                                                                #
+# TITLE:                                                               #
 # AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
-# SOURCE                                                               #
+# SOURCE CODE:                                                         #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# CITE AS                                                              #
+# PLEASE CITE THIS SOFTWARE AS:                                        #
 # Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
 # (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
 # Data. Journal of Statistical Software, 104(3), 1-31.                 #
-# doi:10.18637/jss.v104.i03                                            #
+# https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
 # Center Groningen in The Netherlands, in collaboration with many      #
@@ -58,35 +58,35 @@ AMR_env$av_previously_coerced <- data.frame(
 AMR_env$sir_interpretation_history <- data.frame(
   datetime = Sys.time()[0],
   index = integer(0),
-  ab_input = character(0),
-  ab_considered = character(0),
-  mo_input = character(0),
-  mo_considered = character(0),
+  ab_user = character(0),
+  mo_user = character(0),
+  ab = set_clean_class(character(0), c("ab", "character")),
+  mo = set_clean_class(character(0), c("mo", "character")),
+  input = double(0),
+  outcome = NA_sir_[0],
+  method = character(0),
+  breakpoint_S_R = character(0),
   guideline = character(0),
   ref_table = character(0),
-  method = character(0),
-  breakpoint_S = double(0),
-  breakpoint_R = double(0),
-  input = double(0),
-  interpretation = character(0),
   stringsAsFactors = FALSE
 )
+
 AMR_env$custom_ab_codes <- character(0)
 AMR_env$custom_mo_codes <- character(0)
 AMR_env$is_dark_theme <- NULL
+AMR_env$chmatch <- import_fn("chmatch", "data.table", error_on_fail = FALSE)
+AMR_env$chin <- import_fn("%chin%", "data.table", error_on_fail = FALSE)
 
 # determine info icon for messages
-utf8_supported <- isTRUE(base::l10n_info()$`UTF-8`)
-is_latex <- tryCatch(import_fn("is_latex_output", "knitr", error_on_fail = FALSE)(),
-  error = function(e) FALSE
-)
-if (utf8_supported && !is_latex) {
-  # \u2139 is a symbol officially named 'information source'
-  AMR_env$info_icon <- "\u2139"
-  AMR_env$bullet_icon <- "\u2022"
+if (pkg_is_available("cli")) {
+  # let cli do the determination of supported symbols
+  AMR_env$info_icon <- import_fn("symbol", "cli")$info
+  AMR_env$bullet_icon <- import_fn("symbol", "cli")$bullet
+  AMR_env$dots <- import_fn("symbol", "cli")$ellipsis
 } else {
   AMR_env$info_icon <- "i"
   AMR_env$bullet_icon <- "*"
+  AMR_env$dots <- "..."
 }
 
 .onLoad <- function(lib, pkg) {
@@ -185,7 +185,7 @@ if (utf8_supported && !is_latex) {
     try(loadNamespace("tibble"), silent = TRUE)
   }
 
-  # reference data - they have additional to improve algorithm speed
+  # reference data - they have additional data to improve algorithm speed
   # they cannot be part of R/sysdata.rda since CRAN thinks it would make the package too large (+3 MB)
   AMR_env$AB_lookup <- cbind(AMR::antibiotics, AB_LOOKUP)
   AMR_env$AV_lookup <- cbind(AMR::antivirals, AV_LOOKUP)

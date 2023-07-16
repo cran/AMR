@@ -1,3 +1,40 @@
+# AMR 2.1.0
+
+## New
+* Regarding clinical breakpoints:
+  * Clinical breakpoints and intrinsic resistance of EUCAST 2023 and CLSI 2023 have been added to the `clinical_breakpoints` data set for usage in `as.sir()`. EUCAST 2023 (v13.0) is now the new default guideline for all MIC and disks diffusion interpretations
+  * The EUCAST dosage guideline of v13.0 has been added to the `dosage` data set
+  * The `clinical_breakpoints` data set now also contains epidemiological cut-off (ECOFF) values and CLSI animal breakpoints. These two new breakpoint types can be used for MIC/disk interpretation using `as.sir(..., breakpoint_type = "ECOFF")` or`as.sir(..., breakpoint_type = "animal")`, which is an important new addition for veterinary microbiology.
+* Added support for 30 species groups / complexes. They are gathered in a new data set `microorganisms.groups` and are used in clinical breakpoint interpretation. For example, CLSI 2023 contains breakpoints for the RGM group (Rapidly Growing Mycobacterium, containing over 80 species) which is now supported by our package.
+* Added oxygen tolerance from BacDive to over 25,000 bacteria in the `microorganisms` data set
+  * Added `mo_oxygen_tolerance()` to retrieve the values
+  * Added `mo_is_anaerobic()` to determine which genera/species are obligate anaerobic bacteria
+* Added LPSN and GBIF identifiers, and oxygen tolerance to `mo_info()`
+* Added SAS Transport files (file extension `.xpt`) to [our download page](https://msberends.github.io/AMR/articles/datasets.html) to use in SAS software
+* Added microbial codes for Gram-negative/positive anaerobic bacteria
+
+## Changed
+* Updated algorithm of `as.mo()` by giving more weight to fungi
+* Fixed clinical breakpoints errors introduced by the source we import the rules from
+* `mo_rank()` now returns `NA` for 'unknown' microorganisms (`B_ANAER`, `B_ANAER-NEG`, `B_ANAER-POS`, `B_GRAMN`, `B_GRAMP`, `F_FUNGUS`, `F_YEAST`, and `UNKNOWN`)
+* When printing microorganism or antibiotic codes in a tibble, a mouse-hover now shows the full name of the code
+* Plots for MIC and disk diffusion values:
+  * Now have settable arguments for breakpoint type and PK/PD, like `as.sir()`
+  * Will now contain the name of the guideline table in the subtitle of the plot
+* Fixed formatting for `sir_interpretation_history()`
+* Fixed some WHONET codes for microorganisms and consequently a couple of entries in `clinical_breakpoints`
+* Fixed a bug for `as.mo()` that led to coercion of `NA` values when using custom microorganism codes
+* Fixed usage of `icu_exclude` in `first_isolates()`
+* Improved `as.mo()` algorithm:
+  * Now allows searching on only species names
+  * Fix for using the `keep_synonyms` argument when using MO codes as input
+  * Fix for using the `minimum_matching_score` argument
+* Updated the code table in `microorganisms.codes`
+* Fixed an endless loop if using `reference_df` in `as.mo()`
+* Fixed bug for indicating UTIs in `as.sir()`
+* Greatly improved speed of `as.sir()`
+
+
 # AMR 2.0.0
 
 This is a new major release of the AMR package, with great new additions but also some breaking changes for current users. These are all listed below.

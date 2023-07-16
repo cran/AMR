@@ -1,12 +1,12 @@
 Package: AMR
-Version: 2.0.0
-Date: 2023-03-12
+Version: 2.1.0
+Date: 2023-07-16
 Title: Antimicrobial Resistance Data Analysis
 Description: Functions to simplify and standardise antimicrobial resistance (AMR)
   data analysis and to work with microbial and antimicrobial properties by
   using evidence-based methods, as described in <doi:10.18637/jss.v104.i03>.
 Authors@R: c(
-  person(family = "Berends",     c("Matthijs", "S."), role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7620-1800"), email = "m.berends@certe.nl"),
+  person(family = "Berends",     c("Matthijs", "S."), role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7620-1800"), email = "m.s.berends@umcg.nl"),
   person(family = "Luz",         c("Christian", "F."), role = c("aut", "ctb"), comment = c(ORCID = "0000-0001-5809-5995")),
   person(family = "Souverein",   c("Dennis"), role = c("aut", "ctb"), comment = c(ORCID = "0000-0003-0455-0336")),
   person(family = "Hassing",     c("Erwin", "E.", "A."), role = c("aut", "ctb")),
@@ -30,8 +30,8 @@ Authors@R: c(
   person(family = "Williams",    c("Anita"), role = "ctb", comment = c(ORCID = "0000-0002-5295-8451")))
 Depends: R (>= 3.0.0)
 Enhances: cleaner, ggplot2, janitor, skimr, tibble, tidyselect, tsibble
-Suggests: curl, data.table, dplyr, knitr, progress, readxl, rmarkdown,
-        rvest, tinytest, xml2
+Suggests: cli, curl, data.table, dplyr, knitr, progress, readxl,
+        rmarkdown, rvest, tinytest, xml2
 VignetteBuilder: knitr,rmarkdown
 URL: https://msberends.github.io/AMR/, https://github.com/msberends/AMR
 BugReports: https://github.com/msberends/AMR/issues
@@ -40,7 +40,7 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2023-03-12 12:41:07 UTC; msberends
+Packaged: 2023-07-16 07:04:56 UTC; uscloud
 Author: Matthijs S. Berends [aut, cre]
     (<https://orcid.org/0000-0001-7620-1800>),
   Christian F. Luz [aut, ctb] (<https://orcid.org/0000-0001-5809-5995>),
@@ -64,6 +64,6 @@ Author: Matthijs S. Berends [aut, cre]
   Bhanu N. M. Sinha [ths] (<https://orcid.org/0000-0003-1634-0010>),
   Anthony Underwood [ctb] (<https://orcid.org/0000-0002-8547-4277>),
   Anita Williams [ctb] (<https://orcid.org/0000-0002-5295-8451>)
-Maintainer: Matthijs S. Berends <m.berends@certe.nl>
+Maintainer: Matthijs S. Berends <m.s.berends@umcg.nl>
 Repository: CRAN
-Date/Publication: 2023-03-12 13:00:02 UTC
+Date/Publication: 2023-07-16 15:30:02 UTC

@@ -3,17 +3,18 @@
 \docType{data}
 \name{microorganisms}
 \alias{microorganisms}
-\title{Data Set with 52 142 Microorganisms}
+\title{Data Set with 52 171 Microorganisms}
 \format{
-A \link[tibble:tibble]{tibble} with 52 142 observations and 22 variables:
+A \link[tibble:tibble]{tibble} with 52 171 observations and 23 variables:
 \itemize{
-\item \code{mo}\cr ID of microorganism as used by this package
-\item \code{fullname}\cr Full name, like \code{"Escherichia coli"}. For the taxonomic ranks genus, species and subspecies, this is the 'pasted' text of genus, species, and subspecies. For all taxonomic ranks higher than genus, this is the name of the taxon.
+\item \code{mo}\cr ID of microorganism as used by this package. \emph{This is a unique identifier.}
+\item \code{fullname}\cr Full name, like \code{"Escherichia coli"}. For the taxonomic ranks genus, species and subspecies, this is the 'pasted' text of genus, species, and subspecies. For all taxonomic ranks higher than genus, this is the name of the taxon. \emph{This is a unique identifier.}
 \item \code{status} \cr Status of the taxon, either "accepted" or "synonym"
 \item \code{kingdom}, \code{phylum}, \code{class}, \code{order}, \code{family}, \code{genus}, \code{species}, \code{subspecies}\cr Taxonomic rank of the microorganism
 \item \code{rank}\cr Text of the taxonomic rank of the microorganism, such as \code{"species"} or \code{"genus"}
 \item \code{ref}\cr Author(s) and year of related scientific publication. This contains only the \emph{first surname} and year of the \emph{latest} authors, e.g. "Wallis \emph{et al.} 2006 \emph{emend.} Smith and Jones 2018" becomes "Smith \emph{et al.}, 2018". This field is directly retrieved from the source specified in the column \code{source}. Moreover, accents were removed to comply with CRAN that only allows ASCII characters, e.g. "Váňová" becomes "Vanova".
 \item \code{lpsn}\cr Identifier ('Record number') of the List of Prokaryotic names with Standing in Nomenclature (LPSN). This will be the first/highest LPSN identifier to keep one identifier per row. For example, \emph{Acetobacter ascendens} has LPSN Record number 7864 and 11011. Only the first is available in the \code{microorganisms} data set.
+\item \code{oxygen_tolerance} \cr Oxygen tolerance, either "aerobe", "anaerobe", "anaerobe/microaerophile", "facultative anaerobe", "likely facultative anaerobe", or "microaerophile". These data were retrieved from BacDive (see \emph{Source}). Items that contain "likely" are missing from BacDive and were extrapolated from other species within the same genus to guess the oxygen tolerance. Currently 73.4\% of all ~37 000 bacteria in the data set contain an oxygen tolerance.
 \item \code{lpsn_parent}\cr LPSN identifier of the parent taxon
 \item \code{lpsn_renamed_to}\cr LPSN identifier of the currently valid taxon
 \item \code{gbif}\cr Identifier ('taxonID') of the Global Biodiversity Information Facility (GBIF)
@@ -21,13 +22,14 @@ A \link[tibble:tibble]{tibble} with 52 142 observations and 22 variables:
 \item \code{gbif_renamed_to}\cr GBIF identifier of the currently valid taxon
 \item \code{source}\cr Either "GBIF", "LPSN", or "manually added" (see \emph{Source})
 \item \code{prevalence}\cr Prevalence of the microorganism according to Bartlett \emph{et al.} (2022, \doi{10.1099/mic.0.001269}), see \code{\link[=mo_matching_score]{mo_matching_score()}} for the full explanation
-\item \code{snomed}\cr Systematized Nomenclature of Medicine (SNOMED) code of the microorganism, version of 1 July, 2021 (see \emph{Source}). Use \code{\link[=mo_snomed]{mo_snomed()}} to retrieve it quickly, see \code{\link[=mo_property]{mo_property()}}.
+\item \code{snomed}\cr Systematized Nomenclature of Medicine (SNOMED) code of the microorganism, version of July 1st, 2021 (see \emph{Source}). Use \code{\link[=mo_snomed]{mo_snomed()}} to retrieve it quickly, see \code{\link[=mo_property]{mo_property()}}.
 }
 }
 \source{
 \itemize{
-\item Parte, AC \emph{et al.} (2020). \strong{List of Prokaryotic names with Standing in Nomenclature (LPSN) moves to the DSMZ.} International Journal of Systematic and Evolutionary Microbiology, 70, 5607-5612; \doi{10.1099/ijsem.0.004332}. Accessed from \url{https://lpsn.dsmz.de} on 11 December, 2022.
-\item GBIF Secretariat (2022). GBIF Backbone Taxonomy. Checklist dataset \doi{10.15468/39omei}. Accessed from \url{https://www.gbif.org} on 11 December, 2022.
+\item Parte, AC \emph{et al.} (2020). \strong{List of Prokaryotic names with Standing in Nomenclature (LPSN) moves to the DSMZ.} International Journal of Systematic and Evolutionary Microbiology, 70, 5607-5612; \doi{10.1099/ijsem.0.004332}. Accessed from \url{https://lpsn.dsmz.de} on December 11th, 2022.
+\item GBIF Secretariat (2022). GBIF Backbone Taxonomy. Checklist dataset \doi{10.15468/39omei}. Accessed from \url{https://www.gbif.org} on December 11th, 2022.
+\item Reimer, LC \emph{et al.} (2022). \strong{\emph{BacDive} in 2022: the knowledge base for standardized bacterial and archaeal data.} Nucleic Acids Res., 50(D1):D741-D74; \doi{10.1093/nar/gkab961}. Accessed from \url{https://bacdive.dsmz.de} on May 12th, 2023.
 \item Public Health Information Network Vocabulary Access and Distribution System (PHIN VADS). US Edition of SNOMED CT from 1 September 2020. Value Set Name 'Microoganism', OID 2.16.840.1.114222.4.11.1009 (v12). URL: \url{https://phinvads.cdc.gov}
 \item Grimont \emph{et al.} (2007). Antigenic Formulae of the Salmonella Serovars, 9th Edition. WHO Collaborating Centre for Reference and Research on \emph{Salmonella} (WHOCC-SALM).
 \item Bartlett \emph{et al.} (2022). \strong{A comprehensive list of bacterial pathogens infecting humans} \emph{Microbiology} 168:001269; \doi{10.1099/mic.0.001269}
@@ -37,7 +39,7 @@ A \link[tibble:tibble]{tibble} with 52 142 observations and 22 variables:
 microorganisms
 }
 \description{
-A data set containing the full microbial taxonomy (\strong{last updated: 11 December, 2022}) of five kingdoms from the List of Prokaryotic names with Standing in Nomenclature (LPSN) and the Global Biodiversity Information Facility (GBIF). This data set is the backbone of this \code{AMR} package. MO codes can be looked up using \code{\link[=as.mo]{as.mo()}}.
+A data set containing the full microbial taxonomy (\strong{last updated: December 11th, 2022}) of five kingdoms from the List of Prokaryotic names with Standing in Nomenclature (LPSN) and the Global Biodiversity Information Facility (GBIF). This data set is the backbone of this \code{AMR} package. MO codes can be looked up using \code{\link[=as.mo]{as.mo()}}.
 }
 \details{
 Please note that entries are only based on the List of Prokaryotic names with Standing in Nomenclature (LPSN) and the Global Biodiversity Information Facility (GBIF) (see below). Since these sources incorporate entries based on (recent) publications in the International Journal of Systematic and Evolutionary Microbiology (IJSEM), it can happen that the year of publication is sometimes later than one might expect.
@@ -48,10 +50,10 @@ For example, \emph{Staphylococcus pettenkoferi} was described for the first time
 
 Included taxonomic data are:
 \itemize{
-\item All ~36 000 (sub)species from the kingdoms of Archaea and Bacteria
+\item All ~37 000 (sub)species from the kingdoms of Archaea and Bacteria
 \item ~7 900 (sub)species from the kingdom of Fungi. The kingdom of Fungi is a very large taxon with almost 300,000 different (sub)species, of which most are not microbial (but rather macroscopic, like mushrooms). Because of this, not all fungi fit the scope of this package. Only relevant fungi are covered (such as all species of \emph{Aspergillus}, \emph{Candida}, \emph{Cryptococcus}, \emph{Histoplasma}, \emph{Pneumocystis}, \emph{Saccharomyces} and \emph{Trichophyton}).
 \item ~5 100 (sub)species from the kingdom of Protozoa
-\item ~1 400 (sub)species from ~40 other relevant genera from the kingdom of Animalia (such as \emph{Strongyloides} and \emph{Taenia})
+\item ~1 400 (sub)species from 43 other relevant genera from the kingdom of Animalia (such as \emph{Strongyloides} and \emph{Taenia})
 \item All ~9 800 previously accepted names of all included (sub)species (these were taxonomically renamed)
 \item The complete taxonomic tree of all included (sub)species: from kingdom to subspecies
 \item The identifier of the parent taxons
@@ -61,12 +63,11 @@ Included taxonomic data are:
 
 For convenience, some entries were added manually:
 \itemize{
-\item ~1 500 entries for the city-like serovars of \emph{Salmonellae}
-\item 11 entries of \emph{Streptococcus} (beta-haemolytic: groups A, B, C, D, F, G, H, K and unspecified; other: viridans, milleri)
-\item 2 entries of \emph{Staphylococcus} (coagulase-negative (CoNS) and coagulase-positive (CoPS))
+\item ~1 500 entries of \emph{Salmonella}, such as the city-like serovars and groups A to H
+\item 36 species groups (such as the beta-haemolytic \emph{Streptococcus} groups A to K, coagulase-negative \emph{Staphylococcus} (CoNS), \emph{Mycobacterium tuberculosis} complex, etc.), of which the group compositions are stored in the \link{microorganisms.groups} data set
 \item 1 entry of \emph{Blastocystis} (\emph{B.  hominis}), although it officially does not exist (Noel \emph{et al.} 2005, PMID 15634993)
 \item 1 entry of \emph{Moraxella} (\emph{M. catarrhalis}), which was formally named \emph{Branhamella catarrhalis} (Catlin, 1970) though this change was never accepted within the field of clinical microbiology
-\item 6 other 'undefined' entries (unknown, unknown Gram negatives, unknown Gram positives, unknown yeast, unknown fungus, and unknown anaerobic bacteria)
+\item 8 other 'undefined' entries (unknown, unknown Gram-negatives, unknown Gram-positives, unknown yeast, unknown fungus, and unknown anaerobic Gram-pos/Gram-neg bacteria)
 }
 
 The syntax used to transform the original data to a cleansed \R format, can be found here: \url{https://github.com/msberends/AMR/blob/main/data-raw/reproduction_of_microorganisms.R}.
@@ -89,6 +90,6 @@ The List of Prokaryotic names with Standing in Nomenclature (LPSN) provides comp
 microorganisms
 }
 \seealso{
-\code{\link[=as.mo]{as.mo()}}, \code{\link[=mo_property]{mo_property()}}, \link{microorganisms.codes}, \link{intrinsic_resistant}
+\code{\link[=as.mo]{as.mo()}}, \code{\link[=mo_property]{mo_property()}}, \link{microorganisms.groups}, \link{microorganisms.codes}, \link{intrinsic_resistant}
 }
 \keyword{datasets}

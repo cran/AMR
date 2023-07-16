@@ -1,15 +1,15 @@
 # ==================================================================== #
-# TITLE                                                                #
+# TITLE:                                                               #
 # AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
-# SOURCE                                                               #
+# SOURCE CODE:                                                         #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# CITE AS                                                              #
+# PLEASE CITE THIS SOFTWARE AS:                                        #
 # Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
 # (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
 # Data. Journal of Statistical Software, 104(3), 1-31.                 #
-# doi:10.18637/jss.v104.i03                                            #
+# https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
 # Center Groningen in The Netherlands, in collaboration with many      #
@@ -30,6 +30,12 @@
 # add new version numbers here, and add the rules themselves to "data-raw/eucast_rules.tsv" and clinical_breakpoints
 # (sourcing "data-raw/_pre_commit_hook.R" will process the TSV file)
 EUCAST_VERSION_BREAKPOINTS <- list(
+  # "13.0" = list(
+  #   version_txt = "v13.0",
+  #   year = 2023,
+  #   title = "'EUCAST Clinical Breakpoint Tables'",
+  #   url = "https://www.eucast.org/clinical_breakpoints/"
+  # ),
   "12.0" = list(
     version_txt = "v12.0",
     year = 2022,
@@ -50,25 +56,33 @@ EUCAST_VERSION_BREAKPOINTS <- list(
   )
 )
 EUCAST_VERSION_EXPERT_RULES <- list(
-  "3.1" = list(
-    version_txt = "v3.1",
-    year = 2016,
-    title = "'EUCAST Expert Rules, Intrinsic Resistance and Exceptional Phenotypes'",
-    url = "https://www.eucast.org/expert_rules_and_expected_phenotypes/"
+  "3.3" = list(
+    version_txt = "v3.3",
+    year = 2021,
+    title = "'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes'",
+    url = "https://www.eucast.org/expert_rules_and_expected_phenotypes"
   ),
   "3.2" = list(
     version_txt = "v3.2",
     year = 2020,
     title = "'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes'",
-    url = "https://www.eucast.org/expert_rules_and_expected_phenotypes/"
+    url = "https://www.eucast.org/expert_rules_and_expected_phenotypes"
   ),
-  "3.3" = list(
-    version_txt = "v3.3",
-    year = 2021,
-    title = "'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes'",
-    url = "https://www.eucast.org/expert_rules_and_expected_phenotypes/"
+  "3.1" = list(
+    version_txt = "v3.1",
+    year = 2016,
+    title = "'EUCAST Expert Rules, Intrinsic Resistance and Exceptional Phenotypes'",
+    url = "https://www.eucast.org/expert_rules_and_expected_phenotypes"
   )
 )
+# EUCAST_VERSION_RESISTANTPHENOTYPES <- list(
+#   "1.2" = list(
+#     version_txt = "v1.2",
+#     year = 2023,
+#     title = "'Expected Resistant Phenotypes'",
+#     url = "https://www.eucast.org/expert_rules_and_expected_phenotypes"
+#   )
+# )
 
 TAXONOMY_VERSION <- list(
   GBIF = list(
@@ -80,6 +94,11 @@ TAXONOMY_VERSION <- list(
     accessed_date = as.Date("2022-12-11"),
     citation = "Parte, AC *et al.* (2020). **List of Prokaryotic names with Standing in Nomenclature (LPSN) moves to the DSMZ.** International Journal of Systematic and Evolutionary Microbiology, 70, 5607-5612; \\doi{10.1099/ijsem.0.004332}.",
     url = "https://lpsn.dsmz.de"
+  ),
+  BacDive = list(
+    accessed_date = as.Date("2023-05-12"),
+    citation = "Reimer, LC *et al.* (2022). ***BacDive* in 2022: the knowledge base for standardized bacterial and archaeal data.** Nucleic Acids Res., 50(D1):D741-D74; \\doi{10.1093/nar/gkab961}.",
+    url = "https://bacdive.dsmz.de"
   ),
   SNOMED = list(
     accessed_date = as.Date("2021-07-01"),

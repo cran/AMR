@@ -1,15 +1,15 @@
 # ==================================================================== #
-# TITLE                                                                #
+# TITLE:                                                               #
 # AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
-# SOURCE                                                               #
+# SOURCE CODE:                                                         #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# CITE AS                                                              #
+# PLEASE CITE THIS SOFTWARE AS:                                        #
 # Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
 # (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
 # Data. Journal of Statistical Software, 104(3), 1-31.                 #
-# doi:10.18637/jss.v104.i03                                            #
+# https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
 # Center Groningen in The Netherlands, in collaboration with many      #
@@ -52,7 +52,7 @@
 #'
 #' * `guideline = "CMI2012"` (default)
 #'
-#'   Magiorakos AP, Srinivasan A *et al.* "Multidrug-resistant, extensively drug-resistant and pandrug-resistant bacteria: an international expert proposal for interim standard definitions for acquired resistance." Clinical Microbiology and Infection (2012) ([link](https://www.clinicalmicrobiologyandinfection.com/article/S1198-743X(14)61632-3/fulltext))
+#'   Magiorakos AP, Srinivasan A *et al.* "Multidrug-resistant, extensively drug-resistant and pandrug-resistant bacteria: an international expert proposal for interim standard definitions for acquired resistance." Clinical Microbiology and Infection (2012) (\doi{10.1111/j.1469-0691.2011.03570.x})
 #'
 #' * `guideline = "EUCAST3.3"` (or simply `guideline = "EUCAST"`)
 #'

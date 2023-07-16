@@ -18,9 +18,9 @@ An object of class \code{sir} (inherits from \code{ordered}, \code{factor}) of l
 \source{
 For interpretations of minimum inhibitory concentration (MIC) values and disk diffusion diameters:
 \itemize{
-\item \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data}, 2013-2022, \emph{Clinical and Laboratory Standards Institute} (CLSI). \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
-\item \strong{M100 Performance Standard for Antimicrobial Susceptibility Testing}, 2013-2022, \emph{Clinical and Laboratory Standards Institute} (CLSI). \url{https://clsi.org/standards/products/microbiology/documents/m100/}.
-\item \strong{Breakpoint tables for interpretation of MICs and zone diameters}, 2013-2022, \emph{European Committee on Antimicrobial Susceptibility Testing} (EUCAST). \url{https://www.eucast.org/clinical_breakpoints}.
+\item \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data}, 2011-2023, \emph{Clinical and Laboratory Standards Institute} (CLSI). \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
+\item \strong{M100 Performance Standard for Antimicrobial Susceptibility Testing}, 2011-2023, \emph{Clinical and Laboratory Standards Institute} (CLSI). \url{https://clsi.org/standards/products/microbiology/documents/m100/}.
+\item \strong{Breakpoint tables for interpretation of MICs and zone diameters}, 2011-2023, \emph{European Committee on Antimicrobial Susceptibility Testing} (EUCAST). \url{https://www.eucast.org/clinical_breakpoints}.
 }
 }
 \usage{
@@ -43,6 +43,7 @@ is_sir_eligible(x, threshold = 0.05)
   reference_data = AMR::clinical_breakpoints,
   include_screening = getOption("AMR_include_screening", FALSE),
   include_PKPD = getOption("AMR_include_PKPD", TRUE),
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"),
   ...
 )
 
@@ -56,6 +57,7 @@ is_sir_eligible(x, threshold = 0.05)
   reference_data = AMR::clinical_breakpoints,
   include_screening = getOption("AMR_include_screening", FALSE),
   include_PKPD = getOption("AMR_include_PKPD", TRUE),
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"),
   ...
 )
 
@@ -69,7 +71,8 @@ is_sir_eligible(x, threshold = 0.05)
   add_intrinsic_resistance = FALSE,
   reference_data = AMR::clinical_breakpoints,
   include_screening = getOption("AMR_include_screening", FALSE),
-  include_PKPD = getOption("AMR_include_PKPD", TRUE)
+  include_PKPD = getOption("AMR_include_PKPD", TRUE),
+  breakpoint_type = getOption("AMR_breakpoint_type", "human")
 )
 
 sir_interpretation_history(clean = FALSE)
@@ -85,19 +88,21 @@ sir_interpretation_history(clean = FALSE)
 
 \item{ab}{any (vector of) text that can be coerced to a valid antimicrobial drug code with \code{\link[=as.ab]{as.ab()}}}
 
-\item{guideline}{defaults to EUCAST 2022 (the latest implemented EUCAST guideline in the \link{clinical_breakpoints} data set), but can be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_guideline}}. Currently supports EUCAST (2013-2022) and CLSI (2013-2022), see \emph{Details}.}
+\item{guideline}{defaults to EUCAST 2023 (the latest implemented EUCAST guideline in the \link{clinical_breakpoints} data set), but can be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_guideline}}. Currently supports EUCAST (2011-2023) and CLSI (2011-2023), see \emph{Details}.}
 
 \item{uti}{(Urinary Tract Infection) A vector with \link{logical}s (\code{TRUE} or \code{FALSE}) to specify whether a UTI specific interpretation from the guideline should be chosen. For using \code{\link[=as.sir]{as.sir()}} on a \link{data.frame}, this can also be a column containing \link{logical}s or when left blank, the data set will be searched for a column 'specimen', and rows within this column containing 'urin' (such as 'urine', 'urina') will be regarded isolates from a UTI. See \emph{Examples}.}
 
 \item{conserve_capped_values}{a \link{logical} to indicate that MIC values starting with \code{">"} (but not \code{">="}) must always return "R" , and that MIC values starting with \code{"<"} (but not \code{"<="}) must always return "S"}
 
-\item{add_intrinsic_resistance}{\emph{(only useful when using a EUCAST guideline)} a \link{logical} to indicate whether intrinsic antibiotic resistance must also be considered for applicable bug-drug combinations, meaning that e.g. ampicillin will always return "R" in \emph{Klebsiella} species. Determination is based on the \link{intrinsic_resistant} data set, that itself is based on \href{https://www.eucast.org/expert_rules_and_expected_phenotypes/}{'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes' v3.3} (2021).}
+\item{add_intrinsic_resistance}{\emph{(only useful when using a EUCAST guideline)} a \link{logical} to indicate whether intrinsic antibiotic resistance must also be considered for applicable bug-drug combinations, meaning that e.g. ampicillin will always return "R" in \emph{Klebsiella} species. Determination is based on the \link{intrinsic_resistant} data set, that itself is based on \href{https://www.eucast.org/expert_rules_and_expected_phenotypes}{'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes' v3.3} (2021).}
 
 \item{reference_data}{a \link{data.frame} to be used for interpretation, which defaults to the \link{clinical_breakpoints} data set. Changing this argument allows for using own interpretation guidelines. This argument must contain a data set that is equal in structure to the \link{clinical_breakpoints} data set (same column names and column types). Please note that the \code{guideline} argument will be ignored when \code{reference_data} is manually set.}
 
 \item{include_screening}{a \link{logical} to indicate that clinical breakpoints for screening are allowed - the default is \code{FALSE}. Can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_include_screening}}.}
 
 \item{include_PKPD}{a \link{logical} to indicate that PK/PD clinical breakpoints must be applied as a last resort - the default is \code{TRUE}. Can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_include_PKPD}}.}
+
+\item{breakpoint_type}{the type of breakpoints to use, either "ECOFF", "animal", or "human". ECOFF stands for Epidemiological Cut-Off values. The default is \code{"human"}, which can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_breakpoint_type}}.}
 
 \item{col_mo}{column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
 
@@ -109,9 +114,12 @@ Ordered \link{factor} with new class \code{sir}
 \description{
 Interpret minimum inhibitory concentration (MIC) values and disk diffusion diameters according to EUCAST or CLSI, or clean up existing SIR values. This transforms the input to a new class \code{\link{sir}}, which is an ordered \link{factor} with levels \verb{S < I < R}.
 
+Currently available \strong{breakpoint guidelines} are EUCAST 2011-2023 and CLSI 2011-2023, and available \strong{breakpoint types} are "ECOFF", "animal", and "human".
+
 All breakpoints used for interpretation are publicly available in the \link{clinical_breakpoints} data set.
 }
 \details{
+\emph{Note: The clinical breakpoints in this package were validated through and imported from \href{https://whonet.org}{WHONET} and the public use of this \code{AMR} package has been endorsed by CLSI and EUCAST, please see \link{clinical_breakpoints} for more information.}
 \subsection{How it Works}{
 
 The \code{\link[=as.sir]{as.sir()}} function works in four ways:
@@ -142,9 +150,9 @@ your_data \%>\% mutate(across(where(is.disk), as.sir))
 
 \subsection{Supported Guidelines}{
 
-For interpreting MIC values as well as disk diffusion diameters, currently implemented guidelines are EUCAST (2013-2022) and CLSI (2013-2022).
+For interpreting MIC values as well as disk diffusion diameters, currently implemented guidelines are EUCAST (2011-2023) and CLSI (2011-2023).
 
-Thus, the \code{guideline} argument must be set to e.g., \code{"EUCAST 2022"} or \code{"CLSI 2022"}. By simply using \code{"EUCAST"} (the default) or \code{"CLSI"} as input, the latest included version of that guideline will automatically be selected. You can set your own data set using the \code{reference_data} argument. The \code{guideline} argument will then be ignored.
+Thus, the \code{guideline} argument must be set to e.g., \code{"EUCAST 2023"} or \code{"CLSI 2023"}. By simply using \code{"EUCAST"} (the default) or \code{"CLSI"} as input, the latest included version of that guideline will automatically be selected. You can set your own data set using the \code{reference_data} argument. The \code{guideline} argument will then be ignored.
 
 You can set the default guideline with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_guideline}} (e.g. in your \code{.Rprofile} file), such as:
 
@@ -163,7 +171,7 @@ After using \code{\link[=as.sir]{as.sir()}}, you can use the \code{\link[=eucast
 
 \subsection{Machine-Readable Clinical Breakpoints}{
 
-The repository of this package \href{https://github.com/msberends/AMR/blob/main/data-raw/clinical_breakpoints.txt}{contains a machine-readable version} of all guidelines. This is a CSV file consisting of 18 308 rows and 11 columns. This file is machine-readable, since it contains one row for every unique combination of the test method (MIC or disk diffusion), the antimicrobial drug and the microorganism. \strong{This allows for easy implementation of these rules in laboratory information systems (LIS)}. Note that it only contains interpretation guidelines for humans - interpretation guidelines from CLSI for animals were removed.
+The repository of this package \href{https://github.com/msberends/AMR/blob/main/data-raw/clinical_breakpoints.txt}{contains a machine-readable version} of all guidelines. This is a CSV file consisting of 29 747 rows and 12 columns. This file is machine-readable, since it contains one row for every unique combination of the test method (MIC or disk diffusion), the antimicrobial drug and the microorganism. \strong{This allows for easy implementation of these rules in laboratory information systems (LIS)}. Note that it only contains interpretation guidelines for humans - interpretation guidelines from CLSI for animals were removed.
 }
 
 \subsection{Other}{
@@ -177,7 +185,7 @@ The function \code{\link[=is_sir_eligible]{is_sir_eligible()}} returns \code{TRU
 }
 \section{Interpretation of SIR}{
 
-In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R as shown below (\url{https://www.eucast.org/newsiandr/}):
+In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R as shown below (\url{https://www.eucast.org/newsiandr}):
 \itemize{
 \item \strong{S - Susceptible, standard dosing regimen}\cr
 A microorganism is categorised as "Susceptible, standard dosing regimen", when there is a high likelihood of therapeutic success using a standard dosing regimen of the agent.

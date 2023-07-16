@@ -24,6 +24,8 @@
   colours_SIR = c("#3CAEA3", "#F6D55C", "#ED553B"),
   language = get_AMR_locale(),
   expand = TRUE,
+  include_PKPD = getOption("AMR_include_PKPD", TRUE),
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"),
   ...
 )
 
@@ -38,6 +40,8 @@
   colours_SIR = c("#3CAEA3", "#F6D55C", "#ED553B"),
   language = get_AMR_locale(),
   expand = TRUE,
+  include_PKPD = getOption("AMR_include_PKPD", TRUE),
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"),
   ...
 )
 
@@ -54,6 +58,8 @@
   colours_SIR = c("#3CAEA3", "#F6D55C", "#ED553B"),
   language = get_AMR_locale(),
   expand = TRUE,
+  include_PKPD = getOption("AMR_include_PKPD", TRUE),
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"),
   ...
 )
 
@@ -68,6 +74,8 @@
   colours_SIR = c("#3CAEA3", "#F6D55C", "#ED553B"),
   language = get_AMR_locale(),
   expand = TRUE,
+  include_PKPD = getOption("AMR_include_PKPD", TRUE),
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"),
   ...
 )
 
@@ -113,6 +121,10 @@
 
 \item{expand}{a \link{logical} to indicate whether the range on the x axis should be expanded between the lowest and highest value. For MIC values, intermediate values will be factors of 2 starting from the highest MIC value. For disk diameters, the whole diameter range will be filled.}
 
+\item{include_PKPD}{a \link{logical} to indicate that PK/PD clinical breakpoints must be applied as a last resort - the default is \code{TRUE}. Can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_include_PKPD}}.}
+
+\item{breakpoint_type}{the type of breakpoints to use, either "ECOFF", "animal", or "human". ECOFF stands for Epidemiological Cut-Off values. The default is \code{"human"}, which can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_breakpoint_type}}.}
+
 \item{...}{arguments passed on to methods}
 }
 \value{
@@ -126,7 +138,7 @@ Functions to plot classes \code{sir}, \code{mic} and \code{disk}, with support f
 \details{
 The interpretation of "I" will be named "Increased exposure" for all EUCAST guidelines since 2019, and will be named "Intermediate" in all other cases.
 
-For interpreting MIC values as well as disk diffusion diameters, supported guidelines to be used as input for the \code{guideline} argument are: "EUCAST 2022", "EUCAST 2021", "EUCAST 2020", "EUCAST 2019", "EUCAST 2018", "EUCAST 2017", "EUCAST 2016", "EUCAST 2015", "EUCAST 2014", "EUCAST 2013", "CLSI 2022", "CLSI 2021", "CLSI 2020", "CLSI 2019", "CLSI 2018", "CLSI 2017", "CLSI 2016", "CLSI 2015", "CLSI 2014", and "CLSI 2013".
+For interpreting MIC values as well as disk diffusion diameters, supported guidelines to be used as input for the \code{guideline} argument are: "EUCAST 2023", "EUCAST 2022", "EUCAST 2021", "EUCAST 2020", "EUCAST 2019", "EUCAST 2018", "EUCAST 2017", "EUCAST 2016", "EUCAST 2015", "EUCAST 2014", "EUCAST 2013", "EUCAST 2012", "EUCAST 2011", "CLSI 2023", "CLSI 2022", "CLSI 2021", "CLSI 2020", "CLSI 2019", "CLSI 2018", "CLSI 2017", "CLSI 2016", "CLSI 2015", "CLSI 2014", "CLSI 2013", "CLSI 2012", and "CLSI 2011".
 
 Simply using \code{"CLSI"} or \code{"EUCAST"} as input will automatically select the latest version of that guideline.
 }

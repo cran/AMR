@@ -1,15 +1,15 @@
 # ==================================================================== #
-# TITLE                                                                #
+# TITLE:                                                               #
 # AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
-# SOURCE                                                               #
+# SOURCE CODE:                                                         #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# CITE AS                                                              #
+# PLEASE CITE THIS SOFTWARE AS:                                        #
 # Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
 # (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
 # Data. Journal of Statistical Software, 104(3), 1-31.                 #
-# doi:10.18637/jss.v104.i03                                            #
+# https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
 # Center Groningen in The Netherlands, in collaboration with many      #
@@ -71,7 +71,8 @@
 #' @examples
 #' \donttest{
 #' # a combination of species is not formal taxonomy, so
-#' # this will result in only "Enterobacter asburiae":
+#' # this will result in "Enterobacter cloacae cloacae",
+#' # since it resembles the input best:
 #' mo_name("Enterobacter asburiae/cloacae")
 #'
 #' # now add a custom entry - it will be considered by as.mo() and
@@ -109,7 +110,7 @@
 #' mo_name("BACTEROIDES / PARABACTEROIDES")
 #' mo_rank("BACTEROIDES / PARABACTEROIDES")
 #'
-#' # taxonomy still works, although a slashline genus was given as input:
+#' # taxonomy still works, even though a slashline genus was given as input:
 #' mo_family("Bacteroides/Parabacteroides")
 #'
 #'
@@ -247,19 +248,14 @@ add_custom_microorganisms <- function(x) {
     "CUSTOM",
     seq.int(from = current + 1, to = current + nrow(x), by = 1),
     "_",
-    toupper(unname(abbreviate(
-      gsub(
-        " +", " _ ",
-        gsub(
-          "[^A-Za-z0-9-]", " ",
-          trimws2(paste(x$genus, x$species, x$subspecies))
-        )
-      ),
-      minlength = 10
-    )))
-  )
+    trimws(
+      paste(abbreviate_mo(x$genus, 5),
+            abbreviate_mo(x$species, 4, hyphen_as_space = TRUE),
+            abbreviate_mo(x$subspecies, 4, hyphen_as_space = TRUE),
+            sep = "_"),
+      whitespace = "_"))
   stop_if(anyDuplicated(c(as.character(AMR_env$MO_lookup$mo), x$mo)), "MO codes must be unique and not match existing MO codes of the AMR package")
-
+  
   # add to package ----
   AMR_env$custom_mo_codes <- c(AMR_env$custom_mo_codes, x$mo)
   class(AMR_env$MO_lookup$mo) <- "character"
@@ -305,4 +301,27 @@ clear_custom_microorganisms <- function() {
   AMR_env$mo_previously_coerced <- AMR_env$mo_previously_coerced[which(AMR_env$mo_previously_coerced$mo %in% AMR_env$MO_lookup$mo), , drop = FALSE]
   AMR_env$mo_uncertainties <- AMR_env$mo_uncertainties[0, , drop = FALSE]
   message_("Cleared ", nr2char(n - n2), " custom record", ifelse(n - n2 > 1, "s", ""), " from the internal `microorganisms` data set.")
+}
+
+abbreviate_mo <- function(x, minlength = 5, prefix = "", hyphen_as_space = FALSE, ...) {
+  if (hyphen_as_space == TRUE) {
+    x <- gsub("-", " ", x, fixed = TRUE)
+  }
+  # keep a starting Latin ae
+  suppressWarnings(
+    gsub("(\u00C6|\u00E6)+",
+         "AE",
+         toupper(
+           paste0(prefix,
+                  abbreviate(
+                    gsub("^ae",
+                         "\u00E6\u00E6",
+                         x,
+                         ignore.case = TRUE),
+                    minlength = minlength,
+                    use.classes = TRUE,
+                    method = "both.sides",
+                    ...
+                  ))))
+  )
 }

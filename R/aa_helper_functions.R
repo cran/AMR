@@ -1,15 +1,15 @@
 # ==================================================================== #
-# TITLE                                                                #
+# TITLE:                                                               #
 # AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
-# SOURCE                                                               #
+# SOURCE CODE:                                                         #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# CITE AS                                                              #
+# PLEASE CITE THIS SOFTWARE AS:                                        #
 # Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
 # (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
 # Data. Journal of Statistical Software, 104(3), 1-31.                 #
-# doi:10.18637/jss.v104.i03                                            #
+# https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
 # Center Groningen in The Netherlands, in collaboration with many      #
@@ -501,11 +501,27 @@ word_wrap <- function(...,
   }
 
   # format backticks
+  if (pkg_is_available("cli") &&
+      tryCatch(isTRUE(getExportedValue("ansi_has_hyperlink_support", ns = asNamespace("cli"))()), error = function(e) FALSE) &&
+      tryCatch(getExportedValue("isAvailable", ns = asNamespace("rstudioapi"))(), error = function(e) return(FALSE)) && 
+      tryCatch(getExportedValue("versionInfo", ns = asNamespace("rstudioapi"))()$version > "2023.6.0.0", error = function(e) return(FALSE))) {
+    # we are in a recent version of RStudio, so do something nice: add links to our help pages in the console.
+    parts <- strsplit(msg, "`", fixed = TRUE)[[1]]
+    cmds <- parts %in% paste0(ls(envir = asNamespace("AMR")), "()")
+    # functions with a dot are not allowed: https://github.com/rstudio/rstudio/issues/11273#issuecomment-1156193252
+    # lead them to the help page of our package
+    parts[cmds & parts %like% "[.]"] <- font_url(url = paste0("ide:help:AMR::", gsub("()", "", parts[cmds & parts %like% "[.]"], fixed = TRUE)),
+                                                 txt = parts[cmds & parts %like% "[.]"])
+    # otherwise, give a 'click to run' popup
+    parts[cmds & parts %unlike% "[.]"] <- font_url(url = paste0("ide:run:AMR::", parts[cmds & parts %unlike% "[.]"]),
+                                                   txt = parts[cmds & parts %unlike% "[.]"])
+    msg <- paste0(parts, collapse = "`")
+  }
   msg <- gsub("`(.+?)`", font_grey_bg("\\1"), msg)
-
-  # clean introduced whitespace between fullstops
+  
+  # clean introduced whitespace in between fullstops
   msg <- gsub("[.] +[.]", "..", msg)
-  # remove extra space that was introduced (e.g. "Smith et al., 2022")
+  # remove extra space that was introduced (e.g. "Smith et al. , 2022")
   msg <- gsub(". ,", ".,", msg, fixed = TRUE)
   msg <- gsub("[ ,", "[,", msg, fixed = TRUE)
   msg <- gsub("/ /", "//", msg, fixed = TRUE)
@@ -629,7 +645,12 @@ dataset_UTF8_to_ASCII <- function(df) {
 }
 
 documentation_date <- function(d) {
-  paste0(trimws(format(d, "%e")), " ", month.name[as.integer(format(d, "%m"))], ", ", format(d, "%Y"))
+  day <- as.integer(format(d, "%e"))
+  suffix <- rep("th", length(day))
+  suffix[day %in% c(1, 21, 31)] <- "st"
+  suffix[day %in% c(2, 22)] <- "nd"
+  suffix[day %in% c(3, 23)] <- "rd"
+  paste0(month.name[as.integer(format(d, "%m"))], " ", day, suffix, ", ", format(d, "%Y"))
 }
 
 format_included_data_number <- function(data) {
@@ -644,10 +665,13 @@ format_included_data_number <- function(data) {
     rounder <- -3 # round on thousands
   } else if (n > 1000) {
     rounder <- -2 # round on hundreds
+  } else if (n < 50) {
+    # do not round
+    rounder <- 0
   } else {
     rounder <- -1 # round on tens
   }
-  paste0("~", format(round(n, rounder), decimal.mark = ".", big.mark = " "))
+  paste0(ifelse(rounder == 0, "", "~"), format(round(n, rounder), decimal.mark = ".", big.mark = " "))
 }
 
 # for eucast_rules() and mdro(), creates markdown output with URLs and names
@@ -670,10 +694,15 @@ create_eucast_ab_documentation <- function() {
   atcs <- ab_atc(ab, only_first = TRUE)
   # only keep ABx with an ATC code:
   ab <- ab[!is.na(atcs)]
+  atcs <- atcs[!is.na(atcs)]
+
+  # sort all vectors on name:
   ab_names <- ab_name(ab, language = NULL, tolower = TRUE)
   ab <- ab[order(ab_names)]
+  atcs <- atcs[order(ab_names)]
   ab_names <- ab_names[order(ab_names)]
-  atc_txt <- paste0("[", atcs[!is.na(atcs)], "](", ab_url(ab), ")")
+  # create the text:
+  atc_txt <- paste0("[", atcs, "](", ab_url(ab), ")")
   out <- paste0(ab_names, " (`", ab, "`, ", atc_txt, ")", collapse = ", ")
   substr(out, 1, 1) <- toupper(substr(out, 1, 1))
   out
@@ -996,7 +1025,7 @@ get_current_column <- function() {
 
   # cur_column() doesn't always work (only allowed for certain conditions set by dplyr), but it's probably still possible:
   frms <- lapply(sys.frames(), function(env) {
-    if (!is.null(env$i)) {
+    if (tryCatch(!is.null(env$i), error = function(e) FALSE)) {
       if (!is.null(env$tibble_vars)) {
         # for mutate_if()
         env$tibble_vars[env$i]
@@ -1169,20 +1198,20 @@ is_dark <- function() {
   }
   isTRUE(AMR_env$is_dark_theme)
 }
-font_black <- function(..., collapse = " ") {
+font_black <- function(..., collapse = " ", adapt = TRUE) {
   before <- "\033[38;5;232m"
   after <- "\033[39m"
-  if (is_dark()) {
+  if (isTRUE(adapt) && is_dark()) {
     # white
     before <- "\033[37m"
     after <- "\033[39m"
   }
   try_colour(..., before = before, after = after, collapse = collapse)
 }
-font_white <- function(..., collapse = " ") {
+font_white <- function(..., collapse = " ", adapt = TRUE) {
   before <- "\033[37m"
   after <- "\033[39m"
-  if (is_dark()) {
+  if (isTRUE(adapt) && is_dark()) {
     # black
     before <- "\033[38;5;232m"
     after <- "\033[39m"
@@ -1224,24 +1253,24 @@ font_grey_bg <- function(..., collapse = " ") {
 }
 font_red_bg <- function(..., collapse = " ") {
   # this is #ed553b (picked to be colourblind-safe with other SIR colours)
-  try_colour(font_black(..., collapse = collapse), before = "\033[48;5;203m", after = "\033[49m", collapse = collapse)
+  try_colour(font_black(..., collapse = collapse, adapt = FALSE), before = "\033[48;5;203m", after = "\033[49m", collapse = collapse)
 }
 font_orange_bg <- function(..., collapse = " ") {
   # this is #f6d55c (picked to be colourblind-safe with other SIR colours)
-  try_colour(font_black(..., collapse = collapse), before = "\033[48;5;222m", after = "\033[49m", collapse = collapse)
+  try_colour(font_black(..., collapse = collapse, adapt = FALSE), before = "\033[48;5;222m", after = "\033[49m", collapse = collapse)
 }
 font_yellow_bg <- function(..., collapse = " ") {
-  try_colour(font_black(..., collapse = collapse), before = "\033[48;5;228m", after = "\033[49m", collapse = collapse)
+  try_colour(font_black(..., collapse = collapse, adapt = FALSE), before = "\033[48;5;228m", after = "\033[49m", collapse = collapse)
 }
 font_green_bg <- function(..., collapse = " ") {
   # this is #3caea3 (picked to be colourblind-safe with other SIR colours)
-  try_colour(font_black(..., collapse = collapse), before = "\033[48;5;79m", after = "\033[49m", collapse = collapse)
+  try_colour(font_black(..., collapse = collapse, adapt = FALSE), before = "\033[48;5;79m", after = "\033[49m", collapse = collapse)
 }
 font_purple_bg <- function(..., collapse = " ") {
-  try_colour(font_black(..., collapse = collapse), before = "\033[48;5;89m", after = "\033[49m", collapse = collapse)
+  try_colour(font_black(..., collapse = collapse, adapt = FALSE), before = "\033[48;5;89m", after = "\033[49m", collapse = collapse)
 }
 font_rose_bg <- function(..., collapse = " ") {
-  try_colour(font_black(..., collapse = collapse), before = "\033[48;5;217m", after = "\033[49m", collapse = collapse)
+  try_colour(font_black(..., collapse = collapse, adapt = FALSE), before = "\033[48;5;217m", after = "\033[49m", collapse = collapse)
 }
 font_na <- function(..., collapse = " ") {
   font_red(..., collapse = collapse)
@@ -1270,7 +1299,7 @@ font_stripstyle <- function(x) {
   x
 }
 
-progress_ticker <- function(n = 1, n_min = 0, print = TRUE, ...) {
+progress_ticker <- function(n = 1, n_min = 0, print = TRUE, clear = TRUE, title = "", only_bar_percent = FALSE, ...) {
   if (print == FALSE || n < n_min) {
     # create fake/empty object
     pb <- list()
@@ -1286,9 +1315,11 @@ progress_ticker <- function(n = 1, n_min = 0, print = TRUE, ...) {
     progress_bar <- import_fn("progress_bar", "progress", error_on_fail = FALSE)
     if (!is.null(progress_bar)) {
       # so we use progress::progress_bar
-      # a close() method was also added, see below this function
+      # a close()-method was also added, see below for that
       pb <- progress_bar$new(
-        format = "[:bar] :percent (:current/:total,:eta)",
+        format = paste0(title,
+                        ifelse(only_bar_percent == TRUE, "[:bar] :percent", "[:bar] :percent (:current/:total,:eta)")),
+        clear = clear,
         total = n
       )
     } else {
@@ -1474,11 +1505,11 @@ add_MO_lookup_to_AMR_env <- function() {
 
     MO_lookup$kingdom_index <- NA_real_
     MO_lookup[which(MO_lookup$kingdom == "Bacteria" | MO_lookup$mo == "UNKNOWN"), "kingdom_index"] <- 1
-    MO_lookup[which(MO_lookup$kingdom == "Fungi"), "kingdom_index"] <- 2
-    MO_lookup[which(MO_lookup$kingdom == "Protozoa"), "kingdom_index"] <- 3
-    MO_lookup[which(MO_lookup$kingdom == "Archaea"), "kingdom_index"] <- 4
+    MO_lookup[which(MO_lookup$kingdom == "Fungi"), "kingdom_index"] <- 1.25
+    MO_lookup[which(MO_lookup$kingdom == "Protozoa"), "kingdom_index"] <- 1.5
+    MO_lookup[which(MO_lookup$kingdom == "Archaea"), "kingdom_index"] <- 2
     # all the rest
-    MO_lookup[which(is.na(MO_lookup$kingdom_index)), "kingdom_index"] <- 5
+    MO_lookup[which(is.na(MO_lookup$kingdom_index)), "kingdom_index"] <- 3
 
     # the fullname lowercase, important for the internal algorithms in as.mo()
     MO_lookup$fullname_lower <- tolower(trimws(paste(
@@ -1504,6 +1535,10 @@ trimws2 <- function(..., whitespace = "[\u0009\u000A\u000B\u000C\u000D\u0020\u00
   trimws(..., whitespace = whitespace)
 }
 
+totitle <- function(x) {
+  gsub("^(.)", "\\U\\1", x, perl = TRUE)
+}
+
 readRDS_AMR <- function(file, refhook = NULL) {
   # this is readRDS with remote file support
   con <- file(file)
@@ -1514,19 +1549,17 @@ readRDS_AMR <- function(file, refhook = NULL) {
 # Faster data.table implementations ----
 
 match <- function(x, table, ...) {
-  chmatch <- import_fn("chmatch", "data.table", error_on_fail = FALSE)
-  if (!is.null(chmatch) && is.character(x) && is.character(table)) {
+  if (!is.null(AMR_env$chmatch) && inherits(x, "character") && inherits(table, "character")) {
     # data.table::chmatch() is much faster than base::match() for character
-    chmatch(x, table, ...)
+    AMR_env$chmatch(x, table, ...)
   } else {
     base::match(x, table, ...)
   }
 }
 `%in%` <- function(x, table) {
-  chin <- import_fn("%chin%", "data.table", error_on_fail = FALSE)
-  if (!is.null(chin) && is.character(x) && is.character(table)) {
+  if (!is.null(AMR_env$chin) && inherits(x, "character") && inherits(table, "character")) {
     # data.table::`%chin%`() is much faster than base::`%in%`() for character
-    chin(x, table)
+    AMR_env$chin(x, table)
   } else {
     base::`%in%`(x, table)
   }

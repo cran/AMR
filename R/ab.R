@@ -1,15 +1,15 @@
 # ==================================================================== #
-# TITLE                                                                #
+# TITLE:                                                               #
 # AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
-# SOURCE                                                               #
+# SOURCE CODE:                                                         #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# CITE AS                                                              #
+# PLEASE CITE THIS SOFTWARE AS:                                        #
 # Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
 # (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
 # Data. Journal of Statistical Software, 104(3), 1-31.                 #
-# doi:10.18637/jss.v104.i03                                            #
+# https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
 # Center Groningen in The Netherlands, in collaboration with many      #
@@ -545,6 +545,13 @@ is.ab <- function(x) {
 pillar_shaft.ab <- function(x, ...) {
   out <- trimws(format(x))
   out[is.na(x)] <- font_na(NA)
+  
+  # add the names to the drugs as mouse-over!
+  if (tryCatch(isTRUE(getExportedValue("ansi_has_hyperlink_support", ns = asNamespace("cli"))()), error = function(e) FALSE)) {
+    out[!is.na(x)] <- font_url(url = paste0(x[!is.na(x)], ": ", ab_name(x[!is.na(x)])),
+                               txt = out[!is.na(x)])
+  }
+  
   create_pillar_column(out, align = "left", min_width = 4)
 }
 

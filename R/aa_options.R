@@ -1,15 +1,15 @@
 # ==================================================================== #
-# TITLE                                                                #
+# TITLE:                                                               #
 # AMR: An R Package for Working with Antimicrobial Resistance Data     #
 #                                                                      #
-# SOURCE                                                               #
+# SOURCE CODE:                                                         #
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
-# CITE AS                                                              #
+# PLEASE CITE THIS SOFTWARE AS:                                        #
 # Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
 # (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
 # Data. Journal of Statistical Software, 104(3), 1-31.                 #
-# doi:10.18637/jss.v104.i03                                            #
+# https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
 # Center Groningen in The Netherlands, in collaboration with many      #
@@ -37,6 +37,7 @@
 #' * `AMR_guideline` \cr Used for setting the default guideline for interpreting MIC values and disk diffusion diameters with [as.sir()]. Can be only the guideline name (e.g., `"CLSI"`) or the name with a year (e.g. `"CLSI 2019"`). The default to the latest implemented EUCAST guideline, currently \code{"`r clinical_breakpoints$guideline[1]`"}. Supported guideline are currently EUCAST (`r min(as.integer(gsub("[^0-9]", "", subset(clinical_breakpoints, guideline %like% "EUCAST")$guideline)))`-`r max(as.integer(gsub("[^0-9]", "", subset(clinical_breakpoints, guideline %like% "EUCAST")$guideline)))`) and CLSI (`r min(as.integer(gsub("[^0-9]", "", subset(clinical_breakpoints, guideline %like% "CLSI")$guideline)))`-`r max(as.integer(gsub("[^0-9]", "", subset(clinical_breakpoints, guideline %like% "CLSI")$guideline)))`).
 #' * `AMR_ignore_pattern` \cr A [regular expression][base::regex] to ignore (i.e., make `NA`) any match given in [as.mo()] and all [`mo_*`][mo_property()] functions.
 #' * `AMR_include_PKPD` \cr A [logical] to use in [as.sir()], to indicate that PK/PD clinical breakpoints must be applied as a last resort - the default is `TRUE`.
+#' * `AMR_ecoff` \cr A [logical] use in [as.sir()], to indicate that ECOFF (Epidemiological Cut-Off) values must be used - the default is `FALSE`.
 #' * `AMR_include_screening` \cr A [logical] to use in [as.sir()], to indicate that clinical breakpoints for screening are allowed - the default is `FALSE`.
 #' * `AMR_keep_synonyms` \cr A [logical] to use in [as.mo()] and all [`mo_*`][mo_property()] functions, to indicate if old, previously valid taxonomic names must be preserved and not be corrected to currently accepted names. The default is `FALSE`.
 #' * `AMR_cleaning_regex` \cr A [regular expression][base::regex] (case-insensitive) to use in [as.mo()] and all [`mo_*`][mo_property()] functions, to clean the user input. The default is the outcome of [mo_cleaning_regex()], which removes texts between brackets and texts such as "species" and "serovar".
