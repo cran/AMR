@@ -1,6 +1,6 @@
 Package: AMR
-Version: 2.1.0
-Date: 2023-07-16
+Version: 2.1.1
+Date: 2023-10-20
 Title: Antimicrobial Resistance Data Analysis
 Description: Functions to simplify and standardise antimicrobial resistance (AMR)
   data analysis and to work with microbial and antimicrobial properties by
@@ -40,7 +40,7 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
 NeedsCompilation: no
-Packaged: 2023-07-16 07:04:56 UTC; uscloud
+Packaged: 2023-10-20 16:04:38 UTC; msberends
 Author: Matthijs S. Berends [aut, cre]
     (<https://orcid.org/0000-0001-7620-1800>),
   Christian F. Luz [aut, ctb] (<https://orcid.org/0000-0001-5809-5995>),
@@ -66,4 +66,4 @@ Author: Matthijs S. Berends [aut, cre]
   Anita Williams [ctb] (<https://orcid.org/0000-0002-5295-8451>)
 Maintainer: Matthijs S. Berends <m.s.berends@umcg.nl>
 Repository: CRAN
-Date/Publication: 2023-07-16 15:30:02 UTC
+Date/Publication: 2023-10-21 23:10:16 UTC
