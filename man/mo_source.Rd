@@ -6,17 +6,15 @@
 \alias{get_mo_source}
 \title{User-Defined Reference Data Set for Microorganisms}
 \usage{
-set_mo_source(
-  path,
-  destination = getOption("AMR_mo_source", "~/mo_source.rds")
-)
+set_mo_source(path, destination = getOption("AMR_mo_source",
+  "~/mo_source.rds"))
 
 get_mo_source(destination = getOption("AMR_mo_source", "~/mo_source.rds"))
 }
 \arguments{
-\item{path}{location of your reference file, this can be any text file (comma-, tab- or pipe-separated) or an Excel file (see \emph{Details}). Can also be \code{""}, \code{NULL} or \code{FALSE} to delete the reference file.}
+\item{path}{Location of your reference file, this can be any text file (comma-, tab- or pipe-separated) or an Excel file (see \emph{Details}). Can also be \code{""}, \code{NULL} or \code{FALSE} to delete the reference file.}
 
-\item{destination}{destination of the compressed data file - the default is the user's home directory.}
+\item{destination}{Destination of the compressed data file - the default is the user's home directory.}
 }
 \description{
 These functions can be used to predefine your own reference to be used in \code{\link[=as.mo]{as.mo()}} and consequently all \code{\link[=mo_property]{mo_*}} functions (such as \code{\link[=mo_genus]{mo_genus()}} and \code{\link[=mo_gramstain]{mo_gramstain()}}).
@@ -26,7 +24,7 @@ This is \strong{the fastest way} to have your organisation (or analysis) specifi
 \details{
 The reference file can be a text file separated with commas (CSV) or tabs or pipes, an Excel file (either 'xls' or 'xlsx' format) or an \R object file (extension '.rds'). To use an Excel file, you will need to have the \code{readxl} package installed.
 
-\code{\link[=set_mo_source]{set_mo_source()}} will check the file for validity: it must be a \link{data.frame}, must have a column named \code{"mo"} which contains values from \code{\link[=microorganisms]{microorganisms$mo}} or \code{\link[=microorganisms]{microorganisms$fullname}} and must have a reference column with your own defined values. If all tests pass, \code{\link[=set_mo_source]{set_mo_source()}} will read the file into \R and will ask to export it to \code{"~/mo_source.rds"}. The CRAN policy disallows packages to write to the file system, although '\emph{exceptions may be allowed in interactive sessions if the package obtains confirmation from the user}'. For this reason, this function only works in interactive sessions so that the user can \strong{specifically confirm and allow} that this file will be created. The destination of this file can be set with the \code{destination} argument and defaults to the user's home directory. It can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_mo_source}}, e.g. \code{options(AMR_mo_source = "my/location/file.rds")}.
+\code{\link[=set_mo_source]{set_mo_source()}} will check the file for validity: it must be a \link{data.frame}, must have a column named \code{"mo"} which contains values from \code{\link[=microorganisms]{microorganisms$mo}} or \code{\link[=microorganisms]{microorganisms$fullname}} and must have a reference column with your own defined values. If all tests pass, \code{\link[=set_mo_source]{set_mo_source()}} will read the file into \R and will ask to export it to \code{"~/mo_source.rds"}. The CRAN policy disallows packages to write to the file system, although '\emph{exceptions may be allowed in interactive sessions if the package obtains confirmation from the user}'. For this reason, this function only works in interactive sessions so that the user can \strong{specifically confirm and allow} that this file will be created. The destination of this file can be set with the \code{destination} argument and defaults to the user's home directory. It can also be set with the package option \code{\link[=AMR-options]{AMR_mo_source}}, e.g. \code{options(AMR_mo_source = "my/location/file.rds")}.
 
 The created compressed data file \code{"mo_source.rds"} will be used at default for MO determination (function \code{\link[=as.mo]{as.mo()}} and consequently all \verb{mo_*} functions like \code{\link[=mo_genus]{mo_genus()}} and \code{\link[=mo_gramstain]{mo_gramstain()}}). The location and timestamp of the original file will be saved as an \link[base:attributes]{attribute} to the compressed data file.
 
@@ -47,9 +45,9 @@ Imagine this data on a sheet of an Excel file. The first column contains the org
 4 |                    |                       |
 }\if{html}{\out{</div>}}
 
-We save it as \code{"home/me/ourcodes.xlsx"}. Now we have to set it as a source:
+We save it as \code{"/Users/me/Documents/ourcodes.xlsx"}. Now we have to set it as a source:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{set_mo_source("home/me/ourcodes.xlsx")
+\if{html}{\out{<div class="sourceCode">}}\preformatted{set_mo_source("/Users/me/Documents/ourcodes.xlsx")
 #> NOTE: Created mo_source file '/Users/me/mo_source.rds' (0.3 kB) from
 #>       '/Users/me/Documents/ourcodes.xlsx' (9 kB), columns
 #>       "Organisation XYZ" and "mo"

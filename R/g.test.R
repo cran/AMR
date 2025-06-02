@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,7 +24,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' *G*-test for Count Data
@@ -72,7 +72,7 @@
 #'
 #' If there are more than two categories and you want to find out which ones are significantly different from their null expectation, you can use the same method of testing each category vs. the sum of all categories, with the Bonferroni correction. You use *G*-tests for each category, of course.
 #' @seealso [chisq.test()]
-#' @references 1. McDonald, J.H. 2014. **Handbook of Biological Statistics (3rd ed.)**. Sparky House Publishing, Baltimore, Maryland. <http://www.biostathandbook.com/gtestgof.html>.
+#' @references 1. McDonald, J.H. 2014. **Handbook of Biological Statistics (3rd ed.)**. Sparky House Publishing, Baltimore, Maryland.
 #' @source The code for this function is identical to that of [chisq.test()], except that:
 #' - The calculation of the statistic was changed to \eqn{2 * sum(x * log(x / E))}
 #' - Yates' continuity correction was removed as it does not apply to a *G*-test

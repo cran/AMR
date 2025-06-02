@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,17 +24,17 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Random MIC Values/Disk Zones/SIR Generation
 #'
 #' These functions can be used for generating random MIC values and disk diffusion diameters, for AMR data analysis practice. By providing a microorganism and antimicrobial drug, the generated results will reflect reality as much as possible.
-#' @param size desired size of the returned vector. If used in a [data.frame] call or `dplyr` verb, will get the current (group) size if left blank.
-#' @param mo any [character] that can be coerced to a valid microorganism code with [as.mo()]
-#' @param ab any [character] that can be coerced to a valid antimicrobial drug code with [as.ab()]
-#' @param prob_SIR a vector of length 3: the probabilities for "S" (1st value), "I" (2nd value) and "R" (3rd value)
-#' @param ... ignored, only in place to allow future extensions
+#' @param size Desired size of the returned vector. If used in a [data.frame] call or `dplyr` verb, will get the current (group) size if left blank.
+#' @param mo Any [character] that can be coerced to a valid microorganism code with [as.mo()].
+#' @param ab Any [character] that can be coerced to a valid antimicrobial drug code with [as.ab()].
+#' @param prob_SIR A vector of length 3: the probabilities for "S" (1st value), "I" (2nd value) and "R" (3rd value).
+#' @param ... Ignored, only in place to allow future extensions.
 #' @details The base \R function [sample()] is used for generating values.
 #'
 #' Generated values are based on the EUCAST `r max(as.integer(gsub("[^0-9]", "", subset(clinical_breakpoints, guideline %like% "EUCAST")$guideline)))` guideline as implemented in the [clinical_breakpoints] data set. To create specific generated values per bug or drug, set the `mo` and/or `ab` argument.
@@ -83,10 +83,6 @@ random_disk <- function(size = NULL, mo = NULL, ab = NULL, ...) {
 #' @export
 random_sir <- function(size = NULL, prob_SIR = c(0.33, 0.33, 0.33), ...) {
   meet_criteria(size, allow_class = c("numeric", "integer"), has_length = 1, is_positive = TRUE, is_finite = TRUE, allow_NULL = TRUE)
-  if ("prob_RSI" %in% names(list(...))) {
-    deprecation_warning("prob_RSI", "prob_SIR", is_function = FALSE)
-    prob_SIR <- list(...)$prob_RSI
-  }
   meet_criteria(prob_SIR, allow_class = c("numeric", "integer"), has_length = 3)
   if (is.null(size)) {
     size <- NROW(get_current_data(arg_name = "size", call = -3))
@@ -101,7 +97,7 @@ random_exec <- function(method_type, size, mo = NULL, ab = NULL) {
     subset(guideline == max(guideline) &
       method == method_type &
       type == "human")
-  
+
   if (!is.null(mo)) {
     mo_coerced <- as.mo(mo)
     mo_include <- c(
@@ -137,7 +133,7 @@ random_exec <- function(method_type, size, mo = NULL, ab = NULL) {
     # get highest/lowest +/- random 1 to 3 higher factors of two
     max_range <- mic_range[min(
       length(mic_range),
-      which(mic_range == max(df$breakpoint_R, na.rm = TRUE)) + sample(c(1:3), 1)
+      which(mic_range == max(df$breakpoint_R[!is.na(df$breakpoint_R)], na.rm = TRUE)) + sample(c(1:3), 1)
     )]
     min_range <- mic_range[max(
       1,
@@ -150,16 +146,16 @@ random_exec <- function(method_type, size, mo = NULL, ab = NULL) {
     }
     out <- as.mic(sample(mic_range_new, size = size, replace = TRUE))
     # 50% chance that lowest will get <= and highest will get >=
-    if (stats::runif(1) > 0.5) {
+    if (stats::runif(1) > 0.5 && length(unique(out)) > 1) {
       out[out == min(out)] <- paste0("<=", out[out == min(out)])
     }
-    if (stats::runif(1) > 0.5) {
+    if (stats::runif(1) > 0.5 && length(unique(out)) > 1) {
       out[out == max(out)] <- paste0(">=", out[out == max(out)])
     }
     return(out)
   } else if (method_type == "DISK") {
     set_range <- seq(
-      from = as.integer(min(df$breakpoint_R, na.rm = TRUE) / 1.25),
+      from = as.integer(min(df$breakpoint_R[!is.na(df$breakpoint_R)], na.rm = TRUE) / 1.25),
       to = as.integer(max(df$breakpoint_S, na.rm = TRUE) * 1.25),
       by = 1
     )

@@ -11,13 +11,13 @@ as.av(x, flag_multiple_results = TRUE, info = interactive(), ...)
 is.av(x)
 }
 \arguments{
-\item{x}{a \link{character} vector to determine to antiviral drug ID}
+\item{x}{A \link{character} vector to determine to antiviral drug ID.}
 
-\item{flag_multiple_results}{a \link{logical} to indicate whether a note should be printed to the console that probably more than one antiviral drug code or name can be retrieved from a single input value.}
+\item{flag_multiple_results}{A \link{logical} to indicate whether a note should be printed to the console that probably more than one antiviral drug code or name can be retrieved from a single input value.}
 
-\item{info}{a \link{logical} to indicate whether a progress bar should be printed - the default is \code{TRUE} only in interactive mode}
+\item{info}{A \link{logical} to indicate whether a progress bar should be printed - the default is \code{TRUE} only in interactive mode.}
 
-\item{...}{arguments passed on to internal functions}
+\item{...}{Arguments passed on to internal functions.}
 }
 \value{
 A \link{character} \link{vector} with additional class \code{\link{ab}}
@@ -42,25 +42,29 @@ Note: the \code{\link[=as.av]{as.av()}} and \code{\link[=av_property]{av_*}} fun
 }
 \section{Source}{
 
-World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://www.whocc.no/atc_ddd_index/}
+World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://atcddd.fhi.no/atc_ddd_index/}
 
 European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 }
 
 \section{WHOCC}{
 
-This package contains \strong{all ~550 antibiotic, antimycotic and antiviral drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}).
+This package contains \strong{all ~550 antibiotic, antimycotic and antiviral drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://atcddd.fhi.no}) and the Pharmaceuticals Community Register of the European Commission (\url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}).
 
 These have become the gold standard for international drug utilisation monitoring and research.
 
 The WHOCC is located in Oslo at the Norwegian Institute of Public Health and funded by the Norwegian government. The European Commission is the executive of the European Union and promotes its general interest.
 
-\strong{NOTE: The WHOCC copyright does not allow use for commercial purposes, unlike any other info from this package.} See \url{https://www.whocc.no/copyright_disclaimer/.}
+\strong{NOTE: The WHOCC copyright does not allow use for commercial purposes, unlike any other info from this package.} See \url{https://atcddd.fhi.no/copyright_disclaimer/.}
 }
 
-\section{Reference Data Publicly Available}{
+\section{Download Our Reference Data}{
 
-All data sets in this \code{AMR} package (about microorganisms, antibiotics, SIR interpretation, EUCAST rules, etc.) are publicly and freely available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. We also provide tab-separated plain text files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
+All reference data sets in the AMR package - including information on microorganisms, antimicrobials, and clinical breakpoints - are freely available for download in multiple formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, and Stata.
+
+For maximum compatibility, we also provide machine-readable, tab-separated plain text files suitable for use in any software, including laboratory information systems.
+
+Visit \href{https://amr-for-r.org/articles/datasets.html}{our website for direct download links}, or explore the actual files in \href{https://github.com/msberends/AMR/tree/main/data-raw/datasets}{our GitHub repository}.
 }
 
 \examples{

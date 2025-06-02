@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,7 +24,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' User-Defined Reference Data Set for Microorganisms
@@ -32,14 +32,14 @@
 #' @description These functions can be used to predefine your own reference to be used in [as.mo()] and consequently all [`mo_*`][mo_property()] functions (such as [mo_genus()] and [mo_gramstain()]).
 #'
 #' This is **the fastest way** to have your organisation (or analysis) specific codes picked up and translated by this package, since you don't have to bother about it again after setting it up once.
-#' @param path location of your reference file, this can be any text file (comma-, tab- or pipe-separated) or an Excel file (see *Details*). Can also be `""`, `NULL` or `FALSE` to delete the reference file.
-#' @param destination destination of the compressed data file - the default is the user's home directory.
+#' @param path Location of your reference file, this can be any text file (comma-, tab- or pipe-separated) or an Excel file (see *Details*). Can also be `""`, `NULL` or `FALSE` to delete the reference file.
+#' @param destination Destination of the compressed data file - the default is the user's home directory.
 #' @rdname mo_source
 #' @name mo_source
 #' @aliases set_mo_source get_mo_source
 #' @details The reference file can be a text file separated with commas (CSV) or tabs or pipes, an Excel file (either 'xls' or 'xlsx' format) or an \R object file (extension '.rds'). To use an Excel file, you will need to have the `readxl` package installed.
 #'
-#' [set_mo_source()] will check the file for validity: it must be a [data.frame], must have a column named `"mo"` which contains values from [`microorganisms$mo`][microorganisms] or [`microorganisms$fullname`][microorganisms] and must have a reference column with your own defined values. If all tests pass, [set_mo_source()] will read the file into \R and will ask to export it to `"~/mo_source.rds"`. The CRAN policy disallows packages to write to the file system, although '*exceptions may be allowed in interactive sessions if the package obtains confirmation from the user*'. For this reason, this function only works in interactive sessions so that the user can **specifically confirm and allow** that this file will be created. The destination of this file can be set with the `destination` argument and defaults to the user's home directory. It can also be set with the [package option][AMR-options] [`AMR_mo_source`][AMR-options], e.g. `options(AMR_mo_source = "my/location/file.rds")`.
+#' [set_mo_source()] will check the file for validity: it must be a [data.frame], must have a column named `"mo"` which contains values from [`microorganisms$mo`][microorganisms] or [`microorganisms$fullname`][microorganisms] and must have a reference column with your own defined values. If all tests pass, [set_mo_source()] will read the file into \R and will ask to export it to `"~/mo_source.rds"`. The CRAN policy disallows packages to write to the file system, although '*exceptions may be allowed in interactive sessions if the package obtains confirmation from the user*'. For this reason, this function only works in interactive sessions so that the user can **specifically confirm and allow** that this file will be created. The destination of this file can be set with the `destination` argument and defaults to the user's home directory. It can also be set with the package option [`AMR_mo_source`][AMR-options], e.g. `options(AMR_mo_source = "my/location/file.rds")`.
 #'
 #' The created compressed data file `"mo_source.rds"` will be used at default for MO determination (function [as.mo()] and consequently all `mo_*` functions like [mo_genus()] and [mo_gramstain()]). The location and timestamp of the original file will be saved as an [attribute][base::attributes()] to the compressed data file.
 #'
@@ -60,10 +60,10 @@
 #' 4 |                    |                       |
 #' ```
 #'
-#' We save it as `"home/me/ourcodes.xlsx"`. Now we have to set it as a source:
+#' We save it as `"/Users/me/Documents/ourcodes.xlsx"`. Now we have to set it as a source:
 #'
 #' ```
-#' set_mo_source("home/me/ourcodes.xlsx")
+#' set_mo_source("/Users/me/Documents/ourcodes.xlsx")
 #' #> NOTE: Created mo_source file '/Users/me/mo_source.rds' (0.3 kB) from
 #' #>       '/Users/me/Documents/ourcodes.xlsx' (9 kB), columns
 #' #>       "Organisation XYZ" and "mo"
@@ -125,13 +125,12 @@
 #' If the original file (in the previous case an Excel file) is moved or deleted, the `mo_source.rds` file will be removed upon the next use of [as.mo()] or any [`mo_*`][mo_property()] function.
 #' @export
 set_mo_source <- function(path, destination = getOption("AMR_mo_source", "~/mo_source.rds")) {
+  stop_ifnot(interactive(), "this function can only be used in interactive mode, since it must ask for the user's permission to write a file to their file system.")
+
   meet_criteria(path, allow_class = "character", has_length = 1, allow_NULL = TRUE)
   meet_criteria(destination, allow_class = "character", has_length = 1)
   stop_ifnot(destination %like% "[.]rds$", "the `destination` must be a file location with file extension .rds.")
-
   mo_source_destination <- path.expand(destination)
-
-  stop_ifnot(interactive(), "this function can only be used in interactive mode, since it must ask for the user's permission to write a file to their file system.")
 
   if (is.null(path) || path %in% c(FALSE, "")) {
     AMR_env$mo_source <- NULL
@@ -246,6 +245,12 @@ get_mo_source <- function(destination = getOption("AMR_mo_source", "~/mo_source.
       set_mo_source("")
     }
     return(NULL)
+  }
+  if (destination %unlike% "[.]rds$") {
+    current_ext <- regexpr("\\.([[:alnum:]]+)$", destination)
+    current_ext <- ifelse(current_ext > -1L, substring(destination, current_ext + 1L), "")
+    vowel <- ifelse(current_ext %like% "^[AEFHILMNORSX]", "n", "")
+    stop_("The AMR mo source must be an RDS file, not a", vowel, " ", toupper(current_ext), " file. If `\"", basename(destination), "\"` was meant as your input file, use `set_mo_source()` on this file. In any case, the option `AMR_mo_source` must be set to another path.")
   }
   if (is.null(AMR_env$mo_source)) {
     AMR_env$mo_source <- readRDS_AMR(path.expand(destination))

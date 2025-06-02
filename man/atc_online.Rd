@@ -7,16 +7,12 @@
 \alias{atc_online_ddd_units}
 \title{Get ATC Properties from WHOCC Website}
 \source{
-\url{https://www.whocc.no/atc_ddd_alterations__cumulative/ddd_alterations/abbrevations/}
+\url{https://atcddd.fhi.no/atc_ddd_alterations__cumulative/ddd_alterations/abbrevations/}
 }
 \usage{
-atc_online_property(
-  atc_code,
-  property,
-  administration = "O",
-  url = "https://www.whocc.no/atc_ddd_index/?code=\%s&showdescription=no",
-  url_vet = "https://www.whocc.no/atcvet/atcvet_index/?code=\%s&showdescription=no"
-)
+atc_online_property(atc_code, property, administration = "O",
+  url = "https://atcddd.fhi.no/atc_ddd_index/?code=\%s&showdescription=no",
+  url_vet = "https://atcddd.fhi.no/atcvet/atcvet_index/?code=\%s&showdescription=no")
 
 atc_online_groups(atc_code, ...)
 
@@ -25,20 +21,20 @@ atc_online_ddd(atc_code, ...)
 atc_online_ddd_units(atc_code, ...)
 }
 \arguments{
-\item{atc_code}{a \link{character} (vector) with ATC code(s) of antibiotics, will be coerced with \code{\link[=as.ab]{as.ab()}} and \code{\link[=ab_atc]{ab_atc()}} internally if not a valid ATC code}
+\item{atc_code}{A \link{character} (vector) with ATC code(s) of antimicrobials, will be coerced with \code{\link[=as.ab]{as.ab()}} and \code{\link[=ab_atc]{ab_atc()}} internally if not a valid ATC code.}
 
-\item{property}{property of an ATC code. Valid values are \code{"ATC"}, \code{"Name"}, \code{"DDD"}, \code{"U"} (\code{"unit"}), \code{"Adm.R"}, \code{"Note"} and \code{groups}. For this last option, all hierarchical groups of an ATC code will be returned, see \emph{Examples}.}
+\item{property}{Property of an ATC code. Valid values are \code{"ATC"}, \code{"Name"}, \code{"DDD"}, \code{"U"} (\code{"unit"}), \code{"Adm.R"}, \code{"Note"} and \code{groups}. For this last option, all hierarchical groups of an ATC code will be returned, see \emph{Examples}.}
 
-\item{administration}{type of administration when using \code{property = "Adm.R"}, see \emph{Details}}
+\item{administration}{Type of administration when using \code{property = "Adm.R"}, see \emph{Details}.}
 
-\item{url}{url of website of the WHOCC. The sign \verb{\%s} can be used as a placeholder for ATC codes.}
+\item{url}{URL of website of the WHOCC. The sign \verb{\%s} can be used as a placeholder for ATC codes.}
 
-\item{url_vet}{url of website of the WHOCC for veterinary medicine. The sign \verb{\%s} can be used as a placeholder for ATC_vet codes (that all start with "Q").}
+\item{url_vet}{URL of website of the WHOCC for veterinary medicine. The sign \verb{\%s} can be used as a placeholder for ATC_vet codes (that all start with "Q").}
 
-\item{...}{arguments to pass on to \code{atc_property}}
+\item{...}{Arguments to pass on to \code{atc_property}.}
 }
 \description{
-Gets data from the WHOCC website to determine properties of an Anatomical Therapeutic Chemical (ATC) (e.g. an antibiotic), such as the name, defined daily dose (DDD) or standard unit.
+Gets data from the WHOCC website to determine properties of an Anatomical Therapeutic Chemical (ATC) (e.g. an antimicrobial), such as the name, defined daily dose (DDD) or standard unit.
 }
 \details{
 Options for argument \code{administration}:

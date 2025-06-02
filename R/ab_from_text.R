@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,19 +24,19 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Retrieve Antimicrobial Drug Names and Doses from Clinical Text
 #'
 #' Use this function on e.g. clinical texts from health care records. It returns a [list] with all antimicrobial drugs, doses and forms of administration found in the texts.
-#' @param text text to analyse
-#' @param type type of property to search for, either `"drug"`, `"dose"` or `"administration"`, see *Examples*
-#' @param collapse a [character] to pass on to `paste(, collapse = ...)` to only return one [character] per element of `text`, see *Examples*
-#' @param translate_ab if `type = "drug"`: a column name of the [antibiotics] data set to translate the antibiotic abbreviations to, using [ab_property()]. The default is `FALSE`. Using `TRUE` is equal to using "name".
-#' @param thorough_search a [logical] to indicate whether the input must be extensively searched for misspelling and other faulty input values. Setting this to `TRUE` will take considerably more time than when using `FALSE`. At default, it will turn `TRUE` when all input elements contain a maximum of three words.
-#' @param info a [logical] to indicate whether a progress bar should be printed - the default is `TRUE` only in interactive mode
-#' @param ... arguments passed on to [as.ab()]
+#' @param text Text to analyse.
+#' @param type Type of property to search for, either `"drug"`, `"dose"` or `"administration"`, see *Examples*.
+#' @param collapse A [character] to pass on to `paste(, collapse = ...)` to only return one [character] per element of `text`, see *Examples*.
+#' @param translate_ab If `type = "drug"`: a column name of the [antimicrobials] data set to translate the antibiotic abbreviations to, using [ab_property()]. The default is `FALSE`. Using `TRUE` is equal to using "name".
+#' @param thorough_search A [logical] to indicate whether the input must be extensively searched for misspelling and other faulty input values. Setting this to `TRUE` will take considerably more time than when using `FALSE`. At default, it will turn `TRUE` when all input elements contain a maximum of three words.
+#' @param info A [logical] to indicate whether a progress bar should be printed - the default is `TRUE` only in interactive mode.
+#' @param ... Arguments passed on to [as.ab()].
 #' @details This function is also internally used by [as.ab()], although it then only searches for the first drug name and will throw a note if more drug names could have been returned. Note: the [as.ab()] function may use very long regular expression to match brand names of antimicrobial drugs. This may fail on some systems.
 #'
 #' ### Argument `type`
@@ -129,16 +129,20 @@ ab_from_text <- function(text,
       text_split_all <- text_split_all[nchar(text_split_all) >= 4 & grepl("[a-z]+", text_split_all)]
       result <- lapply(text_split_all, function(text_split) {
         progress$tick()
+        text_split <- text_split[text_split %like% "[A-Z]" & text_split %unlike% "[0-9]"]
+        if (length(text_split) == 0) {
+          return(as.ab(NA_character_))
+        }
         suppressWarnings(
           as.ab(text_split, ...)
         )
       })
     } else {
       # no thorough search
-      abbr <- unlist(AMR::antibiotics$abbreviations)
+      abbr <- unlist(AMR::antimicrobials$abbreviations)
       abbr <- abbr[nchar(abbr) >= 4]
-      names_atc <- substr(c(AMR::antibiotics$name, AMR::antibiotics$atc), 1, 5)
-      synonyms <- unlist(AMR::antibiotics$synonyms)
+      names_atc <- substr(c(AMR::antimicrobials$name, AMR::antimicrobials$atc), 1, 5)
+      synonyms <- unlist(AMR::antimicrobials$synonyms)
       synonyms <- synonyms[nchar(synonyms) >= 4]
       # regular expression must not be too long, so split synonyms in two:
       synonyms_part1 <- synonyms[seq_len(0.5 * length(synonyms))]

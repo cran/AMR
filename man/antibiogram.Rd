@@ -2,95 +2,168 @@
 % Please edit documentation in R/antibiogram.R
 \name{antibiogram}
 \alias{antibiogram}
+\alias{wisca}
+\alias{retrieve_wisca_parameters}
 \alias{plot.antibiogram}
 \alias{autoplot.antibiogram}
 \alias{knit_print.antibiogram}
-\title{Generate Antibiogram: Traditional, Combined, Syndromic, or Weighted-Incidence Syndromic Combination (WISCA)}
+\title{Generate Traditional, Combination, Syndromic, or WISCA Antibiograms}
 \source{
 \itemize{
+\item Bielicki JA \emph{et al.} (2016). \strong{Selecting appropriate empirical antibiotic regimens for paediatric bloodstream infections: application of a Bayesian decision model to local and pooled antimicrobial resistance surveillance data} \emph{Journal of Antimicrobial Chemotherapy} 71(3); \doi{10.1093/jac/dkv397}
+\item Bielicki JA \emph{et al.} (2020). \strong{Evaluation of the coverage of 3 antibiotic regimens for neonatal sepsis in the hospital setting across Asian countries} \emph{JAMA Netw Open.} 3(2):e1921124; \doi{10.1001/jamanetworkopen.2019.21124}
 \item Klinker KP \emph{et al.} (2021). \strong{Antimicrobial stewardship and antibiograms: importance of moving beyond traditional antibiograms}. \emph{Therapeutic Advances in Infectious Disease}, May 5;8:20499361211011373; \doi{10.1177/20499361211011373}
 \item Barbieri E \emph{et al.} (2021). \strong{Development of a Weighted-Incidence Syndromic Combination Antibiogram (WISCA) to guide the choice of the empiric antibiotic treatment for urinary tract infection in paediatric patients: a Bayesian approach} \emph{Antimicrobial Resistance & Infection Control} May 1;10(1):74; \doi{10.1186/s13756-021-00939-2}
 \item \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 5th Edition}, 2022, \emph{Clinical and Laboratory Standards Institute (CLSI)}. \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
 }
 }
 \usage{
-antibiogram(
-  x,
-  antibiotics = where(is.sir),
-  mo_transform = "shortname",
-  ab_transform = NULL,
-  syndromic_group = NULL,
-  add_total_n = TRUE,
-  only_all_tested = FALSE,
-  digits = 0,
-  col_mo = NULL,
-  language = get_AMR_locale(),
-  minimum = 30,
-  combine_SI = TRUE,
-  sep = " + ",
-  info = interactive()
-)
+antibiogram(x, antimicrobials = where(is.sir), mo_transform = "shortname",
+  ab_transform = "name", syndromic_group = NULL, add_total_n = FALSE,
+  only_all_tested = FALSE, digits = ifelse(wisca, 1, 0),
+  formatting_type = getOption("AMR_antibiogram_formatting_type",
+  ifelse(wisca, 14, 18)), col_mo = NULL, language = get_AMR_locale(),
+  minimum = 30, combine_SI = TRUE, sep = " + ", sort_columns = TRUE,
+  wisca = FALSE, simulations = 1000, conf_interval = 0.95,
+  interval_side = "two-tailed", info = interactive(), ...)
+
+wisca(x, antimicrobials = where(is.sir), ab_transform = "name",
+  syndromic_group = NULL, only_all_tested = FALSE, digits = 1,
+  formatting_type = getOption("AMR_antibiogram_formatting_type", 14),
+  col_mo = NULL, language = get_AMR_locale(), combine_SI = TRUE,
+  sep = " + ", sort_columns = TRUE, simulations = 1000,
+  conf_interval = 0.95, interval_side = "two-tailed",
+  info = interactive(), ...)
+
+retrieve_wisca_parameters(wisca_model, ...)
 
 \method{plot}{antibiogram}(x, ...)
 
 \method{autoplot}{antibiogram}(object, ...)
 
-\method{knit_print}{antibiogram}(
-  x,
-  italicise = TRUE,
-  na = getOption("knitr.kable.NA", default = ""),
-  ...
-)
+\method{knit_print}{antibiogram}(x, italicise = TRUE,
+  na = getOption("knitr.kable.NA", default = ""), ...)
 }
 \arguments{
-\item{x}{a \link{data.frame} containing at least a column with microorganisms and columns with antibiotic results (class 'sir', see \code{\link[=as.sir]{as.sir()}})}
+\item{x}{A \link{data.frame} containing at least a column with microorganisms and columns with antimicrobial results (class 'sir', see \code{\link[=as.sir]{as.sir()}}).}
 
-\item{antibiotics}{vector of any antibiotic name or code (will be evaluated with \code{\link[=as.ab]{as.ab()}}, column name of \code{x}, or (any combinations of) \link[=antibiotic_class_selectors]{antibiotic selectors} such as \code{\link[=aminoglycosides]{aminoglycosides()}} or \code{\link[=carbapenems]{carbapenems()}}. For combination antibiograms, this can also be set to values separated with \code{"+"}, such as "TZP+TOB" or "cipro + genta", given that columns resembling such antibiotics exist in \code{x}. See \emph{Examples}.}
+\item{antimicrobials}{A vector specifying the antimicrobials containing SIR values to include in the antibiogram (see \emph{Examples}). Will be evaluated using \code{\link[=guess_ab_col]{guess_ab_col()}}. This can be:
+\itemize{
+\item Any antimicrobial name or code that could match (see \code{\link[=guess_ab_col]{guess_ab_col()}}) to any column in \code{x}
+\item Any \link[=antimicrobial_selectors]{antimicrobial selector}, such as \code{\link[=aminoglycosides]{aminoglycosides()}} or \code{\link[=carbapenems]{carbapenems()}}
+\item A combination of the above, using \code{c()}, e.g.:
+\itemize{
+\item \code{c(aminoglycosides(), "AMP", "AMC")}
+\item \code{c(aminoglycosides(), carbapenems())}
+}
+\item Combination therapy, indicated by using \code{"+"}, with or without \link[=antimicrobial_selectors]{antimicrobial selectors}, e.g.:
+\itemize{
+\item \code{"cipro + genta"}
+\item \code{"TZP+TOB"}
+\item \code{c("TZP", "TZP+GEN", "TZP+TOB")}
+\item \code{carbapenems() + "GEN"}
+\item \code{carbapenems() + c("", "GEN")}
+\item \code{carbapenems() + c("", aminoglycosides())}
+}
+}}
 
-\item{mo_transform}{a character to transform microorganism input - must be "name", "shortname", "gramstain", or one of the column names of the \link{microorganisms} data set: "mo", "fullname", "status", "kingdom", "phylum", "class", "order", "family", "genus", "species", "subspecies", "rank", "ref", "oxygen_tolerance", "source", "lpsn", "lpsn_parent", "lpsn_renamed_to", "gbif", "gbif_parent", "gbif_renamed_to", "prevalence", or "snomed". Can also be \code{NULL} to not transform the input.}
+\item{mo_transform}{A character to transform microorganism input - must be \code{"name"}, \code{"shortname"} (default), \code{"gramstain"}, or one of the column names of the \link{microorganisms} data set: "mo", "fullname", "status", "kingdom", "phylum", "class", "order", "family", "genus", "species", "subspecies", "rank", "ref", "oxygen_tolerance", "source", "lpsn", "lpsn_parent", "lpsn_renamed_to", "mycobank", "mycobank_parent", "mycobank_renamed_to", "gbif", "gbif_parent", "gbif_renamed_to", "prevalence", or "snomed". Can also be \code{NULL} to not transform the input or \code{NA} to consider all microorganisms 'unknown'.}
 
-\item{ab_transform}{a character to transform antibiotic input - must be one of the column names of the \link{antibiotics} data set: "ab", "cid", "name", "group", "atc", "atc_group1", "atc_group2", "abbreviations", "synonyms", "oral_ddd", "oral_units", "iv_ddd", "iv_units", or "loinc". Can also be \code{NULL} to not transform the input.}
+\item{ab_transform}{A character to transform antimicrobial input - must be one of the column names of the \link{antimicrobials} data set (defaults to \code{"name"}): "ab", "cid", "name", "group", "atc", "atc_group1", "atc_group2", "abbreviations", "synonyms", "oral_ddd", "oral_units", "iv_ddd", "iv_units", or "loinc". Can also be \code{NULL} to not transform the input.}
 
-\item{syndromic_group}{a column name of \code{x}, or values calculated to split rows of \code{x}, e.g. by using \code{\link[=ifelse]{ifelse()}} or \code{\link[dplyr:case_when]{case_when()}}. See \emph{Examples}.}
+\item{syndromic_group}{A column name of \code{x}, or values calculated to split rows of \code{x}, e.g. by using \code{\link[=ifelse]{ifelse()}} or \code{\link[dplyr:case_when]{case_when()}}. See \emph{Examples}.}
 
-\item{add_total_n}{a \link{logical} to indicate whether total available numbers per pathogen should be added to the table (default is \code{TRUE}). This will add the lowest and highest number of available isolate per antibiotic (e.g, if for \emph{E. coli} 200 isolates are available for ciprofloxacin and 150 for amoxicillin, the returned number will be "150-200").}
+\item{add_total_n}{\emph{(deprecated in favour of \code{formatting_type})} A \link{logical} to indicate whether \code{n_tested} available numbers per pathogen should be added to the table (default is \code{TRUE}). This will add the lowest and highest number of available isolates per antimicrobial (e.g, if for \emph{E. coli} 200 isolates are available for ciprofloxacin and 150 for amoxicillin, the returned number will be "150-200"). This option is unavailable when \code{wisca = TRUE}; in that case, use \code{\link[=retrieve_wisca_parameters]{retrieve_wisca_parameters()}} to get the parameters used for WISCA.}
 
-\item{only_all_tested}{(for combination antibiograms): a \link{logical} to indicate that isolates must be tested for all antibiotics, see \emph{Details}}
+\item{only_all_tested}{(for combination antibiograms): a \link{logical} to indicate that isolates must be tested for all antimicrobials, see \emph{Details}.}
 
-\item{digits}{number of digits to use for rounding}
+\item{digits}{Number of digits to use for rounding the antimicrobial coverage, defaults to 1 for WISCA and 0 otherwise.}
 
-\item{col_mo}{column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
+\item{formatting_type}{Numeric value (1–22 for WISCA, 1-12 for non-WISCA) indicating how the 'cells' of the antibiogram table should be formatted. See \emph{Details} > \emph{Formatting Type} for a list of options.}
 
-\item{language}{language to translate text, which defaults to the system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}})}
+\item{col_mo}{Column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
 
-\item{minimum}{the minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see \emph{Source}.}
+\item{language}{Language to translate text, which defaults to the system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}).}
 
-\item{combine_SI}{a \link{logical} to indicate whether all susceptibility should be determined by results of either S or I, instead of only S (default is \code{TRUE})}
+\item{minimum}{The minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see \emph{Source}.}
 
-\item{sep}{a separating character for antibiotic columns in combination antibiograms}
+\item{combine_SI}{A \link{logical} to indicate whether all susceptibility should be determined by results of either S, SDD, or I, instead of only S (default is \code{TRUE}).}
 
-\item{info}{a \link{logical} to indicate info should be printed - the default is \code{TRUE} only in interactive mode}
+\item{sep}{A separating character for antimicrobial columns in combination antibiograms.}
 
-\item{...}{when used in \link[knitr:kable]{R Markdown or Quarto}: arguments passed on to \code{\link[knitr:kable]{knitr::kable()}} (otherwise, has no use)}
+\item{sort_columns}{A \link{logical} to indicate whether the antimicrobial columns must be sorted on name.}
 
-\item{object}{an \code{\link[=antibiogram]{antibiogram()}} object}
+\item{wisca}{A \link{logical} to indicate whether a Weighted-Incidence Syndromic Combination Antibiogram (WISCA) must be generated (default is \code{FALSE}). This will use a Bayesian decision model to estimate regimen coverage probabilities using \href{https://en.wikipedia.org/wiki/Monte_Carlo_method}{Monte Carlo simulations}. Set \code{simulations}, \code{conf_interval}, and \code{interval_side} to adjust.}
 
-\item{italicise}{a \link{logical} to indicate whether the microorganism names in the \link[knitr:kable]{knitr} table should be made italic, using \code{\link[=italicise_taxonomy]{italicise_taxonomy()}}.}
+\item{simulations}{(for WISCA) a numerical value to set the number of Monte Carlo simulations.}
 
-\item{na}{character to use for showing \code{NA} values}
+\item{conf_interval}{A numerical value to set confidence interval (default is \code{0.95}).}
+
+\item{interval_side}{The side of the confidence interval, either \code{"two-tailed"} (default), \code{"left"} or \code{"right"}.}
+
+\item{info}{A \link{logical} to indicate info should be printed - the default is \code{TRUE} only in interactive mode.}
+
+\item{...}{When used in \link[knitr:kable]{R Markdown or Quarto}: arguments passed on to \code{\link[knitr:kable]{knitr::kable()}} (otherwise, has no use).}
+
+\item{wisca_model}{The outcome of \code{\link[=wisca]{wisca()}} or \code{\link[=antibiogram]{antibiogram(..., wisca = TRUE)}}.}
+
+\item{object}{An \code{\link[=antibiogram]{antibiogram()}} object.}
+
+\item{italicise}{A \link{logical} to indicate whether the microorganism names in the \link[knitr:kable]{knitr} table should be made italic, using \code{\link[=italicise_taxonomy]{italicise_taxonomy()}}.}
+
+\item{na}{Character to use for showing \code{NA} values.}
 }
 \description{
-Generate an antibiogram, and communicate the results in plots or tables. These functions follow the logic of Klinker \emph{et al.} and Barbieri \emph{et al.} (see \emph{Source}), and allow reporting in e.g. R Markdown and Quarto as well.
+Create detailed antibiograms with options for traditional, combination, syndromic, and Bayesian WISCA methods.
+
+Adhering to previously described approaches (see \emph{Source}) and especially the Bayesian WISCA model (Weighted-Incidence Syndromic Combination Antibiogram) by Bielicki \emph{et al.}, these functions provide flexible output formats including plots and tables, ideal for integration with R Markdown and Quarto reports.
 }
 \details{
-This function returns a table with values between 0 and 100 for \emph{susceptibility}, not resistance.
+These functions return a table with values between 0 and 100 for \emph{susceptibility}, not resistance.
 
-\strong{Remember that you should filter your data to let it contain only first isolates!} This is needed to exclude duplicates and to reduce selection bias. Use \code{\link[=first_isolate]{first_isolate()}} to determine them in your data set with one of the four available algorithms.
+\strong{Remember that you should filter your data to let it contain only first isolates!} This is needed to exclude duplicates and to reduce selection bias. Use \code{\link[=first_isolate]{first_isolate()}} to determine them with one of the four available algorithms: isolate-based, patient-based, episode-based, or phenotype-based.
 
-All types of antibiograms as listed below can be plotted (using \code{\link[ggplot2:autoplot]{ggplot2::autoplot()}} or base \R \code{\link[=plot]{plot()}}/\code{\link[=barplot]{barplot()}}). The \code{antibiogram} object can also be used directly in R Markdown / Quarto (i.e., \code{knitr}) for reports. In this case, \code{\link[knitr:kable]{knitr::kable()}} will be applied automatically and microorganism names will even be printed in italics at default (see argument \code{italicise}). You can also use functions from specific 'table reporting' packages to transform the output of \code{\link[=antibiogram]{antibiogram()}} to your needs, e.g. with \code{flextable::as_flextable()} or \code{gt::gt()}.
+For estimating antimicrobial coverage, especially when creating a WISCA, the outcome might become more reliable by only including the top \emph{n} species encountered in the data. You can filter on this top \emph{n} using \code{\link[=top_n_microorganisms]{top_n_microorganisms()}}. For example, use \code{top_n_microorganisms(your_data, n = 10)} as a pre-processing step to only include the top 10 species in the data.
+
+The numeric values of an antibiogram are stored in a long format as the \link[=attributes]{attribute} \code{long_numeric}. You can retrieve them using \code{attributes(x)$long_numeric}, where \code{x} is the outcome of \code{\link[=antibiogram]{antibiogram()}} or \code{\link[=wisca]{wisca()}}. This is ideal for e.g. advanced plotting.
+\subsection{Formatting Type}{
+
+The formatting of the 'cells' of the table can be set with the argument \code{formatting_type}. In these examples, \code{5} indicates the antimicrobial coverage (\code{4-6} the confidence level), \code{15} the number of susceptible isolates, and \code{300} the number of tested (i.e., available) isolates:
+\enumerate{
+\item 5
+\item 15
+\item 300
+\item 15/300
+\item 5 (300)
+\item 5\% (300)
+\item 5 (N=300)
+\item 5\% (N=300)
+\item 5 (15/300)
+\item 5\% (15/300)
+\item 5 (N=15/300)
+\item 5\% (N=15/300)
+\item 5 (4-6)
+\item 5\% (4-6\%) - \strong{default for WISCA}
+\item 5 (4-6,300)
+\item 5\% (4-6\%,300)
+\item 5 (4-6,N=300)
+\item 5\% (4-6\%,N=300) - \strong{default for non-WISCA}
+\item 5 (4-6,15/300)
+\item 5\% (4-6\%,15/300)
+\item 5 (4-6,N=15/300)
+\item 5\% (4-6\%,N=15/300)
+}
+
+The default can be set globally with the package option \code{\link[=AMR-options]{AMR_antibiogram_formatting_type}}, e.g. \code{options(AMR_antibiogram_formatting_type = 5)}. Do note that for WISCA, the total numbers of tested and susceptible isolates are less useful to report, since these are included in the Bayesian model and apparent from the susceptibility and its confidence level.
+
+Set \code{digits} (defaults to \code{0}) to alter the rounding of the susceptibility percentages.
+}
+
 \subsection{Antibiogram Types}{
 
-There are four antibiogram types, as proposed by Klinker \emph{et al.} (2021, \doi{10.1177/20499361211011373}), and they are all supported by \code{\link[=antibiogram]{antibiogram()}}:
+There are various antibiogram types, as summarised by Klinker \emph{et al.} (2021, \doi{10.1177/20499361211011373}), and they are all supported by \code{\link[=antibiogram]{antibiogram()}}.
+
+For clinical coverage estimations, \strong{use WISCA whenever possible}, since it provides more precise coverage estimates by accounting for pathogen incidence and antimicrobial susceptibility, as has been shown by Bielicki \emph{et al.} (2020, \doi{10.1001/jamanetworkopen.2019.21124}). See the section \emph{Explaining WISCA} on this page. Do note that WISCA is pathogen-agnostic, meaning that the outcome is not stratied by pathogen, but rather by syndrome.
 \enumerate{
 \item \strong{Traditional Antibiogram}
 
@@ -99,7 +172,7 @@ Case example: Susceptibility of \emph{Pseudomonas aeruginosa} to piperacillin/ta
 Code example:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{antibiogram(your_data,
-            antibiotics = "TZP")
+            antimicrobials = "TZP")
 }\if{html}{\out{</div>}}
 \item \strong{Combination Antibiogram}
 
@@ -108,7 +181,7 @@ Case example: Additional susceptibility of \emph{Pseudomonas aeruginosa} to TZP 
 Code example:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{antibiogram(your_data,
-            antibiotics = c("TZP", "TZP+TOB", "TZP+GEN"))
+            antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"))
 }\if{html}{\out{</div>}}
 \item \strong{Syndromic Antibiogram}
 
@@ -117,47 +190,132 @@ Case example: Susceptibility of \emph{Pseudomonas aeruginosa} to TZP among respi
 Code example:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{antibiogram(your_data,
-            antibiotics = penicillins(),
+            antimicrobials = penicillins(),
             syndromic_group = "ward")
 }\if{html}{\out{</div>}}
 \item \strong{Weighted-Incidence Syndromic Combination Antibiogram (WISCA)}
 
-Case example: Susceptibility of \emph{Pseudomonas aeruginosa} to TZP among respiratory specimens (obtained among ICU patients only) for male patients age >=65 years with heart failure
+WISCA can be applied to any antibiogram, see the section \emph{Explaining WISCA} on this page for more information.
+
+Code example:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{antibiogram(your_data,
+            antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"),
+            wisca = TRUE)
+
+# this is equal to:
+wisca(your_data,
+      antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"))
+}\if{html}{\out{</div>}}
+
+WISCA uses a sophisticated Bayesian decision model to combine both local and pooled antimicrobial resistance data. This approach not only evaluates local patterns but can also draw on multi-centre datasets to improve regimen accuracy, even in low-incidence infections like paediatric bloodstream infections (BSIs).
+}
+}
+
+\subsection{Grouped tibbles}{
+
+For any type of antibiogram, grouped \link[tibble:tibble]{tibbles} can also be used to calculate susceptibilities over various groups.
 
 Code example:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{library(dplyr)
 your_data \%>\%
-  filter(ward == "ICU" & specimen_type == "Respiratory") \%>\%
-  antibiogram(antibiotics = c("TZP", "TZP+TOB", "TZP+GEN"),
-              syndromic_group = ifelse(.$age >= 65 &
-                                         .$gender == "Male" &
-                                         .$condition == "Heart Disease",
-                                       "Study Group", "Control Group"))
+  group_by(has_sepsis, is_neonate, sex) \%>\%
+  wisca(antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"))
 }\if{html}{\out{</div>}}
 }
 
-Note that for combination antibiograms, it is important to realise that susceptibility can be calculated in two ways, which can be set with the \code{only_all_tested} argument (default is \code{FALSE}). See this example for two antibiotics, Drug A and Drug B, about how \code{\link[=antibiogram]{antibiogram()}} works to calculate the \%SI:
+\subsection{Stepped Approach for Clinical Insight}{
+
+In clinical practice, antimicrobial coverage decisions evolve as more microbiological data becomes available. This theoretical stepped approach ensures empirical coverage can continuously assessed to improve patient outcomes:
+\enumerate{
+\item \strong{Initial Empirical Therapy (Admission / Pre-Culture Data)}
+
+At admission, no pathogen information is available.
+\itemize{
+\item Action: broad-spectrum coverage is based on local resistance patterns and syndromic antibiograms. Using the pathogen-agnostic yet incidence-weighted WISCA is preferred.
+\item Code example:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{antibiogram(your_data,
+            antimicrobials = selected_regimens,
+            mo_transform = NA) # all pathogens set to `NA`
+
+# preferred: use WISCA
+wisca(your_data,
+      antimicrobials = selected_regimens)
+}\if{html}{\out{</div>}}
+}
+\item \strong{Refinement with Gram Stain Results}
+
+When a blood culture becomes positive, the Gram stain provides an initial and crucial first stratification (Gram-positive vs. Gram-negative).
+\itemize{
+\item Action: narrow coverage based on Gram stain-specific resistance patterns.
+\item Code example:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{antibiogram(your_data,
+            antimicrobials = selected_regimens,
+            mo_transform = "gramstain") # all pathogens set to Gram-pos/Gram-neg
+}\if{html}{\out{</div>}}
+}
+\item \strong{Definitive Therapy Based on Species Identification}
+
+After cultivation of the pathogen, full pathogen identification allows precise targeting of therapy.
+\itemize{
+\item Action: adjust treatment to pathogen-specific antibiograms, minimizing resistance risks.
+\item Code example:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{antibiogram(your_data,
+            antimicrobials = selected_regimens,
+            mo_transform = "shortname") # all pathogens set to 'G. species', e.g., E. coli
+}\if{html}{\out{</div>}}
+}
+}
+
+By structuring antibiograms around this stepped approach, clinicians can make data-driven adjustments at each stage, ensuring optimal empirical and targeted therapy while reducing unnecessary broad-spectrum antimicrobial use.
+}
+
+\subsection{Inclusion in Combination Antibiograms}{
+
+Note that for combination antibiograms, it is important to realise that susceptibility can be calculated in two ways, which can be set with the \code{only_all_tested} argument (default is \code{FALSE}). See this example for two antimicrobials, Drug A and Drug B, about how \code{\link[=antibiogram]{antibiogram()}} works to calculate the \%SI:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{--------------------------------------------------------------------
                     only_all_tested = FALSE  only_all_tested = TRUE
                     -----------------------  -----------------------
- Drug A    Drug B   include as  include as   include as  include as
-                    numerator   denominator  numerator   denominator
---------  --------  ----------  -----------  ----------  -----------
- S or I    S or I       X            X            X            X
-   R       S or I       X            X            X            X
-  <NA>     S or I       X            X            -            -
- S or I      R          X            X            X            X
-   R         R          -            X            -            X
-  <NA>       R          -            -            -            -
- S or I     <NA>        X            X            -            -
-   R        <NA>        -            -            -            -
-  <NA>      <NA>        -            -            -            -
+ Drug A    Drug B   considered   considered  considered   considered
+                    susceptible    tested    susceptible    tested
+--------  --------  -----------  ----------  -----------  ----------
+ S or I    S or I        X            X           X            X
+   R       S or I        X            X           X            X
+  <NA>     S or I        X            X           -            -
+ S or I      R           X            X           X            X
+   R         R           -            X           -            X
+  <NA>       R           -            -           -            -
+ S or I     <NA>         X            X           -            -
+   R        <NA>         -            -           -            -
+  <NA>      <NA>         -            -           -            -
 --------------------------------------------------------------------
 }\if{html}{\out{</div>}}
 }
+
+\subsection{Plotting}{
+
+All types of antibiograms as listed above can be plotted (using \code{\link[ggplot2:autoplot]{ggplot2::autoplot()}} or base \R's \code{\link[=plot]{plot()}} and \code{\link[=barplot]{barplot()}}). As mentioned above, the numeric values of an antibiogram are stored in a long format as the \link[=attributes]{attribute} \code{long_numeric}. You can retrieve them using \code{attributes(x)$long_numeric}, where \code{x} is the outcome of \code{\link[=antibiogram]{antibiogram()}} or \code{\link[=wisca]{wisca()}}.
+
+The outcome of \code{\link[=antibiogram]{antibiogram()}} can also be used directly in R Markdown / Quarto (i.e., \code{knitr}) for reports. In this case, \code{\link[knitr:kable]{knitr::kable()}} will be applied automatically and microorganism names will even be printed in italics at default (see argument \code{italicise}).
+
+You can also use functions from specific 'table reporting' packages to transform the output of \code{\link[=antibiogram]{antibiogram()}} to your needs, e.g. with \code{flextable::as_flextable()} or \code{gt::gt()}.
 }
+}
+\section{Explaining WISCA}{
+
+
+WISCA (Weighted-Incidence Syndromic Combination Antibiogram) estimates the probability of empirical coverage for combination regimens.
+
+It weights susceptibility by pathogen prevalence within a clinical syndrome and provides credible intervals around the expected coverage.
+
+For more background, interpretation, and examples, see \href{https://amr-for-r.org/articles/WISCA.html}{the WISCA vignette}.
+}
+
 \examples{
 # example_isolates is a data set available in the AMR package.
 # run ?example_isolates for more info.
@@ -167,17 +325,17 @@ example_isolates
 # Traditional antibiogram ----------------------------------------------
 
 antibiogram(example_isolates,
-  antibiotics = c(aminoglycosides(), carbapenems())
+  antimicrobials = c(aminoglycosides(), carbapenems())
 )
 
 antibiogram(example_isolates,
-  antibiotics = aminoglycosides(),
+  antimicrobials = aminoglycosides(),
   ab_transform = "atc",
   mo_transform = "gramstain"
 )
 
 antibiogram(example_isolates,
-  antibiotics = carbapenems(),
+  antimicrobials = carbapenems(),
   ab_transform = "name",
   mo_transform = "name"
 )
@@ -185,15 +343,21 @@ antibiogram(example_isolates,
 
 # Combined antibiogram -------------------------------------------------
 
-# combined antibiotics yield higher empiric coverage
+# combined antimicrobials yield higher empiric coverage
 antibiogram(example_isolates,
-  antibiotics = c("TZP", "TZP+TOB", "TZP+GEN"),
+  antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"),
   mo_transform = "gramstain"
 )
 
-# names of antibiotics do not need to resemble columns exactly:
+# you can use any antimicrobial selector with `+` too:
 antibiogram(example_isolates,
-  antibiotics = c("Cipro", "cipro + genta"),
+  antimicrobials = ureidopenicillins() + c("", "GEN", "tobra"),
+  mo_transform = "gramstain"
+)
+
+# names of antimicrobials do not need to resemble columns exactly:
+antibiogram(example_isolates,
+  antimicrobials = c("Cipro", "cipro + genta"),
   mo_transform = "gramstain",
   ab_transform = "name",
   sep = " & "
@@ -204,7 +368,7 @@ antibiogram(example_isolates,
 
 # the data set could contain a filter for e.g. respiratory specimens
 antibiogram(example_isolates,
-  antibiotics = c(aminoglycosides(), carbapenems()),
+  antimicrobials = c(aminoglycosides(), carbapenems()),
   syndromic_group = "ward"
 )
 
@@ -214,7 +378,7 @@ ex1 <- example_isolates[which(mo_genus() == "Escherichia"), ]
 # with a custom language, though this will be determined automatically
 # (i.e., this table will be in Spanish on Spanish systems)
 antibiogram(ex1,
-  antibiotics = aminoglycosides(),
+  antimicrobials = aminoglycosides(),
   ab_transform = "name",
   syndromic_group = ifelse(ex1$ward == "ICU",
     "UCI", "No UCI"
@@ -223,25 +387,22 @@ antibiogram(ex1,
 )
 
 
-# Weighted-incidence syndromic combination antibiogram (WISCA) ---------
+# WISCA antibiogram ----------------------------------------------------
 
-# the data set could contain a filter for e.g. respiratory specimens/ICU
+# WISCA are not stratified by species, but rather on syndromes
 antibiogram(example_isolates,
-  antibiotics = c("AMC", "AMC+CIP", "TZP", "TZP+TOB"),
-  mo_transform = "gramstain",
-  minimum = 10, # this should be >=30, but now just as example
-  syndromic_group = ifelse(example_isolates$age >= 65 &
-    example_isolates$gender == "M",
-  "WISCA Group 1", "WISCA Group 2"
-  )
+  antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"),
+  syndromic_group = "ward",
+  wisca = TRUE
 )
 
 
 # Print the output for R Markdown / Quarto -----------------------------
 
 ureido <- antibiogram(example_isolates,
-  antibiotics = ureidopenicillins(),
-  ab_transform = "name"
+  antimicrobials = ureidopenicillins(),
+  syndromic_group = "ward",
+  wisca = TRUE
 )
 
 # in an Rmd file, you would just need to return `ureido` in a chunk,
@@ -254,11 +415,11 @@ if (requireNamespace("knitr")) {
 # Generate plots with ggplot2 or base R --------------------------------
 
 ab1 <- antibiogram(example_isolates,
-  antibiotics = c("AMC", "CIP", "TZP", "TZP+TOB"),
+  antimicrobials = c("AMC", "CIP", "TZP", "TZP+TOB"),
   mo_transform = "gramstain"
 )
 ab2 <- antibiogram(example_isolates,
-  antibiotics = c("AMC", "CIP", "TZP", "TZP+TOB"),
+  antimicrobials = c("AMC", "CIP", "TZP", "TZP+TOB"),
   mo_transform = "gramstain",
   syndromic_group = "ward"
 )
@@ -273,4 +434,7 @@ if (requireNamespace("ggplot2")) {
 plot(ab1)
 plot(ab2)
 }
+}
+\author{
+Implementation: Dr. Larisse Bolton and Dr. Matthijs Berends
 }

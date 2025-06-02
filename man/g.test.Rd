@@ -45,8 +45,9 @@ A list with class \code{"htest"} containing the following
   \item{residuals}{the Pearson residuals,
     \code{(observed - expected) / sqrt(expected)}.}
   \item{stdres}{standardized residuals,
-    \code{(observed - expected) / sqrt(V)}, where \code{V} is the residual cell variance (Agresti, 2007,
-    section 2.4.5 for the case where \code{x} is a matrix, \code{n * p * (1 - p)} otherwise).}
+    \code{(observed - expected) / sqrt(V)}, where \code{V} is the
+    residual cell variance (Agresti, 2007, section 2.4.5
+    for the case where \code{x} is a matrix, \code{n * p * (1 - p)} otherwise).}
 }
 \description{
 \code{\link[=g.test]{g.test()}} performs chi-squared contingency table tests and goodness-of-fit tests, just like \code{\link[=chisq.test]{chisq.test()}} but is more reliable (1). A \emph{G}-test can be used to see whether the number of observations in each category fits a theoretical expectation (called a \strong{\emph{G}-test of goodness-of-fit}), or to see whether the proportions of one variable are different for different values of the other variable (called a \strong{\emph{G}-test of independence}).
@@ -132,7 +133,7 @@ g.test(x)
 }
 \references{
 \enumerate{
-\item McDonald, J.H. 2014. \strong{Handbook of Biological Statistics (3rd ed.)}. Sparky House Publishing, Baltimore, Maryland. \url{http://www.biostathandbook.com/gtestgof.html}.
+\item McDonald, J.H. 2014. \strong{Handbook of Biological Statistics (3rd ed.)}. Sparky House Publishing, Baltimore, Maryland.
 }
 }
 \seealso{

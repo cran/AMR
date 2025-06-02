@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,14 +24,14 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Principal Component Analysis (for AMR)
 #'
 #' Performs a principal component analysis (PCA) based on a data set with automatic determination for afterwards plotting the groups and labels, and automatic filtering on only suitable (i.e. non-empty and numeric) variables.
-#' @param x a [data.frame] containing [numeric] columns
-#' @param ... columns of `x` to be selected for PCA, can be unquoted since it supports quasiquotation.
+#' @param x A [data.frame] containing [numeric] columns.
+#' @param ... Columns of `x` to be selected for PCA, can be unquoted since it supports quasiquotation.
 #' @inheritParams stats::prcomp
 #' @details The [pca()] function takes a [data.frame] as input and performs the actual PCA with the \R function [prcomp()].
 #'
@@ -60,17 +60,18 @@
 #'
 #'   pca_result
 #'   summary(pca_result)
-#'
 #'   # old base R plotting method:
 #'   biplot(pca_result)
-#'   # new ggplot2 plotting method using this package:
-#'   if (require("ggplot2")) {
-#'     ggplot_pca(pca_result)
+#' }
 #'
+#' # new ggplot2 plotting method using this package:
+#' if (require("dplyr") && require("ggplot2")) {
+#'     ggplot_pca(pca_result)
+#' }
+#' if (require("dplyr") && require("ggplot2")) {
 #'     ggplot_pca(pca_result) +
 #'       scale_colour_viridis_d() +
 #'       labs(title = "Title here")
-#'   }
 #' }
 #' }
 pca <- function(x,
@@ -113,7 +114,7 @@ pca <- function(x,
 
     x <- as.data.frame(new_list, stringsAsFactors = FALSE)
     if (any(vapply(FUN.VALUE = logical(1), x, function(y) !is.numeric(y)))) {
-      warning_("in `pca()`: be sure to first calculate the resistance (or susceptibility) of variables with antimicrobial test results, since PCA works with numeric variables only. See Examples in ?pca.", call = FALSE)
+      warning_("in `pca()`: be sure to first calculate the resistance (or susceptibility) of variables with antimicrobial test results, since PCA works with numeric variables only. See Examples in `?pca`.", call = FALSE)
     }
 
     # set column names

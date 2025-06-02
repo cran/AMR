@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,18 +24,18 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Transform Input to Disk Diffusion Diameters
 #'
-#' This transforms a vector to a new class [`disk`], which is a disk diffusion growth zone size (around an antibiotic disk) in millimetres between 6 and 50.
+#' This transforms a vector to a new class [`disk`], which is a disk diffusion growth zone size (around an antibiotic disk) in millimetres between 0 and 50.
 #' @rdname as.disk
-#' @param x vector
-#' @param na.rm a [logical] indicating whether missing values should be removed
+#' @param x Vector.
+#' @param na.rm A [logical] indicating whether missing values should be removed.
 #' @details Interpret disk values as SIR values with [as.sir()]. It supports guidelines from EUCAST and CLSI.
 #'
-#' Disk diffusion growth zone sizes must be between 6 and 50 millimetres. Values higher than 50 but lower than 100 will be maximised to 50. All others input values outside the 6-50 range will return `NA`.
+#' Disk diffusion growth zone sizes must be between 0 and 50 millimetres. Values higher than 50 but lower than 100 will be maximised to 50. All others input values outside the 0-50 range will return `NA`.
 #' @return An [integer] with additional class [`disk`]
 #' @aliases disk
 #' @export
@@ -108,8 +108,8 @@ as.disk <- function(x, na.rm = FALSE) {
     # round up and make it an integer
     x <- as.integer(ceiling(clean_double2(x)))
 
-    # disks can never be less than 6 mm (size of smallest disk) or more than 50 mm
-    x[x < 6 | x > 99] <- NA_integer_
+    # disks can never be less than 0 mm or more than 50 mm
+    x[x < 0 | x > 99] <- NA_integer_
     x[x > 50] <- 50L
     na_after <- length(x[is.na(x)])
 
@@ -121,7 +121,7 @@ as.disk <- function(x, na.rm = FALSE) {
       cur_col <- get_current_column()
       warning_("in `as.disk()`: ", na_after - na_before, " result",
         ifelse(na_after - na_before > 1, "s", ""),
-        ifelse(is.null(cur_col), "", paste0(" in column '", cur_col, "'")),
+        ifelse(is.null(cur_col), "", paste0(" in index '", cur_col, "'")),
         " truncated (",
         round(((na_after - na_before) / length(x)) * 100),
         "%) that were invalid disk zones: ",
@@ -158,16 +158,12 @@ is.disk <- function(x) {
   inherits(x, "disk")
 }
 
-# will be exported using s3_register() in R/zzz.R
+# this prevents the requirement for putting the dependency in Imports:
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(pillar::pillar_shaft, disk)
 pillar_shaft.disk <- function(x, ...) {
   out <- trimws(format(x))
   out[is.na(x)] <- font_na(NA)
   create_pillar_column(out, align = "right", width = 2)
-}
-
-# will be exported using s3_register() in R/zzz.R
-type_sum.disk <- function(x, ...) {
-  "disk"
 }
 
 #' @method print disk
@@ -237,7 +233,8 @@ rep.disk <- function(x, ...) {
   y
 }
 
-# will be exported using s3_register() in R/zzz.R
+# this prevents the requirement for putting the dependency in Imports:
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(skimr::get_skimmers, disk)
 get_skimmers.disk <- function(column) {
   skimr::sfl(
     skim_type = "disk",

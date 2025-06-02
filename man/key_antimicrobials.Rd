@@ -6,56 +6,44 @@
 \alias{antimicrobials_equal}
 \title{(Key) Antimicrobials for First Weighted Isolates}
 \usage{
-key_antimicrobials(
-  x = NULL,
-  col_mo = NULL,
-  universal = c("ampicillin", "amoxicillin/clavulanic acid", "cefuroxime",
-    "piperacillin/tazobactam", "ciprofloxacin", "trimethoprim/sulfamethoxazole"),
-  gram_negative = c("gentamicin", "tobramycin", "colistin", "cefotaxime", "ceftazidime",
-    "meropenem"),
-  gram_positive = c("vancomycin", "teicoplanin", "tetracycline", "erythromycin",
-    "oxacillin", "rifampin"),
-  antifungal = c("anidulafungin", "caspofungin", "fluconazole", "miconazole", "nystatin",
-    "voriconazole"),
-  only_sir_columns = FALSE,
-  ...
-)
+key_antimicrobials(x = NULL, col_mo = NULL, universal = c("ampicillin",
+  "amoxicillin/clavulanic acid", "cefuroxime", "piperacillin/tazobactam",
+  "ciprofloxacin", "trimethoprim/sulfamethoxazole"),
+  gram_negative = c("gentamicin", "tobramycin", "colistin", "cefotaxime",
+  "ceftazidime", "meropenem"), gram_positive = c("vancomycin", "teicoplanin",
+  "tetracycline", "erythromycin", "oxacillin", "rifampin"),
+  antifungal = c("anidulafungin", "caspofungin", "fluconazole", "miconazole",
+  "nystatin", "voriconazole"), only_sir_columns = any(is.sir(x)), ...)
 
-all_antimicrobials(x = NULL, only_sir_columns = FALSE, ...)
+all_antimicrobials(x = NULL, only_sir_columns = any(is.sir(x)), ...)
 
-antimicrobials_equal(
-  y,
-  z,
-  type = c("points", "keyantimicrobials"),
-  ignore_I = TRUE,
-  points_threshold = 2,
-  ...
-)
+antimicrobials_equal(y, z, type = c("points", "keyantimicrobials"),
+  ignore_I = TRUE, points_threshold = 2, ...)
 }
 \arguments{
-\item{x}{a \link{data.frame} with antibiotics columns, like \code{AMX} or \code{amox}. Can be left blank to determine automatically}
+\item{x}{A \link{data.frame} with antimicrobials columns, like \code{AMX} or \code{amox}. Can be left blank to determine automatically.}
 
-\item{col_mo}{column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
+\item{col_mo}{Column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
 
-\item{universal}{names of \strong{broad-spectrum} antimicrobial drugs, case-insensitive. Set to \code{NULL} to ignore. See \emph{Details} for the default antimicrobial drugs}
+\item{universal}{Names of \strong{broad-spectrum} antimicrobial drugs, case-insensitive. Set to \code{NULL} to ignore. See \emph{Details} for the default antimicrobial drugs.}
 
-\item{gram_negative}{names of antibiotic drugs for \strong{Gram-positives}, case-insensitive. Set to \code{NULL} to ignore. See \emph{Details} for the default antibiotic drugs}
+\item{gram_negative}{Names of antibiotic drugs for \strong{Gram-positives}, case-insensitive. Set to \code{NULL} to ignore. See \emph{Details} for the default antibiotic drugs.}
 
-\item{gram_positive}{names of antibiotic drugs for \strong{Gram-negatives}, case-insensitive. Set to \code{NULL} to ignore. See \emph{Details} for the default antibiotic drugs}
+\item{gram_positive}{Names of antibiotic drugs for \strong{Gram-negatives}, case-insensitive. Set to \code{NULL} to ignore. See \emph{Details} for the default antibiotic drugs.}
 
-\item{antifungal}{names of antifungal drugs for \strong{fungi}, case-insensitive. Set to \code{NULL} to ignore. See \emph{Details} for the default antifungal drugs}
+\item{antifungal}{Names of antifungal drugs for \strong{fungi}, case-insensitive. Set to \code{NULL} to ignore. See \emph{Details} for the default antifungal drugs.}
 
-\item{only_sir_columns}{a \link{logical} to indicate whether only columns must be included that were transformed to class \code{sir} (see \code{\link[=as.sir]{as.sir()}}) on beforehand (default is \code{FALSE})}
+\item{only_sir_columns}{A \link{logical} to indicate whether only antimicrobial columns must be included that were transformed to class \link[=as.sir]{sir} on beforehand. Defaults to \code{FALSE} if no columns of \code{x} have a class \link[=as.sir]{sir}.}
 
-\item{...}{ignored, only in place to allow future extensions}
+\item{...}{Ignored, only in place to allow future extensions.}
 
-\item{y, z}{\link{character} vectors to compare}
+\item{y, z}{\link{character} vectors to compare.}
 
-\item{type}{type to determine weighed isolates; can be \code{"keyantimicrobials"} or \code{"points"}, see \emph{Details}}
+\item{type}{Type to determine weighed isolates; can be \code{"keyantimicrobials"} or \code{"points"}, see \emph{Details}.}
 
-\item{ignore_I}{\link{logical} to indicate whether antibiotic interpretations with \code{"I"} will be ignored when \code{type = "keyantimicrobials"}, see \emph{Details}}
+\item{ignore_I}{\link{logical} to indicate whether antibiotic interpretations with \code{"I"} will be ignored when \code{type = "keyantimicrobials"}, see \emph{Details}.}
 
-\item{points_threshold}{minimum number of points to require before differences in the antibiogram will lead to inclusion of an isolate when \code{type = "points"}, see \emph{Details}}
+\item{points_threshold}{Minimum number of points to require before differences in the antibiogram will lead to inclusion of an isolate when \code{type = "points"}, see \emph{Details}.}
 }
 \description{
 These functions can be used to determine first weighted isolates by considering the phenotype for isolate selection (see \code{\link[=first_isolate]{first_isolate()}}). Using a phenotype-based method to determine first isolates is more reliable than methods that disregard phenotypes.
@@ -124,7 +112,7 @@ antimicrobials_equal(strainA, strainB, type = "keyantimicrobials", ignore_I = FA
 
 \donttest{
 if (require("dplyr")) {
-  # set key antibiotics to a new variable
+  # set key antimicrobials to a new variable
   my_patients <- example_isolates \%>\%
     mutate(keyab = key_antimicrobials(antifungal = NULL)) \%>\% # no need to define `x`
     mutate(

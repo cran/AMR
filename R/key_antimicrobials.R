@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,21 +24,21 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' (Key) Antimicrobials for First Weighted Isolates
 #'
 #' These functions can be used to determine first weighted isolates by considering the phenotype for isolate selection (see [first_isolate()]). Using a phenotype-based method to determine first isolates is more reliable than methods that disregard phenotypes.
-#' @param x a [data.frame] with antibiotics columns, like `AMX` or `amox`. Can be left blank to determine automatically
-#' @param y,z [character] vectors to compare
+#' @param x A [data.frame] with antimicrobials columns, like `AMX` or `amox`. Can be left blank to determine automatically.
+#' @param y,z [character] vectors to compare.
 #' @inheritParams first_isolate
-#' @param universal names of **broad-spectrum** antimicrobial drugs, case-insensitive. Set to `NULL` to ignore. See *Details* for the default antimicrobial drugs
-#' @param gram_negative names of antibiotic drugs for **Gram-positives**, case-insensitive. Set to `NULL` to ignore. See *Details* for the default antibiotic drugs
-#' @param gram_positive names of antibiotic drugs for **Gram-negatives**, case-insensitive. Set to `NULL` to ignore. See *Details* for the default antibiotic drugs
-#' @param antifungal names of antifungal drugs for **fungi**, case-insensitive. Set to `NULL` to ignore. See *Details* for the default antifungal drugs
-#' @param only_sir_columns a [logical] to indicate whether only columns must be included that were transformed to class `sir` (see [as.sir()]) on beforehand (default is `FALSE`)
-#' @param ... ignored, only in place to allow future extensions
+#' @param universal Names of **broad-spectrum** antimicrobial drugs, case-insensitive. Set to `NULL` to ignore. See *Details* for the default antimicrobial drugs.
+#' @param gram_negative Names of antibiotic drugs for **Gram-positives**, case-insensitive. Set to `NULL` to ignore. See *Details* for the default antibiotic drugs.
+#' @param gram_positive Names of antibiotic drugs for **Gram-negatives**, case-insensitive. Set to `NULL` to ignore. See *Details* for the default antibiotic drugs.
+#' @param antifungal Names of antifungal drugs for **fungi**, case-insensitive. Set to `NULL` to ignore. See *Details* for the default antifungal drugs.
+#' @param only_sir_columns A [logical] to indicate whether only antimicrobial columns must be included that were transformed to class [sir][as.sir()] on beforehand. Defaults to `FALSE` if no columns of `x` have a class [sir][as.sir()].
+#' @param ... Ignored, only in place to allow future extensions.
 #' @details
 #' The [key_antimicrobials()] and [all_antimicrobials()] functions are context-aware. This means that the `x` argument can be left blank if used inside a [data.frame] call, see *Examples*.
 #'
@@ -73,7 +73,6 @@
 #' - Tetracycline
 #' - Vancomycin
 #'
-#'
 #' The default antimicrobial drugs used for **fungi** (set in `antifungal`) are:
 #'
 #' - Anidulafungin
@@ -102,7 +101,7 @@
 #'
 #' \donttest{
 #' if (require("dplyr")) {
-#'   # set key antibiotics to a new variable
+#'   # set key antimicrobials to a new variable
 #'   my_patients <- example_isolates %>%
 #'     mutate(keyab = key_antimicrobials(antifungal = NULL)) %>% # no need to define `x`
 #'     mutate(
@@ -135,7 +134,7 @@ key_antimicrobials <- function(x = NULL,
                                  "anidulafungin", "caspofungin", "fluconazole",
                                  "miconazole", "nystatin", "voriconazole"
                                ),
-                               only_sir_columns = FALSE,
+                               only_sir_columns = any(is.sir(x)),
                                ...) {
   if (is_null_or_grouped_tbl(x)) {
     # when `x` is left blank, auto determine it (get_current_data() searches underlying data within call)
@@ -149,10 +148,6 @@ key_antimicrobials <- function(x = NULL,
   meet_criteria(gram_positive, allow_class = "character", allow_NULL = TRUE)
   meet_criteria(antifungal, allow_class = "character", allow_NULL = TRUE)
   meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
-  if ("only_rsi_columns" %in% names(list(...))) {
-    deprecation_warning("only_rsi_columns", "only_sir_columns", is_function = FALSE)
-    only_sir_columns <- list(...)$only_rsi_columns
-  }
 
   # force regular data.frame, not a tibble or data.table
   x <- as.data.frame(x, stringsAsFactors = FALSE)
@@ -192,11 +187,11 @@ key_antimicrobials <- function(x = NULL,
           "No columns available ",
           paste0("Only using ", values_new_length, " out of ", values_old_length, " defined columns ")
         ),
-        "as key antimicrobials for ", name, "s. See ?key_antimicrobials."
+        "as key antimicrobials for ", name, "s. See `?key_antimicrobials`."
       )
     }
 
-    generate_antimcrobials_string(x[which(filter), c(universal, values), drop = FALSE])
+    generate_antimicrobials_string(x[which(filter), c(universal, values), drop = FALSE])
   }
 
   if (is.null(universal)) {
@@ -251,7 +246,7 @@ key_antimicrobials <- function(x = NULL,
 #' @rdname key_antimicrobials
 #' @export
 all_antimicrobials <- function(x = NULL,
-                               only_sir_columns = FALSE,
+                               only_sir_columns = any(is.sir(x)),
                                ...) {
   if (is_null_or_grouped_tbl(x)) {
     # when `x` is left blank, auto determine it (get_current_data() searches underlying data within call)
@@ -268,10 +263,10 @@ all_antimicrobials <- function(x = NULL,
     sort = FALSE, fn = "all_antimicrobials"
   )
 
-  generate_antimcrobials_string(x[, cols, drop = FALSE])
+  generate_antimicrobials_string(x[, cols, drop = FALSE])
 }
 
-generate_antimcrobials_string <- function(df) {
+generate_antimicrobials_string <- function(df) {
   if (NCOL(df) == 0) {
     return(rep("", NROW(df)))
   }
@@ -286,6 +281,8 @@ generate_antimcrobials_string <- function(df) {
           as.list(df),
           function(x) {
             x <- toupper(as.character(x))
+            x[x == "SDD"] <- "I"
+            # ignore "NI" here, no use for determining first isolates
             x[!x %in% c("S", "I", "R")] <- "."
             paste(x)
           }
@@ -316,7 +313,7 @@ antimicrobials_equal <- function(y,
     val <- strsplit(val, "", fixed = TRUE)[[1L]]
     val.int <- rep(NA_real_, length(val))
     val.int[val == "S"] <- 1
-    val.int[val == "I"] <- 2
+    val.int[val %in% c("I", "SDD")] <- 2
     val.int[val == "R"] <- 3
     val.int
   }

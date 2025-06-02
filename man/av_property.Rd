@@ -40,19 +40,19 @@ av_url(x, open = FALSE, ...)
 av_property(x, property = "name", language = get_AMR_locale(), ...)
 }
 \arguments{
-\item{x}{any (vector of) text that can be coerced to a valid antiviral drug code with \code{\link[=as.av]{as.av()}}}
+\item{x}{Any (vector of) text that can be coerced to a valid antiviral drug code with \code{\link[=as.av]{as.av()}}.}
 
-\item{language}{language of the returned text - the default is system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{language}{Language of the returned text - the default is system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the package option \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
-\item{tolower}{a \link{logical} to indicate whether the first \link{character} of every output should be transformed to a lower case \link{character}.}
+\item{tolower}{A \link{logical} to indicate whether the first \link{character} of every output should be transformed to a lower case \link{character}.}
 
-\item{...}{other arguments passed on to \code{\link[=as.av]{as.av()}}}
+\item{...}{Other arguments passed on to \code{\link[=as.av]{as.av()}}.}
 
-\item{administration}{way of administration, either \code{"oral"} or \code{"iv"}}
+\item{administration}{Way of administration, either \code{"oral"} or \code{"iv"}.}
 
-\item{open}{browse the URL using \code{\link[utils:browseURL]{utils::browseURL()}}}
+\item{open}{Browse the URL using \code{\link[utils:browseURL]{utils::browseURL()}}.}
 
-\item{property}{one of the column names of one of the \link{antivirals} data set: \code{vector_or(colnames(antivirals), sort = FALSE)}.}
+\item{property}{One of the column names of one of the \link{antivirals} data set: \code{vector_or(colnames(antivirals), sort = FALSE)}.}
 }
 \value{
 \itemize{
@@ -72,14 +72,18 @@ The function \code{\link[=av_url]{av_url()}} will return the direct URL to the o
 }
 \section{Source}{
 
-World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://www.whocc.no/atc_ddd_index/}
+World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://atcddd.fhi.no/atc_ddd_index/}
 
 European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 }
 
-\section{Reference Data Publicly Available}{
+\section{Download Our Reference Data}{
 
-All data sets in this \code{AMR} package (about microorganisms, antibiotics, SIR interpretation, EUCAST rules, etc.) are publicly and freely available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. We also provide tab-separated plain text files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
+All reference data sets in the AMR package - including information on microorganisms, antimicrobials, and clinical breakpoints - are freely available for download in multiple formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, and Stata.
+
+For maximum compatibility, we also provide machine-readable, tab-separated plain text files suitable for use in any software, including laboratory information systems.
+
+Visit \href{https://amr-for-r.org/articles/datasets.html}{our website for direct download links}, or explore the actual files in \href{https://github.com/msberends/AMR/tree/main/data-raw/datasets}{our GitHub repository}.
 }
 
 \examples{

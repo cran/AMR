@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,7 +24,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 dots2vars <- function(...) {
@@ -41,7 +41,7 @@ sir_calc <- function(...,
                      as_percent = FALSE,
                      only_all_tested = FALSE,
                      only_count = FALSE) {
-  meet_criteria(ab_result, allow_class = c("character", "numeric", "integer"), has_length = c(1, 2, 3))
+  meet_criteria(ab_result, allow_class = c("character", "numeric", "integer"), has_length = c(1:5))
   meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_positive_or_zero = TRUE, is_finite = TRUE)
   meet_criteria(as_percent, allow_class = "logical", has_length = 1)
   meet_criteria(only_all_tested, allow_class = "logical", has_length = 1)
@@ -137,15 +137,21 @@ sir_calc <- function(...,
     if (isTRUE(only_all_tested)) {
       # no NAs in any column
       y <- apply(
-        X = as.data.frame(lapply(x, as.integer), stringsAsFactors = FALSE),
+        X = as.data.frame(lapply(x, as.double), stringsAsFactors = FALSE),
         MARGIN = 1,
         FUN = min
       )
-      numerator <- sum(as.integer(y) %in% as.integer(ab_result), na.rm = TRUE)
+      if ("SDD" %in% ab_result && "SDD" %in% y && message_not_thrown_before("sir_calc", only_count, ab_result, entire_session = TRUE)) {
+        message_("Note that `", ifelse(only_count, "count", "proportion"), "_", ifelse("S" %in% ab_result, "S", ""), "I", ifelse("R" %in% ab_result, "R", ""), "()` will also include dose-dependent susceptibility, 'SDD'. This note will be shown once for this session.", as_note = FALSE)
+      }
+      numerator <- sum(!is.na(y) & y %in% as.double(ab_result), na.rm = TRUE)
       denominator <- sum(vapply(FUN.VALUE = logical(1), x_transposed, function(y) !(anyNA(y))))
     } else {
       # may contain NAs in any column
       other_values <- setdiff(c(NA, levels(ab_result)), ab_result)
+      if ("SDD" %in% ab_result && "SDD" %in% unlist(x_transposed) && message_not_thrown_before("sir_calc", only_count, ab_result, entire_session = TRUE)) {
+        message_("Note that `", ifelse(only_count, "count", "proportion"), "_", ifelse("S" %in% ab_result, "S", ""), "I", ifelse("R" %in% ab_result, "R", ""), "()` will also include dose-dependent susceptibility, 'SDD'. This note will be shown once for this session.", as_note = FALSE)
+      }
       numerator <- sum(vapply(FUN.VALUE = logical(1), x_transposed, function(y) any(y %in% ab_result, na.rm = TRUE)))
       denominator <- sum(vapply(FUN.VALUE = logical(1), x_transposed, function(y) !(all(y %in% other_values) & anyNA(y))))
     }
@@ -154,6 +160,9 @@ sir_calc <- function(...,
     if (!is.sir(x)) {
       x <- as.sir(x)
       print_warning <- TRUE
+    }
+    if ("SDD" %in% ab_result && "SDD" %in% x && message_not_thrown_before("sir_calc", only_count, ab_result, entire_session = TRUE)) {
+      message_("Note that `", ifelse(only_count, "count", "proportion"), "_", ifelse("S" %in% ab_result, "S", ""), "I", ifelse("R" %in% ab_result, "R", ""), "()` will also include dose-dependent susceptibility, 'SDD'. This note will be shown once for this session.", as_note = FALSE)
     }
     numerator <- sum(x %in% ab_result, na.rm = TRUE)
     denominator <- sum(x %in% levels(ab_result), na.rm = TRUE)
@@ -208,7 +217,7 @@ sir_calc <- function(...,
   }
 
   if (as_percent == TRUE) {
-    percentage(fraction, digits = 1)
+    trimws(percentage(fraction, digits = 1))
   } else {
     fraction
   }
@@ -223,7 +232,8 @@ sir_calc_df <- function(type, # "proportion", "count" or "both"
                         combine_SI = TRUE,
                         confidence_level = 0.95) {
   meet_criteria(type, is_in = c("proportion", "count", "both"), has_length = 1)
-  meet_criteria(data, allow_class = "data.frame", contains_column_class = c("sir", "rsi"))
+  meet_criteria(data, allow_class = "data.frame")
+  data <- ascertain_sir_classes(data, "data")
   meet_criteria(translate_ab, allow_class = c("character", "logical"), has_length = 1, allow_NA = TRUE)
   language <- validate_language(language)
   meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_positive_or_zero = TRUE, is_finite = TRUE)
@@ -234,7 +244,7 @@ sir_calc_df <- function(type, # "proportion", "count" or "both"
   translate_ab <- get_translate_ab(translate_ab)
 
   data.bak <- data
-  # select only groups and antibiotics
+  # select only groups and antimicrobials
   if (is_null_or_grouped_tbl(data)) {
     data_has_groups <- TRUE
     groups <- get_group_names(data)
@@ -249,7 +259,10 @@ sir_calc_df <- function(type, # "proportion", "count" or "both"
     for (i in seq_len(ncol(data))) {
       if (is.sir(data[, i, drop = TRUE])) {
         data[, i] <- as.character(data[, i, drop = TRUE])
-        data[, i] <- gsub("(I|S)", "SI", data[, i, drop = TRUE])
+        if ("SDD" %in% data[, i, drop = TRUE] && message_not_thrown_before("sir_calc_df", combine_SI, entire_session = TRUE)) {
+          message_("Note that `sir_calc_df()` will also count dose-dependent susceptibility, 'SDD', as 'SI' when `combine_SI = TRUE`. This note will be shown once for this session.", as_note = FALSE)
+        }
+        data[, i] <- gsub("(I|S|SDD)", "SI", data[, i, drop = TRUE])
       }
     }
   }
@@ -272,9 +285,9 @@ sir_calc_df <- function(type, # "proportion", "count" or "both"
     for (i in seq_len(ncol(.data))) {
       values <- .data[, i, drop = TRUE]
       if (isTRUE(combine_SI)) {
-        values <- factor(values, levels = c("SI", "R"), ordered = TRUE)
+        values <- factor(values, levels = c("SI", "R", "NI"), ordered = TRUE)
       } else {
-        values <- factor(values, levels = c("S", "I", "R"), ordered = TRUE)
+        values <- factor(values, levels = c("S", "SDD", "I", "R", "NI"), ordered = TRUE)
       }
       col_results <- as.data.frame(as.matrix(table(values)), stringsAsFactors = FALSE)
       col_results$interpretation <- rownames(col_results)
@@ -351,8 +364,14 @@ sir_calc_df <- function(type, # "proportion", "count" or "both"
   } else {
     # don't use as.sir() here, as it would add the class 'sir' and we would like
     # the same data structure as output, regardless of input
-    out$interpretation <- factor(out$interpretation, levels = c("S", "I", "R"), ordered = TRUE)
+    if (out$value[out$interpretation == "SDD"] > 0) {
+      out$interpretation <- factor(out$interpretation, levels = c("S", "SDD", "I", "R"), ordered = TRUE)
+    } else {
+      out$interpretation <- factor(out$interpretation, levels = c("S", "I", "R"), ordered = TRUE)
+    }
   }
+
+  out <- out[!is.na(out$interpretation), , drop = FALSE]
 
   if (data_has_groups) {
     # ordering by the groups and two more: "antibiotic" and "interpretation"
@@ -371,7 +390,5 @@ sir_calc_df <- function(type, # "proportion", "count" or "both"
     out <- subset(out, select = -c(ci_min, ci_max, isolates))
   }
 
-  rownames(out) <- NULL
-  out <- as_original_data_class(out, class(data.bak)) # will remove tibble groups
-  structure(out, class = c("sir_df", "rsi_df", class(out)))
+  as_original_data_class(out, class(data.bak), extra_class = "sir_df") # will remove tibble groups
 }

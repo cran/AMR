@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,15 +24,15 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Vectorised Pattern Matching with Keyboard Shortcut
 #'
 #' Convenient wrapper around [grepl()] to match a pattern: `x %like% pattern`. It always returns a [`logical`] vector and is always case-insensitive (use `x %like_case% pattern` for case-sensitive matching). Also, `pattern` can be as long as `x` to compare items of each index in both vectors, or they both can have the same length to iterate over all cases.
-#' @param x a [character] vector where matches are sought, or an object which can be coerced by [as.character()] to a [character] vector.
-#' @param pattern a [character] vector containing regular expressions (or a [character] string for `fixed = TRUE`) to be matched in the given [character] vector. Coerced by [as.character()] to a [character] string if possible.
-#' @param ignore.case if `FALSE`, the pattern matching is *case sensitive* and if `TRUE`, case is ignored during matching.
+#' @param x A [character] vector where matches are sought, or an object which can be coerced by [as.character()] to a [character] vector.
+#' @param pattern A [character] vector containing regular expressions (or a [character] string for `fixed = TRUE`) to be matched in the given [character] vector. Coerced by [as.character()] to a [character] string if possible.
+#' @param ignore.case If `FALSE`, the pattern matching is *case sensitive* and if `TRUE`, case is ignored during matching.
 #' @return A [logical] vector
 #' @name like
 #' @rdname like
@@ -51,7 +51,7 @@
 #' @examples
 #' # data.table has a more limited version of %like%, so unload it:
 #' try(detach("package:data.table", unload = TRUE), silent = TRUE)
-#' 
+#'
 #' a <- "This is a test"
 #' b <- "TEST"
 #' a %like% b

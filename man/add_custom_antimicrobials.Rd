@@ -10,7 +10,7 @@ add_custom_antimicrobials(x)
 clear_custom_antimicrobials()
 }
 \arguments{
-\item{x}{a \link{data.frame} resembling the \link{antibiotics} data set, at least containing columns "ab" and "name"}
+\item{x}{A \link{data.frame} resembling the \link{antimicrobials} data set, at least containing columns "ab" and "name".}
 }
 \description{
 With \code{\link[=add_custom_antimicrobials]{add_custom_antimicrobials()}} you can add your own custom antimicrobial drug names and codes.
@@ -20,10 +20,10 @@ With \code{\link[=add_custom_antimicrobials]{add_custom_antimicrobials()}} you c
 
 There are two ways to circumvent this and automate the process of adding antimicrobials:
 
-\strong{Method 1:} Using the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_custom_ab}}, which is the preferred method. To use this method:
+\strong{Method 1:} Using the package option \code{\link[=AMR-options]{AMR_custom_ab}}, which is the preferred method. To use this method:
 \enumerate{
-\item Create a data set in the structure of the \link{antibiotics} data set (containing at the very least columns "ab" and "name") and save it with \code{\link[=saveRDS]{saveRDS()}} to a location of choice, e.g. \code{"~/my_custom_ab.rds"}, or any remote location.
-\item Set the file location to the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_custom_ab}}: \code{options(AMR_custom_ab = "~/my_custom_ab.rds")}. This can even be a remote file location, such as an https URL. Since options are not saved between \R sessions, it is best to save this option to the \code{.Rprofile} file so that it will be loaded on start-up of \R. To do this, open the \code{.Rprofile} file using e.g. \code{utils::file.edit("~/.Rprofile")}, add this text and save the file:
+\item Create a data set in the structure of the \link{antimicrobials} data set (containing at the very least columns "ab" and "name") and save it with \code{\link[=saveRDS]{saveRDS()}} to a location of choice, e.g. \code{"~/my_custom_ab.rds"}, or any remote location.
+\item Set the file location to the package option \code{\link[=AMR-options]{AMR_custom_ab}}: \code{options(AMR_custom_ab = "~/my_custom_ab.rds")}. This can even be a remote file location, such as an https URL. Since options are not saved between \R sessions, it is best to save this option to the \code{.Rprofile} file so that it will be loaded on start-up of \R. To do this, open the \code{.Rprofile} file using e.g. \code{utils::file.edit("~/.Rprofile")}, add this text and save the file:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{# Add custom antimicrobial codes:
 options(AMR_custom_ab = "~/my_custom_ab.rds")
@@ -50,11 +50,8 @@ Use \code{\link[=clear_custom_antimicrobials]{clear_custom_antimicrobials()}} to
 }
 \examples{
 \donttest{
-
-# returns NA and throws a warning (which is suppressed here):
-suppressWarnings(
-  as.ab("testab")
-)
+# returns a wildly guessed result:
+as.ab("testab")
 
 # now add a custom entry - it will be considered by as.ab() and
 # all ab_*() functions
@@ -63,7 +60,7 @@ add_custom_antimicrobials(
     ab = "TESTAB",
     name = "Test Antibiotic",
     # you can add any property present in the
-    # 'antibiotics' data set, such as 'group':
+    # 'antimicrobials' data set, such as 'group':
     group = "Test Group"
   )
 )
@@ -77,7 +74,7 @@ ab_info("testab")
 
 
 # Add Co-fluampicil, which is one of the many J01CR50 codes, see
-# https://www.whocc.no/ddd/list_of_ddds_combined_products/
+# https://atcddd.fhi.no/ddd/list_of_ddds_combined_products/
 add_custom_antimicrobials(
   data.frame(
     ab = "COFLU",
@@ -89,7 +86,8 @@ add_custom_antimicrobials(
 ab_atc("Co-fluampicil")
 ab_name("J01CR50")
 
-# even antibiotic selectors work
+# even antimicrobial selectors work
+# see ?amr_selector
 x <- data.frame(
   random_column = "some value",
   coflu = as.sir("S"),

@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,7 +24,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 # faster implementation of left_join than using merge() by poorman - we use match():
@@ -237,7 +237,7 @@ addin_insert_like <- function() {
   }
 }
 
-search_type_in_df <- function(x, type, info = TRUE) {
+search_type_in_df <- function(x, type, info = TRUE, add_col_prefix = TRUE) {
   meet_criteria(x, allow_class = "data.frame")
   meet_criteria(type, allow_class = "character", has_length = 1)
 
@@ -266,7 +266,7 @@ search_type_in_df <- function(x, type, info = TRUE) {
       found <- sort(colnames(x)[colnames_formatted %like_case% "species"])
     }
   }
-  # -- key antibiotics
+  # -- key antimicrobials
   if (type %in% c("keyantibiotics", "keyantimicrobials")) {
     if (any(colnames_formatted %like_case% "^key.*(ab|antibiotics|antimicrobials)")) {
       found <- sort(colnames(x)[colnames_formatted %like_case% "^key.*(ab|antibiotics|antimicrobials)"])
@@ -280,7 +280,7 @@ search_type_in_df <- function(x, type, info = TRUE) {
       if (!inherits(pm_pull(x, found), c("Date", "POSIXct"))) {
         stop(
           font_red(paste0(
-            "Found column '", font_bold(found), "' to be used as input for `col_", type,
+            "Found column '", font_bold(found), "' to be used as input for `", ifelse(add_col_prefix, "col_", ""), type,
             "`, but this column contains no valid dates. Transform its values to valid dates first."
           )),
           call. = FALSE
@@ -311,6 +311,14 @@ search_type_in_df <- function(x, type, info = TRUE) {
       found <- sort(colnames(x)[colnames_formatted %like_case% "^(specimen)"])
     }
   }
+  # -- host (animals)
+  if (type == "host") {
+    if (any(colnames_formatted %like_case% "^(host|animal)")) {
+      found <- sort(colnames(x)[colnames_formatted %like_case% "^(host|animal)"])
+    } else if (any(colnames_formatted %like_case% "((^|[^A-Za-z])host($|[^A-Za-z])|animal)")) {
+      found <- sort(colnames(x)[colnames_formatted %like_case% "((^|[^A-Za-z])host($|[^A-Za-z])|animal)"])
+    }
+  }
   # -- UTI (urinary tract infection)
   if (type == "uti") {
     if (any(colnames_formatted == "uti")) {
@@ -321,7 +329,7 @@ search_type_in_df <- function(x, type, info = TRUE) {
     if (!is.null(found)) {
       # this column should contain logicals
       if (!is.logical(x[, found, drop = TRUE])) {
-        message_("Column '", font_bold(found), "' found as input for `col_", type,
+        message_("Column '", font_bold(found), "' found as input for `", ifelse(add_col_prefix, "col_", ""), type,
           "`, but this column does not contain 'logical' values (TRUE/FALSE) and was ignored.",
           add_fn = font_red
         )
@@ -334,9 +342,9 @@ search_type_in_df <- function(x, type, info = TRUE) {
 
   if (!is.null(found) && isTRUE(info)) {
     if (message_not_thrown_before("search_in_type", type)) {
-      msg <- paste0("Using column '", font_bold(found), "' as input for `col_", type, "`.")
+      msg <- paste0("Using column '", font_bold(found), "' as input for `", ifelse(add_col_prefix, "col_", ""), type, "`.")
       if (type %in% c("keyantibiotics", "keyantimicrobials", "specimen")) {
-        msg <- paste(msg, "Use", font_bold(paste0("col_", type), "= FALSE"), "to prevent this.")
+        msg <- paste(msg, "Use", font_bold(paste0(ifelse(add_col_prefix, "col_", ""), type), "= FALSE"), "to prevent this.")
       }
       message_(msg)
     }
@@ -456,7 +464,8 @@ word_wrap <- function(...,
   ops <- "([,./><\\]\\[])"
   msg <- gsub(paste0(ops, " ", ops), "\\1\\2", msg, perl = TRUE)
   # we need to correct for already applied style, that adds text like "\033[31m\"
-  msg_stripped <- font_stripstyle(msg)
+  msg_stripped <- gsub("(.*)?\\033\\]8;;.*\\a(.*?)\\033\\]8;;\\a(.*)", "\\1\\2\\3", msg, perl = TRUE) # for font_url()
+  msg_stripped <- font_stripstyle(msg_stripped)
   # where are the spaces now?
   msg_stripped_wrapped <- paste0(
     strwrap(msg_stripped,
@@ -502,23 +511,41 @@ word_wrap <- function(...,
 
   # format backticks
   if (pkg_is_available("cli") &&
-      tryCatch(isTRUE(getExportedValue("ansi_has_hyperlink_support", ns = asNamespace("cli"))()), error = function(e) FALSE) &&
-      tryCatch(getExportedValue("isAvailable", ns = asNamespace("rstudioapi"))(), error = function(e) return(FALSE)) && 
-      tryCatch(getExportedValue("versionInfo", ns = asNamespace("rstudioapi"))()$version > "2023.6.0.0", error = function(e) return(FALSE))) {
+    tryCatch(isTRUE(getExportedValue("ansi_has_hyperlink_support", ns = asNamespace("cli"))()), error = function(e) FALSE) &&
+    tryCatch(getExportedValue("isAvailable", ns = asNamespace("rstudioapi"))(), error = function(e) {
+      return(FALSE)
+    }) &&
+    tryCatch(getExportedValue("versionInfo", ns = asNamespace("rstudioapi"))()$version > "2023.6.0.0", error = function(e) {
+      return(FALSE)
+    })) {
     # we are in a recent version of RStudio, so do something nice: add links to our help pages in the console.
     parts <- strsplit(msg, "`", fixed = TRUE)[[1]]
     cmds <- parts %in% paste0(ls(envir = asNamespace("AMR")), "()")
     # functions with a dot are not allowed: https://github.com/rstudio/rstudio/issues/11273#issuecomment-1156193252
     # lead them to the help page of our package
-    parts[cmds & parts %like% "[.]"] <- font_url(url = paste0("ide:help:AMR::", gsub("()", "", parts[cmds & parts %like% "[.]"], fixed = TRUE)),
-                                                 txt = parts[cmds & parts %like% "[.]"])
+    parts[cmds & parts %like% "[.]"] <- font_url(
+      url = paste0("ide:help:AMR::", gsub("()", "", parts[cmds & parts %like% "[.]"], fixed = TRUE)),
+      txt = parts[cmds & parts %like% "[.]"]
+    )
     # otherwise, give a 'click to run' popup
-    parts[cmds & parts %unlike% "[.]"] <- font_url(url = paste0("ide:run:AMR::", parts[cmds & parts %unlike% "[.]"]),
-                                                   txt = parts[cmds & parts %unlike% "[.]"])
+    parts[cmds & parts %unlike% "[.]"] <- font_url(
+      url = paste0("ide:run:AMR::", parts[cmds & parts %unlike% "[.]"]),
+      txt = parts[cmds & parts %unlike% "[.]"]
+    )
+    # datasets should give help page as well
+    parts[parts %in% c("antimicrobials", "microorganisms", "microorganisms.codes", "microorganisms.groups")] <- font_url(
+      url = paste0("ide:help:AMR::", gsub("()", "", parts[parts %in% c("antimicrobials", "microorganisms", "microorganisms.codes", "microorganisms.groups")], fixed = TRUE)),
+      txt = parts[parts %in% c("antimicrobials", "microorganisms", "microorganisms.codes", "microorganisms.groups")]
+    )
+    # text starting with `?` must also lead to the help page
+    parts[parts %like% "^[?].+"] <- font_url(
+      url = paste0("ide:help:AMR::", gsub("?", "", parts[parts %like% "^[?].+"], fixed = TRUE)),
+      txt = parts[parts %like% "^[?].+"]
+    )
     msg <- paste0(parts, collapse = "`")
   }
   msg <- gsub("`(.+?)`", font_grey_bg("\\1"), msg)
-  
+
   # clean introduced whitespace in between fullstops
   msg <- gsub("[.] +[.]", "..", msg)
   # remove extra space that was introduced (e.g. "Smith et al. , 2022")
@@ -561,6 +588,7 @@ warning_ <- function(...,
 # - wraps text to never break lines within words
 stop_ <- function(..., call = TRUE) {
   msg <- paste0(c(...), collapse = "")
+  msg_call <- ""
   if (!isFALSE(call)) {
     if (isTRUE(call)) {
       call <- as.character(sys.call(-1)[1])
@@ -568,10 +596,19 @@ stop_ <- function(..., call = TRUE) {
       # so you can go back more than 1 call, as used in sir_calc(), that now throws a reference to e.g. n_sir()
       call <- as.character(sys.call(call)[1])
     }
-    msg <- paste0("in ", call, "(): ", msg)
+    msg_call <- paste0("in ", call, "():")
   }
   msg <- trimws2(word_wrap(msg, add_fn = list(), as_note = FALSE))
-  stop(msg, call. = FALSE)
+  if (!is.null(AMR_env$cli_abort) && length(unlist(strsplit(msg, "\n", fixed = TRUE))) <= 1) {
+    if (is.character(call)) {
+      call <- as.call(str2lang(paste0(call, "()")))
+    } else {
+      call <- NULL
+    }
+    AMR_env$cli_abort(msg, call = call)
+  } else {
+    stop(paste(msg_call, msg), call. = FALSE)
+  }
 }
 
 stop_if <- function(expr, ..., call = TRUE) {
@@ -674,40 +711,6 @@ format_included_data_number <- function(data) {
   paste0(ifelse(rounder == 0, "", "~"), format(round(n, rounder), decimal.mark = ".", big.mark = " "))
 }
 
-# for eucast_rules() and mdro(), creates markdown output with URLs and names
-create_eucast_ab_documentation <- function() {
-  x <- trimws(unique(toupper(unlist(strsplit(EUCAST_RULES_DF$then_change_these_antibiotics, ",", fixed = TRUE)))))
-  ab <- character()
-  for (val in x) {
-    if (paste0("AB_", val) %in% ls(envir = asNamespace("AMR"))) {
-      # antibiotic group names, as defined in data-raw/_pre_commit_hook.R, such as `CARBAPENEMS`
-      val <- eval(parse(text = paste0("AB_", val)), envir = asNamespace("AMR"))
-    } else if (val %in% AMR_env$AB_lookup$ab) {
-      # separate drugs, such as `AMX`
-      val <- as.ab(val)
-    } else {
-      val <- as.sir(NA)
-    }
-    ab <- c(ab, val)
-  }
-  ab <- unique(ab)
-  atcs <- ab_atc(ab, only_first = TRUE)
-  # only keep ABx with an ATC code:
-  ab <- ab[!is.na(atcs)]
-  atcs <- atcs[!is.na(atcs)]
-
-  # sort all vectors on name:
-  ab_names <- ab_name(ab, language = NULL, tolower = TRUE)
-  ab <- ab[order(ab_names)]
-  atcs <- atcs[order(ab_names)]
-  ab_names <- ab_names[order(ab_names)]
-  # create the text:
-  atc_txt <- paste0("[", atcs, "](", ab_url(ab), ")")
-  out <- paste0(ab_names, " (`", ab, "`, ", atc_txt, ")", collapse = ", ")
-  substr(out, 1, 1) <- toupper(substr(out, 1, 1))
-  out
-}
-
 vector_or <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE, initial_captital = FALSE, last_sep = " or ") {
   # makes unique and sorts, and this also removed NAs
   v <- unique(v)
@@ -733,6 +736,10 @@ vector_or <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE, initial_ca
   if (identical(v, c("I", "R", "S"))) {
     # class 'sir' should be sorted like this
     v <- c("S", "I", "R")
+  }
+  if (identical(v, c("I", "NI", "R", "S", "SDD"))) {
+    # class 'sir' should be sorted like this
+    v <- c("S", "SDD", "I", "R", "NI")
   }
   # oxford comma
   if (last_sep %in% c(" or ", " and ") && length(v) > 2) {
@@ -796,7 +803,6 @@ meet_criteria <- function(object, # can be literally `list(...)` for `allow_argu
                           is_positive = NULL,
                           is_positive_or_zero = NULL,
                           is_finite = NULL,
-                          contains_column_class = NULL,
                           allow_NULL = FALSE,
                           allow_NA = FALSE,
                           ignore.case = FALSE,
@@ -826,7 +832,12 @@ meet_criteria <- function(object, # can be literally `list(...)` for `allow_argu
     return(invisible())
   }
 
-  if (!is.null(allow_class)) {
+  if (identical(class(object), "list") && !"list" %in% allow_class) {
+    # coming from Python, possibly - turn lists (not data.frame) to the underlying data type
+    object <- unlist(object)
+  }
+
+  if (!is.null(allow_class) && !(suppressWarnings(all(is.na(object))) && allow_NA == TRUE)) {
     stop_ifnot(inherits(object, allow_class), "argument `", obj_name,
       "` must be ", format_class(allow_class, plural = isTRUE(has_length > 1)),
       ", i.e. not be ", format_class(class(object), plural = isTRUE(has_length > 1)),
@@ -862,12 +873,20 @@ meet_criteria <- function(object, # can be literally `list(...)` for `allow_argu
       object <- tolower(object)
       is_in <- tolower(is_in)
     }
-    stop_ifnot(all(object %in% is_in, na.rm = TRUE), "argument `", obj_name, "` ",
+    is_in.bak <- is_in
+    if ("logical" %in% allow_class) {
+      is_in <- is_in[!is_in %in% c("TRUE", "FALSE")]
+    }
+    or_values <- vector_or(is_in, quotes = !isTRUE(any(c("numeric", "integer") %in% allow_class)))
+    if ("logical" %in% allow_class) {
+      or_values <- paste0(or_values, ", or TRUE or FALSE")
+    }
+    stop_ifnot(all(object %in% is_in.bak, na.rm = TRUE), "argument `", obj_name, "` ",
       ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1,
         "must be either ",
         "must only contain values "
       ),
-      vector_or(is_in, quotes = !isTRUE(any(c("double", "numeric", "integer") %in% allow_class))),
+      or_values,
       ifelse(allow_NA == TRUE, ", or NA", ""),
       call = call_depth
     )
@@ -903,21 +922,6 @@ meet_criteria <- function(object, # can be literally `list(...)` for `allow_argu
       call = call_depth
     )
   }
-  if (!is.null(contains_column_class)) {
-    stop_ifnot(
-      any(vapply(
-        FUN.VALUE = logical(1),
-        object,
-        function(col, columns_class = contains_column_class) {
-          inherits(col, columns_class)
-        }
-      ), na.rm = TRUE),
-      "the data provided in argument `", obj_name,
-      "` must contain at least one column of class '", contains_column_class[1L], "'. ",
-      "See `?as.", contains_column_class[1L], "`.",
-      call = call_depth
-    )
-  }
   if (!is.null(allow_arguments_from) && !is.null(names(object))) {
     args_given <- names(object)
     if (is.function(allow_arguments_from)) {
@@ -939,7 +943,26 @@ meet_criteria <- function(object, # can be literally `list(...)` for `allow_argu
   return(invisible())
 }
 
+ascertain_sir_classes <- function(x, obj_name) {
+  sirs <- vapply(FUN.VALUE = logical(1), x, is.sir)
+  if (!any(sirs, na.rm = TRUE)) {
+    warning_(
+      "the data provided in argument `", obj_name,
+      "` should contain at least one column of class 'sir'. Eligible SIR column were now guessed. ",
+      "See `?as.sir`.",
+      immediate = TRUE
+    )
+    sirs_eligible <- is_sir_eligible(x)
+    for (col in colnames(x)[sirs_eligible]) {
+      x[[col]] <- as.sir(x[[col]])
+    }
+  }
+  x
+}
+
 get_current_data <- function(arg_name, call) {
+  # This function enables AMR selectors (e.g., AMR::carbapenems()) to work seamlessly across different environments, including dplyr, base R, data.table, and tidymodels.
+  # It identifies and extracts the appropriate data frame from the current execution context.
   valid_df <- function(x) {
     !is.null(x) && is.data.frame(x)
   }
@@ -951,7 +974,7 @@ get_current_data <- function(arg_name, call) {
   for (env in frms[which(with_mask)]) {
     if (is.function(env$mask$current_rows) && (valid_df(env$data) || valid_df(env$`.data`))) {
       # an element `.data` or `data` (containing all data) and `mask` (containing functions) will be in the environment when using dplyr verbs
-      # we use their mask$current_rows() to get the group rows, since dplyr::cur_data_all() is deprecated and will be removed in the future
+      # we use their mask$current_rows() below to get the group rows, since dplyr::cur_data_all() is deprecated and will be removed in the future
       # e.g. for `example_isolates %>% group_by(ward) %>% mutate(first = first_isolate(.))`
       if (valid_df(env$data)) {
         # support for dplyr 1.1.x
@@ -965,12 +988,18 @@ get_current_data <- function(arg_name, call) {
     }
   }
 
-  # now go over all underlying environments looking for other dplyr, data.table and base R selection environments
+  # now go over all underlying environments looking for other dplyr, tidymodels, data.table and base R selection environments
   with_generic <- vapply(FUN.VALUE = logical(1), frms, function(e) !is.null(e$`.Generic`))
   for (env in frms[which(with_generic)]) {
     if (valid_df(env$`.data`)) {
       # an element `.data` will be in the environment when using dplyr::select()
       return(env$`.data`)
+    } else if (valid_df(env$training)) {
+      # an element `training` will be in the environment when using some tidymodels functions such as `prep()`
+      return(env$training)
+    } else if (valid_df(env$data)) {
+      # an element `data` will be in the environment when using older dplyr versions, or some tidymodels functions such as `fit()`
+      return(env$data)
     } else if (valid_df(env$xx)) {
       # an element `xx` will be in the environment for rows + cols in base R, e.g. `example_isolates[c(1:3), carbapenems()]`
       return(env$xx)
@@ -986,8 +1015,19 @@ get_current_data <- function(arg_name, call) {
   for (env in frms[which(with_tbl)]) {
     if (!is.null(names(env)) && all(c(".tbl", ".vars", ".cols") %in% names(env), na.rm = TRUE)) {
       # an element `.tbl` will be in the environment when using scoped dplyr variants, with or without `dplyr::vars()`
-      # (e.g. `dplyr::summarise_at()` or `dplyr::mutate_at()`)
+      # e.g. `dplyr::summarise_at(carbapenems(), ...)` or `dplyr::mutate_at(vars(carbapenems()), ...)`
       return(env$`.tbl`)
+    }
+  }
+
+  # now check if it was run with eval(), which has arguments `expr`, `envir`, and `enclos`
+  from_eval_parse <- vapply(FUN.VALUE = logical(1), frms, function(e) all(c("expr", "envir", "enclos") %in% names(e)))
+  for (env in frms[which(from_eval_parse)]) {
+    if (valid_df(env$envir)) {
+      # the element `envir` could contain the data in case of
+      # e.g. `eval(parse(text = "any(cephalosporins_3rd() == 'R')"), envir = example_isolates)`
+      # this is also used by run_custom_mdro_guideline() to support antimicrobial selectors in the part before `~`
+      return(env$envir)
     }
   }
 
@@ -997,10 +1037,11 @@ get_current_data <- function(arg_name, call) {
       fn <- as.character(sys.call(call + 1)[1])
       examples <- paste0(
         ", e.g.:\n",
-        "  your_data %>% select(", fn, "())\n",
-        "  your_data %>% select(column_a, column_b, ", fn, "())\n",
-        "  your_data[, ", fn, "()]\n",
-        '  your_data[, c("column_a", "column_b", ', fn, "())]"
+        " ", AMR_env$bullet_icon, " your_data %>% select(", fn, "())\n",
+        " ", AMR_env$bullet_icon, " your_data %>% select(column_a, column_b, ", fn, "())\n",
+        " ", AMR_env$bullet_icon, " your_data %>% filter(any(", fn, "() == \"R\"))\n",
+        " ", AMR_env$bullet_icon, " your_data[, ", fn, "()]\n",
+        " ", AMR_env$bullet_icon, " your_data[, c(\"column_a\", \"column_b\", ", fn, "())]"
       )
     } else {
       examples <- ""
@@ -1028,10 +1069,15 @@ get_current_column <- function() {
     if (tryCatch(!is.null(env$i), error = function(e) FALSE)) {
       if (!is.null(env$tibble_vars)) {
         # for mutate_if()
+        # TODO remove later, was part of older dplyr versions (at least not in dplyr 1.1.4)
         env$tibble_vars[env$i]
       } else {
         # for mutate(across())
-        df <- tryCatch(get_current_data(NA, 0), error = function(e) NULL)
+        if (!is.null(env$data) && is.data.frame(env$data)) {
+          df <- env$data
+        } else {
+          df <- tryCatch(get_current_data(NA, 0), error = function(e) NULL)
+        }
         if (is.data.frame(df)) {
           colnames(df)[env$i]
         } else {
@@ -1069,6 +1115,44 @@ get_group_names <- function(x) {
   }
 }
 
+format_custom_query_rule <- function(query, colours = has_colour()) {
+  # this is used by custom EUCAST and custom MDRO rules
+
+  # font_black() is a bit expensive so do it once:
+  txt <- font_black("{text}")
+  query <- gsub(" & ", sub("{text}", font_bold(" and "), txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" | ", sub("{text}", " or ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" + ", sub("{text}", " plus ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" - ", sub("{text}", " minus ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" / ", sub("{text}", " divided by ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" * ", sub("{text}", " times ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" == ", sub("{text}", " is ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" > ", sub("{text}", " is higher than ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" < ", sub("{text}", " is lower than ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" >= ", sub("{text}", " is higher than or equal to ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" <= ", sub("{text}", " is lower than or equal to ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" ^ ", sub("{text}", " to the power of ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" %in% ", sub("{text}", " is one of ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub(" %like% ", sub("{text}", " resembles ", txt, fixed = TRUE), query, fixed = TRUE)
+  query <- gsub("any\\((.*)\\)$", paste0(font_black("any of "), "\\1"), query)
+  query <- gsub("all\\((.*)\\)$", paste0(font_black("all of "), "\\1"), query)
+  if (colours == TRUE) {
+    query <- gsub("[\"']R[\"']", font_rose_bg(" R "), query)
+    query <- gsub("[\"']SDD[\"']", font_orange_bg(" SDD "), query)
+    query <- gsub("[\"']S[\"']", font_green_bg(" S "), query)
+    query <- gsub("[\"']NI[\"']", font_grey_bg(font_black(" NI ")), query)
+    query <- gsub("[\"']I[\"']", font_orange_bg(" I "), query)
+  }
+  # replace the black colour 'stops' with blue colour 'starts'
+  query <- gsub("\033[39m", "\033[34m", as.character(query), fixed = TRUE)
+  # start with blue
+  query <- paste0("\033[34m", query)
+  if (colours == FALSE) {
+    query <- font_stripstyle(query)
+  }
+  query
+}
+
 unique_call_id <- function(entire_session = FALSE, match_fn = NULL) {
   if (entire_session == TRUE) {
     return(c(envir = "session", call = "session"))
@@ -1096,9 +1180,9 @@ unique_call_id <- function(entire_session = FALSE, match_fn = NULL) {
 }
 
 #' @noRd
-#' @param fn name of the function as a character
-#' @param ... character elements to be pasted together as a 'salt'
-#' @param entire_session show message once per session
+#' @param fn Name of the function as a character.
+#' @param ... Character elements to be pasted together as a 'salt'.
+#' @param entire_session Show message once per session.
 message_not_thrown_before <- function(fn, ..., entire_session = FALSE) {
   # this is to prevent that messages/notes will be printed for every dplyr group or more than once per session
   # e.g. this would show a msg 4 times: example_isolates %>% group_by(ward) %>% filter(mo_is_gram_negative())
@@ -1122,58 +1206,25 @@ message_not_thrown_before <- function(fn, ..., entire_session = FALSE) {
   not_thrown_before
 }
 
-has_colour <- function() {
-  # this is a base R version of crayon::has_color, but disables colours on emacs
-
-  if (Sys.getenv("EMACS") != "" || Sys.getenv("INSIDE_EMACS") != "") {
-    # disable on emacs, which only supports 8 colours
-    return(FALSE)
-  }
-  enabled <- getOption("crayon.enabled")
-  if (!is.null(enabled)) {
-    return(isTRUE(enabled))
-  }
-  rstudio_with_ansi_support <- function(x) {
-    if (Sys.getenv("RSTUDIO", "") == "") {
-      return(FALSE)
-    }
-    if ((cols <- Sys.getenv("RSTUDIO_CONSOLE_COLOR", "")) != "" && !is.na(as.double(cols))) {
-      return(TRUE)
-    }
-    tryCatch(getExportedValue("isAvailable", ns = asNamespace("rstudioapi"))(), error = function(e) {
-      return(FALSE)
-    }) &&
-      tryCatch(getExportedValue("hasFun", ns = asNamespace("rstudioapi"))("getConsoleHasColor"), error = function(e) {
-        return(FALSE)
-      })
-  }
-  if (rstudio_with_ansi_support() && sink.number() == 0) {
-    return(TRUE)
-  }
-  if (!isatty(stdout())) {
-    return(FALSE)
-  }
-  if (tolower(Sys.info()["sysname"]) == "windows") {
-    if (Sys.getenv("ConEmuANSI") == "ON") {
-      return(TRUE)
-    }
-    if (Sys.getenv("CMDER_ROOT") != "") {
-      return(TRUE)
-    }
-    return(FALSE)
-  }
-  if ("COLORTERM" %in% names(Sys.getenv())) {
-    return(TRUE)
-  }
-  if (Sys.getenv("TERM") == "dumb") {
-    return(FALSE)
-  }
-  grepl(
-    pattern = "^screen|^xterm|^vt100|color|ansi|cygwin|linux",
-    x = Sys.getenv("TERM"),
-    ignore.case = TRUE,
-    perl = TRUE
+reset_all_thrown_messages <- function() {
+  rm(
+    list = grep("^thrown_msg", ls(envir = AMR_env), value = TRUE),
+    envir = AMR_env
   )
+}
+
+has_colour <- function() {
+  if (is.null(AMR_env$supports_colour)) {
+    if (Sys.getenv("EMACS") != "" || Sys.getenv("INSIDE_EMACS") != "") {
+      # disable on emacs, which only supports 8 colours
+      AMR_env$supports_colour <- FALSE
+    } else {
+      has_color <- import_fn("has_color", "crayon", error_on_fail = FALSE)
+      AMR_env$supports_colour <- !is.null(has_color) && isTRUE(has_color())
+    }
+  }
+  # always FALSE for GitHub documents (`index.Rmd` and `README.Rmd`)
+  isTRUE(AMR_env$supports_colour) && !identical(getOption("rmarkdown.output.format"), "github_document")
 }
 
 # set colours if console has_colour()
@@ -1270,7 +1321,13 @@ font_purple_bg <- function(..., collapse = " ") {
   try_colour(font_black(..., collapse = collapse, adapt = FALSE), before = "\033[48;5;89m", after = "\033[49m", collapse = collapse)
 }
 font_rose_bg <- function(..., collapse = " ") {
-  try_colour(font_black(..., collapse = collapse, adapt = FALSE), before = "\033[48;5;217m", after = "\033[49m", collapse = collapse)
+  if (is_dark()) {
+    # this is #ed553b (picked to be colourblind-safe with other SIR colours)
+    try_colour(font_black(..., collapse = collapse, adapt = FALSE), before = "\033[48;5;203m", after = "\033[49m", collapse = collapse)
+  } else {
+    # also colourblind-safe but softer
+    try_colour(font_black(..., collapse = collapse, adapt = FALSE), before = "\033[48;5;217m", after = "\033[49m", collapse = collapse)
+  }
 }
 font_na <- function(..., collapse = " ") {
   font_red(..., collapse = collapse)
@@ -1311,19 +1368,26 @@ progress_ticker <- function(n = 1, n_min = 0, print = TRUE, clear = TRUE, title 
     }
     set_clean_class(pb, new_class = "txtProgressBar")
   } else if (n >= n_min) {
-    # use `progress`, which also has a timer
+    title <- trimws2(title)
+    if (title != "") {
+      title <- paste0(title, " ")
+    }
     progress_bar <- import_fn("progress_bar", "progress", error_on_fail = FALSE)
     if (!is.null(progress_bar)) {
       # so we use progress::progress_bar
       # a close()-method was also added, see below for that
       pb <- progress_bar$new(
-        format = paste0(title,
-                        ifelse(only_bar_percent == TRUE, "[:bar] :percent", "[:bar] :percent (:current/:total,:eta)")),
+        show_after = 0,
+        format = paste0(
+          title,
+          ifelse(only_bar_percent == TRUE, "[:bar] :percent", "[:bar] :percent (:current/:total,:eta)")
+        ),
         clear = clear,
         total = n
       )
     } else {
-      # use base R
+      # use base R's txtProgressBar
+      cat(title, "\n", sep = "")
       pb <- utils::txtProgressBar(max = n, style = 3)
       pb$tick <- function() {
         pb$up(pb$getVal() + 1)
@@ -1378,16 +1442,15 @@ as_original_data_class <- function(df, old_class = NULL, extra_class = NULL) {
   if ("tbl_df" %in% old_class && pkg_is_available("tibble")) {
     # this will then also remove groups
     fn <- import_fn("as_tibble", "tibble")
-  } else if ("tbl_ts" %in% old_class && pkg_is_available("tsibble")) {
-    fn <- import_fn("as_tsibble", "tsibble")
   } else if ("data.table" %in% old_class && pkg_is_available("data.table")) {
     fn <- import_fn("as.data.table", "data.table")
-  } else if ("tabyl" %in% old_class && pkg_is_available("janitor")) {
-    fn <- import_fn("as_tabyl", "janitor")
   } else {
     fn <- function(x) base::as.data.frame(df, stringsAsFactors = FALSE)
   }
   out <- fn(df)
+  # don't keep row names
+  rownames(out) <- NULL
+  # add additional class if needed
   if (!is.null(extra_class)) {
     class(out) <- c(extra_class, class(out))
   }
@@ -1504,24 +1567,27 @@ add_MO_lookup_to_AMR_env <- function() {
     MO_lookup <- AMR::microorganisms
 
     MO_lookup$kingdom_index <- NA_real_
-    MO_lookup[which(MO_lookup$kingdom == "Bacteria" | MO_lookup$mo == "UNKNOWN"), "kingdom_index"] <- 1
+    MO_lookup[which(MO_lookup$kingdom == "Bacteria" | as.character(MO_lookup$mo) == "UNKNOWN"), "kingdom_index"] <- 1
     MO_lookup[which(MO_lookup$kingdom == "Fungi"), "kingdom_index"] <- 1.25
     MO_lookup[which(MO_lookup$kingdom == "Protozoa"), "kingdom_index"] <- 1.5
+    MO_lookup[which(MO_lookup$kingdom == "Chromista"), "kingdom_index"] <- 1.75
     MO_lookup[which(MO_lookup$kingdom == "Archaea"), "kingdom_index"] <- 2
     # all the rest
     MO_lookup[which(is.na(MO_lookup$kingdom_index)), "kingdom_index"] <- 3
 
     # the fullname lowercase, important for the internal algorithms in as.mo()
-    MO_lookup$fullname_lower <- tolower(trimws(paste(
+    MO_lookup$fullname_lower <- tolower(trimws2(paste(
       MO_lookup$genus,
       MO_lookup$species,
       MO_lookup$subspecies
     )))
     ind <- MO_lookup$genus == "" | grepl("^[(]unknown ", MO_lookup$fullname, perl = TRUE)
     MO_lookup[ind, "fullname_lower"] <- tolower(MO_lookup[ind, "fullname", drop = TRUE])
-    MO_lookup$fullname_lower <- trimws(gsub("[^.a-z0-9/ \\-]+", "", MO_lookup$fullname_lower, perl = TRUE))
+    MO_lookup$fullname_lower <- trimws2(gsub("[^.a-z0-9/ \\-]+", "", MO_lookup$fullname_lower, perl = TRUE))
     # special for Salmonella - they have cities as subspecies but not the species (enterica) in the fullname:
     MO_lookup$fullname_lower[which(MO_lookup$subspecies %like_case% "^[A-Z]")] <- gsub(" enterica ", " ", MO_lookup$fullname_lower[which(MO_lookup$subspecies %like_case% "^[A-Z]")], fixed = TRUE)
+
+    MO_lookup$genus_lower <- tolower(MO_lookup$genus)
 
     MO_lookup$full_first <- substr(MO_lookup$fullname_lower, 1, 1)
     MO_lookup$species_first <- tolower(substr(MO_lookup$species, 1, 1)) # tolower for groups (Streptococcus, Salmonella)
@@ -1546,12 +1612,34 @@ readRDS_AMR <- function(file, refhook = NULL) {
   readRDS(con, refhook = refhook)
 }
 
+get_n_cores <- function(max_cores = Inf) {
+  if (pkg_is_available("parallelly", min_version = "0.8.0", also_load = FALSE)) {
+    available_cores <- import_fn("availableCores", "parallelly")
+    n_cores <- min(available_cores(), na.rm = TRUE)
+  } else {
+    # `parallel` is part of base R since 2.14.0, but detectCores() is not very precise on exotic systems like Docker and quota-set Linux environments
+    n_cores <- parallel::detectCores()[1]
+    if (is.na(n_cores)) {
+      n_cores <- 1
+    }
+  }
+  max_cores <- floor(max_cores)
+  if (max_cores == 0) {
+    n_cores <- 1
+  } else if (max_cores < 0) {
+    n_cores <- max(1, n_cores - abs(max_cores))
+  } else if (max_cores > 0) {
+    n_cores <- min(n_cores, max_cores)
+  }
+  n_cores
+}
+
 # Faster data.table implementations ----
 
 match <- function(x, table, ...) {
   if (!is.null(AMR_env$chmatch) && inherits(x, "character") && inherits(table, "character")) {
     # data.table::chmatch() is much faster than base::match() for character
-    AMR_env$chmatch(x, table, ...)
+    tryCatch(AMR_env$chmatch(x, table, ...), error = function(e) base::match(x, table, ...))
   } else {
     base::match(x, table, ...)
   }
@@ -1559,7 +1647,7 @@ match <- function(x, table, ...) {
 `%in%` <- function(x, table) {
   if (!is.null(AMR_env$chin) && inherits(x, "character") && inherits(table, "character")) {
     # data.table::`%chin%`() is much faster than base::`%in%`() for character
-    AMR_env$chin(x, table)
+    tryCatch(AMR_env$chin(x, table), error = function(e) base::`%in%`(x, table))
   } else {
     base::`%in%`(x, table)
   }

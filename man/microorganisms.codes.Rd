@@ -3,11 +3,11 @@
 \docType{data}
 \name{microorganisms.codes}
 \alias{microorganisms.codes}
-\title{Data Set with 4 957 Common Microorganism Codes}
+\title{Data Set with 6 036 Common Microorganism Codes}
 \format{
-A \link[tibble:tibble]{tibble} with 4 957 observations and 2 variables:
+A \link[tibble:tibble]{tibble} with 6 036 observations and 2 variables:
 \itemize{
-\item \code{code}\cr Commonly used code of a microorganism. \emph{This is a unique identifier.}
+\item \code{code}\cr Commonly used code of a microorganism. \emph{\strong{This is a unique identifier.}}
 \item \code{mo}\cr ID of the microorganism in the \link{microorganisms} data set
 }
 }
@@ -17,9 +17,15 @@ microorganisms.codes
 \description{
 A data set containing commonly used codes for microorganisms, from laboratory systems and \href{https://whonet.org}{WHONET}. Define your own with \code{\link[=set_mo_source]{set_mo_source()}}. They will all be searched when using \code{\link[=as.mo]{as.mo()}} and consequently all the \code{\link[=mo_property]{mo_*}} functions.
 }
-\details{
-Like all data sets in this package, this data set is publicly available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
+\section{Download Our Reference Data}{
+
+All reference data sets in the AMR package - including information on microorganisms, antimicrobials, and clinical breakpoints - are freely available for download in multiple formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, and Stata.
+
+For maximum compatibility, we also provide machine-readable, tab-separated plain text files suitable for use in any software, including laboratory information systems.
+
+Visit \href{https://amr-for-r.org/articles/datasets.html}{our website for direct download links}, or explore the actual files in \href{https://github.com/msberends/AMR/tree/main/data-raw/datasets}{our GitHub repository}.
 }
+
 \examples{
 microorganisms.codes
 

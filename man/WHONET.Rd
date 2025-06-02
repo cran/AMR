@@ -32,18 +32,24 @@ A \link[tibble:tibble]{tibble} with 500 observations and 53 variables:
 \item \verb{Inducible clindamycin resistance}\cr Clindamycin can be induced?
 \item \code{Comment}\cr Other comments
 \item \verb{Date of data entry}\cr \link{Date} this data was entered in WHONET
-\item \code{AMP_ND10:CIP_EE}\cr 28 different antibiotics. You can lookup the abbreviations in the \link{antibiotics} data set, or use e.g. \code{\link[=ab_name]{ab_name("AMP")}} to get the official name immediately. Before analysis, you should transform this to a valid antibiotic class, using \code{\link[=as.sir]{as.sir()}}.
+\item \code{AMP_ND10:CIP_EE}\cr 28 different antimicrobials. You can lookup the abbreviations in the \link{antimicrobials} data set, or use e.g. \code{\link[=ab_name]{ab_name("AMP")}} to get the official name immediately. Before analysis, you should transform this to a valid antimicrobial class, using \code{\link[=as.sir]{as.sir()}}.
 }
 }
 \usage{
 WHONET
 }
 \description{
-This example data set has the exact same structure as an export file from WHONET. Such files can be used with this package, as this example data set shows. The antibiotic results are from our \link{example_isolates} data set. All patient names were created using online surname generators and are only in place for practice purposes.
+This example data set has the exact same structure as an export file from WHONET. Such files can be used with this package, as this example data set shows. The antimicrobial results are from our \link{example_isolates} data set. All patient names were created using online surname generators and are only in place for practice purposes.
 }
-\details{
-Like all data sets in this package, this data set is publicly available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
+\section{Download Our Reference Data}{
+
+All reference data sets in the AMR package - including information on microorganisms, antimicrobials, and clinical breakpoints - are freely available for download in multiple formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, and Stata.
+
+For maximum compatibility, we also provide machine-readable, tab-separated plain text files suitable for use in any software, including laboratory information systems.
+
+Visit \href{https://amr-for-r.org/articles/datasets.html}{our website for direct download links}, or explore the actual files in \href{https://github.com/msberends/AMR/tree/main/data-raw/datasets}{our GitHub repository}.
 }
+
 \examples{
 WHONET
 }

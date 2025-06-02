@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,17 +24,17 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Translate Strings from the AMR Package
 #'
 #' For language-dependent output of `AMR` functions, such as [mo_name()], [mo_gramstain()], [mo_type()] and [ab_name()].
-#' @param x text to translate
-#' @param language language to choose. Use one of these supported language names or ISO-639-1 codes: `r vector_or(paste0(sapply(LANGUAGES_SUPPORTED_NAMES, function(x) x[[1]]), " (" , LANGUAGES_SUPPORTED, ")"), quotes = FALSE, sort = FALSE)`.
+#' @param x Text to translate.
+#' @param language Language to choose. Use one of these supported language names or [ISO 639-1 codes](https://en.wikipedia.org/wiki/ISO_639-1): `r vector_or(paste0(sapply(LANGUAGES_SUPPORTED_NAMES, function(x) x[[1]]), " (" , LANGUAGES_SUPPORTED, ")"), quotes = FALSE, sort = FALSE)`.
 #' @details The currently `r length(LANGUAGES_SUPPORTED)` supported languages are `r vector_and(paste0(sapply(LANGUAGES_SUPPORTED_NAMES, function(x) x[[1]]), " (" , LANGUAGES_SUPPORTED, ")"), quotes = FALSE, sort = FALSE)`. All these languages have translations available for all antimicrobial drugs and colloquial microorganism names.
 #'
-#' To permanently silence the once-per-session language note on a non-English operating system, you can set the [package option][AMR-options] [`AMR_locale`][AMR-options] in your `.Rprofile` file like this:
+#' To permanently silence the once-per-session language note on a non-English operating system, you can set the package option [`AMR_locale`][AMR-options] in your `.Rprofile` file like this:
 #'
 #' ```r
 #' # Open .Rprofile file
@@ -51,12 +51,12 @@
 #' ### Changing the Default Language
 #' The system language will be used at default (as returned by `Sys.getenv("LANG")` or, if `LANG` is not set, [`Sys.getlocale("LC_COLLATE")`][Sys.getlocale()]), if that language is supported. But the language to be used can be overwritten in two ways and will be checked in this order:
 #'
-#'   1. Setting the [package option][AMR-options] [`AMR_locale`][AMR-options], either by using e.g. `set_AMR_locale("German")` or by running e.g. `options(AMR_locale = "German")`.
+#'   1. Setting the package option [`AMR_locale`][AMR-options], either by using e.g. `set_AMR_locale("German")` or by running e.g. `options(AMR_locale = "German")`.
 #'
 #'      Note that setting an \R option only works in the same session. Save the command `options(AMR_locale = "(your language)")` to your `.Rprofile` file to apply it for every session. Run `utils::file.edit("~/.Rprofile")` to edit your `.Rprofile` file.
 #'   2. Setting the system variable `LANGUAGE` or `LANG`, e.g. by adding `LANGUAGE="de_DE.utf8"` to your `.Renviron` file in your home directory.
 #'
-#' Thus, if the [package option][AMR-options] [`AMR_locale`][AMR-options] is set, the system variables `LANGUAGE` and `LANG` will be ignored.
+#' Thus, if the package option [`AMR_locale`][AMR-options] is set, the system variables `LANGUAGE` and `LANG` will be ignored.
 #' @rdname translate
 #' @name translate
 #' @export
@@ -75,7 +75,7 @@
 #' ab_name("Ciprofloxacin")
 #' mo_name("Coagulase-negative Staphylococcus (CoNS)")
 #'
-#' # set_AMR_locale() understands endonyms, English exonyms, and ISO-639-1:
+#' # set_AMR_locale() understands endonyms, English exonyms, and ISO 639-1:
 #' set_AMR_locale("Deutsch")
 #' set_AMR_locale("German")
 #' set_AMR_locale("de")
@@ -152,7 +152,7 @@ validate_language <- function(language, extra_txt = character(0)) {
   }
   lang <- find_language(language[1], fallback = FALSE)
   stop_ifnot(length(lang) > 0 && lang %in% LANGUAGES_SUPPORTED,
-    "unsupported language for AMR package", extra_txt, ": \"", language, "\". Use one of these language names or ISO-639-1 codes: ",
+    "unsupported language for AMR package", extra_txt, ": \"", language, "\". Use one of these language names or ISO 639-1 codes: ",
     paste0('"', vapply(FUN.VALUE = character(1), LANGUAGES_SUPPORTED_NAMES, function(x) x[[1]]),
       '" ("', LANGUAGES_SUPPORTED, '")',
       collapse = ", "
@@ -193,7 +193,7 @@ translate_into_language <- function(from,
                                     only_unknown = FALSE,
                                     only_affect_ab_names = FALSE,
                                     only_affect_mo_names = FALSE) {
-  # get ISO-639-1 of language
+  # get ISO 639-1 of language
   lang <- validate_language(language)
   if (lang == "en") {
     # don' translate
@@ -203,7 +203,25 @@ translate_into_language <- function(from,
   df_trans <- TRANSLATIONS # internal data file
   from.bak <- from
   from_unique <- unique(from)
-  from_unique_translated <- from_unique
+  from_split_combined <- function(vec) {
+    sapply(vec, function(x) {
+      if (grepl("/", x, fixed = TRUE)) {
+        parts <- strsplit(x, "/", fixed = TRUE)[[1]]
+        # Translate each part separately
+        translated_parts <- translate_into_language(
+          parts,
+          language = lang,
+          only_unknown = only_unknown,
+          only_affect_ab_names = only_affect_ab_names,
+          only_affect_mo_names = only_affect_mo_names
+        )
+        paste(translated_parts, collapse = "/")
+      } else {
+        x
+      }
+    }, USE.NAMES = FALSE)
+  }
+  from_unique_translated <- from_split_combined(from_unique)
 
   # only keep lines where translation is available for this language
   df_trans <- df_trans[which(!is.na(df_trans[, lang, drop = TRUE])), , drop = FALSE]

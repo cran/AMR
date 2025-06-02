@@ -8,82 +8,53 @@
 \alias{autoplot.resistance_predict}
 \title{Predict Antimicrobial Resistance}
 \usage{
-resistance_predict(
-  x,
-  col_ab,
-  col_date = NULL,
-  year_min = NULL,
-  year_max = NULL,
-  year_every = 1,
-  minimum = 30,
-  model = NULL,
-  I_as_S = TRUE,
-  preserve_measurements = TRUE,
-  info = interactive(),
-  ...
-)
+resistance_predict(x, col_ab, col_date = NULL, year_min = NULL,
+  year_max = NULL, year_every = 1, minimum = 30, model = NULL,
+  I_as_S = TRUE, preserve_measurements = TRUE, info = interactive(), ...)
 
-sir_predict(
-  x,
-  col_ab,
-  col_date = NULL,
-  year_min = NULL,
-  year_max = NULL,
-  year_every = 1,
-  minimum = 30,
-  model = NULL,
-  I_as_S = TRUE,
-  preserve_measurements = TRUE,
-  info = interactive(),
-  ...
-)
+sir_predict(x, col_ab, col_date = NULL, year_min = NULL, year_max = NULL,
+  year_every = 1, minimum = 30, model = NULL, I_as_S = TRUE,
+  preserve_measurements = TRUE, info = interactive(), ...)
 
-\method{plot}{resistance_predict}(x, main = paste("Resistance Prediction of", x_name), ...)
+\method{plot}{resistance_predict}(x, main = paste("Resistance Prediction of",
+  x_name), ...)
 
-ggplot_sir_predict(
-  x,
-  main = paste("Resistance Prediction of", x_name),
-  ribbon = TRUE,
-  ...
-)
+ggplot_sir_predict(x, main = paste("Resistance Prediction of", x_name),
+  ribbon = TRUE, ...)
 
-\method{autoplot}{resistance_predict}(
-  object,
-  main = paste("Resistance Prediction of", x_name),
-  ribbon = TRUE,
-  ...
-)
+\method{autoplot}{resistance_predict}(object,
+  main = paste("Resistance Prediction of", x_name), ribbon = TRUE, ...)
 }
 \arguments{
-\item{x}{a \link{data.frame} containing isolates. Can be left blank for automatic determination, see \emph{Examples}.}
+\item{x}{A \link{data.frame} containing isolates. Can be left blank for automatic determination, see \emph{Examples}.}
 
-\item{col_ab}{column name of \code{x} containing antimicrobial interpretations (\code{"R"}, \code{"I"} and \code{"S"})}
+\item{col_ab}{Column name of \code{x} containing antimicrobial interpretations (\code{"R"}, \code{"I"} and \code{"S"}).}
 
-\item{col_date}{column name of the date, will be used to calculate years if this column doesn't consist of years already - the default is the first column of with a date class}
+\item{col_date}{Column name of the date, will be used to calculate years if this column doesn't consist of years already - the default is the first column of with a date class.}
 
-\item{year_min}{lowest year to use in the prediction model, dafaults to the lowest year in \code{col_date}}
+\item{year_min}{Lowest year to use in the prediction model, dafaults to the lowest year in \code{col_date}.}
 
-\item{year_max}{highest year to use in the prediction model - the default is 10 years after today}
+\item{year_max}{Highest year to use in the prediction model - the default is 10 years after today.}
 
-\item{year_every}{unit of sequence between lowest year found in the data and \code{year_max}}
+\item{year_every}{Unit of sequence between lowest year found in the data and \code{year_max}.}
 
-\item{minimum}{minimal amount of available isolates per year to include. Years containing less observations will be estimated by the model.}
+\item{minimum}{Minimal amount of available isolates per year to include. Years containing less observations will be estimated by the model.}
 
-\item{model}{the statistical model of choice. This could be a generalised linear regression model with binomial distribution (i.e. using \code{glm(..., family = binomial)}, assuming that a period of zero resistance was followed by a period of increasing resistance leading slowly to more and more resistance. See \emph{Details} for all valid options.}
+\item{model}{The statistical model of choice. This could be a generalised linear regression model with binomial distribution (i.e. using \code{glm(..., family = binomial)}, assuming that a period of zero resistance was followed by a period of increasing resistance leading slowly to more and more resistance. See \emph{Details} for all valid options.}
 
-\item{I_as_S}{a \link{logical} to indicate whether values \code{"I"} should be treated as \code{"S"} (will otherwise be treated as \code{"R"}). The default, \code{TRUE}, follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section \emph{Interpretation of S, I and R} below.}
+\item{I_as_S}{A \link{logical} to indicate whether values \code{"I"} should be treated as \code{"S"} (will otherwise be treated as \code{"R"}). The default, \code{TRUE}, follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section \emph{Interpretation of S, I and R} below.}
 
-\item{preserve_measurements}{a \link{logical} to indicate whether predictions of years that are actually available in the data should be overwritten by the original data. The standard errors of those years will be \code{NA}.}
+\item{preserve_measurements}{A \link{logical} to indicate whether predictions of years that are actually available in the data should be overwritten by the original data. The standard errors of those years will be \code{NA}.}
 
-\item{info}{a \link{logical} to indicate whether textual analysis should be printed with the name and \code{\link[=summary]{summary()}} of the statistical model.}
+\item{info}{A \link{logical} to indicate whether textual analysis should be printed with the name and \code{\link[=summary]{summary()}} of the statistical model.}
 
-\item{...}{arguments passed on to functions}
+\item{...}{Arguments passed on to functions.}
 
-\item{main}{title of the plot}
+\item{main}{Title of the plot.}
 
-\item{ribbon}{a \link{logical} to indicate whether a ribbon should be shown (default) or error bars}
+\item{ribbon}{A \link{logical} to indicate whether a ribbon should be shown (default) or error bars.}
 
-\item{object}{model data to be plotted}
+\item{object}{Model data to be plotted.}
 }
 \value{
 A \link{data.frame} with extra class \code{\link{resistance_predict}} with columns:
@@ -100,7 +71,9 @@ A \link{data.frame} with extra class \code{\link{resistance_predict}} with colum
 Furthermore, the model itself is available as an attribute: \code{attributes(x)$model}, see \emph{Examples}.
 }
 \description{
-Create a prediction model to predict antimicrobial resistance for the next years on statistical solid ground. Standard errors (SE) will be returned as columns \code{se_min} and \code{se_max}. See \emph{Examples} for a real live example.
+Create a prediction model to predict antimicrobial resistance for the next years. Standard errors (SE) will be returned as columns \code{se_min} and \code{se_max}. See \emph{Examples} for a real live example.
+
+\strong{NOTE:} These functions are \link[=AMR-deprecated]{deprecated} and will be removed in a future version. Use the AMR package combined with the tidymodels framework instead, for which we have written a \href{https://amr-for-r.org/articles/AMR_with_tidymodels.html}{basic and short introduction on our website}.
 }
 \details{
 Valid options for the statistical model (argument \code{model}) are:
@@ -112,20 +85,9 @@ Valid options for the statistical model (argument \code{model}) are:
 }
 \section{Interpretation of SIR}{
 
-In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R as shown below (\url{https://www.eucast.org/newsiandr}):
-\itemize{
-\item \strong{S - Susceptible, standard dosing regimen}\cr
-A microorganism is categorised as "Susceptible, standard dosing regimen", when there is a high likelihood of therapeutic success using a standard dosing regimen of the agent.
-\item \strong{I - Susceptible, increased exposure} \emph{\cr
-A microorganism is categorised as "Susceptible, Increased exposure}" when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.
-\item \strong{R = Resistant}\cr
-A microorganism is categorised as "Resistant" when there is a high likelihood of therapeutic failure even when there is increased exposure.
-\itemize{
-\item \emph{Exposure} is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
-}
-}
+In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R (\url{https://www.eucast.org/newsiandr}).
 
-This AMR package honours this insight. Use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
+This AMR package follows insight; use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
 }
 
 \examples{

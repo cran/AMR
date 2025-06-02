@@ -5,41 +5,37 @@
 \alias{format.bug_drug_combinations}
 \title{Determine Bug-Drug Combinations}
 \usage{
-bug_drug_combinations(x, col_mo = NULL, FUN = mo_shortname, ...)
+bug_drug_combinations(x, col_mo = NULL, FUN = mo_shortname,
+  include_n_rows = FALSE, ...)
 
-\method{format}{bug_drug_combinations}(
-  x,
-  translate_ab = "name (ab, atc)",
-  language = get_AMR_locale(),
-  minimum = 30,
-  combine_SI = TRUE,
-  add_ab_group = TRUE,
-  remove_intrinsic_resistant = FALSE,
-  decimal.mark = getOption("OutDec"),
-  big.mark = ifelse(decimal.mark == ",", ".", ","),
-  ...
-)
+\method{format}{bug_drug_combinations}(x, translate_ab = "name (ab, atc)",
+  language = get_AMR_locale(), minimum = 30, combine_SI = TRUE,
+  add_ab_group = TRUE, remove_intrinsic_resistant = FALSE,
+  decimal.mark = getOption("OutDec"), big.mark = ifelse(decimal.mark ==
+  ",", ".", ","), ...)
 }
 \arguments{
-\item{x}{a data set with antibiotic columns, such as \code{amox}, \code{AMX} and \code{AMC}}
+\item{x}{A data set with antimicrobials columns, such as \code{amox}, \code{AMX} and \code{AMC}.}
 
-\item{col_mo}{column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
+\item{col_mo}{Column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
 
-\item{FUN}{the function to call on the \code{mo} column to transform the microorganism codes - the default is \code{\link[=mo_shortname]{mo_shortname()}}}
+\item{FUN}{The function to call on the \code{mo} column to transform the microorganism codes - the default is \code{\link[=mo_shortname]{mo_shortname()}}.}
 
-\item{...}{arguments passed on to \code{FUN}}
+\item{include_n_rows}{A \link{logical} to indicate if the total number of rows must be included in the output.}
 
-\item{translate_ab}{a \link{character} of length 1 containing column names of the \link{antibiotics} data set}
+\item{...}{Arguments passed on to \code{FUN}.}
 
-\item{language}{language of the returned text - the default is the current system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{translate_ab}{A \link{character} of length 1 containing column names of the \link{antimicrobials} data set.}
 
-\item{minimum}{the minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see \emph{Source}.}
+\item{language}{Language of the returned text - the default is the current system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the package option \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
-\item{combine_SI}{a \link{logical} to indicate whether values S and I should be summed, so resistance will be based on only R - the default is \code{TRUE}}
+\item{minimum}{The minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see \emph{Source}.}
 
-\item{add_ab_group}{a \link{logical} to indicate where the group of the antimicrobials must be included as a first column}
+\item{combine_SI}{A \link{logical} to indicate whether values S, SDD, and I should be summed, so resistance will be based on only R - the default is \code{TRUE}.}
 
-\item{remove_intrinsic_resistant}{\link{logical} to indicate that rows and columns with 100\% resistance for all tested antimicrobials must be removed from the table}
+\item{add_ab_group}{A \link{logical} to indicate where the group of the antimicrobials must be included as a first column.}
+
+\item{remove_intrinsic_resistant}{\link{logical} to indicate that rows and columns with 100\% resistance for all tested antimicrobials must be removed from the table.}
 
 \item{decimal.mark}{the character to be used to indicate the numeric
     decimal point.}
@@ -49,7 +45,7 @@ bug_drug_combinations(x, col_mo = NULL, FUN = mo_shortname, ...)
     decimal point.}
 }
 \value{
-The function \code{\link[=bug_drug_combinations]{bug_drug_combinations()}} returns a \link{data.frame} with columns "mo", "ab", "S", "I", "R" and "total".
+The function \code{\link[=bug_drug_combinations]{bug_drug_combinations()}} returns a \link{data.frame} with columns "mo", "ab", "S", "SDD", "I", "R", and "total".
 }
 \description{
 Determine antimicrobial resistance (AMR) of all bug-drug combinations in your data set where at least 30 (default) isolates are available per species. Use \code{\link[=format]{format()}} on the result to prettify it to a publishable/printable format, see \emph{Examples}.

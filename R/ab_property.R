@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,22 +24,22 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Get Properties of an Antibiotic
 #'
-#' Use these functions to return a specific property of an antibiotic from the [antibiotics] data set. All input values will be evaluated internally with [as.ab()].
-#' @param x any (vector of) text that can be coerced to a valid antibiotic drug code with [as.ab()]
-#' @param tolower a [logical] to indicate whether the first [character] of every output should be transformed to a lower case [character]. This will lead to e.g. "polymyxin B" and not "polymyxin b".
-#' @param property one of the column names of one of the [antibiotics] data set: `vector_or(colnames(antibiotics), sort = FALSE)`.
-#' @param language language of the returned text - the default is the current system language (see [get_AMR_locale()]) and can also be set with the [package option][AMR-options] [`AMR_locale`][AMR-options]. Use `language = NULL` or `language = ""` to prevent translation.
-#' @param administration way of administration, either `"oral"` or `"iv"`
-#' @param open browse the URL using [utils::browseURL()]
-#' @param ... in case of [set_ab_names()] and `data` is a [data.frame]: columns to select (supports tidy selection such as `column1:column4`), otherwise other arguments passed on to [as.ab()]
-#' @param data a [data.frame] of which the columns need to be renamed, or a [character] vector of column names
-#' @param snake_case a [logical] to indicate whether the names should be in so-called [snake case](https://en.wikipedia.org/wiki/Snake_case): in lower case and all spaces/slashes replaced with an underscore (`_`)
-#' @param only_first a [logical] to indicate whether only the first ATC code must be returned, with giving preference to J0-codes (i.e., the antimicrobial drug group)
+#' Use these functions to return a specific property of an antibiotic from the [antimicrobials] data set. All input values will be evaluated internally with [as.ab()].
+#' @param x Any (vector of) text that can be coerced to a valid antibiotic drug code with [as.ab()].
+#' @param tolower A [logical] to indicate whether the first [character] of every output should be transformed to a lower case [character]. This will lead to e.g. "polymyxin B" and not "polymyxin b".
+#' @param property One of the column names of one of the [antimicrobials] data set: `vector_or(colnames(antimicrobials), sort = FALSE)`.
+#' @param language Language of the returned text - the default is the current system language (see [get_AMR_locale()]) and can also be set with the package option [`AMR_locale`][AMR-options]. Use `language = NULL` or `language = ""` to prevent translation.
+#' @param administration Way of administration, either `"oral"` or `"iv"`.
+#' @param open Browse the URL using [utils::browseURL()].
+#' @param ... In case of [set_ab_names()] and `data` is a [data.frame]: columns to select (supports tidy selection such as `column1:column4`), otherwise other arguments passed on to [as.ab()].
+#' @param data A [data.frame] of which the columns need to be renamed, or a [character] vector of column names.
+#' @param snake_case A [logical] to indicate whether the names should be in so-called [snake case](https://en.wikipedia.org/wiki/Snake_case): in lower case and all spaces/slashes replaced with an underscore (`_`).
+#' @param only_first A [logical] to indicate whether only the first ATC code must be returned, with giving preference to J0-codes (i.e., the antimicrobial drug group).
 #' @details All output [will be translated][translate] where possible.
 #'
 #' The function [ab_url()] will return the direct URL to the official WHO website. A warning will be returned if the required ATC code is not available.
@@ -55,8 +55,8 @@
 #' - A [data.frame] in case of [set_ab_names()]
 #' - A [character] in all other cases
 #' @export
-#' @seealso [antibiotics]
-#' @inheritSection AMR Reference Data Publicly Available
+#' @seealso [antimicrobials]
+#' @inheritSection AMR Download Our Reference Data
 #' @examples
 #' # all properties:
 #' ab_name("AMX")
@@ -245,7 +245,7 @@ ab_ddd <- function(x, administration = "oral", ...) {
     warning_(
       "in `ab_ddd()`: DDDs of some combined products are available for different dose combinations and not (yet) part of the AMR package.",
       "Please refer to the WHOCC website:\n",
-      "www.whocc.no/ddd/list_of_ddds_combined_products/"
+      "atcddd.fhi.no/ddd/list_of_ddds_combined_products/"
     )
   }
   out
@@ -265,7 +265,7 @@ ab_ddd_units <- function(x, administration = "oral", ...) {
     warning_(
       "in `ab_ddd_units()`: DDDs of some combined products are available for different dose combinations and not (yet) part of the AMR package.",
       "Please refer to the WHOCC website:\n",
-      "www.whocc.no/ddd/list_of_ddds_combined_products/"
+      "atcddd.fhi.no/ddd/list_of_ddds_combined_products/"
     )
   }
   out
@@ -310,7 +310,10 @@ ab_url <- function(x, open = FALSE, ...) {
 
   ab <- as.ab(x = x, ...)
   atcs <- ab_atc(ab, only_first = TRUE)
-  u <- paste0("https://www.whocc.no/atc_ddd_index/?code=", atcs, "&showdescription=no")
+  u <- character(length(atcs))
+  # veterinary codes
+  u[atcs %like% "^Q"] <- paste0("https://atcddd.fhi.no/atcvet/atcvet_index/?code=", atcs[atcs %like% "^Q"], "&showdescription=no")
+  u[atcs %unlike% "^Q"] <- paste0("https://atcddd.fhi.no/atc_ddd_index//?code=", atcs[atcs %unlike% "^Q"], "&showdescription=no")
   u[is.na(atcs)] <- NA_character_
   names(u) <- ab_name(ab)
 
@@ -334,7 +337,7 @@ ab_url <- function(x, open = FALSE, ...) {
 #' @export
 ab_property <- function(x, property = "name", language = get_AMR_locale(), ...) {
   meet_criteria(x, allow_NA = TRUE)
-  meet_criteria(property, is_in = colnames(AMR::antibiotics), has_length = 1)
+  meet_criteria(property, is_in = colnames(AMR::antimicrobials), has_length = 1)
   language <- validate_language(language)
   translate_into_language(ab_validate(x = x, property = property, ...), language = language)
 }
@@ -344,7 +347,7 @@ ab_property <- function(x, property = "name", language = get_AMR_locale(), ...) 
 #' @export
 set_ab_names <- function(data, ..., property = "name", language = get_AMR_locale(), snake_case = NULL) {
   meet_criteria(data, allow_class = c("data.frame", "character"))
-  meet_criteria(property, is_in = colnames(AMR::antibiotics), has_length = 1, ignore.case = TRUE)
+  meet_criteria(property, is_in = colnames(AMR::antimicrobials), has_length = 1, ignore.case = TRUE)
   language <- validate_language(language)
   meet_criteria(snake_case, allow_class = "logical", has_length = 1, allow_NULL = TRUE)
 

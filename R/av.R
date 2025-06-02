@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,16 +24,16 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Transform Input to an Antiviral Drug ID
 #'
 #' Use this function to determine the antiviral drug code of one or more antiviral drugs. The data set [antivirals] will be searched for abbreviations, official names and synonyms (brand names).
-#' @param x a [character] vector to determine to antiviral drug ID
-#' @param flag_multiple_results a [logical] to indicate whether a note should be printed to the console that probably more than one antiviral drug code or name can be retrieved from a single input value.
-#' @param info a [logical] to indicate whether a progress bar should be printed - the default is `TRUE` only in interactive mode
-#' @param ... arguments passed on to internal functions
+#' @param x A [character] vector to determine to antiviral drug ID.
+#' @param flag_multiple_results A [logical] to indicate whether a note should be printed to the console that probably more than one antiviral drug code or name can be retrieved from a single input value.
+#' @param info A [logical] to indicate whether a progress bar should be printed - the default is `TRUE` only in interactive mode.
+#' @param ... Arguments passed on to internal functions.
 #' @rdname as.av
 #' @inheritSection WHOCC WHOCC
 #' @details All entries in the [antivirals] data set have three different identifiers: a human readable EARS-Net code (column `ab`, used by ECDC and WHONET), an ATC code (column `atc`, used by WHO), and a CID code (column `cid`, Compound ID, used by PubChem). The data set contains more than 5,000 official brand names from many different countries, as found in PubChem. Not that some drugs contain multiple ATC codes.
@@ -49,7 +49,7 @@
 #'
 #' Note: the [as.av()] and [`av_*`][av_property()] functions may use very long regular expression to match brand names of antimicrobial drugs. This may fail on some systems.
 #' @section Source:
-#' World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://www.whocc.no/atc_ddd_index/}
+#' World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://atcddd.fhi.no/atc_ddd_index/}
 #'
 #' European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 #' @aliases av
@@ -57,7 +57,7 @@
 #' @seealso
 #' * [antivirals] for the [data.frame] that is being used to determine ATCs
 #' * [av_from_text()] for a function to retrieve antimicrobial drugs from clinical text (from health care records)
-#' @inheritSection AMR Reference Data Publicly Available
+#' @inheritSection AMR Download Our Reference Data
 #' @export
 #' @examples
 #' # these examples all return "ACI", the ID of aciclovir:
@@ -507,7 +507,8 @@ is.av <- function(x) {
   inherits(x, "av")
 }
 
-# will be exported using s3_register() in R/zzz.R
+# this prevents the requirement for putting the dependency in Imports:
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(pillar::pillar_shaft, av)
 pillar_shaft.av <- function(x, ...) {
   out <- trimws(format(x))
   out[!is.na(x)] <- gsub("+", font_subtle("+"), out[!is.na(x)], fixed = TRUE)
@@ -515,7 +516,8 @@ pillar_shaft.av <- function(x, ...) {
   create_pillar_column(out, align = "left", min_width = 4)
 }
 
-# will be exported using s3_register() in R/zzz.R
+# this prevents the requirement for putting the dependency in Imports:
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(pillar::type_sum, av)
 type_sum.av <- function(x, ...) {
   "av"
 }

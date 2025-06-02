@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,7 +24,7 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 # These are all S3 implementations for the vctrs package,
@@ -34,34 +34,97 @@
 
 # see https://github.com/tidyverse/dplyr/issues/5955 why this is required
 
-# S3: ab_selector
-vec_ptype2.character.ab_selector <- function(x, y, ...) {
-  x
-}
-vec_ptype2.ab_selector.character <- function(x, y, ...) {
-  y
-}
-vec_cast.character.ab_selector <- function(x, to, ...) {
-  unclass(x)
-}
+# LIST ALL EXPORTS
+# this prevents the requirement for putting `vctrs` as a the dependency in Imports
 
-# S3: ab_selector_any_all
-vec_ptype2.logical.ab_selector_any_all <- function(x, y, ...) {
-  x
-}
-vec_ptype2.ab_selector_any_all.logical <- function(x, y, ...) {
-  y
-}
-vec_cast.logical.ab_selector_any_all <- function(x, to, ...) {
-  unclass(x)
-}
-
+# (NOTE 2024-02-22 this is the right way - it should be 2 '.'-separated S3 classes in the second argument)
+# S3: amr_selector
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, character.amr_selector)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, amr_selector.character)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, character.amr_selector)
+# S3: amr_selector_any_all
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, logical.amr_selector_any_all)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, amr_selector_any_all.logical)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, logical.amr_selector_any_all)
 # S3: ab
-vec_ptype2.character.ab <- function(x, y, ...) {
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, ab.default)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, ab.ab)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, character.ab)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, ab.character)
+# S3: av
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, av.default)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, av.av)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, character.av)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, av.character)
+# S3: mo
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, mo.default)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, mo.mo)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, character.mo)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, mo.character)
+# S3: disk
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype_full, disk)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype_abbr, disk)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, disk.default)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, disk.disk)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, disk.disk)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, integer.disk)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, disk.integer)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, double.disk)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, disk.double)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, character.disk)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, disk.character)
+# S3: mic
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, mic.default)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, mic.mic)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, character.mic)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, double.mic)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, integer.mic)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, factor.mic)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, mic.character)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, mic.double)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, mic.integer)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, mic.factor)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, mic.mic)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_math, mic)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_arith, mic)
+# S3: sir
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, sir.default)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, sir.sir)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, character.sir)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, character.sir)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, sir.character)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, sir.sir)
+
+# S3: amr_selector ----
+# this does not need a .default method since it's used internally only
+vec_ptype2.character.amr_selector <- function(x, y, ...) {
   x
 }
-vec_ptype2.ab.character <- function(x, y, ...) {
+vec_ptype2.amr_selector.character <- function(x, y, ...) {
   y
+}
+vec_cast.character.amr_selector <- function(x, to, ...) {
+  unclass(x)
+}
+
+# S3: amr_selector_any_all ----
+# this does not need a .default method since it's used internally only
+vec_ptype2.logical.amr_selector_any_all <- function(x, y, ...) {
+  x
+}
+vec_ptype2.amr_selector_any_all.logical <- function(x, y, ...) {
+  y
+}
+vec_cast.logical.amr_selector_any_all <- function(x, to, ...) {
+  unclass(x)
+}
+
+# S3: ab ----
+vec_ptype2.ab.default <- function(x, y, ..., x_arg = "", y_arg = "") {
+  x
+}
+vec_ptype2.ab.ab <- function(x, y, ...) {
+  x
 }
 vec_cast.character.ab <- function(x, to, ...) {
   as.character(x)
@@ -70,12 +133,12 @@ vec_cast.ab.character <- function(x, to, ...) {
   return_after_integrity_check(x, "antimicrobial drug code", as.character(AMR_env$AB_lookup$ab))
 }
 
-# S3: av
-vec_ptype2.character.av <- function(x, y, ...) {
+# S3: av ----
+vec_ptype2.av.default <- function(x, y, ..., x_arg = "", y_arg = "") {
   x
 }
-vec_ptype2.av.character <- function(x, y, ...) {
-  y
+vec_ptype2.av.av <- function(x, y, ...) {
+  x
 }
 vec_cast.character.av <- function(x, to, ...) {
   as.character(x)
@@ -84,12 +147,12 @@ vec_cast.av.character <- function(x, to, ...) {
   return_after_integrity_check(x, "antiviral drug code", as.character(AMR_env$AV_lookup$av))
 }
 
-# S3: mo
-vec_ptype2.character.mo <- function(x, y, ...) {
+# S3: mo ----
+vec_ptype2.mo.default <- function(x, y, ..., x_arg = "", y_arg = "") {
   x
 }
-vec_ptype2.mo.character <- function(x, y, ...) {
-  y
+vec_ptype2.mo.mo <- function(x, y, ...) {
+  x
 }
 vec_cast.character.mo <- function(x, to, ...) {
   as.character(x)
@@ -99,12 +162,21 @@ vec_cast.mo.character <- function(x, to, ...) {
   return_after_integrity_check(x, "microorganism code", as.character(AMR_env$MO_lookup$mo))
 }
 
-# S3: disk
-vec_ptype2.integer.disk <- function(x, y, ...) {
-  x
+# S3: disk ----
+vec_ptype_full.disk <- function(x, ...) {
+  "disk"
 }
-vec_ptype2.disk.integer <- function(x, y, ...) {
-  y
+vec_ptype_abbr.disk <- function(x, ...) {
+  "dsk"
+}
+vec_ptype2.disk.default <- function(x, y, ..., x_arg = "", y_arg = "") {
+  NA_disk_[0]
+}
+vec_ptype2.disk.disk <- function(x, y, ...) {
+  NA_disk_[0]
+}
+vec_cast.disk.disk <- function(x, to, ...) {
+  as.disk(x)
 }
 vec_cast.integer.disk <- function(x, to, ...) {
   unclass(x)
@@ -125,12 +197,30 @@ vec_cast.disk.character <- function(x, to, ...) {
   as.disk(x)
 }
 
-# S3: mic
+# S3: mic ----
+vec_ptype2.mic.default <- function(x, y, ..., x_arg = "", y_arg = "") {
+  # this will make sure that currently implemented MIC levels are returned
+  NA_mic_[0]
+}
+vec_ptype2.mic.mic <- function(x, y, ...) {
+  # this will make sure that currently implemented MIC levels are returned
+  NA_mic_[0]
+}
+vec_cast.mic.mic <- function(x, to, ...) {
+  # this will make sure that currently implemented MIC levels are returned
+  as.mic(x)
+}
 vec_cast.character.mic <- function(x, to, ...) {
   as.character(x)
 }
 vec_cast.double.mic <- function(x, to, ...) {
   as.double(x)
+}
+vec_cast.integer.mic <- function(x, to, ...) {
+  as.integer(x)
+}
+vec_cast.factor.mic <- function(x, to, ...) {
+  factor(as.character(x))
 }
 vec_cast.mic.double <- function(x, to, ...) {
   as.mic(x)
@@ -138,16 +228,32 @@ vec_cast.mic.double <- function(x, to, ...) {
 vec_cast.mic.character <- function(x, to, ...) {
   as.mic(x)
 }
+vec_cast.mic.integer <- function(x, to, ...) {
+  as.mic(x)
+}
+vec_cast.mic.factor <- function(x, to, ...) {
+  as.mic(x)
+}
 vec_math.mic <- function(.fn, x, ...) {
   .fn(as.double(x), ...)
 }
-
-# S3: sir
-vec_ptype2.character.sir <- function(x, y, ...) {
-  x
+vec_arith.mic <- function(op, x, y, ...) {
+  vctrs::vec_arith(op, as.double(x), as.double(y))
 }
-vec_ptype2.sir.character <- function(x, y, ...) {
-  y
+
+# S3: sir ----
+vec_ptype2.sir.default <- function(x, y, ..., x_arg = "", y_arg = "") {
+  NA_sir_[0]
+}
+vec_ptype2.sir.sir <- function(x, y, ...) {
+  NA_sir_[0]
+}
+vec_ptype2.character.sir <- function(x, y, ...) {
+  NA_sir_[0]
+}
+vec_cast.sir.sir <- function(x, to, ...) {
+  # this makes sure that old SIR objects (with S/I/R) are converted to the current structure (S/SDD/I/R/NI)
+  as.sir(x)
 }
 vec_cast.character.sir <- function(x, to, ...) {
   as.character(x)

@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,26 +24,28 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Predict Antimicrobial Resistance
 #'
-#' Create a prediction model to predict antimicrobial resistance for the next years on statistical solid ground. Standard errors (SE) will be returned as columns `se_min` and `se_max`. See *Examples* for a real live example.
-#' @param object model data to be plotted
-#' @param col_ab column name of `x` containing antimicrobial interpretations (`"R"`, `"I"` and `"S"`)
-#' @param col_date column name of the date, will be used to calculate years if this column doesn't consist of years already - the default is the first column of with a date class
-#' @param year_min lowest year to use in the prediction model, dafaults to the lowest year in `col_date`
-#' @param year_max highest year to use in the prediction model - the default is 10 years after today
-#' @param year_every unit of sequence between lowest year found in the data and `year_max`
-#' @param minimum minimal amount of available isolates per year to include. Years containing less observations will be estimated by the model.
-#' @param model the statistical model of choice. This could be a generalised linear regression model with binomial distribution (i.e. using `glm(..., family = binomial)`, assuming that a period of zero resistance was followed by a period of increasing resistance leading slowly to more and more resistance. See *Details* for all valid options.
-#' @param I_as_S a [logical] to indicate whether values `"I"` should be treated as `"S"` (will otherwise be treated as `"R"`). The default, `TRUE`, follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section *Interpretation of S, I and R* below.
-#' @param preserve_measurements a [logical] to indicate whether predictions of years that are actually available in the data should be overwritten by the original data. The standard errors of those years will be `NA`.
-#' @param info a [logical] to indicate whether textual analysis should be printed with the name and [summary()] of the statistical model.
-#' @param main title of the plot
-#' @param ribbon a [logical] to indicate whether a ribbon should be shown (default) or error bars
-#' @param ... arguments passed on to functions
+#' @description Create a prediction model to predict antimicrobial resistance for the next years. Standard errors (SE) will be returned as columns `se_min` and `se_max`. See *Examples* for a real live example.
+#'
+#' **NOTE:** These functions are [deprecated][AMR-deprecated] and will be removed in a future version. Use the AMR package combined with the tidymodels framework instead, for which we have written a [basic and short introduction on our website](https://amr-for-r.org/articles/AMR_with_tidymodels.html).
+#' @param object Model data to be plotted.
+#' @param col_ab Column name of `x` containing antimicrobial interpretations (`"R"`, `"I"` and `"S"`).
+#' @param col_date Column name of the date, will be used to calculate years if this column doesn't consist of years already - the default is the first column of with a date class.
+#' @param year_min Lowest year to use in the prediction model, dafaults to the lowest year in `col_date`.
+#' @param year_max Highest year to use in the prediction model - the default is 10 years after today.
+#' @param year_every Unit of sequence between lowest year found in the data and `year_max`.
+#' @param minimum Minimal amount of available isolates per year to include. Years containing less observations will be estimated by the model.
+#' @param model The statistical model of choice. This could be a generalised linear regression model with binomial distribution (i.e. using `glm(..., family = binomial)`, assuming that a period of zero resistance was followed by a period of increasing resistance leading slowly to more and more resistance. See *Details* for all valid options.
+#' @param I_as_S A [logical] to indicate whether values `"I"` should be treated as `"S"` (will otherwise be treated as `"R"`). The default, `TRUE`, follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section *Interpretation of S, I and R* below.
+#' @param preserve_measurements A [logical] to indicate whether predictions of years that are actually available in the data should be overwritten by the original data. The standard errors of those years will be `NA`.
+#' @param info A [logical] to indicate whether textual analysis should be printed with the name and [summary()] of the statistical model.
+#' @param main Title of the plot.
+#' @param ribbon A [logical] to indicate whether a ribbon should be shown (default) or error bars.
+#' @param ... Arguments passed on to functions.
 #' @inheritSection as.sir Interpretation of SIR
 #' @inheritParams first_isolate
 #' @inheritParams graphics::plot
@@ -130,6 +132,11 @@ resistance_predict <- function(x,
   meet_criteria(I_as_S, allow_class = "logical", has_length = 1)
   meet_criteria(preserve_measurements, allow_class = "logical", has_length = 1)
   meet_criteria(info, allow_class = "logical", has_length = 1)
+
+  deprecation_warning(
+    old = "resistance_predict", is_function = TRUE,
+    extra_msg = paste0("Use the tidymodels framework instead, for which we have written a basic and short introduction on our website: ", font_url("https://amr-for-r.org/articles/AMR_with_tidymodels.html", txt = font_bold("AMR with tidymodels")))
+  )
 
   stop_if(is.null(model), 'choose a regression model with the `model` argument, e.g. resistance_predict(..., model = "binomial")')
 
@@ -231,7 +238,7 @@ resistance_predict <- function(x,
     prediction <- predictmodel$fit
     se <- predictmodel$se.fit
   } else {
-    stop("no valid model selected. See ?resistance_predict.")
+    stop("no valid model selected. See `?resistance_predict`.")
   }
 
   # prepare the output dataframe
@@ -394,7 +401,8 @@ ggplot_sir_predict <- function(x,
 
 #' @method autoplot resistance_predict
 #' @rdname resistance_predict
-# will be exported using s3_register() in R/zzz.R
+# this prevents the requirement for putting the dependency in Imports:
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(ggplot2::autoplot, resistance_predict)
 autoplot.resistance_predict <- function(object,
                                         main = paste("Resistance Prediction of", x_name),
                                         ribbon = TRUE,
@@ -407,7 +415,8 @@ autoplot.resistance_predict <- function(object,
 
 #' @method fortify resistance_predict
 #' @noRd
-# will be exported using s3_register() in R/zzz.R
+# this prevents the requirement for putting the dependency in Imports:
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(ggplot2::fortify, resistance_predict)
 fortify.resistance_predict <- function(model, data, ...) {
   as.data.frame(model)
 }

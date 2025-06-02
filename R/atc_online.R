@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,18 +24,18 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Get ATC Properties from WHOCC Website
 #'
-#' Gets data from the WHOCC website to determine properties of an Anatomical Therapeutic Chemical (ATC) (e.g. an antibiotic), such as the name, defined daily dose (DDD) or standard unit.
-#' @param atc_code a [character] (vector) with ATC code(s) of antibiotics, will be coerced with [as.ab()] and [ab_atc()] internally if not a valid ATC code
-#' @param property property of an ATC code. Valid values are `"ATC"`, `"Name"`, `"DDD"`, `"U"` (`"unit"`), `"Adm.R"`, `"Note"` and `groups`. For this last option, all hierarchical groups of an ATC code will be returned, see *Examples*.
-#' @param administration type of administration when using `property = "Adm.R"`, see *Details*
-#' @param url url of website of the WHOCC. The sign `%s` can be used as a placeholder for ATC codes.
-#' @param url_vet url of website of the WHOCC for veterinary medicine. The sign `%s` can be used as a placeholder for ATC_vet codes (that all start with "Q").
-#' @param ... arguments to pass on to `atc_property`
+#' Gets data from the WHOCC website to determine properties of an Anatomical Therapeutic Chemical (ATC) (e.g. an antimicrobial), such as the name, defined daily dose (DDD) or standard unit.
+#' @param atc_code A [character] (vector) with ATC code(s) of antimicrobials, will be coerced with [as.ab()] and [ab_atc()] internally if not a valid ATC code.
+#' @param property Property of an ATC code. Valid values are `"ATC"`, `"Name"`, `"DDD"`, `"U"` (`"unit"`), `"Adm.R"`, `"Note"` and `groups`. For this last option, all hierarchical groups of an ATC code will be returned, see *Examples*.
+#' @param administration Type of administration when using `property = "Adm.R"`, see *Details*.
+#' @param url URL of website of the WHOCC. The sign `%s` can be used as a placeholder for ATC codes.
+#' @param url_vet URL of website of the WHOCC for veterinary medicine. The sign `%s` can be used as a placeholder for ATC_vet codes (that all start with "Q").
+#' @param ... Arguments to pass on to `atc_property`.
 #' @details
 #' Options for argument `administration`:
 #'
@@ -64,7 +64,7 @@
 #' **N.B. This function requires an internet connection and only works if the following packages are installed: `curl`, `rvest`, `xml2`.**
 #' @export
 #' @rdname atc_online
-#' @source <https://www.whocc.no/atc_ddd_alterations__cumulative/ddd_alterations/abbrevations/>
+#' @source <https://atcddd.fhi.no/atc_ddd_alterations__cumulative/ddd_alterations/abbrevations/>
 #' @examples
 #' \donttest{
 #' if (requireNamespace("curl") && requireNamespace("rvest") && requireNamespace("xml2")) {
@@ -81,9 +81,9 @@
 atc_online_property <- function(atc_code,
                                 property,
                                 administration = "O",
-                                url = "https://www.whocc.no/atc_ddd_index/?code=%s&showdescription=no",
-                                url_vet = "https://www.whocc.no/atcvet/atcvet_index/?code=%s&showdescription=no") {
-  meet_criteria(atc_code, allow_class = "character")
+                                url = "https://atcddd.fhi.no/atc_ddd_index/?code=%s&showdescription=no",
+                                url_vet = "https://atcddd.fhi.no/atcvet/atcvet_index/?code=%s&showdescription=no") {
+  meet_criteria(atc_code, allow_class = "character", allow_NA = TRUE)
   meet_criteria(property, allow_class = "character", has_length = 1, is_in = c("ATC", "Name", "DDD", "U", "unit", "Adm.R", "Note", "groups"), ignore.case = TRUE)
   meet_criteria(administration, allow_class = "character", has_length = 1)
   meet_criteria(url, allow_class = "character", has_length = 1, looks_like = "https?://")
@@ -98,7 +98,7 @@ atc_online_property <- function(atc_code,
   html_text <- import_fn("html_text", "rvest")
   read_html <- import_fn("read_html", "xml2")
 
-  if (!all(atc_code %in% unlist(AMR::antibiotics$atc))) {
+  if (!all(atc_code %in% unlist(AMR::antimicrobials$atc))) {
     atc_code <- as.character(ab_atc(atc_code, only_first = TRUE))
   }
 
@@ -128,6 +128,10 @@ atc_online_property <- function(atc_code,
 
   for (i in seq_len(length(atc_code))) {
     progress$tick()
+
+    if (is.na(atc_code[i])) {
+      next
+    }
 
     if (atc_code[i] %like% "^Q") {
       # veterinary drugs, ATC_vet codes start with a "Q"
@@ -176,7 +180,7 @@ atc_online_property <- function(atc_code,
       colnames(out) <- gsub("^atc.*", "atc", tolower(colnames(out)))
 
       if (length(out) == 0) {
-        warning_("in `atc_online_property()`: ATC not found: ", atc_code[i], ". Please check ", atc_url, ".")
+        message_("in `atc_online_property()`: no properties found for ATC ", atc_code[i], ". Please check ", font_url(atc_url, "this WHOCC webpage"), ".")
         returnvalue[i] <- NA
         next
       }
@@ -209,20 +213,20 @@ atc_online_property <- function(atc_code,
 #' @rdname atc_online
 #' @export
 atc_online_groups <- function(atc_code, ...) {
-  meet_criteria(atc_code, allow_class = "character")
+  meet_criteria(atc_code, allow_class = "character", allow_NA = TRUE)
   atc_online_property(atc_code = atc_code, property = "groups", ...)
 }
 
 #' @rdname atc_online
 #' @export
 atc_online_ddd <- function(atc_code, ...) {
-  meet_criteria(atc_code, allow_class = "character")
+  meet_criteria(atc_code, allow_class = "character", allow_NA = TRUE)
   atc_online_property(atc_code = atc_code, property = "ddd", ...)
 }
 
 #' @rdname atc_online
 #' @export
 atc_online_ddd_units <- function(atc_code, ...) {
-  meet_criteria(atc_code, allow_class = "character")
+  meet_criteria(atc_code, allow_class = "character", allow_NA = TRUE)
   atc_online_property(atc_code = atc_code, property = "unit", ...)
 }

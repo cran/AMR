@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,33 +24,33 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' PCA Biplot with `ggplot2`
 #'
 #' Produces a `ggplot2` variant of a so-called [biplot](https://en.wikipedia.org/wiki/Biplot) for PCA (principal component analysis), but is more flexible and more appealing than the base \R [biplot()] function.
-#' @param x an object returned by [pca()], [prcomp()] or [princomp()]
+#' @param x An object returned by [pca()], [prcomp()] or [princomp()].
 #' @inheritParams stats::biplot.prcomp
-#' @param labels an optional vector of labels for the observations. If set, the labels will be placed below their respective points. When using the [pca()] function as input for `x`, this will be determined automatically based on the attribute `non_numeric_cols`, see [pca()].
-#' @param labels_textsize the size of the text used for the labels
-#' @param labels_text_placement adjustment factor the placement of the variable names (`>=1` means further away from the arrow head)
-#' @param groups an optional vector of groups for the labels, with the same length as `labels`. If set, the points and labels will be coloured according to these groups. When using the [pca()] function as input for `x`, this will be determined automatically based on the attribute `non_numeric_cols`, see [pca()].
-#' @param ellipse a [logical] to indicate whether a normal data ellipse should be drawn for each group (set with `groups`)
-#' @param ellipse_prob statistical size of the ellipse in normal probability
-#' @param ellipse_size the size of the ellipse line
-#' @param ellipse_alpha the alpha (transparency) of the ellipse line
-#' @param points_size the size of the points
-#' @param points_alpha the alpha (transparency) of the points
-#' @param arrows a [logical] to indicate whether arrows should be drawn
-#' @param arrows_textsize the size of the text for variable names
-#' @param arrows_colour the colour of the arrow and their text
-#' @param arrows_size the size (thickness) of the arrow lines
-#' @param arrows_textsize the size of the text at the end of the arrows
-#' @param arrows_textangled a [logical] whether the text at the end of the arrows should be angled
-#' @param arrows_alpha the alpha (transparency) of the arrows and their text
-#' @param base_textsize the text size for all plot elements except the labels and arrows
-#' @param ... arguments passed on to functions
+#' @param labels An optional vector of labels for the observations. If set, the labels will be placed below their respective points. When using the [pca()] function as input for `x`, this will be determined automatically based on the attribute `non_numeric_cols`, see [pca()].
+#' @param labels_textsize The size of the text used for the labels.
+#' @param labels_text_placement Adjustment factor the placement of the variable names (`>=1` means further away from the arrow head).
+#' @param groups An optional vector of groups for the labels, with the same length as `labels`. If set, the points and labels will be coloured according to these groups. When using the [pca()] function as input for `x`, this will be determined automatically based on the attribute `non_numeric_cols`, see [pca()].
+#' @param ellipse A [logical] to indicate whether a normal data ellipse should be drawn for each group (set with `groups`).
+#' @param ellipse_prob Statistical size of the ellipse in normal probability.
+#' @param ellipse_size The size of the ellipse line.
+#' @param ellipse_alpha The alpha (transparency) of the ellipse line.
+#' @param points_size The size of the points.
+#' @param points_alpha The alpha (transparency) of the points.
+#' @param arrows A [logical] to indicate whether arrows should be drawn.
+#' @param arrows_textsize The size of the text for variable names.
+#' @param arrows_colour The colour of the arrow and their text.
+#' @param arrows_size The size (thickness) of the arrow lines.
+#' @param arrows_textsize The size of the text at the end of the arrows.
+#' @param arrows_textangled A [logical] whether the text at the end of the arrows should be angled.
+#' @param arrows_alpha The alpha (transparency) of the arrows and their text.
+#' @param base_textsize The text size for all plot elements except the labels and arrows.
+#' @param ... Arguments passed on to functions.
 #' @source The [ggplot_pca()] function is based on the `ggbiplot()` function from the `ggbiplot` package by Vince Vu, as found on GitHub: <https://github.com/vqv/ggbiplot> (retrieved: 2 March 2020, their latest commit: [`7325e88`](https://github.com/vqv/ggbiplot/commit/7325e880485bea4c07465a0304c470608fffb5d9); 12 February 2015).
 #'
 #' As per their GPL-2 licence that demands documentation of code changes, the changes made based on the source code were:
@@ -85,16 +85,18 @@
 #'   summary(pca_result)
 #'
 #'   # old base R plotting method:
-#'   biplot(pca_result)
+#'   biplot(pca_result, main = "Base R biplot")
 #'
 #'   # new ggplot2 plotting method using this package:
 #'   if (require("ggplot2")) {
-#'     ggplot_pca(pca_result)
-#'
+#'     ggplot_pca(pca_result) +
+#'       labs(title = "ggplot2 biplot")
+#'   }
+#'   if (require("ggplot2")) {
 #'     # still extendible with any ggplot2 function
 #'     ggplot_pca(pca_result) +
 #'       scale_colour_viridis_d() +
-#'       labs(title = "Title here")
+#'       labs(title = "ggplot2 biplot")
 #'   }
 #' }
 #' }
@@ -242,7 +244,7 @@ ggplot_pca <- function(x,
     g <- g + ggplot2::geom_path(
       data = ell,
       ggplot2::aes(colour = groups, group = groups),
-      size = ellipse_size,
+      linewidth = ellipse_size,
       alpha = points_alpha
     )
   }
@@ -259,7 +261,7 @@ ggplot_pca <- function(x,
         type = "open"
       ),
       colour = arrows_colour,
-      size = arrows_size,
+      linewidth = arrows_size,
       alpha = arrows_alpha
     )
     if (arrows_textangled == TRUE) {

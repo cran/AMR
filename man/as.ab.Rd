@@ -4,29 +4,35 @@
 \alias{as.ab}
 \alias{ab}
 \alias{is.ab}
+\alias{ab_reset_session}
 \title{Transform Input to an Antibiotic ID}
 \usage{
-as.ab(x, flag_multiple_results = TRUE, info = interactive(), ...)
+as.ab(x, flag_multiple_results = TRUE, language = get_AMR_locale(),
+  info = interactive(), ...)
 
 is.ab(x)
+
+ab_reset_session()
 }
 \arguments{
-\item{x}{a \link{character} vector to determine to antibiotic ID}
+\item{x}{A \link{character} vector to determine to antibiotic ID.}
 
-\item{flag_multiple_results}{a \link{logical} to indicate whether a note should be printed to the console that probably more than one antibiotic drug code or name can be retrieved from a single input value.}
+\item{flag_multiple_results}{A \link{logical} to indicate whether a note should be printed to the console that probably more than one antibiotic drug code or name can be retrieved from a single input value.}
 
-\item{info}{a \link{logical} to indicate whether a progress bar should be printed - the default is \code{TRUE} only in interactive mode}
+\item{language}{Language to coerce input values from any of the 28 supported languages - default to the system language if supported (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}).}
 
-\item{...}{arguments passed on to internal functions}
+\item{info}{A \link{logical} to indicate whether a progress bar should be printed - the default is \code{TRUE} only in interactive mode.}
+
+\item{...}{Arguments passed on to internal functions.}
 }
 \value{
 A \link{character} \link{vector} with additional class \code{\link{ab}}
 }
 \description{
-Use this function to determine the antibiotic drug code of one or more antibiotics. The data set \link{antibiotics} will be searched for abbreviations, official names and synonyms (brand names).
+Use this function to determine the antimicrobial drug code of one or more antimicrobials. The data set \link{antimicrobials} will be searched for abbreviations, official names and synonyms (brand names).
 }
 \details{
-All entries in the \link{antibiotics} data set have three different identifiers: a human readable EARS-Net code (column \code{ab}, used by ECDC and WHONET), an ATC code (column \code{atc}, used by WHO), and a CID code (column \code{cid}, Compound ID, used by PubChem). The data set contains more than 5,000 official brand names from many different countries, as found in PubChem. Not that some drugs contain multiple ATC codes.
+All entries in the \link{antimicrobials} data set have three different identifiers: a human readable EARS-Net code (column \code{ab}, used by ECDC and WHONET), an ATC code (column \code{atc}, used by WHO), and a CID code (column \code{cid}, Compound ID, used by PubChem). The data set contains more than 5,000 official brand names from many different countries, as found in PubChem. Not that some drugs contain multiple ATC codes.
 
 All these properties will be searched for the user input. The \code{\link[=as.ab]{as.ab()}} can correct for different forms of misspelling:
 \itemize{
@@ -44,25 +50,29 @@ You can add your own manual codes to be considered by \code{\link[=as.ab]{as.ab(
 }
 \section{Source}{
 
-World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://www.whocc.no/atc_ddd_index/}
+World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://atcddd.fhi.no/atc_ddd_index/}
 
 European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 }
 
 \section{WHOCC}{
 
-This package contains \strong{all ~550 antibiotic, antimycotic and antiviral drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://www.whocc.no}) and the Pharmaceuticals Community Register of the European Commission (\url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}).
+This package contains \strong{all ~550 antibiotic, antimycotic and antiviral drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://atcddd.fhi.no}) and the Pharmaceuticals Community Register of the European Commission (\url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}).
 
 These have become the gold standard for international drug utilisation monitoring and research.
 
 The WHOCC is located in Oslo at the Norwegian Institute of Public Health and funded by the Norwegian government. The European Commission is the executive of the European Union and promotes its general interest.
 
-\strong{NOTE: The WHOCC copyright does not allow use for commercial purposes, unlike any other info from this package.} See \url{https://www.whocc.no/copyright_disclaimer/.}
+\strong{NOTE: The WHOCC copyright does not allow use for commercial purposes, unlike any other info from this package.} See \url{https://atcddd.fhi.no/copyright_disclaimer/.}
 }
 
-\section{Reference Data Publicly Available}{
+\section{Download Our Reference Data}{
 
-All data sets in this \code{AMR} package (about microorganisms, antibiotics, SIR interpretation, EUCAST rules, etc.) are publicly and freely available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. We also provide tab-separated plain text files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
+All reference data sets in the AMR package - including information on microorganisms, antimicrobials, and clinical breakpoints - are freely available for download in multiple formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, and Stata.
+
+For maximum compatibility, we also provide machine-readable, tab-separated plain text files suitable for use in any software, including laboratory information systems.
+
+Visit \href{https://amr-for-r.org/articles/datasets.html}{our website for direct download links}, or explore the actual files in \href{https://github.com/msberends/AMR/tree/main/data-raw/datasets}{our GitHub repository}.
 }
 
 \examples{
@@ -71,12 +81,10 @@ as.ab("J01FA01")
 as.ab("J 01 FA 01")
 as.ab("Erythromycin")
 as.ab("eryt")
-as.ab("   eryt 123")
 as.ab("ERYT")
 as.ab("ERY")
 as.ab("eritromicine") # spelled wrong, yet works
 as.ab("Erythrocin") # trade name
-as.ab("Romycin") # trade name
 
 # spelling from different languages and dyslexia are no problem
 ab_atc("ceftriaxon")
@@ -99,7 +107,7 @@ if (require("dplyr")) {
 }
 \seealso{
 \itemize{
-\item \link{antibiotics} for the \link{data.frame} that is being used to determine ATCs
+\item \link{antimicrobials} for the \link{data.frame} that is being used to determine ATCs
 \item \code{\link[=ab_from_text]{ab_from_text()}} for a function to retrieve antimicrobial drugs from clinical text (from health care records)
 }
 }

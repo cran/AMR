@@ -3,137 +3,84 @@
 \name{ggplot_sir}
 \alias{ggplot_sir}
 \alias{geom_sir}
-\alias{facet_sir}
-\alias{scale_y_percent}
-\alias{scale_sir_colours}
-\alias{theme_sir}
-\alias{labels_sir_count}
 \title{AMR Plots with \code{ggplot2}}
 \usage{
-ggplot_sir(
-  data,
-  position = NULL,
-  x = "antibiotic",
-  fill = "interpretation",
-  facet = NULL,
-  breaks = seq(0, 1, 0.1),
-  limits = NULL,
-  translate_ab = "name",
-  combine_SI = TRUE,
-  minimum = 30,
-  language = get_AMR_locale(),
-  nrow = NULL,
-  colours = c(S = "#3CAEA3", SI = "#3CAEA3", I = "#F6D55C", IR = "#ED553B", R =
-    "#ED553B"),
-  datalabels = TRUE,
-  datalabels.size = 2.5,
-  datalabels.colour = "grey15",
-  title = NULL,
-  subtitle = NULL,
-  caption = NULL,
-  x.title = "Antimicrobial",
-  y.title = "Proportion",
-  ...
-)
+ggplot_sir(data, position = NULL, x = "antibiotic",
+  fill = "interpretation", facet = NULL, breaks = seq(0, 1, 0.1),
+  limits = NULL, translate_ab = "name", combine_SI = TRUE,
+  minimum = 30, language = get_AMR_locale(), nrow = NULL, colours = c(S
+  = "#3CAEA3", SI = "#3CAEA3", I = "#F6D55C", IR = "#ED553B", R = "#ED553B"),
+  datalabels = TRUE, datalabels.size = 2.5, datalabels.colour = "grey15",
+  title = NULL, subtitle = NULL, caption = NULL,
+  x.title = "Antimicrobial", y.title = "Proportion", ...)
 
-geom_sir(
-  position = NULL,
-  x = c("antibiotic", "interpretation"),
-  fill = "interpretation",
-  translate_ab = "name",
-  minimum = 30,
-  language = get_AMR_locale(),
-  combine_SI = TRUE,
-  ...
-)
-
-facet_sir(facet = c("interpretation", "antibiotic"), nrow = NULL)
-
-scale_y_percent(breaks = seq(0, 1, 0.1), limits = NULL)
-
-scale_sir_colours(..., aesthetics = "fill")
-
-theme_sir()
-
-labels_sir_count(
-  position = NULL,
-  x = "antibiotic",
-  translate_ab = "name",
-  minimum = 30,
-  language = get_AMR_locale(),
-  combine_SI = TRUE,
-  datalabels.size = 3,
-  datalabels.colour = "grey15"
-)
+geom_sir(position = NULL, x = c("antibiotic", "interpretation"),
+  fill = "interpretation", translate_ab = "name", minimum = 30,
+  language = get_AMR_locale(), combine_SI = TRUE, ...)
 }
 \arguments{
-\item{data}{a \link{data.frame} with column(s) of class \code{\link{sir}} (see \code{\link[=as.sir]{as.sir()}})}
+\item{data}{A \link{data.frame} with column(s) of class \code{\link{sir}} (see \code{\link[=as.sir]{as.sir()}}).}
 
-\item{position}{position adjustment of bars, either \code{"fill"}, \code{"stack"} or \code{"dodge"}}
+\item{position}{Position adjustment of bars, either \code{"fill"}, \code{"stack"} or \code{"dodge"}.}
 
-\item{x}{variable to show on x axis, either \code{"antibiotic"} (default) or \code{"interpretation"} or a grouping variable}
+\item{x}{Variable to show on x axis, either \code{"antibiotic"} (default) or \code{"interpretation"} or a grouping variable.}
 
-\item{fill}{variable to categorise using the plots legend, either \code{"antibiotic"} (default) or \code{"interpretation"} or a grouping variable}
+\item{fill}{Variable to categorise using the plots legend, either \code{"antibiotic"} (default) or \code{"interpretation"} or a grouping variable.}
 
-\item{facet}{variable to split plots by, either \code{"interpretation"} (default) or \code{"antibiotic"} or a grouping variable}
+\item{facet}{Variable to split plots by, either \code{"interpretation"} (default) or \code{"antibiotic"} or a grouping variable.}
 
-\item{breaks}{a \link{numeric} vector of positions}
+\item{breaks}{A \link{numeric} vector of positions.}
 
-\item{limits}{a \link{numeric} vector of length two providing limits of the scale, use \code{NA} to refer to the existing minimum or maximum}
+\item{limits}{A \link{numeric} vector of length two providing limits of the scale, use \code{NA} to refer to the existing minimum or maximum.}
 
-\item{translate_ab}{a column name of the \link{antibiotics} data set to translate the antibiotic abbreviations to, using \code{\link[=ab_property]{ab_property()}}}
+\item{translate_ab}{A column name of the \link{antimicrobials} data set to translate the antibiotic abbreviations to, using \code{\link[=ab_property]{ab_property()}}.}
 
-\item{combine_SI}{a \link{logical} to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant) - the default is \code{TRUE}}
+\item{combine_SI}{A \link{logical} to indicate whether all values of S, SDD, and I must be merged into one, so the output only consists of S+SDD+I vs. R (susceptible vs. resistant) - the default is \code{TRUE}.}
 
-\item{minimum}{the minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see \emph{Source}.}
+\item{minimum}{The minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see \emph{Source}.}
 
-\item{language}{language of the returned text - the default is the current system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{language}{Language of the returned text - the default is the current system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the package option \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
-\item{nrow}{(when using \code{facet}) number of rows}
+\item{nrow}{(when using \code{facet}) number of rows.}
 
-\item{colours}{a named vactor with colour to be used for filling. The default colours are colour-blind friendly.}
+\item{colours}{A named vactor with colour to be used for filling. The default colours are colour-blind friendly.}
 
-\item{datalabels}{show datalabels using \code{\link[=labels_sir_count]{labels_sir_count()}}}
+\item{datalabels}{Show datalabels using \code{\link[=labels_sir_count]{labels_sir_count()}}.}
 
-\item{datalabels.size}{size of the datalabels}
+\item{datalabels.size}{Size of the datalabels.}
 
-\item{datalabels.colour}{colour of the datalabels}
+\item{datalabels.colour}{Colour of the datalabels.}
 
-\item{title}{text to show as title of the plot}
+\item{title}{Text to show as title of the plot.}
 
-\item{subtitle}{text to show as subtitle of the plot}
+\item{subtitle}{Text to show as subtitle of the plot.}
 
-\item{caption}{text to show as caption of the plot}
+\item{caption}{Text to show as caption of the plot.}
 
-\item{x.title}{text to show as x axis description}
+\item{x.title}{Text to show as x axis description.}
 
-\item{y.title}{text to show as y axis description}
+\item{y.title}{Text to show as y axis description.}
 
-\item{...}{other arguments passed on to \code{\link[=geom_sir]{geom_sir()}} or, in case of \code{\link[=scale_sir_colours]{scale_sir_colours()}}, named values to set colours. The default colours are colour-blind friendly, while maintaining the convention that e.g. 'susceptible' should be green and 'resistant' should be red. See \emph{Examples}.}
-
-\item{aesthetics}{aesthetics to apply the colours to - the default is "fill" but can also be (a combination of) "alpha", "colour", "fill", "linetype", "shape" or "size"}
+\item{...}{Other arguments passed on to \code{\link[=geom_sir]{geom_sir()}} or, in case of \code{\link[=scale_sir_colours]{scale_sir_colours()}}, named values to set colours. The default colours are colour-blind friendly, while maintaining the convention that e.g. 'susceptible' should be green and 'resistant' should be red. See \emph{Examples}.}
 }
 \description{
 Use these functions to create bar plots for AMR data analysis. All functions rely on \link[ggplot2:ggplot]{ggplot2} functions.
 }
 \details{
-At default, the names of antibiotics will be shown on the plots using \code{\link[=ab_name]{ab_name()}}. This can be set with the \code{translate_ab} argument. See \code{\link[=count_df]{count_df()}}.
-\subsection{The Functions}{
+At default, the names of antimicrobials will be shown on the plots using \code{\link[=ab_name]{ab_name()}}. This can be set with the \code{translate_ab} argument. See \code{\link[=count_df]{count_df()}}.
 
-\code{\link[=geom_sir]{geom_sir()}} will take any variable from the data that has an \code{\link{sir}} class (created with \code{\link[=as.sir]{as.sir()}}) using \code{\link[=sir_df]{sir_df()}} and will plot bars with the percentage S, I, and R. The default behaviour is to have the bars stacked and to have the different antibiotics on the x axis.
+\code{\link[=geom_sir]{geom_sir()}} will take any variable from the data that has an \code{\link{sir}} class (created with \code{\link[=as.sir]{as.sir()}}) using \code{\link[=sir_df]{sir_df()}} and will plot bars with the percentage S, I, and R. The default behaviour is to have the bars stacked and to have the different antimicrobials on the x axis.
 
-\code{\link[=facet_sir]{facet_sir()}} creates 2d plots (at default based on S/I/R) using \code{\link[ggplot2:facet_wrap]{ggplot2::facet_wrap()}}.
-
-\code{\link[=scale_y_percent]{scale_y_percent()}} transforms the y axis to a 0 to 100\% range using \code{\link[ggplot2:scale_continuous]{ggplot2::scale_y_continuous()}}.
-
-\code{\link[=scale_sir_colours]{scale_sir_colours()}} sets colours to the bars (green for S, yellow for I, and red for R). with multilingual support. The default colours are colour-blind friendly, while maintaining the convention that e.g. 'susceptible' should be green and 'resistant' should be red.
-
-\code{\link[=theme_sir]{theme_sir()}} is a [ggplot2 theme][\code{\link[ggplot2:theme]{ggplot2::theme()}} with minimal distraction.
-
-\code{\link[=labels_sir_count]{labels_sir_count()}} print datalabels on the bars with percentage and amount of isolates using \code{\link[ggplot2:geom_text]{ggplot2::geom_text()}}.
+Additional functions include:
+\itemize{
+\item \code{\link[=facet_sir]{facet_sir()}} creates 2d plots (at default based on S/I/R) using \code{\link[ggplot2:facet_wrap]{ggplot2::facet_wrap()}}.
+\item \code{\link[=scale_y_percent]{scale_y_percent()}} transforms the y axis to a 0 to 100\% range using \code{\link[ggplot2:scale_continuous]{ggplot2::scale_y_continuous()}}.
+\item \code{\link[=scale_sir_colours]{scale_sir_colours()}} sets colours to the bars (green for S, yellow for I, and red for R). with multilingual support. The default colours are colour-blind friendly, while maintaining the convention that e.g. 'susceptible' should be green and 'resistant' should be red.
+\item \code{\link[=theme_sir]{theme_sir()}} is a \link[ggplot2:theme]{ggplot2 theme} with minimal distraction.
+\item \code{\link[=labels_sir_count]{labels_sir_count()}} print datalabels on the bars with percentage and amount of isolates using \code{\link[ggplot2:geom_text]{ggplot2::geom_text()}}.
+}
 
 \code{\link[=ggplot_sir]{ggplot_sir()}} is a wrapper around all above functions that uses data as first input. This makes it possible to use this function after a pipe (\verb{\%>\%}). See \emph{Examples}.
-}
 }
 \examples{
 \donttest{
@@ -148,7 +95,7 @@ if (require("ggplot2") && require("dplyr")) {
   ggplot(df) +
     geom_sir() +
     scale_y_percent() +
-    scale_sir_colours() +
+    scale_sir_colours(aesthetics = "fill") +
     labels_sir_count() +
     theme_sir()
 }
@@ -192,7 +139,10 @@ if (require("ggplot2") && require("dplyr")) {
   ) \%>\%
     ggplot() +
     geom_col(aes(x = x, y = y, fill = z)) +
-    scale_sir_colours(Value4 = "S", Value5 = "I", Value6 = "R")
+    scale_sir_colours(
+      aesthetics = "fill",
+      Value4 = "S", Value5 = "I", Value6 = "R"
+    )
 }
 if (require("ggplot2") && require("dplyr")) {
   # resistance of ciprofloxacine per age group

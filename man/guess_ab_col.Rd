@@ -4,30 +4,26 @@
 \alias{guess_ab_col}
 \title{Guess Antibiotic Column}
 \usage{
-guess_ab_col(
-  x = NULL,
-  search_string = NULL,
-  verbose = FALSE,
-  only_sir_columns = FALSE
-)
+guess_ab_col(x = NULL, search_string = NULL, verbose = FALSE,
+  only_sir_columns = FALSE)
 }
 \arguments{
-\item{x}{a \link{data.frame}}
+\item{x}{A \link{data.frame}.}
 
-\item{search_string}{a text to search \code{x} for, will be checked with \code{\link[=as.ab]{as.ab()}} if this value is not a column in \code{x}}
+\item{search_string}{A text to search \code{x} for, will be checked with \code{\link[=as.ab]{as.ab()}} if this value is not a column in \code{x}.}
 
-\item{verbose}{a \link{logical} to indicate whether additional info should be printed}
+\item{verbose}{A \link{logical} to indicate whether additional info should be printed.}
 
-\item{only_sir_columns}{a \link{logical} to indicate whether only antibiotic columns must be detected that were transformed to class \code{sir} (see \code{\link[=as.sir]{as.sir()}}) on beforehand (default is \code{FALSE})}
+\item{only_sir_columns}{A \link{logical} to indicate whether only antimicrobial columns must be included that were transformed to class \link[=as.sir]{sir} on beforehand. Defaults to \code{FALSE} if no columns of \code{x} have a class \link[=as.sir]{sir}.}
 }
 \value{
 A column name of \code{x}, or \code{NULL} when no result is found.
 }
 \description{
-This tries to find a column name in a data set based on information from the \link{antibiotics} data set. Also supports WHONET abbreviations.
+This tries to find a column name in a data set based on information from the \link{antimicrobials} data set. Also supports WHONET abbreviations.
 }
 \details{
-You can look for an antibiotic (trade) name or abbreviation and it will search \code{x} and the \link{antibiotics} data set for any column containing a name or code of that antibiotic.
+You can look for an antibiotic (trade) name or abbreviation and it will search \code{x} and the \link{antimicrobials} data set for any column containing a name or code of that antibiotic.
 }
 \examples{
 df <- data.frame(
@@ -39,7 +35,6 @@ guess_ab_col(df, "amoxicillin")
 guess_ab_col(df, "J01AA07") # ATC code of tetracycline
 
 guess_ab_col(df, "J01AA07", verbose = TRUE)
-# NOTE: Using column 'tetr' as input for J01AA07 (tetracycline).
 
 # WHONET codes
 df <- data.frame(
@@ -48,5 +43,5 @@ df <- data.frame(
 )
 guess_ab_col(df, "ampicillin")
 guess_ab_col(df, "J01CR02")
-guess_ab_col(df, as.ab("augmentin"))
+guess_ab_col(df, "augmentin")
 }

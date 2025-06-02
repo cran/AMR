@@ -4,11 +4,11 @@
 \alias{count}
 \alias{count_resistant}
 \alias{count_susceptible}
-\alias{count_R}
-\alias{count_IR}
-\alias{count_I}
-\alias{count_SI}
 \alias{count_S}
+\alias{count_SI}
+\alias{count_I}
+\alias{count_IR}
+\alias{count_R}
 \alias{count_all}
 \alias{n_sir}
 \alias{count_df}
@@ -18,39 +18,35 @@ count_resistant(..., only_all_tested = FALSE)
 
 count_susceptible(..., only_all_tested = FALSE)
 
-count_R(..., only_all_tested = FALSE)
-
-count_IR(..., only_all_tested = FALSE)
-
-count_I(..., only_all_tested = FALSE)
+count_S(..., only_all_tested = FALSE)
 
 count_SI(..., only_all_tested = FALSE)
 
-count_S(..., only_all_tested = FALSE)
+count_I(..., only_all_tested = FALSE)
+
+count_IR(..., only_all_tested = FALSE)
+
+count_R(..., only_all_tested = FALSE)
 
 count_all(..., only_all_tested = FALSE)
 
 n_sir(..., only_all_tested = FALSE)
 
-count_df(
-  data,
-  translate_ab = "name",
-  language = get_AMR_locale(),
-  combine_SI = TRUE
-)
+count_df(data, translate_ab = "name", language = get_AMR_locale(),
+  combine_SI = TRUE)
 }
 \arguments{
-\item{...}{one or more vectors (or columns) with antibiotic interpretations. They will be transformed internally with \code{\link[=as.sir]{as.sir()}} if needed.}
+\item{...}{One or more vectors (or columns) with antibiotic interpretations. They will be transformed internally with \code{\link[=as.sir]{as.sir()}} if needed.}
 
-\item{only_all_tested}{(for combination therapies, i.e. using more than one variable for \code{...}): a \link{logical} to indicate that isolates must be tested for all antibiotics, see section \emph{Combination Therapy} below}
+\item{only_all_tested}{(for combination therapies, i.e. using more than one variable for \code{...}): a \link{logical} to indicate that isolates must be tested for all antimicrobials, see section \emph{Combination Therapy} below.}
 
-\item{data}{a \link{data.frame} containing columns with class \code{\link{sir}} (see \code{\link[=as.sir]{as.sir()}})}
+\item{data}{A \link{data.frame} containing columns with class \code{\link{sir}} (see \code{\link[=as.sir]{as.sir()}}).}
 
-\item{translate_ab}{a column name of the \link{antibiotics} data set to translate the antibiotic abbreviations to, using \code{\link[=ab_property]{ab_property()}}}
+\item{translate_ab}{A column name of the \link{antimicrobials} data set to translate the antibiotic abbreviations to, using \code{\link[=ab_property]{ab_property()}}.}
 
-\item{language}{language of the returned text - the default is the current system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{language}{Language of the returned text - the default is the current system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the package option \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
-\item{combine_SI}{a \link{logical} to indicate whether all values of S and I must be merged into one, so the output only consists of S+I vs. R (susceptible vs. resistant) - the default is \code{TRUE}}
+\item{combine_SI}{A \link{logical} to indicate whether all values of S, SDD, and I must be merged into one, so the output only consists of S+SDD+I vs. R (susceptible vs. resistant) - the default is \code{TRUE}.}
 }
 \value{
 An \link{integer}
@@ -65,47 +61,36 @@ These functions are meant to count isolates. Use the \code{\link[=resistance]{re
 
 The function \code{\link[=count_resistant]{count_resistant()}} is equal to the function \code{\link[=count_R]{count_R()}}. The function \code{\link[=count_susceptible]{count_susceptible()}} is equal to the function \code{\link[=count_SI]{count_SI()}}.
 
-The function \code{\link[=n_sir]{n_sir()}} is an alias of \code{\link[=count_all]{count_all()}}. They can be used to count all available isolates, i.e. where all input antibiotics have an available result (S, I or R). Their use is equal to \code{n_distinct()}. Their function is equal to \code{count_susceptible(...) + count_resistant(...)}.
+The function \code{\link[=n_sir]{n_sir()}} is an alias of \code{\link[=count_all]{count_all()}}. They can be used to count all available isolates, i.e. where all input antimicrobials have an available result (S, I or R). Their use is equal to \code{n_distinct()}. Their function is equal to \code{count_susceptible(...) + count_resistant(...)}.
 
 The function \code{\link[=count_df]{count_df()}} takes any variable from \code{data} that has an \code{\link{sir}} class (created with \code{\link[=as.sir]{as.sir()}}) and counts the number of S's, I's and R's. It also supports grouped variables. The function \code{\link[=sir_df]{sir_df()}} works exactly like \code{\link[=count_df]{count_df()}}, but adds the percentage of S, I and R.
 }
 \section{Interpretation of SIR}{
 
-In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R as shown below (\url{https://www.eucast.org/newsiandr}):
-\itemize{
-\item \strong{S - Susceptible, standard dosing regimen}\cr
-A microorganism is categorised as "Susceptible, standard dosing regimen", when there is a high likelihood of therapeutic success using a standard dosing regimen of the agent.
-\item \strong{I - Susceptible, increased exposure} \emph{\cr
-A microorganism is categorised as "Susceptible, Increased exposure}" when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.
-\item \strong{R = Resistant}\cr
-A microorganism is categorised as "Resistant" when there is a high likelihood of therapeutic failure even when there is increased exposure.
-\itemize{
-\item \emph{Exposure} is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
-}
-}
+In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R (\url{https://www.eucast.org/newsiandr}).
 
-This AMR package honours this insight. Use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
+This AMR package follows insight; use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
 }
 
 \section{Combination Therapy}{
 
-When using more than one variable for \code{...} (= combination therapy), use \code{only_all_tested} to only count isolates that are tested for all antibiotics/variables that you test them for. See this example for two antibiotics, Drug A and Drug B, about how \code{\link[=susceptibility]{susceptibility()}} works to calculate the \%SI:
+When using more than one variable for \code{...} (= combination therapy), use \code{only_all_tested} to only count isolates that are tested for all antimicrobials/variables that you test them for. See this example for two antimicrobials, Drug A and Drug B, about how \code{\link[=susceptibility]{susceptibility()}} works to calculate the \%SI:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{--------------------------------------------------------------------
                     only_all_tested = FALSE  only_all_tested = TRUE
                     -----------------------  -----------------------
- Drug A    Drug B   include as  include as   include as  include as
-                    numerator   denominator  numerator   denominator
---------  --------  ----------  -----------  ----------  -----------
- S or I    S or I       X            X            X            X
-   R       S or I       X            X            X            X
-  <NA>     S or I       X            X            -            -
- S or I      R          X            X            X            X
-   R         R          -            X            -            X
-  <NA>       R          -            -            -            -
- S or I     <NA>        X            X            -            -
-   R        <NA>        -            -            -            -
-  <NA>      <NA>        -            -            -            -
+ Drug A    Drug B   considered   considered  considered   considered
+                    susceptible    tested    susceptible    tested
+--------  --------  -----------  ----------  -----------  ----------
+ S or I    S or I        X            X           X            X
+   R       S or I        X            X           X            X
+  <NA>     S or I        X            X           -            -
+ S or I      R           X            X           X            X
+   R         R           -            X           -            X
+  <NA>       R           -            -           -            -
+ S or I     <NA>         X            X           -            -
+   R        <NA>         -            -           -            -
+  <NA>      <NA>         -            -           -            -
 --------------------------------------------------------------------
 }\if{html}{\out{</div>}}
 

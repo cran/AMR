@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,24 +24,21 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Calculate the Matching Score for Microorganisms
 #'
 #' This algorithm is used by [as.mo()] and all the [`mo_*`][mo_property()] functions to determine the most probable match of taxonomic records based on user input.
-#' @author Dr. Matthijs Berends, 2018
-#' @param x Any user input value(s)
-#' @param n A full taxonomic name, that exists in [`microorganisms$fullname`][microorganisms]
-#' @note This algorithm was originally described in: Berends MS *et al.* (2022). **AMR: An R Package for Working with Antimicrobial Resistance Data**. *Journal of Statistical Software*, 104(3), 1-31; \doi{10.18637/jss.v104.i03}.
+#' @param x Any user input value(s).
+#' @param n A full taxonomic name, that exists in [`microorganisms$fullname`][microorganisms].
+#' @note This algorithm was originally developed in 2018 and subsequently described in: Berends MS *et al.* (2022). **AMR: An R Package for Working with Antimicrobial Resistance Data**. *Journal of Statistical Software*, 104(3), 1-31; \doi{10.18637/jss.v104.i03}.
 #'
-#' Later, the work of Bartlett A *et al.* about bacterial pathogens infecting humans (2022, \doi{10.1099/mic.0.001269}) was incorporated.
+#' Later, the work of Bartlett A *et al.* about bacterial pathogens infecting humans (2022, \doi{10.1099/mic.0.001269}) was incorporated, and optimalisations to the algorithm were made.
 #' @section Matching Score for Microorganisms:
 #' With ambiguous user input in [as.mo()] and all the [`mo_*`][mo_property()] functions, the returned results are chosen based on their matching score using [mo_matching_score()]. This matching score \eqn{m}, is calculated as:
 #'
-#' \ifelse{latex}{\deqn{m_{(x, n)} = \frac{l_{n} - 0.5 \cdot \min \begin{cases}l_{n} \\ \textrm{lev}(x, n)\end{cases}}{l_{n} \cdot p_{n} \cdot k_{n}}}}{
-#'
-#' \ifelse{html}{\figure{mo_matching_score.png}{options: width="300" alt="mo matching score"}}{m(x, n) = ( l_n * min(l_n, lev(x, n) ) ) / ( l_n * p_n * k_n )}}
+#' \deqn{m_{(x, n)} = \frac{l_{n} - 0.5 \cdot \min \begin{cases}l_{n} \\ \textrm{lev}(x, n)\end{cases}}{l_{n} \cdot p_{n} \cdot k_{n}}}
 #'
 #' where:
 #'
@@ -50,26 +47,27 @@
 #' * \eqn{l_n} is the length of \eqn{n};
 #' * \eqn{lev} is the [Levenshtein distance function](https://en.wikipedia.org/wiki/Levenshtein_distance) (counting any insertion as 1, and any deletion or substitution as 2) that is needed to change \eqn{x} into \eqn{n};
 #' * \eqn{p_n} is the human pathogenic prevalence group of \eqn{n}, as described below;
-#' * \eqn{k_n} is the taxonomic kingdom of \eqn{n}, set as Bacteria = 1, Fungi = 1.25, Protozoa = 1.5, Archaea = 2, others = 3.
+#' * \eqn{k_n} is the taxonomic kingdom of \eqn{n}, set as Bacteria = 1, Fungi = 1.25, Protozoa = 1.5, Chromista = 1.75, Archaea = 2, others = 3.
 #'
 #' The grouping into human pathogenic prevalence \eqn{p} is based on recent work from Bartlett *et al.* (2022, \doi{10.1099/mic.0.001269}) who extensively studied medical-scientific literature to categorise all bacterial species into these groups:
 #'
-#' - **Established**, if a taxonomic species has infected at least three persons in three or more references. These records have `prevalence = 1.0` in the [microorganisms] data set;
+#' - **Established**, if a taxonomic species has infected at least three persons in three or more references. These records have `prevalence = 1.15` in the [microorganisms] data set;
 #' - **Putative**, if a taxonomic species has fewer than three known cases. These records have `prevalence = 1.25` in the [microorganisms] data set.
 #'
 #' Furthermore,
 #'
-#' - Any genus present in the **established** list also has `prevalence = 1.0` in the [microorganisms] data set;
+#' - Genera from the World Health Organization's (WHO) Priority Pathogen List have `prevalence = 1.0` in the [microorganisms] data set;
+#' - Any genus present in the **established** list also has `prevalence = 1.15` in the [microorganisms] data set;
 #' - Any other genus present in the **putative** list has `prevalence = 1.25` in the [microorganisms] data set;
 #' - Any other species or subspecies of which the genus is present in the two aforementioned groups, has `prevalence = 1.5` in the [microorganisms] data set;
-#' - Any *non-bacterial* genus, species or subspecies of which the genus is present in the following list, has `prevalence = 1.25` in the [microorganisms] data set: `r vector_or(MO_PREVALENT_GENERA, quotes = "*")`;
+#' - Any *non-bacterial* genus, species or subspecies of which the genus is present in the following list, has `prevalence = 1.25` in the [microorganisms] data set: `r vector_or(MO_RELEVANT_GENERA, quotes = "*")`;
 #' - All other records have `prevalence = 2.0` in the [microorganisms] data set.
 #'
 #' When calculating the matching score, all characters in \eqn{x} and \eqn{n} are ignored that are other than A-Z, a-z, 0-9, spaces and parentheses.
 #'
 #' All matches are sorted descending on their matching score and for all user input values, the top match will be returned. This will lead to the effect that e.g., `"E. coli"` will return the microbial ID of *Escherichia coli* (\eqn{m = `r round(mo_matching_score("E. coli", "Escherichia coli"), 3)`}, a highly prevalent microorganism found in humans) and not *Entamoeba coli* (\eqn{m = `r round(mo_matching_score("E. coli", "Entamoeba coli"), 3)`}, a less prevalent microorganism in humans), although the latter would alphabetically come first.
 #' @export
-#' @inheritSection AMR Reference Data Publicly Available
+#' @inheritSection AMR Download Our Reference Data
 #' @examples
 #' mo_reset_session()
 #'

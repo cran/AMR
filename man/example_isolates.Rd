@@ -13,18 +13,24 @@ A \link[tibble:tibble]{tibble} with 2 000 observations and 46 variables:
 \item \code{gender}\cr Gender of the patient, either "F" or "M"
 \item \code{ward}\cr Ward type where the patient was admitted, either "Clinical", "ICU", or "Outpatient"
 \item \code{mo}\cr ID of microorganism created with \code{\link[=as.mo]{as.mo()}}, see also the \link{microorganisms} data set
-\item \code{PEN:RIF}\cr 40 different antibiotics with class \code{\link{sir}} (see \code{\link[=as.sir]{as.sir()}}); these column names occur in the \link{antibiotics} data set and can be translated with \code{\link[=set_ab_names]{set_ab_names()}} or \code{\link[=ab_name]{ab_name()}}
+\item \code{PEN:RIF}\cr 40 different antimicrobials with class \code{\link{sir}} (see \code{\link[=as.sir]{as.sir()}}); these column names occur in the \link{antimicrobials} data set and can be translated with \code{\link[=set_ab_names]{set_ab_names()}} or \code{\link[=ab_name]{ab_name()}}
 }
 }
 \usage{
 example_isolates
 }
 \description{
-A data set containing 2 000 microbial isolates with their full antibiograms. This data set contains randomised fictitious data, but reflects reality and can be used to practise AMR data analysis. For examples, please read \href{https://msberends.github.io/AMR/articles/AMR.html}{the tutorial on our website}.
+A data set containing 2 000 microbial isolates with their full antibiograms. This data set contains randomised fictitious data, but reflects reality and can be used to practise AMR data analysis. For examples, please read \href{https://amr-for-r.org/articles/AMR.html}{the tutorial on our website}.
 }
-\details{
-Like all data sets in this package, this data set is publicly available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
+\section{Download Our Reference Data}{
+
+All reference data sets in the AMR package - including information on microorganisms, antimicrobials, and clinical breakpoints - are freely available for download in multiple formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, and Stata.
+
+For maximum compatibility, we also provide machine-readable, tab-separated plain text files suitable for use in any software, including laboratory information systems.
+
+Visit \href{https://amr-for-r.org/articles/datasets.html}{our website for direct download links}, or explore the actual files in \href{https://github.com/msberends/AMR/tree/main/data-raw/datasets}{our GitHub repository}.
 }
+
 \examples{
 example_isolates
 }

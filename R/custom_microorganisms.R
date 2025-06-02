@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,24 +24,24 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Add Custom Microorganisms
 #'
 #' With [add_custom_microorganisms()] you can add your own custom microorganisms, such the non-taxonomic outcome of laboratory analysis.
-#' @param x a [data.frame] resembling the [microorganisms] data set, at least containing column "genus" (case-insensitive)
+#' @param x A [data.frame] resembling the [microorganisms] data set, at least containing column "genus" (case-insensitive).
 #' @details This function will fill in missing taxonomy for you, if specific taxonomic columns are missing, see *Examples*.
 #'
 #' **Important:** Due to how \R works, the [add_custom_microorganisms()] function has to be run in every \R session - added microorganisms are not stored between sessions and are thus lost when \R is exited.
 #'
 #' There are two ways to circumvent this and automate the process of adding microorganisms:
 #'
-#' **Method 1:** Using the [package option][AMR-options] [`AMR_custom_mo`][AMR-options], which is the preferred method. To use this method:
+#' **Method 1:** Using the package option [`AMR_custom_mo`][AMR-options], which is the preferred method. To use this method:
 #'
 #'    1. Create a data set in the structure of the [microorganisms] data set (containing at the very least column "genus") and save it with [saveRDS()] to a location of choice, e.g. `"~/my_custom_mo.rds"`, or any remote location.
 #'
-#'    2. Set the file location to the [package option][AMR-options] [`AMR_custom_mo`][AMR-options]: `options(AMR_custom_mo = "~/my_custom_mo.rds")`. This can even be a remote file location, such as an https URL. Since options are not saved between \R sessions, it is best to save this option to the `.Rprofile` file so that it will be loaded on start-up of \R. To do this, open the `.Rprofile` file using e.g. `utils::file.edit("~/.Rprofile")`, add this text and save the file:
+#'    2. Set the file location to the package option [`AMR_custom_mo`][AMR-options]: `options(AMR_custom_mo = "~/my_custom_mo.rds")`. This can even be a remote file location, such as an https URL. Since options are not saved between \R sessions, it is best to save this option to the `.Rprofile` file so that it will be loaded on start-up of \R. To do this, open the `.Rprofile` file using e.g. `utils::file.edit("~/.Rprofile")`, add this text and save the file:
 #'
 #'       ```r
 #'       # Add custom microorganism codes:
@@ -250,12 +250,15 @@ add_custom_microorganisms <- function(x) {
     "_",
     trimws(
       paste(abbreviate_mo(x$genus, 5),
-            abbreviate_mo(x$species, 4, hyphen_as_space = TRUE),
-            abbreviate_mo(x$subspecies, 4, hyphen_as_space = TRUE),
-            sep = "_"),
-      whitespace = "_"))
+        abbreviate_mo(x$species, 4, hyphen_as_space = TRUE),
+        abbreviate_mo(x$subspecies, 4, hyphen_as_space = TRUE),
+        sep = "_"
+      ),
+      whitespace = "_"
+    )
+  )
   stop_if(anyDuplicated(c(as.character(AMR_env$MO_lookup$mo), x$mo)), "MO codes must be unique and not match existing MO codes of the AMR package")
-  
+
   # add to package ----
   AMR_env$custom_mo_codes <- c(AMR_env$custom_mo_codes, x$mo)
   class(AMR_env$MO_lookup$mo) <- "character"
@@ -309,19 +312,25 @@ abbreviate_mo <- function(x, minlength = 5, prefix = "", hyphen_as_space = FALSE
   }
   # keep a starting Latin ae
   suppressWarnings(
-    gsub("(\u00C6|\u00E6)+",
-         "AE",
-         toupper(
-           paste0(prefix,
-                  abbreviate(
-                    gsub("^ae",
-                         "\u00E6\u00E6",
-                         x,
-                         ignore.case = TRUE),
-                    minlength = minlength,
-                    use.classes = TRUE,
-                    method = "both.sides",
-                    ...
-                  ))))
+    gsub(
+      "(\u00C6|\u00E6)+",
+      "AE",
+      toupper(
+        paste0(
+          prefix,
+          abbreviate(
+            gsub("^ae",
+              "\u00E6\u00E6",
+              x,
+              ignore.case = TRUE
+            ),
+            minlength = minlength,
+            use.classes = TRUE,
+            method = "both.sides",
+            ...
+          )
+        )
+      )
+    )
   )
 }

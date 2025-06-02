@@ -2,8 +2,8 @@
 % Please edit documentation in R/aa_amr-package.R
 \docType{package}
 \name{AMR}
-\alias{AMR}
 \alias{AMR-package}
+\alias{AMR}
 \title{The \code{AMR} Package}
 \source{
 To cite AMR in publications use:
@@ -28,23 +28,27 @@ A BibTeX entry for LaTeX users is:
 \description{
 Welcome to the \code{AMR} package.
 
-The \code{AMR} package is a \href{https://msberends.github.io/AMR/#copyright}{free and open-source} R package with \href{https://en.wikipedia.org/wiki/Dependency_hell}{zero dependencies} to simplify the analysis and prediction of Antimicrobial Resistance (AMR) and to work with microbial and antimicrobial data and properties, by using evidence-based methods. \strong{Our aim is to provide a standard} for clean and reproducible AMR data analysis, that can therefore empower epidemiological analyses to continuously enable surveillance and treatment evaluation in any setting. \href{https://msberends.github.io/AMR/authors.html}{Many different researchers} from around the globe are continually helping us to make this a successful and durable project!
+The \code{AMR} package is a peer-reviewed, \href{https://amr-for-r.org/#copyright}{free and open-source} R package with \href{https://en.wikipedia.org/wiki/Dependency_hell}{zero dependencies} to simplify the analysis and prediction of Antimicrobial Resistance (AMR) and to work with microbial and antimicrobial data and properties, by using evidence-based methods. \strong{Our aim is to provide a standard} for clean and reproducible AMR data analysis, that can therefore empower epidemiological analyses to continuously enable surveillance and treatment evaluation in any setting. We are a team of \href{https://amr-for-r.org/authors.html}{many different researchers} from around the globe to make this a successful and durable project!
 
 This work was published in the Journal of Statistical Software (Volume 104(3); \doi{10.18637/jss.v104.i03}) and formed the basis of two PhD theses (\doi{10.33612/diss.177417131} and \doi{10.33612/diss.192486375}).
 
-After installing this package, R knows \href{https://msberends.github.io/AMR/reference/microorganisms.html}{\strong{~52 000 microorganisms}} (updated December 2022) and all \href{https://msberends.github.io/AMR/reference/antibiotics.html}{\strong{~600 antibiotic, antimycotic and antiviral drugs}} by name and code (including ATC, EARS-Net, ASIARS-Net, PubChem, LOINC and SNOMED CT), and knows all about valid SIR and MIC values. The integral clinical breakpoint guidelines from CLSI and EUCAST are included, even with epidemiological cut-off (ECOFF) values. It supports and can read any data format, including WHONET data. This package works on Windows, macOS and Linux with all versions of R since R-3.0 (April 2013). \strong{It was designed to work in any setting, including those with very limited resources}. It was created for both routine data analysis and academic research at the Faculty of Medical Sciences of the public \href{https://www.rug.nl}{University of Groningen}, in collaboration with non-profit organisations \href{https://www.certe.nl}{Certe Medical Diagnostics and Advice Foundation} and \href{https://www.umcg.nl}{University Medical Center Groningen}.
+After installing this package, R knows \href{https://amr-for-r.org/reference/microorganisms.html}{\strong{~79 000 distinct microbial species}} (updated June 2024) and all \href{https://amr-for-r.org/reference/antimicrobials.html}{\strong{~620 antimicrobial and antiviral drugs}} by name and code (including ATC, EARS-Net, ASIARS-Net, PubChem, LOINC and SNOMED CT), and knows all about valid SIR and MIC values. The integral clinical breakpoint guidelines from CLSI 2011-2025 and EUCAST 2011-2025 are included, even with epidemiological cut-off (ECOFF) values. It supports and can read any data format, including WHONET data. This package works on Windows, macOS and Linux with all versions of R since R-3.0 (April 2013). \strong{It was designed to work in any setting, including those with very limited resources}. It was created for both routine data analysis and academic research at the Faculty of Medical Sciences of the \href{https://www.rug.nl}{University of Groningen} and the \href{https://www.umcg.nl}{University Medical Center Groningen}.
 
-The \code{AMR} package is available in English, Chinese, Czech, Danish, Dutch, Finnish, French, German, Greek, Italian, Japanese, Norwegian, Polish, Portuguese, Romanian, Russian, Spanish, Swedish, Turkish, and Ukrainian. Antimicrobial drug (group) names and colloquial microorganism names are provided in these languages.
+The \code{AMR} package is available in English, Arabic, Bengali, Chinese, Czech, Danish, Dutch, Finnish, French, German, Greek, Hindi, Indonesian, Italian, Japanese, Korean, Norwegian, Polish, Portuguese, Romanian, Russian, Spanish, Swahili, Swedish, Turkish, Ukrainian, Urdu, and Vietnamese. Antimicrobial drug (group) names and colloquial microorganism names are provided in these languages.
 }
-\section{Reference Data Publicly Available}{
+\section{Download Our Reference Data}{
 
-All data sets in this \code{AMR} package (about microorganisms, antibiotics, SIR interpretation, EUCAST rules, etc.) are publicly and freely available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. We also provide tab-separated plain text files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
+All reference data sets in the AMR package - including information on microorganisms, antimicrobials, and clinical breakpoints - are freely available for download in multiple formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, and Stata.
+
+For maximum compatibility, we also provide machine-readable, tab-separated plain text files suitable for use in any software, including laboratory information systems.
+
+Visit \href{https://amr-for-r.org/articles/datasets.html}{our website for direct download links}, or explore the actual files in \href{https://github.com/msberends/AMR/tree/main/data-raw/datasets}{our GitHub repository}.
 }
 
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://msberends.github.io/AMR/}
+  \item \url{https://amr-for-r.org}
   \item \url{https://github.com/msberends/AMR}
   \item Report bugs at \url{https://github.com/msberends/AMR/issues}
 }
@@ -55,31 +59,39 @@ Useful links:
 
 Authors:
 \itemize{
-  \item Christian F. Luz (\href{https://orcid.org/0000-0001-5809-5995}{ORCID}) [contributor]
   \item Dennis Souverein (\href{https://orcid.org/0000-0003-0455-0336}{ORCID}) [contributor]
   \item Erwin E. A. Hassing [contributor]
 }
 
 Other contributors:
 \itemize{
-  \item Casper J. Albers (\href{https://orcid.org/0000-0002-9213-6743}{ORCID}) [thesis advisor]
-  \item Peter Dutey-Magni (\href{https://orcid.org/0000-0002-8942-9836}{ORCID}) [contributor]
-  \item Judith M. Fonville [contributor]
-  \item Alex W. Friedrich (\href{https://orcid.org/0000-0003-4881-038X}{ORCID}) [thesis advisor]
-  \item Corinna Glasner (\href{https://orcid.org/0000-0003-1241-1328}{ORCID}) [thesis advisor]
+  \item Aislinn Cook (\href{https://orcid.org/0000-0002-9189-7815}{ORCID}) [contributor]
+  \item Andrew P. Norgan (\href{https://orcid.org/0000-0002-2955-2066}{ORCID}) [contributor]
+  \item Anita Williams (\href{https://orcid.org/0000-0002-5295-8451}{ORCID}) [contributor]
+  \item Annick Lenglet (\href{https://orcid.org/0000-0003-2013-8405}{ORCID}) [contributor]
+  \item Anthony Underwood (\href{https://orcid.org/0000-0002-8547-4277}{ORCID}) [contributor]
+  \item Anton Mymrikov [contributor]
+  \item Bart C. Meijer [contributor]
+  \item Christian F. Luz (\href{https://orcid.org/0000-0001-5809-5995}{ORCID}) [contributor]
+  \item Dmytro Mykhailenko [contributor]
   \item Eric H. L. C. M. Hazenberg [contributor]
   \item Gwen Knight (\href{https://orcid.org/0000-0002-7263-9896}{ORCID}) [contributor]
-  \item Annick Lenglet (\href{https://orcid.org/0000-0003-2013-8405}{ORCID}) [contributor]
-  \item Bart C. Meijer [contributor]
-  \item Dmytro Mykhailenko [contributor]
-  \item Anton Mymrikov [contributor]
-  \item Andrew P. Norgan (\href{https://orcid.org/0000-0002-2955-2066}{ORCID}) [contributor]
-  \item Sofia Ny (\href{https://orcid.org/0000-0002-2017-1363}{ORCID}) [contributor]
+  \item Jane Hawkey (\href{https://orcid.org/0000-0001-9661-5293}{ORCID}) [contributor]
+  \item Jason Stull (\href{https://orcid.org/0000-0002-9028-8153}{ORCID}) [contributor]
+  \item Javier Sanchez (\href{https://orcid.org/0000-0003-2605-8094}{ORCID}) [contributor]
   \item Jonas Salm [contributor]
+  \item Judith M. Fonville [contributor]
+  \item Kathryn Holt (\href{https://orcid.org/0000-0003-3949-2471}{ORCID}) [contributor]
+  \item Larisse Bolton (\href{https://orcid.org/0000-0001-7879-2173}{ORCID}) [contributor]
+  \item Matthew Saab [contributor]
+  \item Natacha Couto (\href{https://orcid.org/0000-0002-9152-5464}{ORCID}) [contributor]
+  \item Peter Dutey-Magni (\href{https://orcid.org/0000-0002-8942-9836}{ORCID}) [contributor]
   \item Rogier P. Schade [contributor]
+  \item Sofia Ny (\href{https://orcid.org/0000-0002-2017-1363}{ORCID}) [contributor]
+  \item Alex W. Friedrich (\href{https://orcid.org/0000-0003-4881-038X}{ORCID}) [thesis advisor]
   \item Bhanu N. M. Sinha (\href{https://orcid.org/0000-0003-1634-0010}{ORCID}) [thesis advisor]
-  \item Anthony Underwood (\href{https://orcid.org/0000-0002-8547-4277}{ORCID}) [contributor]
-  \item Anita Williams (\href{https://orcid.org/0000-0002-5295-8451}{ORCID}) [contributor]
+  \item Casper J. Albers (\href{https://orcid.org/0000-0002-9213-6743}{ORCID}) [thesis advisor]
+  \item Corinna Glasner (\href{https://orcid.org/0000-0003-1241-1328}{ORCID}) [thesis advisor]
 }
 
 }

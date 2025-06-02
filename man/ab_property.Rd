@@ -47,34 +47,29 @@ ab_url(x, open = FALSE, ...)
 
 ab_property(x, property = "name", language = get_AMR_locale(), ...)
 
-set_ab_names(
-  data,
-  ...,
-  property = "name",
-  language = get_AMR_locale(),
-  snake_case = NULL
-)
+set_ab_names(data, ..., property = "name", language = get_AMR_locale(),
+  snake_case = NULL)
 }
 \arguments{
-\item{x}{any (vector of) text that can be coerced to a valid antibiotic drug code with \code{\link[=as.ab]{as.ab()}}}
+\item{x}{Any (vector of) text that can be coerced to a valid antibiotic drug code with \code{\link[=as.ab]{as.ab()}}.}
 
-\item{language}{language of the returned text - the default is the current system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
+\item{language}{Language of the returned text - the default is the current system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the package option \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
-\item{tolower}{a \link{logical} to indicate whether the first \link{character} of every output should be transformed to a lower case \link{character}. This will lead to e.g. "polymyxin B" and not "polymyxin b".}
+\item{tolower}{A \link{logical} to indicate whether the first \link{character} of every output should be transformed to a lower case \link{character}. This will lead to e.g. "polymyxin B" and not "polymyxin b".}
 
-\item{...}{in case of \code{\link[=set_ab_names]{set_ab_names()}} and \code{data} is a \link{data.frame}: columns to select (supports tidy selection such as \code{column1:column4}), otherwise other arguments passed on to \code{\link[=as.ab]{as.ab()}}}
+\item{...}{In case of \code{\link[=set_ab_names]{set_ab_names()}} and \code{data} is a \link{data.frame}: columns to select (supports tidy selection such as \code{column1:column4}), otherwise other arguments passed on to \code{\link[=as.ab]{as.ab()}}.}
 
-\item{only_first}{a \link{logical} to indicate whether only the first ATC code must be returned, with giving preference to J0-codes (i.e., the antimicrobial drug group)}
+\item{only_first}{A \link{logical} to indicate whether only the first ATC code must be returned, with giving preference to J0-codes (i.e., the antimicrobial drug group).}
 
-\item{administration}{way of administration, either \code{"oral"} or \code{"iv"}}
+\item{administration}{Way of administration, either \code{"oral"} or \code{"iv"}.}
 
-\item{open}{browse the URL using \code{\link[utils:browseURL]{utils::browseURL()}}}
+\item{open}{Browse the URL using \code{\link[utils:browseURL]{utils::browseURL()}}.}
 
-\item{property}{one of the column names of one of the \link{antibiotics} data set: \code{vector_or(colnames(antibiotics), sort = FALSE)}.}
+\item{property}{One of the column names of one of the \link{antimicrobials} data set: \code{vector_or(colnames(antimicrobials), sort = FALSE)}.}
 
-\item{data}{a \link{data.frame} of which the columns need to be renamed, or a \link{character} vector of column names}
+\item{data}{A \link{data.frame} of which the columns need to be renamed, or a \link{character} vector of column names.}
 
-\item{snake_case}{a \link{logical} to indicate whether the names should be in so-called \href{https://en.wikipedia.org/wiki/Snake_case}{snake case}: in lower case and all spaces/slashes replaced with an underscore (\verb{_})}
+\item{snake_case}{A \link{logical} to indicate whether the names should be in so-called \href{https://en.wikipedia.org/wiki/Snake_case}{snake case}: in lower case and all spaces/slashes replaced with an underscore (\verb{_}).}
 }
 \value{
 \itemize{
@@ -86,7 +81,7 @@ set_ab_names(
 }
 }
 \description{
-Use these functions to return a specific property of an antibiotic from the \link{antibiotics} data set. All input values will be evaluated internally with \code{\link[=as.ab]{as.ab()}}.
+Use these functions to return a specific property of an antibiotic from the \link{antimicrobials} data set. All input values will be evaluated internally with \code{\link[=as.ab]{as.ab()}}.
 }
 \details{
 All output \link[=translate]{will be translated} where possible.
@@ -97,14 +92,18 @@ The function \code{\link[=set_ab_names]{set_ab_names()}} is a special column ren
 }
 \section{Source}{
 
-World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://www.whocc.no/atc_ddd_index/}
+World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://atcddd.fhi.no/atc_ddd_index/}
 
 European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
 }
 
-\section{Reference Data Publicly Available}{
+\section{Download Our Reference Data}{
 
-All data sets in this \code{AMR} package (about microorganisms, antibiotics, SIR interpretation, EUCAST rules, etc.) are publicly and freely available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. We also provide tab-separated plain text files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
+All reference data sets in the AMR package - including information on microorganisms, antimicrobials, and clinical breakpoints - are freely available for download in multiple formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, and Stata.
+
+For maximum compatibility, we also provide machine-readable, tab-separated plain text files suitable for use in any software, including laboratory information systems.
+
+Visit \href{https://amr-for-r.org/articles/datasets.html}{our website for direct download links}, or explore the actual files in \href{https://github.com/msberends/AMR/tree/main/data-raw/datasets}{our GitHub repository}.
 }
 
 \examples{
@@ -173,5 +172,5 @@ if (require("dplyr")) {
 }
 }
 \seealso{
-\link{antibiotics}
+\link{antimicrobials}
 }

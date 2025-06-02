@@ -7,20 +7,20 @@
 \alias{NA_sir_}
 \alias{is.sir}
 \alias{is_sir_eligible}
+\alias{as.sir.default}
 \alias{as.sir.mic}
 \alias{as.sir.disk}
 \alias{as.sir.data.frame}
 \alias{sir_interpretation_history}
-\title{Translate MIC and Disk Diffusion to SIR, or Clean Existing SIR Data}
-\format{
-An object of class \code{sir} (inherits from \code{ordered}, \code{factor}) of length 1.
-}
+\title{Interpret MIC and Disk Diffusion as SIR, or Clean Existing SIR Data}
 \source{
 For interpretations of minimum inhibitory concentration (MIC) values and disk diffusion diameters:
 \itemize{
-\item \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data}, 2011-2023, \emph{Clinical and Laboratory Standards Institute} (CLSI). \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
-\item \strong{M100 Performance Standard for Antimicrobial Susceptibility Testing}, 2011-2023, \emph{Clinical and Laboratory Standards Institute} (CLSI). \url{https://clsi.org/standards/products/microbiology/documents/m100/}.
-\item \strong{Breakpoint tables for interpretation of MICs and zone diameters}, 2011-2023, \emph{European Committee on Antimicrobial Susceptibility Testing} (EUCAST). \url{https://www.eucast.org/clinical_breakpoints}.
+\item \strong{CLSI M39: Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data}, 2011-2025, \emph{Clinical and Laboratory Standards Institute} (CLSI). \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
+\item \strong{CLSI M100: Performance Standard for Antimicrobial Susceptibility Testing}, 2011-2025, \emph{Clinical and Laboratory Standards Institute} (CLSI). \url{https://clsi.org/standards/products/microbiology/documents/m100/}.
+\item \strong{CLSI VET01: Performance Standards for Antimicrobial Disk and Dilution Susceptibility Tests for Bacteria Isolated From Animals}, 2019-2025, \emph{Clinical and Laboratory Standards Institute} (CLSI). \url{https://clsi.org/standards/products/veterinary-medicine/documents/vet01/}.
+\item \strong{EUCAST Breakpoint tables for interpretation of MICs and zone diameters}, 2011-2025, \emph{European Committee on Antimicrobial Susceptibility Testing} (EUCAST). \url{https://www.eucast.org/clinical_breakpoints}.
+\item \strong{WHONET} as a source for machine-reading the clinical breakpoints (\href{https://amr-for-r.org/reference/clinical_breakpoints.html#imported-from-whonet}{read more here}), 1989-2025, \emph{WHO Collaborating Centre for Surveillance of Antimicrobial Resistance}. \url{https://whonet.org/}.
 }
 }
 \usage{
@@ -32,129 +32,190 @@ is.sir(x)
 
 is_sir_eligible(x, threshold = 0.05)
 
-\method{as.sir}{mic}(
-  x,
-  mo = NULL,
-  ab = deparse(substitute(x)),
-  guideline = getOption("AMR_guideline", "EUCAST"),
-  uti = NULL,
-  conserve_capped_values = FALSE,
-  add_intrinsic_resistance = FALSE,
-  reference_data = AMR::clinical_breakpoints,
-  include_screening = getOption("AMR_include_screening", FALSE),
-  include_PKPD = getOption("AMR_include_PKPD", TRUE),
-  breakpoint_type = getOption("AMR_breakpoint_type", "human"),
-  ...
-)
+\method{as.sir}{default}(x, S = "^(S|U)+$", I = "^(I)+$", R = "^(R)+$",
+  NI = "^(N|NI|V)+$", SDD = "^(SDD|D|H)+$", info = interactive(), ...)
 
-\method{as.sir}{disk}(
-  x,
-  mo = NULL,
-  ab = deparse(substitute(x)),
-  guideline = getOption("AMR_guideline", "EUCAST"),
-  uti = NULL,
+\method{as.sir}{mic}(x, mo = NULL, ab = deparse(substitute(x)),
+  guideline = getOption("AMR_guideline", "EUCAST"), uti = NULL,
+  capped_mic_handling = getOption("AMR_capped_mic_handling", "standard"),
   add_intrinsic_resistance = FALSE,
   reference_data = AMR::clinical_breakpoints,
-  include_screening = getOption("AMR_include_screening", FALSE),
+  substitute_missing_r_breakpoint = getOption("AMR_substitute_missing_r_breakpoint",
+  FALSE), include_screening = getOption("AMR_include_screening", FALSE),
   include_PKPD = getOption("AMR_include_PKPD", TRUE),
-  breakpoint_type = getOption("AMR_breakpoint_type", "human"),
-  ...
-)
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"), host = NULL,
+  language = get_AMR_locale(), verbose = FALSE, info = interactive(),
+  conserve_capped_values = NULL, ...)
 
-\method{as.sir}{data.frame}(
-  x,
-  ...,
-  col_mo = NULL,
-  guideline = getOption("AMR_guideline", "EUCAST"),
-  uti = NULL,
-  conserve_capped_values = FALSE,
+\method{as.sir}{disk}(x, mo = NULL, ab = deparse(substitute(x)),
+  guideline = getOption("AMR_guideline", "EUCAST"), uti = NULL,
   add_intrinsic_resistance = FALSE,
   reference_data = AMR::clinical_breakpoints,
-  include_screening = getOption("AMR_include_screening", FALSE),
+  substitute_missing_r_breakpoint = getOption("AMR_substitute_missing_r_breakpoint",
+  FALSE), include_screening = getOption("AMR_include_screening", FALSE),
   include_PKPD = getOption("AMR_include_PKPD", TRUE),
-  breakpoint_type = getOption("AMR_breakpoint_type", "human")
-)
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"), host = NULL,
+  language = get_AMR_locale(), verbose = FALSE, info = interactive(),
+  ...)
+
+\method{as.sir}{data.frame}(x, ..., col_mo = NULL,
+  guideline = getOption("AMR_guideline", "EUCAST"), uti = NULL,
+  capped_mic_handling = getOption("AMR_capped_mic_handling", "standard"),
+  add_intrinsic_resistance = FALSE,
+  reference_data = AMR::clinical_breakpoints,
+  substitute_missing_r_breakpoint = getOption("AMR_substitute_missing_r_breakpoint",
+  FALSE), include_screening = getOption("AMR_include_screening", FALSE),
+  include_PKPD = getOption("AMR_include_PKPD", TRUE),
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"), host = NULL,
+  language = get_AMR_locale(), verbose = FALSE, info = interactive(),
+  parallel = FALSE, max_cores = -1, conserve_capped_values = NULL)
 
 sir_interpretation_history(clean = FALSE)
 }
 \arguments{
-\item{x}{vector of values (for class \code{\link{mic}}: MIC values in mg/L, for class \code{\link{disk}}: a disk diffusion radius in millimetres)}
+\item{x}{Vector of values (for class \code{\link{mic}}: MIC values in mg/L, for class \code{\link{disk}}: a disk diffusion radius in millimetres).}
 
-\item{...}{for using on a \link{data.frame}: names of columns to apply \code{\link[=as.sir]{as.sir()}} on (supports tidy selection such as \code{column1:column4}). Otherwise: arguments passed on to methods.}
+\item{...}{For using on a \link{data.frame}: names of columns to apply \code{\link[=as.sir]{as.sir()}} on (supports tidy selection such as \code{column1:column4}). Otherwise: arguments passed on to methods.}
 
-\item{threshold}{maximum fraction of invalid antimicrobial interpretations of \code{x}, see \emph{Examples}}
+\item{threshold}{Maximum fraction of invalid antimicrobial interpretations of \code{x}, see \emph{Examples}.}
 
-\item{mo}{any (vector of) text that can be coerced to valid microorganism codes with \code{\link[=as.mo]{as.mo()}}, can be left empty to determine it automatically}
+\item{S, I, R, NI, SDD}{A case-independent \link[base:regex]{regular expression} to translate input to this result. This regular expression will be run \emph{after} all non-letters and whitespaces are removed from the input.}
 
-\item{ab}{any (vector of) text that can be coerced to a valid antimicrobial drug code with \code{\link[=as.ab]{as.ab()}}}
+\item{info}{A \link{logical} to print information about the process, defaults to \code{TRUE} only in \link[base:interactive]{interactive sessions}.}
 
-\item{guideline}{defaults to EUCAST 2023 (the latest implemented EUCAST guideline in the \link{clinical_breakpoints} data set), but can be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_guideline}}. Currently supports EUCAST (2011-2023) and CLSI (2011-2023), see \emph{Details}.}
+\item{mo}{A vector (or column name) with \link{character}s that can be coerced to valid microorganism codes with \code{\link[=as.mo]{as.mo()}}, can be left empty to determine it automatically.}
 
-\item{uti}{(Urinary Tract Infection) A vector with \link{logical}s (\code{TRUE} or \code{FALSE}) to specify whether a UTI specific interpretation from the guideline should be chosen. For using \code{\link[=as.sir]{as.sir()}} on a \link{data.frame}, this can also be a column containing \link{logical}s or when left blank, the data set will be searched for a column 'specimen', and rows within this column containing 'urin' (such as 'urine', 'urina') will be regarded isolates from a UTI. See \emph{Examples}.}
+\item{ab}{A vector (or column name) with \link{character}s that can be coerced to a valid antimicrobial drug code with \code{\link[=as.ab]{as.ab()}}.}
 
-\item{conserve_capped_values}{a \link{logical} to indicate that MIC values starting with \code{">"} (but not \code{">="}) must always return "R" , and that MIC values starting with \code{"<"} (but not \code{"<="}) must always return "S"}
+\item{guideline}{A guideline name (or column name) to use for SIR interpretation. Defaults to EUCAST 2025 (the latest implemented EUCAST guideline in the \link{clinical_breakpoints} data set), but can be set with the package option \code{\link[=AMR-options]{AMR_guideline}}. Currently supports EUCAST (2011-2025) and CLSI (2011-2025), see \emph{Details}. Using a column name allows for straightforward interpretation of historical data, which must be analysed in the context of, for example, different years.}
+
+\item{uti}{(Urinary Tract Infection) a vector (or column name) with \link{logical}s (\code{TRUE} or \code{FALSE}) to specify whether a UTI specific interpretation from the guideline should be chosen. For using \code{\link[=as.sir]{as.sir()}} on a \link{data.frame}, this can also be a column containing \link{logical}s or when left blank, the data set will be searched for a column 'specimen', and rows within this column containing 'urin' (such as 'urine', 'urina') will be regarded isolates from a UTI. See \emph{Examples}.}
+
+\item{capped_mic_handling}{A \link{character} string that controls how MIC values with a cap (i.e., starting with \code{<}, \code{<=}, \code{>}, or \code{>=}) are interpreted. Supports the following options:
+
+\code{"none"}
+\itemize{
+\item \code{<=} and \code{>=} are treated as-is.
+\item \code{<} and \code{>} are treated as-is.
+}
+
+\code{"conservative"}
+\itemize{
+\item \code{<=} and \code{>=} return \code{"NI"} (non-interpretable) if the MIC is within the breakpoint guideline range.
+\item \code{<} always returns \code{"S"}, and \code{>} always returns \code{"R"}.
+}
+
+\code{"standard"} (default)
+\itemize{
+\item \code{<=} and \code{>=} return \code{"NI"} (non-interpretable) if the MIC is within the breakpoint guideline range.
+\item \code{<} and \code{>} are treated as-is.
+}
+
+\code{"inverse"}
+\itemize{
+\item \code{<=} and \code{>=} are treated as-is.
+\item \code{<} always returns \code{"S"}, and \code{>} always returns \code{"R"}.
+}
+
+The default \code{"standard"} setting ensures cautious handling of uncertain values while preserving interpretability. This option can also be set with the package option \code{\link[=AMR-options]{AMR_capped_mic_handling}}.}
 
 \item{add_intrinsic_resistance}{\emph{(only useful when using a EUCAST guideline)} a \link{logical} to indicate whether intrinsic antibiotic resistance must also be considered for applicable bug-drug combinations, meaning that e.g. ampicillin will always return "R" in \emph{Klebsiella} species. Determination is based on the \link{intrinsic_resistant} data set, that itself is based on \href{https://www.eucast.org/expert_rules_and_expected_phenotypes}{'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes' v3.3} (2021).}
 
-\item{reference_data}{a \link{data.frame} to be used for interpretation, which defaults to the \link{clinical_breakpoints} data set. Changing this argument allows for using own interpretation guidelines. This argument must contain a data set that is equal in structure to the \link{clinical_breakpoints} data set (same column names and column types). Please note that the \code{guideline} argument will be ignored when \code{reference_data} is manually set.}
+\item{reference_data}{A \link{data.frame} to be used for interpretation, which defaults to the \link{clinical_breakpoints} data set. Changing this argument allows for using own interpretation guidelines. This argument must contain a data set that is equal in structure to the \link{clinical_breakpoints} data set (same column names and column types). Please note that the \code{guideline} argument will be ignored when \code{reference_data} is manually set.}
 
-\item{include_screening}{a \link{logical} to indicate that clinical breakpoints for screening are allowed - the default is \code{FALSE}. Can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_include_screening}}.}
+\item{substitute_missing_r_breakpoint}{A \link{logical} to indicate that a missing clinical breakpoints for R (resistant) must be substituted with R - the default is \code{FALSE}. Some (especially CLSI) breakpoints only have a breakpoint for S, meaning that the outcome can only be \code{"S"} or \code{NA}. Setting this to \code{TRUE} will convert the \code{NA}s in these cases to \code{"R"}. Can also be set with the package option \code{\link[=AMR-options]{AMR_substitute_missing_r_breakpoint}}.}
 
-\item{include_PKPD}{a \link{logical} to indicate that PK/PD clinical breakpoints must be applied as a last resort - the default is \code{TRUE}. Can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_include_PKPD}}.}
+\item{include_screening}{A \link{logical} to indicate that clinical breakpoints for screening are allowed - the default is \code{FALSE}. Can also be set with the package option \code{\link[=AMR-options]{AMR_include_screening}}.}
 
-\item{breakpoint_type}{the type of breakpoints to use, either "ECOFF", "animal", or "human". ECOFF stands for Epidemiological Cut-Off values. The default is \code{"human"}, which can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_breakpoint_type}}.}
+\item{include_PKPD}{A \link{logical} to indicate that PK/PD clinical breakpoints must be applied as a last resort - the default is \code{TRUE}. Can also be set with the package option \code{\link[=AMR-options]{AMR_include_PKPD}}.}
 
-\item{col_mo}{column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
+\item{breakpoint_type}{The type of breakpoints to use, either "ECOFF", "animal", or "human". ECOFF stands for Epidemiological Cut-Off values. The default is \code{"human"}, which can also be set with the package option \code{\link[=AMR-options]{AMR_breakpoint_type}}. If \code{host} is set to values of veterinary species, this will automatically be set to \code{"animal"}.}
 
-\item{clean}{a \link{logical} to indicate whether previously stored results should be forgotten after returning the 'logbook' with results}
+\item{host}{A vector (or column name) with \link{character}s to indicate the host. Only useful for veterinary breakpoints, as it requires \code{breakpoint_type = "animal"}. The values can be any text resembling the animal species, even in any of the 28 supported languages of this package. For foreign languages, be sure to set the language with \code{\link[=set_AMR_locale]{set_AMR_locale()}} (though it will be automatically guessed based on the system language).}
+
+\item{language}{Language to convert values set in \code{host} when using animal breakpoints. Use one of these supported language names or \href{https://en.wikipedia.org/wiki/ISO_639-1}{ISO 639-1 codes}: English (en), Arabic (ar), Bengali (bn), Chinese (zh), Czech (cs), Danish (da), Dutch (nl), Finnish (fi), French (fr), German (de), Greek (el), Hindi (hi), Indonesian (id), Italian (it), Japanese (ja), Korean (ko), Norwegian (no), Polish (pl), Portuguese (pt), Romanian (ro), Russian (ru), Spanish (es), Swahili (sw), Swedish (sv), Turkish (tr), Ukrainian (uk), Urdu (ur), or Vietnamese (vi).}
+
+\item{verbose}{A \link{logical} to indicate that all notes should be printed during interpretation of MIC values or disk diffusion values.}
+
+\item{conserve_capped_values}{Deprecated, use \code{capped_mic_handling} instead.}
+
+\item{col_mo}{Column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
+
+\item{parallel}{A \link{logical} to indicate if parallel computing must be used, defaults to \code{FALSE}. This requires no additional packages, as the used \code{parallel} package is part of base \R. On Windows and on \R < 4.0.0 \code{\link[parallel:clusterApply]{parallel::parLapply()}} will be used, in all other cases the more efficient \code{\link[parallel:mclapply]{parallel::mclapply()}} will be used.}
+
+\item{max_cores}{Maximum number of cores to use if \code{parallel = TRUE}. Use a negative value to subtract that number from the available number of cores, e.g. a value of \code{-2} on an 8-core machine means that at most 6 cores will be used. Defaults to \code{-1}. There will never be used more cores than variables to analyse. The available number of cores are detected using \code{\link[parallelly:availableCores]{parallelly::availableCores()}} if that package is installed, and base \R's \code{\link[parallel:detectCores]{parallel::detectCores()}} otherwise.}
+
+\item{clean}{A \link{logical} to indicate whether previously stored results should be forgotten after returning the 'logbook' with results.}
 }
 \value{
 Ordered \link{factor} with new class \code{sir}
 }
 \description{
-Interpret minimum inhibitory concentration (MIC) values and disk diffusion diameters according to EUCAST or CLSI, or clean up existing SIR values. This transforms the input to a new class \code{\link{sir}}, which is an ordered \link{factor} with levels \verb{S < I < R}.
+Clean up existing SIR values, or interpret minimum inhibitory concentration (MIC) values and disk diffusion diameters according to EUCAST or CLSI. \code{\link[=as.sir]{as.sir()}} transforms the input to a new class \code{\link{sir}}, which is an ordered \link{factor} containing the levels \code{S}, \code{SDD}, \code{I}, \code{R}, \code{NI}.
 
-Currently available \strong{breakpoint guidelines} are EUCAST 2011-2023 and CLSI 2011-2023, and available \strong{breakpoint types} are "ECOFF", "animal", and "human".
-
-All breakpoints used for interpretation are publicly available in the \link{clinical_breakpoints} data set.
+Breakpoints are currently implemented from EUCAST 2011-2025 and CLSI 2011-2025, see \emph{Details}. All breakpoints used for interpretation are available in our \link{clinical_breakpoints} data set.
 }
 \details{
-\emph{Note: The clinical breakpoints in this package were validated through and imported from \href{https://whonet.org}{WHONET} and the public use of this \code{AMR} package has been endorsed by CLSI and EUCAST, please see \link{clinical_breakpoints} for more information.}
+\emph{Note: The clinical breakpoints in this package were validated through, and imported from, \href{https://whonet.org}{WHONET}. The public use of this \code{AMR} package has been endorsed by both CLSI and EUCAST. See \link{clinical_breakpoints} for more information.}
 \subsection{How it Works}{
 
-The \code{\link[=as.sir]{as.sir()}} function works in four ways:
+The \code{\link[=as.sir]{as.sir()}} function can work in four ways:
 \enumerate{
-\item For \strong{cleaning raw / untransformed data}. The data will be cleaned to only contain values S, I and R and will try its best to determine this with some intelligence. For example, mixed values with SIR interpretations and MIC values such as \code{"<0.25; S"} will be coerced to \code{"S"}. Combined interpretations for multiple test methods (as seen in laboratory records) such as \code{"S; S"} will be coerced to \code{"S"}, but a value like \code{"S; I"} will return \code{NA} with a warning that the input is unclear.
+\item For \strong{cleaning raw / untransformed data}. The data will be cleaned to only contain valid values, namely: \strong{S} for susceptible, \strong{I} for intermediate or 'susceptible, increased exposure', \strong{R} for resistant, \strong{NI} for non-interpretable, and \strong{SDD} for susceptible dose-dependent. Each of these can be set using a \link[base:regex]{regular expression}. Furthermore, \code{\link[=as.sir]{as.sir()}} will try its best to clean with some intelligence. For example, mixed values with SIR interpretations and MIC values such as \code{"<0.25; S"} will be coerced to \code{"S"}. Combined interpretations for multiple test methods (as seen in laboratory records) such as \code{"S; S"} will be coerced to \code{"S"}, but a value like \code{"S; I"} will return \code{NA} with a warning that the input is invalid.
 \item For \strong{interpreting minimum inhibitory concentration (MIC) values} according to EUCAST or CLSI. You must clean your MIC values first using \code{\link[=as.mic]{as.mic()}}, that also gives your columns the new data class \code{\link{mic}}. Also, be sure to have a column with microorganism names or codes. It will be found automatically, but can be set manually using the \code{mo} argument.
 \itemize{
-\item Using \code{dplyr}, SIR interpretation can be done very easily with either:
+\item Example to apply using \code{dplyr}:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{your_data \%>\% mutate_if(is.mic, as.sir)
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{your_data \%>\% mutate_if(is.mic, as.sir)
 your_data \%>\% mutate(across(where(is.mic), as.sir))
+your_data \%>\% mutate_if(is.mic, as.sir, ab = "column_with_antibiotics", mo = "column_with_microorganisms")
+your_data \%>\% mutate_if(is.mic, as.sir, ab = c("cipro", "ampicillin", ...), mo = c("E. coli", "K. pneumoniae", ...))
+
+# for veterinary breakpoints, also set `host`:
+your_data \%>\% mutate_if(is.mic, as.sir, host = "column_with_animal_species", guideline = "CLSI")
+
+# fast processing with parallel computing:
+as.sir(your_data, ..., parallel = TRUE)
 }\if{html}{\out{</div>}}
-\item Operators like "<=" will be stripped before interpretation. When using \code{conserve_capped_values = TRUE}, an MIC value of e.g. ">2" will always return "R", even if the breakpoint according to the chosen guideline is ">=4". This is to prevent that capped values from raw laboratory data would not be treated conservatively. The default behaviour (\code{conserve_capped_values = FALSE}) considers ">2" to be lower than ">=4" and might in this case return "S" or "I".
+\item Operators like "<=" will be stripped before interpretation. When using \code{capped_mic_handling = "conservative"}, an MIC value of e.g. ">2" will always return "R", even if the breakpoint according to the chosen guideline is ">=4". This is to prevent that capped values from raw laboratory data would not be treated conservatively. The default behaviour (\code{capped_mic_handling = "standard"}) considers ">2" to be lower than ">=4" and might in this case return "S" or "I".
+\item \strong{Note:} When using CLSI as the guideline, MIC values must be log2-based doubling dilutions. Values not in this format, will be automatically rounded up to the nearest log2 level as CLSI instructs, and a warning will be thrown.
 }
 \item For \strong{interpreting disk diffusion diameters} according to EUCAST or CLSI. You must clean your disk zones first using \code{\link[=as.disk]{as.disk()}}, that also gives your columns the new data class \code{\link{disk}}. Also, be sure to have a column with microorganism names or codes. It will be found automatically, but can be set manually using the \code{mo} argument.
 \itemize{
-\item Using \code{dplyr}, SIR interpretation can be done very easily with either:
+\item Example to apply using \code{dplyr}:
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{your_data \%>\% mutate_if(is.disk, as.sir)
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{your_data \%>\% mutate_if(is.disk, as.sir)
 your_data \%>\% mutate(across(where(is.disk), as.sir))
+your_data \%>\% mutate_if(is.disk, as.sir, ab = "column_with_antibiotics", mo = "column_with_microorganisms")
+your_data \%>\% mutate_if(is.disk, as.sir, ab = c("cipro", "ampicillin", ...), mo = c("E. coli", "K. pneumoniae", ...))
+
+# for veterinary breakpoints, also set `host`:
+your_data \%>\% mutate_if(is.disk, as.sir, host = "column_with_animal_species", guideline = "CLSI")
+
+# fast processing with parallel computing:
+as.sir(your_data, ..., parallel = TRUE)
 }\if{html}{\out{</div>}}
 }
 \item For \strong{interpreting a complete data set}, with automatic determination of MIC values, disk diffusion diameters, microorganism names or codes, and antimicrobial test results. This is done very simply by running \code{as.sir(your_data)}.
 }
 
-\strong{For points 2, 3 and 4: Use \code{\link[=sir_interpretation_history]{sir_interpretation_history()}}} to retrieve a \link{data.frame} (or \link[tibble:tibble]{tibble} if the \code{tibble} package is installed) with all results of the last \code{\link[=as.sir]{as.sir()}} call.
+\strong{For points 2, 3 and 4: Use \code{\link[=sir_interpretation_history]{sir_interpretation_history()}}} to retrieve a \link{data.frame} with all results of all previous \code{\link[=as.sir]{as.sir()}} calls. It also contains notes about interpretation, and the exact input and output values.
 }
 
 \subsection{Supported Guidelines}{
 
-For interpreting MIC values as well as disk diffusion diameters, currently implemented guidelines are EUCAST (2011-2023) and CLSI (2011-2023).
+For interpreting MIC values as well as disk diffusion diameters, currently implemented guidelines are:
+\itemize{
+\item For \strong{clinical microbiology}: EUCAST 2011-2025 and CLSI 2011-2025;
+\item For \strong{veterinary microbiology}: EUCAST 2021-2025 and CLSI 2019-2025;
+\item For \strong{ECOFFs} (Epidemiological Cut-off Values): EUCAST 2020-2025 and CLSI 2022-2025.
+}
 
-Thus, the \code{guideline} argument must be set to e.g., \code{"EUCAST 2023"} or \code{"CLSI 2023"}. By simply using \code{"EUCAST"} (the default) or \code{"CLSI"} as input, the latest included version of that guideline will automatically be selected. You can set your own data set using the \code{reference_data} argument. The \code{guideline} argument will then be ignored.
+The \code{guideline} argument must be set to e.g., \code{"EUCAST 2025"} or \code{"CLSI 2025"}. By simply using \code{"EUCAST"} (the default) or \code{"CLSI"} as input, the latest included version of that guideline will automatically be selected. Importantly, using a column name of your data instead, allows for straightforward interpretation of historical data that must be analysed in the context of, for example, different years.
 
-You can set the default guideline with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_guideline}} (e.g. in your \code{.Rprofile} file), such as:
+You can set your own data set using the \code{reference_data} argument. The \code{guideline} argument will then be ignored.
+
+It is also possible to set the default guideline with the package option \code{\link[=AMR-options]{AMR_guideline}} (e.g. in your \code{.Rprofile} file), such as:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{  options(AMR_guideline = "CLSI")
   options(AMR_guideline = "CLSI 2018")
@@ -164,67 +225,197 @@ You can set the default guideline with the \link[=AMR-options]{package option} \
 }\if{html}{\out{</div>}}
 }
 
+\subsection{Working with Veterinary Breakpoints}{
+
+When using veterinary breakpoints (i.e., setting \code{breakpoint_type = "animal"}), a column with animal species must be available or set manually using the \code{host} argument. The column must contain names like "dogs", "cats", "cattle", "swine", "horses", "poultry", or "aquatic". Other animal names like "goats", "rabbits", or "monkeys" are also recognised but may not be available in all guidelines. Matching is case-insensitive and accepts Latin-based synonyms (e.g., "bovine" for cattle and "canine" for dogs).
+
+Regarding choice of veterinary guidelines, these might be the best options to set before analysis:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{  options(AMR_guideline = "CLSI")
+  options(AMR_breakpoint_type = "animal")
+}\if{html}{\out{</div>}}
+}
+
 \subsection{After Interpretation}{
 
 After using \code{\link[=as.sir]{as.sir()}}, you can use the \code{\link[=eucast_rules]{eucast_rules()}} defined by EUCAST to (1) apply inferred susceptibility and resistance based on results of other antimicrobials and (2) apply intrinsic resistance based on taxonomic properties of a microorganism.
-}
 
-\subsection{Machine-Readable Clinical Breakpoints}{
-
-The repository of this package \href{https://github.com/msberends/AMR/blob/main/data-raw/clinical_breakpoints.txt}{contains a machine-readable version} of all guidelines. This is a CSV file consisting of 29 747 rows and 12 columns. This file is machine-readable, since it contains one row for every unique combination of the test method (MIC or disk diffusion), the antimicrobial drug and the microorganism. \strong{This allows for easy implementation of these rules in laboratory information systems (LIS)}. Note that it only contains interpretation guidelines for humans - interpretation guidelines from CLSI for animals were removed.
+To determine which isolates are multi-drug resistant, be sure to run \code{\link[=mdro]{mdro()}} (which applies the MDR/PDR/XDR guideline from 2012 at default) on a data set that contains S/I/R values. Read more about \link[=mdro]{interpreting multidrug-resistant organisms here}.
 }
 
 \subsection{Other}{
 
-The function \code{\link[=is.sir]{is.sir()}} detects if the input contains class \code{sir}. If the input is a \link{data.frame}, it iterates over all columns and returns a \link{logical} vector.
+The function \code{\link[=is.sir]{is.sir()}} detects if the input contains class \code{sir}. If the input is a \link{data.frame} or \link{list}, it iterates over all columns/items and returns a \link{logical} vector.
 
-The function \code{\link[=is_sir_eligible]{is_sir_eligible()}} returns \code{TRUE} when a columns contains at most 5\% invalid antimicrobial interpretations (not S and/or I and/or R), and \code{FALSE} otherwise. The threshold of 5\% can be set with the \code{threshold} argument. If the input is a \link{data.frame}, it iterates over all columns and returns a \link{logical} vector.
+The base R function \code{\link[=as.double]{as.double()}} can be used to retrieve quantitative values from a \code{sir} object: \code{"S"} = 1, \code{"I"}/\code{"SDD"} = 2, \code{"R"} = 3. All other values are rendered \code{NA} . \strong{Note:} Do not use \code{as.integer()}, since that (because of how R works internally) will return the factor level indices, and not these aforementioned quantitative values.
+
+The function \code{\link[=is_sir_eligible]{is_sir_eligible()}} returns \code{TRUE} when a column contains at most 5\% potentially invalid antimicrobial interpretations, and \code{FALSE} otherwise. The threshold of 5\% can be set with the \code{threshold} argument. If the input is a \link{data.frame}, it iterates over all columns and returns a \link{logical} vector.
 }
 
 \code{NA_sir_} is a missing value of the new \code{sir} class, analogous to e.g. base \R's \code{\link[base:NA]{NA_character_}}.
 }
 \section{Interpretation of SIR}{
 
-In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R as shown below (\url{https://www.eucast.org/newsiandr}):
-\itemize{
-\item \strong{S - Susceptible, standard dosing regimen}\cr
-A microorganism is categorised as "Susceptible, standard dosing regimen", when there is a high likelihood of therapeutic success using a standard dosing regimen of the agent.
-\item \strong{I - Susceptible, increased exposure} \emph{\cr
-A microorganism is categorised as "Susceptible, Increased exposure}" when there is a high likelihood of therapeutic success because exposure to the agent is increased by adjusting the dosing regimen or by its concentration at the site of infection.
-\item \strong{R = Resistant}\cr
-A microorganism is categorised as "Resistant" when there is a high likelihood of therapeutic failure even when there is increased exposure.
-\itemize{
-\item \emph{Exposure} is a function of how the mode of administration, dose, dosing interval, infusion time, as well as distribution and excretion of the antimicrobial agent will influence the infecting organism at the site of infection.
-}
+In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R (\url{https://www.eucast.org/newsiandr}).
+
+This AMR package follows insight; use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
 }
 
-This AMR package honours this insight. Use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
-}
+\section{Download Our Reference Data}{
 
-\section{Reference Data Publicly Available}{
+All reference data sets in the AMR package - including information on microorganisms, antimicrobials, and clinical breakpoints - are freely available for download in multiple formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, and Stata.
 
-All data sets in this \code{AMR} package (about microorganisms, antibiotics, SIR interpretation, EUCAST rules, etc.) are publicly and freely available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. We also provide tab-separated plain text files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
+For maximum compatibility, we also provide machine-readable, tab-separated plain text files suitable for use in any software, including laboratory information systems.
+
+Visit \href{https://amr-for-r.org/articles/datasets.html}{our website for direct download links}, or explore the actual files in \href{https://github.com/msberends/AMR/tree/main/data-raw/datasets}{our GitHub repository}.
 }
 
 \examples{
 example_isolates
-summary(example_isolates) # see all SIR results at a glance
+
+summary(example_isolates[, 1:10]) # see all SIR results at a glance
+
+# create some example data sets, with combined MIC values and disk zones
+df_wide <- data.frame(
+  microorganism = "Escherichia coli",
+  amoxicillin = as.mic(8),
+  cipro = as.mic(0.256),
+  tobra = as.disk(16),
+  genta = as.disk(18),
+  ERY = "R"
+)
+df_long <- data.frame(
+  bacteria = rep("Escherichia coli", 4),
+  antibiotic = c("amoxicillin", "cipro", "tobra", "genta"),
+  mics = as.mic(c(0.01, 1, 4, 8)),
+  disks = as.disk(c(6, 10, 14, 18)),
+  guideline = c("EUCAST 2021", "EUCAST 2022", "EUCAST 2023", "EUCAST 2024")
+)
+# and clean previous SIR interpretation logs
+x <- sir_interpretation_history(clean = TRUE)
+
 
 # For INTERPRETING disk diffusion and MIC values -----------------------
 
-# a whole data set, even with combined MIC values and disk zones
-df <- data.frame(
-  microorganism = "Escherichia coli",
-  AMP = as.mic(8),
-  CIP = as.mic(0.256),
-  GEN = as.disk(18),
-  TOB = as.disk(16),
-  ERY = "R"
-)
-as.sir(df)
+# most basic application:
+as.sir(df_wide)
 
 # return a 'logbook' about the results:
 sir_interpretation_history()
+
+\donttest{
+# using parallel computing, which is available in base R:
+as.sir(df_wide, parallel = TRUE, info = TRUE)
+
+
+## Using dplyr -------------------------------------------------
+if (require("dplyr")) {
+  # approaches that all work without additional arguments:
+  df_wide \%>\% mutate_if(is.mic, as.sir)
+  df_wide \%>\% mutate_if(function(x) is.mic(x) | is.disk(x), as.sir)
+  df_wide \%>\% mutate(across(where(is.mic), as.sir))
+  df_wide \%>\% mutate_at(vars(amoxicillin:tobra), as.sir)
+  df_wide \%>\% mutate(across(amoxicillin:tobra, as.sir))
+
+  # approaches that all work with additional arguments:
+  df_long \%>\%
+    # given a certain data type, e.g. MIC values
+    mutate_if(is.mic, as.sir,
+      mo = "bacteria",
+      ab = "antibiotic",
+      guideline = "guideline"
+    )
+  df_long \%>\%
+    mutate(across(
+      where(is.mic),
+      function(x) {
+        as.sir(x,
+          mo = "bacteria",
+          ab = "antibiotic",
+          guideline = "CLSI"
+        )
+      }
+    ))
+  df_wide \%>\%
+    # given certain columns, e.g. from 'cipro' to 'genta'
+    mutate_at(vars(cipro:genta), as.sir,
+      mo = "bacteria",
+      guideline = "CLSI"
+    )
+  df_wide \%>\%
+    mutate(across(
+      cipro:genta,
+      function(x) {
+        as.sir(x,
+          mo = "bacteria",
+          guideline = "CLSI"
+        )
+      }
+    ))
+
+  # for veterinary breakpoints, add 'host':
+  df_long$animal_species <- c("cats", "dogs", "horses", "cattle")
+  df_long \%>\%
+    # given a certain data type, e.g. MIC values
+    mutate_if(is.mic, as.sir,
+      mo = "bacteria",
+      ab = "antibiotic",
+      host = "animal_species",
+      guideline = "CLSI"
+    )
+  df_long \%>\%
+    mutate(across(
+      where(is.mic),
+      function(x) {
+        as.sir(x,
+          mo = "bacteria",
+          ab = "antibiotic",
+          host = "animal_species",
+          guideline = "CLSI"
+        )
+      }
+    ))
+  df_wide \%>\%
+    mutate_at(vars(cipro:genta), as.sir,
+      mo = "bacteria",
+      ab = "antibiotic",
+      host = "animal_species",
+      guideline = "CLSI"
+    )
+  df_wide \%>\%
+    mutate(across(
+      cipro:genta,
+      function(x) {
+        as.sir(x,
+          mo = "bacteria",
+          host = "animal_species",
+          guideline = "CLSI"
+        )
+      }
+    ))
+
+  # to include information about urinary tract infections (UTI)
+  data.frame(
+    mo = "E. coli",
+    nitrofuratoin = c("<= 2", 32),
+    from_the_bladder = c(TRUE, FALSE)
+  ) \%>\%
+    as.sir(uti = "from_the_bladder")
+
+  data.frame(
+    mo = "E. coli",
+    nitrofuratoin = c("<= 2", 32),
+    specimen = c("urine", "blood")
+  ) \%>\%
+    as.sir() # automatically determines urine isolates
+
+  df_wide \%>\%
+    mutate_at(vars(cipro:genta), as.sir, mo = "E. coli", uti = TRUE)
+}
+
+
+## Using base R ------------------------------------------------
+
 
 # for single values
 as.sir(
@@ -241,45 +432,21 @@ as.sir(
   guideline = "EUCAST"
 )
 
-\donttest{
-# the dplyr way
-if (require("dplyr")) {
-  df \%>\% mutate_if(is.mic, as.sir)
-  df \%>\% mutate_if(function(x) is.mic(x) | is.disk(x), as.sir)
-  df \%>\% mutate(across(where(is.mic), as.sir))
-  df \%>\% mutate_at(vars(AMP:TOB), as.sir)
-  df \%>\% mutate(across(AMP:TOB, as.sir))
 
-  df \%>\%
-    mutate_at(vars(AMP:TOB), as.sir, mo = .$microorganism)
+# For CLEANING existing SIR values -------------------------------------
 
-  # to include information about urinary tract infections (UTI)
-  data.frame(
-    mo = "E. coli",
-    NIT = c("<= 2", 32),
-    from_the_bladder = c(TRUE, FALSE)
-  ) \%>\%
-    as.sir(uti = "from_the_bladder")
-
-  data.frame(
-    mo = "E. coli",
-    NIT = c("<= 2", 32),
-    specimen = c("urine", "blood")
-  ) \%>\%
-    as.sir() # automatically determines urine isolates
-
-  df \%>\%
-    mutate_at(vars(AMP:TOB), as.sir, mo = "E. coli", uti = TRUE)
-}
-
-# For CLEANING existing SIR values ------------------------------------
-
-as.sir(c("S", "I", "R", "A", "B", "C"))
+as.sir(c("S", "SDD", "I", "R", "NI", "A", "B", "C"))
 as.sir("<= 0.002; S") # will return "S"
 sir_data <- as.sir(c(rep("S", 474), rep("I", 36), rep("R", 370)))
 is.sir(sir_data)
 plot(sir_data) # for percentages
 barplot(sir_data) # for frequencies
+
+# as common in R, you can use as.integer() to return factor indices:
+as.integer(as.sir(c("S", "SDD", "I", "R", "NI", NA)))
+
+# but for computational use, as.double() will return 1 for S, 2 for I/SDD, and 3 for R:
+as.double(as.sir(c("S", "SDD", "I", "R", "NI", NA)))
 
 # the dplyr way
 if (require("dplyr")) {
@@ -293,7 +460,7 @@ if (require("dplyr")) {
   example_isolates \%>\%
     mutate_if(is_sir_eligible, as.sir)
 
-  # since dplyr 1.0.0, this can also be:
+  # since dplyr 1.0.0, this can also be the more impractical:
   # example_isolates \%>\%
   #   mutate(across(where(is_sir_eligible), as.sir))
 }

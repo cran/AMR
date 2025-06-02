@@ -11,19 +11,14 @@
 \alias{mo_cleaning_regex}
 \title{Transform Arbitrary Input to Valid Microbial Taxonomy}
 \usage{
-as.mo(
-  x,
-  Becker = FALSE,
-  Lancefield = FALSE,
+as.mo(x, Becker = FALSE, Lancefield = FALSE,
   minimum_matching_score = NULL,
   keep_synonyms = getOption("AMR_keep_synonyms", FALSE),
   reference_df = get_mo_source(),
   ignore_pattern = getOption("AMR_ignore_pattern", NULL),
   cleaning_regex = getOption("AMR_cleaning_regex", mo_cleaning_regex()),
-  language = get_AMR_locale(),
-  info = interactive(),
-  ...
-)
+  only_fungi = getOption("AMR_only_fungi", FALSE),
+  language = get_AMR_locale(), info = interactive(), ...)
 
 is.mo(x)
 
@@ -38,40 +33,42 @@ mo_reset_session()
 mo_cleaning_regex()
 }
 \arguments{
-\item{x}{a \link{character} vector or a \link{data.frame} with one or two columns}
+\item{x}{A \link{character} vector or a \link{data.frame} with one or two columns.}
 
-\item{Becker}{a \link{logical} to indicate whether staphylococci should be categorised into coagulase-negative staphylococci ("CoNS") and coagulase-positive staphylococci ("CoPS") instead of their own species, according to Karsten Becker \emph{et al.} (see \emph{Source}). Please see \emph{Details} for a full list of staphylococcal species that will be converted.
+\item{Becker}{A \link{logical} to indicate whether staphylococci should be categorised into coagulase-negative staphylococci ("CoNS") and coagulase-positive staphylococci ("CoPS") instead of their own species, according to Karsten Becker \emph{et al.} (see \emph{Source}). Please see \emph{Details} for a full list of staphylococcal species that will be converted.
 
 This excludes \emph{Staphylococcus aureus} at default, use \code{Becker = "all"} to also categorise \emph{S. aureus} as "CoPS".}
 
-\item{Lancefield}{a \link{logical} to indicate whether a beta-haemolytic \emph{Streptococcus} should be categorised into Lancefield groups instead of their own species, according to Rebecca C. Lancefield (see \emph{Source}). These streptococci will be categorised in their first group, e.g. \emph{Streptococcus dysgalactiae} will be group C, although officially it was also categorised into groups G and L. . Please see \emph{Details} for a full list of streptococcal species that will be converted.
+\item{Lancefield}{A \link{logical} to indicate whether a beta-haemolytic \emph{Streptococcus} should be categorised into Lancefield groups instead of their own species, according to Rebecca C. Lancefield (see \emph{Source}). These streptococci will be categorised in their first group, e.g. \emph{Streptococcus dysgalactiae} will be group C, although officially it was also categorised into groups G and L. . Please see \emph{Details} for a full list of streptococcal species that will be converted.
 
 This excludes enterococci at default (who are in group D), use \code{Lancefield = "all"} to also categorise all enterococci as group D.}
 
-\item{minimum_matching_score}{a numeric value to set as the lower limit for the \link[=mo_matching_score]{MO matching score}. When left blank, this will be determined automatically based on the character length of \code{x}, its \link[=microorganisms]{taxonomic kingdom} and \link[=mo_matching_score]{human pathogenicity}.}
+\item{minimum_matching_score}{A numeric value to set as the lower limit for the \link[=mo_matching_score]{MO matching score}. When left blank, this will be determined automatically based on the character length of \code{x}, its \link[=microorganisms]{taxonomic kingdom} and \link[=mo_matching_score]{human pathogenicity}.}
 
-\item{keep_synonyms}{a \link{logical} to indicate if old, previously valid taxonomic names must be preserved and not be corrected to currently accepted names. The default is \code{FALSE}, which will return a note if old taxonomic names were processed. The default can be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_keep_synonyms}}, i.e. \code{options(AMR_keep_synonyms = TRUE)} or \code{options(AMR_keep_synonyms = FALSE)}.}
+\item{keep_synonyms}{A \link{logical} to indicate if old, previously valid taxonomic names must be preserved and not be corrected to currently accepted names. The default is \code{FALSE}, which will return a note if old taxonomic names were processed. The default can be set with the package option \code{\link[=AMR-options]{AMR_keep_synonyms}}, i.e. \code{options(AMR_keep_synonyms = TRUE)} or \code{options(AMR_keep_synonyms = FALSE)}.}
 
-\item{reference_df}{a \link{data.frame} to be used for extra reference when translating \code{x} to a valid \code{\link{mo}}. See \code{\link[=set_mo_source]{set_mo_source()}} and \code{\link[=get_mo_source]{get_mo_source()}} to automate the usage of your own codes (e.g. used in your analysis or organisation).}
+\item{reference_df}{A \link{data.frame} to be used for extra reference when translating \code{x} to a valid \code{\link{mo}}. See \code{\link[=set_mo_source]{set_mo_source()}} and \code{\link[=get_mo_source]{get_mo_source()}} to automate the usage of your own codes (e.g. used in your analysis or organisation).}
 
-\item{ignore_pattern}{a Perl-compatible \link[base:regex]{regular expression} (case-insensitive) of which all matches in \code{x} must return \code{NA}. This can be convenient to exclude known non-relevant input and can also be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_ignore_pattern}}, e.g. \code{options(AMR_ignore_pattern = "(not reported|contaminated flora)")}.}
+\item{ignore_pattern}{A Perl-compatible \link[base:regex]{regular expression} (case-insensitive) of which all matches in \code{x} must return \code{NA}. This can be convenient to exclude known non-relevant input and can also be set with the package option \code{\link[=AMR-options]{AMR_ignore_pattern}}, e.g. \code{options(AMR_ignore_pattern = "(not reported|contaminated flora)")}.}
 
-\item{cleaning_regex}{a Perl-compatible \link[base:regex]{regular expression} (case-insensitive) to clean the input of \code{x}. Every matched part in \code{x} will be removed. At default, this is the outcome of \code{\link[=mo_cleaning_regex]{mo_cleaning_regex()}}, which removes texts between brackets and texts such as "species" and "serovar". The default can be set with the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_cleaning_regex}}.}
+\item{cleaning_regex}{A Perl-compatible \link[base:regex]{regular expression} (case-insensitive) to clean the input of \code{x}. Every matched part in \code{x} will be removed. At default, this is the outcome of \code{\link[=mo_cleaning_regex]{mo_cleaning_regex()}}, which removes texts between brackets and texts such as "species" and "serovar". The default can be set with the package option \code{\link[=AMR-options]{AMR_cleaning_regex}}.}
 
-\item{language}{language to translate text like "no growth", which defaults to the system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}})}
+\item{only_fungi}{A \link{logical} to indicate if only fungi must be found, making sure that e.g. misspellings always return records from the kingdom of Fungi. This can be set globally for \link[=mo_property]{all microorganism functions} with the package option \code{\link[=AMR-options]{AMR_only_fungi}}, i.e. \code{options(AMR_only_fungi = TRUE)}.}
 
-\item{info}{a \link{logical} to indicate if a progress bar should be printed if more than 25 items are to be coerced - the default is \code{TRUE} only in interactive mode}
+\item{language}{Language to translate text like "no growth", which defaults to the system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}).}
 
-\item{...}{other arguments passed on to functions}
+\item{info}{A \link{logical} to indicate that info must be printed, e.g. a progress bar when more than 25 items are to be coerced, or a list with old taxonomic names. The default is \code{TRUE} only in interactive mode.}
+
+\item{...}{Other arguments passed on to functions.}
 }
 \value{
 A \link{character} \link{vector} with additional class \code{\link{mo}}
 }
 \description{
-Use this function to get a valid microorganism code (\code{\link{mo}}) based on arbitrary user input. Determination is done using intelligent rules and the complete taxonomic tree of the kingdoms Animalia, Archaea, Bacteria, and Protozoa, and most microbial species from the kingdom Fungi (see \emph{Source}). The input can be almost anything: a full name (like \code{"Staphylococcus aureus"}), an abbreviated name (such as \code{"S. aureus"}), an abbreviation known in the field (such as \code{"MRSA"}), or just a genus. See \emph{Examples}.
+Use this function to get a valid microorganism code (\code{\link{mo}}) based on arbitrary user input. Determination is done using intelligent rules and the complete taxonomic tree of the kingdoms Animalia, Archaea, Bacteria, Chromista, and Protozoa, and most microbial species from the kingdom Fungi (see \emph{Source}). The input can be almost anything: a full name (like \code{"Staphylococcus aureus"}), an abbreviated name (such as \code{"S. aureus"}), an abbreviation known in the field (such as \code{"MRSA"}), or just a genus. See \emph{Examples}.
 }
 \details{
-A microorganism (MO) code from this package (class: \code{\link{mo}}) is human readable and typically looks like these examples:
+A microorganism (MO) code from this package (class: \code{\link{mo}}) is human-readable and typically looks like these examples:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{  Code               Full name
   ---------------    --------------------------------------
@@ -83,24 +80,21 @@ A microorganism (MO) code from this package (class: \code{\link{mo}}) is human r
   |   |    |    \\---> subspecies, a 3-5 letter acronym
   |   |    \\----> species, a 3-6 letter acronym
   |   \\----> genus, a 4-8 letter acronym
-  \\----> taxonomic kingdom: A (Archaea), AN (Animalia), B (Bacteria),
-                            F (Fungi), PL (Plantae), P (Protozoa)
+  \\----> kingdom: A (Archaea), AN (Animalia), B (Bacteria),
+                  C (Chromista), F (Fungi), PL (Plantae),
+                  P (Protozoa)
 }\if{html}{\out{</div>}}
 
-Values that cannot be coerced will be considered 'unknown' and will be returned as the MO code \code{UNKNOWN} with a warning.
+Values that cannot be coerced will be considered 'unknown' and will return the MO code \code{UNKNOWN} with a warning.
 
 Use the \code{\link[=mo_property]{mo_*}} functions to get properties based on the returned code, see \emph{Examples}.
 
-The \code{\link[=as.mo]{as.mo()}} function uses a novel \link[=mo_matching_score]{matching score algorithm} (see \emph{Matching Score for Microorganisms} below) to match input against the \link[=microorganisms]{available microbial taxonomy} in this package. This will lead to the effect that e.g. \code{"E. coli"} (a microorganism highly prevalent in humans) will return the microbial ID of \emph{Escherichia coli} and not \emph{Entamoeba coli} (a microorganism less prevalent in humans), although the latter would alphabetically come first.
-
-With \code{Becker = TRUE}, the following 85 staphylococci will be converted to the \strong{coagulase-negative group}: \emph{S. argensis}, \emph{S. arlettae}, \emph{S. auricularis}, \emph{S. borealis}, \emph{S. caeli}, \emph{S. caledonicus}, \emph{S. canis}, \emph{S. capitis}, \emph{S. capitis capitis}, \emph{S. capitis urealyticus}, \emph{S. capitis ureolyticus}, \emph{S. caprae}, \emph{S. carnosus}, \emph{S. carnosus carnosus}, \emph{S. carnosus utilis}, \emph{S. casei}, \emph{S. caseolyticus}, \emph{S. chromogenes}, \emph{S. cohnii}, \emph{S. cohnii cohnii}, \emph{S. cohnii urealyticum}, \emph{S. cohnii urealyticus}, \emph{S. condimenti}, \emph{S. croceilyticus}, \emph{S. debuckii}, \emph{S. devriesei}, \emph{S. durrellii}, \emph{S. edaphicus}, \emph{S. epidermidis}, \emph{S. equorum}, \emph{S. equorum equorum}, \emph{S. equorum linens}, \emph{S. felis}, \emph{S. fleurettii}, \emph{S. gallinarum}, \emph{S. haemolyticus}, \emph{S. hominis}, \emph{S. hominis hominis}, \emph{S. hominis novobiosepticus}, \emph{S. jettensis}, \emph{S. kloosii}, \emph{S. lentus}, \emph{S. lloydii}, \emph{S. lugdunensis}, \emph{S. massiliensis}, \emph{S. microti}, \emph{S. muscae}, \emph{S. nepalensis}, \emph{S. pasteuri}, \emph{S. petrasii}, \emph{S. petrasii croceilyticus}, \emph{S. petrasii jettensis}, \emph{S. petrasii petrasii}, \emph{S. petrasii pragensis}, \emph{S. pettenkoferi}, \emph{S. piscifermentans}, \emph{S. pragensis}, \emph{S. pseudoxylosus}, \emph{S. pulvereri}, \emph{S. ratti}, \emph{S. rostri}, \emph{S. saccharolyticus}, \emph{S. saprophyticus}, \emph{S. saprophyticus bovis}, \emph{S. saprophyticus saprophyticus}, \emph{S. schleiferi}, \emph{S. schleiferi schleiferi}, \emph{S. sciuri}, \emph{S. sciuri carnaticus}, \emph{S. sciuri lentus}, \emph{S. sciuri rodentium}, \emph{S. sciuri sciuri}, \emph{S. simulans}, \emph{S. stepanovicii}, \emph{S. succinus}, \emph{S. succinus casei}, \emph{S. succinus succinus}, \emph{S. taiwanensis}, \emph{S. urealyticus}, \emph{S. ureilyticus}, \emph{S. veratri}, \emph{S. vitulinus}, \emph{S. vitulus}, \emph{S. warneri}, and \emph{S. xylosus}.\cr The following 16 staphylococci will be converted to the \strong{coagulase-positive group}: \emph{S. agnetis}, \emph{S. argenteus}, \emph{S. coagulans}, \emph{S. cornubiensis}, \emph{S. delphini}, \emph{S. hyicus}, \emph{S. hyicus chromogenes}, \emph{S. hyicus hyicus}, \emph{S. intermedius}, \emph{S. lutrae}, \emph{S. pseudintermedius}, \emph{S. roterodami}, \emph{S. schleiferi coagulans}, \emph{S. schweitzeri}, \emph{S. simiae}, and \emph{S. singaporensis}.
-
-With \code{Lancefield = TRUE}, the following streptococci will be converted to their corresponding Lancefield group: \emph{S. agalactiae} (Group B), \emph{S. anginosus anginosus} (Group F), \emph{S. anginosus whileyi} (Group F), \emph{S. anginosus} (Group F), \emph{S. canis} (Group G), \emph{S. dysgalactiae dysgalactiae} (Group C), \emph{S. dysgalactiae equisimilis} (Group C), \emph{S. dysgalactiae} (Group C), \emph{S. equi equi} (Group C), \emph{S. equi ruminatorum} (Group C), \emph{S. equi zooepidemicus} (Group C), \emph{S. equi} (Group C), \emph{S. pyogenes} (Group A), \emph{S. salivarius salivarius} (Group K), \emph{S. salivarius thermophilus} (Group K), \emph{S. salivarius} (Group K), and \emph{S. sanguinis} (Group H).
+The \code{\link[=as.mo]{as.mo()}} function uses a novel and scientifically validated (\doi{10.18637/jss.v104.i03}) matching score algorithm (see \emph{Matching Score for Microorganisms} below) to match input against the \link[=microorganisms]{available microbial taxonomy} in this package. This implicates that e.g. \code{"E. coli"} (a microorganism highly prevalent in humans) will return the microbial ID of \emph{Escherichia coli} and not \emph{Entamoeba coli} (a microorganism less prevalent in humans), although the latter would alphabetically come first.
 \subsection{Coping with Uncertain Results}{
 
-Results of non-exact taxonomic input are based on their \link[=mo_matching_score]{matching score}. The lowest allowed score can be set with the \code{minimum_matching_score} argument. At default this will be determined based on the character length of the input, and the \link[=microorganisms]{taxonomic kingdom} and \link[=mo_matching_score]{human pathogenicity} of the taxonomic outcome. If values are matched with uncertainty, a message will be shown to suggest the user to evaluate the results with \code{\link[=mo_uncertainties]{mo_uncertainties()}}, which returns a \link{data.frame} with all specifications.
+Results of non-exact taxonomic input are based on their \link[=mo_matching_score]{matching score}. The lowest allowed score can be set with the \code{minimum_matching_score} argument. At default this will be determined based on the character length of the input, the \link[=microorganisms]{taxonomic kingdom}, and the \link[=mo_matching_score]{human pathogenicity} of the taxonomic outcome. If values are matched with uncertainty, a message will be shown to suggest the user to inspect the results with \code{\link[=mo_uncertainties]{mo_uncertainties()}}, which returns a \link{data.frame} with all specifications.
 
-To increase the quality of matching, the \code{cleaning_regex} argument can be used to clean the input (i.e., \code{x}). This must be a \link[base:regex]{regular expression} that matches parts of the input that should be removed before the input is matched against the \link[=microorganisms]{available microbial taxonomy}. It will be matched Perl-compatible and case-insensitive. The default value of \code{cleaning_regex} is the outcome of the helper function \code{\link[=mo_cleaning_regex]{mo_cleaning_regex()}}.
+To increase the quality of matching, the \code{cleaning_regex} argument is used to clean the input. This must be a \link[base:regex]{regular expression} that matches parts of the input that should be removed before the input is matched against the \link[=microorganisms]{available microbial taxonomy}. It will be matched Perl-compatible and case-insensitive. The default value of \code{cleaning_regex} is the outcome of the helper function \code{\link[=mo_cleaning_regex]{mo_cleaning_regex()}}.
 
 There are three helper functions that can be run after using the \code{\link[=as.mo]{as.mo()}} function:
 \itemize{
@@ -110,24 +104,63 @@ There are three helper functions that can be run after using the \code{\link[=as
 }
 }
 
-\subsection{Microbial Prevalence of Pathogens in Humans}{
+\subsection{For Mycologists}{
 
-The coercion rules consider the prevalence of microorganisms in humans, which is available as the \code{prevalence} column in the \link{microorganisms} data set. The grouping into human pathogenic prevalence is explained in the section \emph{Matching Score for Microorganisms} below.
+The \link[=mo_matching_score]{matching score algorithm} gives precedence to bacteria over fungi. If you are only analysing fungi, be sure to use \code{only_fungi = TRUE}, or better yet, add this to your code and run it once every session:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{options(AMR_only_fungi = TRUE)
+}\if{html}{\out{</div>}}
+
+This will make sure that no bacteria or other 'non-fungi' will be returned by \code{\link[=as.mo]{as.mo()}}, or any of the \code{\link[=mo_property]{mo_*}} functions.
+}
+
+\subsection{Coagulase-negative and Coagulase-positive Staphylococci}{
+
+With \code{Becker = TRUE}, the following staphylococci will be converted to their corresponding coagulase group:
+\itemize{
+\item Coagulase-negative: \emph{S. americanisciuri}, \emph{S. argensis}, \emph{S. arlettae}, \emph{S. auricularis}, \emph{S. borealis}, \emph{S. brunensis}, \emph{S. caeli}, \emph{S. caledonicus}, \emph{S. canis}, \emph{S. capitis}, \emph{S. capitis capitis}, \emph{S. capitis urealyticus}, \emph{S. capitis ureolyticus}, \emph{S. caprae}, \emph{S. carnosus}, \emph{S. carnosus carnosus}, \emph{S. carnosus utilis}, \emph{S. casei}, \emph{S. caseolyticus}, \emph{S. chromogenes}, \emph{S. cohnii}, \emph{S. cohnii cohnii}, \emph{S. cohnii urealyticum}, \emph{S. cohnii urealyticus}, \emph{S. condimenti}, \emph{S. croceilyticus}, \emph{S. debuckii}, \emph{S. devriesei}, \emph{S. durrellii}, \emph{S. edaphicus}, \emph{S. epidermidis}, \emph{S. equorum}, \emph{S. equorum equorum}, \emph{S. equorum linens}, \emph{S. felis}, \emph{S. fleurettii}, \emph{S. gallinarum}, \emph{S. haemolyticus}, \emph{S. hominis}, \emph{S. hominis hominis}, \emph{S. hominis novobiosepticus}, \emph{S. jettensis}, \emph{S. kloosii}, \emph{S. lentus}, \emph{S. lloydii}, \emph{S. lugdunensis}, \emph{S. marylandisciuri}, \emph{S. massiliensis}, \emph{S. microti}, \emph{S. muscae}, \emph{S. nepalensis}, \emph{S. pasteuri}, \emph{S. petrasii}, \emph{S. petrasii croceilyticus}, \emph{S. petrasii jettensis}, \emph{S. petrasii petrasii}, \emph{S. petrasii pragensis}, \emph{S. pettenkoferi}, \emph{S. piscifermentans}, \emph{S. pragensis}, \emph{S. pseudoxylosus}, \emph{S. pulvereri}, \emph{S. ratti}, \emph{S. rostri}, \emph{S. saccharolyticus}, \emph{S. saprophyticus}, \emph{S. saprophyticus bovis}, \emph{S. saprophyticus saprophyticus}, \emph{S. schleiferi}, \emph{S. schleiferi schleiferi}, \emph{S. sciuri}, \emph{S. sciuri carnaticus}, \emph{S. sciuri lentus}, \emph{S. sciuri rodentium}, \emph{S. sciuri sciuri}, \emph{S. shinii}, \emph{S. simulans}, \emph{S. stepanovicii}, \emph{S. succinus}, \emph{S. succinus casei}, \emph{S. succinus succinus}, \emph{S. taiwanensis}, \emph{S. urealyticus}, \emph{S. ureilyticus}, \emph{S. veratri}, \emph{S. vitulinus}, \emph{S. vitulus}, \emph{S. warneri}, and \emph{S. xylosus}
+\item Coagulase-positive: \emph{S. agnetis}, \emph{S. argenteus}, \emph{S. coagulans}, \emph{S. cornubiensis}, \emph{S. delphini}, \emph{S. hyicus}, \emph{S. hyicus chromogenes}, \emph{S. hyicus hyicus}, \emph{S. intermedius}, \emph{S. lutrae}, \emph{S. pseudintermedius}, \emph{S. roterodami}, \emph{S. schleiferi coagulans}, \emph{S. schweitzeri}, \emph{S. simiae}, and \emph{S. singaporensis}
+}
+
+This is based on:
+\itemize{
+\item Becker K \emph{et al.} (2014). \strong{Coagulase-Negative Staphylococci.} \emph{Clin Microbiol Rev.} 27(4): 870-926; \doi{10.1128/CMR.00109-13}
+\item Becker K \emph{et al.} (2019). \strong{Implications of identifying the recently defined members of the \emph{S. aureus} complex, \emph{S. argenteus} and \emph{S. schweitzeri}: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).} \emph{Clin Microbiol Infect}; \doi{10.1016/j.cmi.2019.02.028}
+\item Becker K \emph{et al.} (2020). \strong{Emergence of coagulase-negative staphylococci.} \emph{Expert Rev Anti Infect Ther.} 18(4):349-366; \doi{10.1080/14787210.2020.1730813}
+}
+
+For newly named staphylococcal species, such as \emph{S. brunensis} (2024) and \emph{S. shinii} (2023), we looked up the scientific reference to make sure the species are considered for the correct coagulase group.
+}
+
+\subsection{Lancefield Groups in Streptococci}{
+
+With \code{Lancefield = TRUE}, the following streptococci will be converted to their corresponding Lancefield group:
+\itemize{
+\item Streptococcus Group A: \emph{S. pyogenes}
+\item Streptococcus Group B: \emph{S. agalactiae}
+\item Streptococcus Group C: \emph{S. dysgalactiae}, \emph{S. dysgalactiae dysgalactiae}, \emph{S. dysgalactiae equisimilis}, \emph{S. equi}, \emph{S. equi equi}, \emph{S. equi ruminatorum}, and \emph{S. equi zooepidemicus}
+\item Streptococcus Group F: \emph{S. anginosus}, \emph{S. anginosus anginosus}, \emph{S. anginosus whileyi}, \emph{S. constellatus}, \emph{S. constellatus constellatus}, \emph{S. constellatus pharyngis}, \emph{S. constellatus viborgensis}, and \emph{S. intermedius}
+\item Streptococcus Group G: \emph{S. canis}, \emph{S. dysgalactiae}, \emph{S. dysgalactiae dysgalactiae}, and \emph{S. dysgalactiae equisimilis}
+\item Streptococcus Group H: \emph{S. sanguinis}
+\item Streptococcus Group K: \emph{S. salivarius}, \emph{S. salivarius salivarius}, and \emph{S. salivarius thermophilus}
+\item Streptococcus Group L: \emph{S. dysgalactiae}, \emph{S. dysgalactiae dysgalactiae}, and \emph{S. dysgalactiae equisimilis}
+}
+
+This is based on:
+\itemize{
+\item Lancefield RC (1933). \strong{A serological differentiation of human and other groups of hemolytic streptococci.} \emph{J Exp Med.} 57(4): 571-95; \doi{10.1084/jem.57.4.571}
+}
 }
 }
 \section{Source}{
 
-\enumerate{
+\itemize{
 \item Berends MS \emph{et al.} (2022). \strong{AMR: An R Package for Working with Antimicrobial Resistance Data}. \emph{Journal of Statistical Software}, 104(3), 1-31; \doi{10.18637/jss.v104.i03}
-\item Becker K \emph{et al.} (2014). \strong{Coagulase-Negative Staphylococci.} \emph{Clin Microbiol Rev.} 27(4): 870-926; \doi{10.1128/CMR.00109-13}
-\item Becker K \emph{et al.} (2019). \strong{Implications of identifying the recently defined members of the \emph{S. aureus} complex, \emph{S. argenteus} and \emph{S. schweitzeri}: A position paper of members of the ESCMID Study Group for staphylococci and Staphylococcal Diseases (ESGS).} \emph{Clin Microbiol Infect}; \doi{10.1016/j.cmi.2019.02.028}
-\item Becker K \emph{et al.} (2020). \strong{Emergence of coagulase-negative staphylococci.} \emph{Expert Rev Anti Infect Ther.} 18(4):349-366; \doi{10.1080/14787210.2020.1730813}
-\item Lancefield RC (1933). \strong{A serological differentiation of human and other groups of hemolytic streptococci.} \emph{J Exp Med.} 57(4): 571-95; \doi{10.1084/jem.57.4.571}
-\item Berends MS \emph{et al.} (2022). \strong{Trends in Occurrence and Phenotypic Resistance of Coagulase-Negative Staphylococci (CoNS) Found in Human Blood in the Northern Netherlands between 2013 and 2019/} \emph{Micro.rganisms} 10(9), 1801; \doi{10.3390/microorganisms10091801}
-\item Parte, AC \emph{et al.} (2020). \strong{List of Prokaryotic names with Standing in Nomenclature (LPSN) moves to the DSMZ.} International Journal of Systematic and Evolutionary Microbiology, 70, 5607-5612; \doi{10.1099/ijsem.0.004332}. Accessed from \url{https://lpsn.dsmz.de} on December 11th, 2022.
-\item GBIF Secretariat (2022). GBIF Backbone Taxonomy. Checklist dataset \doi{10.15468/39omei}. Accessed from \url{https://www.gbif.org} on December 11th, 2022.
-\item Reimer, LC \emph{et al.} (2022). \strong{\emph{BacDive} in 2022: the knowledge base for standardized bacterial and archaeal data.} Nucleic Acids Res., 50(D1):D741-D74; \doi{10.1093/nar/gkab961}. Accessed from \url{https://bacdive.dsmz.de} on May 12th, 2023.
-\item Public Health Information Network Vocabulary Access and Distribution System (PHIN VADS). US Edition of SNOMED CT from 1 September 2020. Value Set Name 'Microorganism', OID 2.16.840.1.114222.4.11.1009 (v12). URL: \url{https://phinvads.cdc.gov}
+\item Parte, AC \emph{et al.} (2020). \strong{List of Prokaryotic names with Standing in Nomenclature (LPSN) moves to the DSMZ.} International Journal of Systematic and Evolutionary Microbiology, 70, 5607-5612; \doi{10.1099/ijsem.0.004332}. Accessed from \url{https://lpsn.dsmz.de} on June 24th, 2024.
+\item Vincent, R \emph{et al} (2013). \strong{MycoBank gearing up for new horizons.} IMA Fungus, 4(2), 371-9; \doi{10.5598/imafungus.2013.04.02.16}. Accessed from \url{https://www.mycobank.org} on June 24th, 2024.
+\item GBIF Secretariat (2023). GBIF Backbone Taxonomy. Checklist dataset \doi{10.15468/39omei}. Accessed from \url{https://www.gbif.org} on June 24th, 2024.
+\item Reimer, LC \emph{et al.} (2022). \strong{\emph{BacDive} in 2022: the knowledge base for standardized bacterial and archaeal data.} Nucleic Acids Res., 50(D1):D741-D74; \doi{10.1093/nar/gkab961}. Accessed from \url{https://bacdive.dsmz.de} on July 16th, 2024.
+\item Public Health Information Network Vocabulary Access and Distribution System (PHIN VADS). US Edition of SNOMED CT from 1 September 2020. Value Set Name 'Microorganism', OID 2.16.840.1.114222.4.11.1009 (v12). URL: \url{https://www.cdc.gov/phin/php/phinvads/}
 \item Bartlett A \emph{et al.} (2022). \strong{A comprehensive list of bacterial pathogens infecting humans} \emph{Microbiology} 168:001269; \doi{10.1099/mic.0.001269}
 }
 }
@@ -136,9 +169,7 @@ The coercion rules consider the prevalence of microorganisms in humans, which is
 
 With ambiguous user input in \code{\link[=as.mo]{as.mo()}} and all the \code{\link[=mo_property]{mo_*}} functions, the returned results are chosen based on their matching score using \code{\link[=mo_matching_score]{mo_matching_score()}}. This matching score \eqn{m}, is calculated as:
 
-\ifelse{latex}{\deqn{m_{(x, n)} = \frac{l_{n} - 0.5 \cdot \min \begin{cases}l_{n} \\ \textrm{lev}(x, n)\end{cases}}{l_{n} \cdot p_{n} \cdot k_{n}}}}{
-
-\ifelse{html}{\figure{mo_matching_score.png}{options: width="300" alt="mo matching score"}}{m(x, n) = ( l_n * min(l_n, lev(x, n) ) ) / ( l_n * p_n * k_n )}}
+\deqn{m_{(x, n)} = \frac{l_{n} - 0.5 \cdot \min \begin{cases}l_{n} \\ \textrm{lev}(x, n)\end{cases}}{l_{n} \cdot p_{n} \cdot k_{n}}}
 
 where:
 \itemize{
@@ -147,21 +178,22 @@ where:
 \item \eqn{l_n} is the length of \eqn{n};
 \item \eqn{lev} is the \href{https://en.wikipedia.org/wiki/Levenshtein_distance}{Levenshtein distance function} (counting any insertion as 1, and any deletion or substitution as 2) that is needed to change \eqn{x} into \eqn{n};
 \item \eqn{p_n} is the human pathogenic prevalence group of \eqn{n}, as described below;
-\item \eqn{k_n} is the taxonomic kingdom of \eqn{n}, set as Bacteria = 1, Fungi = 1.25, Protozoa = 1.5, Archaea = 2, others = 3.
+\item \eqn{k_n} is the taxonomic kingdom of \eqn{n}, set as Bacteria = 1, Fungi = 1.25, Protozoa = 1.5, Chromista = 1.75, Archaea = 2, others = 3.
 }
 
 The grouping into human pathogenic prevalence \eqn{p} is based on recent work from Bartlett \emph{et al.} (2022, \doi{10.1099/mic.0.001269}) who extensively studied medical-scientific literature to categorise all bacterial species into these groups:
 \itemize{
-\item \strong{Established}, if a taxonomic species has infected at least three persons in three or more references. These records have \code{prevalence = 1.0} in the \link{microorganisms} data set;
+\item \strong{Established}, if a taxonomic species has infected at least three persons in three or more references. These records have \code{prevalence = 1.15} in the \link{microorganisms} data set;
 \item \strong{Putative}, if a taxonomic species has fewer than three known cases. These records have \code{prevalence = 1.25} in the \link{microorganisms} data set.
 }
 
 Furthermore,
 \itemize{
-\item Any genus present in the \strong{established} list also has \code{prevalence = 1.0} in the \link{microorganisms} data set;
+\item Genera from the World Health Organization's (WHO) Priority Pathogen List have \code{prevalence = 1.0} in the \link{microorganisms} data set;
+\item Any genus present in the \strong{established} list also has \code{prevalence = 1.15} in the \link{microorganisms} data set;
 \item Any other genus present in the \strong{putative} list has \code{prevalence = 1.25} in the \link{microorganisms} data set;
 \item Any other species or subspecies of which the genus is present in the two aforementioned groups, has \code{prevalence = 1.5} in the \link{microorganisms} data set;
-\item Any \emph{non-bacterial} genus, species or subspecies of which the genus is present in the following list, has \code{prevalence = 1.25} in the \link{microorganisms} data set: \emph{Absidia}, \emph{Acanthamoeba}, \emph{Acremonium}, \emph{Aedes}, \emph{Alternaria}, \emph{Amoeba}, \emph{Ancylostoma}, \emph{Angiostrongylus}, \emph{Anisakis}, \emph{Anopheles}, \emph{Apophysomyces}, \emph{Aspergillus}, \emph{Aureobasidium}, \emph{Basidiobolus}, \emph{Beauveria}, \emph{Blastocystis}, \emph{Blastomyces}, \emph{Candida}, \emph{Capillaria}, \emph{Chaetomium}, \emph{Chrysonilia}, \emph{Cladophialophora}, \emph{Cladosporium}, \emph{Conidiobolus}, \emph{Contracaecum}, \emph{Cordylobia}, \emph{Cryptococcus}, \emph{Curvularia}, \emph{Demodex}, \emph{Dermatobia}, \emph{Dientamoeba}, \emph{Diphyllobothrium}, \emph{Dirofilaria}, \emph{Echinostoma}, \emph{Entamoeba}, \emph{Enterobius}, \emph{Exophiala}, \emph{Exserohilum}, \emph{Fasciola}, \emph{Fonsecaea}, \emph{Fusarium}, \emph{Giardia}, \emph{Haloarcula}, \emph{Halobacterium}, \emph{Halococcus}, \emph{Hendersonula}, \emph{Heterophyes}, \emph{Histomonas}, \emph{Histoplasma}, \emph{Hymenolepis}, \emph{Hypomyces}, \emph{Hysterothylacium}, \emph{Leishmania}, \emph{Malassezia}, \emph{Malbranchea}, \emph{Metagonimus}, \emph{Meyerozyma}, \emph{Microsporidium}, \emph{Microsporum}, \emph{Mortierella}, \emph{Mucor}, \emph{Mycocentrospora}, \emph{Necator}, \emph{Nectria}, \emph{Ochroconis}, \emph{Oesophagostomum}, \emph{Oidiodendron}, \emph{Opisthorchis}, \emph{Pediculus}, \emph{Penicillium}, \emph{Phlebotomus}, \emph{Phoma}, \emph{Pichia}, \emph{Piedraia}, \emph{Pithomyces}, \emph{Pityrosporum}, \emph{Pneumocystis}, \emph{Pseudallescheria}, \emph{Pseudoterranova}, \emph{Pulex}, \emph{Rhizomucor}, \emph{Rhizopus}, \emph{Rhodotorula}, \emph{Saccharomyces}, \emph{Sarcoptes}, \emph{Scolecobasidium}, \emph{Scopulariopsis}, \emph{Scytalidium}, \emph{Spirometra}, \emph{Sporobolomyces}, \emph{Stachybotrys}, \emph{Strongyloides}, \emph{Syngamus}, \emph{Taenia}, \emph{Talaromyces}, \emph{Toxocara}, \emph{Trichinella}, \emph{Trichobilharzia}, \emph{Trichoderma}, \emph{Trichomonas}, \emph{Trichophyton}, \emph{Trichosporon}, \emph{Trichostrongylus}, \emph{Trichuris}, \emph{Tritirachium}, \emph{Trombicula}, \emph{Trypanosoma}, \emph{Tunga}, or \emph{Wuchereria};
+\item Any \emph{non-bacterial} genus, species or subspecies of which the genus is present in the following list, has \code{prevalence = 1.25} in the \link{microorganisms} data set: \emph{Absidia}, \emph{Acanthamoeba}, \emph{Acremonium}, \emph{Actinomucor}, \emph{Aedes}, \emph{Alternaria}, \emph{Amoeba}, \emph{Ancylostoma}, \emph{Angiostrongylus}, \emph{Anisakis}, \emph{Anopheles}, \emph{Apophysomyces}, \emph{Arthroderma}, \emph{Aspergillus}, \emph{Aureobasidium}, \emph{Basidiobolus}, \emph{Beauveria}, \emph{Bipolaris}, \emph{Blastobotrys}, \emph{Blastocystis}, \emph{Blastomyces}, \emph{Candida}, \emph{Capillaria}, \emph{Chaetomium}, \emph{Chilomastix}, \emph{Chrysonilia}, \emph{Chrysosporium}, \emph{Cladophialophora}, \emph{Cladosporium}, \emph{Clavispora}, \emph{Coccidioides}, \emph{Cokeromyces}, \emph{Conidiobolus}, \emph{Coniochaeta}, \emph{Contracaecum}, \emph{Cordylobia}, \emph{Cryptococcus}, \emph{Cryptosporidium}, \emph{Cunninghamella}, \emph{Curvularia}, \emph{Cyberlindnera}, \emph{Debaryozyma}, \emph{Demodex}, \emph{Dermatobia}, \emph{Dientamoeba}, \emph{Diphyllobothrium}, \emph{Dirofilaria}, \emph{Echinostoma}, \emph{Entamoeba}, \emph{Enterobius}, \emph{Epidermophyton}, \emph{Exidia}, \emph{Exophiala}, \emph{Exserohilum}, \emph{Fasciola}, \emph{Fonsecaea}, \emph{Fusarium}, \emph{Geotrichum}, \emph{Giardia}, \emph{Graphium}, \emph{Haloarcula}, \emph{Halobacterium}, \emph{Halococcus}, \emph{Hansenula}, \emph{Hendersonula}, \emph{Heterophyes}, \emph{Histomonas}, \emph{Histoplasma}, \emph{Hortaea}, \emph{Hymenolepis}, \emph{Hypomyces}, \emph{Hysterothylacium}, \emph{Kloeckera}, \emph{Kluyveromyces}, \emph{Kodamaea}, \emph{Lacazia}, \emph{Leishmania}, \emph{Lichtheimia}, \emph{Lodderomyces}, \emph{Lomentospora}, \emph{Madurella}, \emph{Malassezia}, \emph{Malbranchea}, \emph{Metagonimus}, \emph{Meyerozyma}, \emph{Microsporidium}, \emph{Microsporum}, \emph{Millerozyma}, \emph{Mortierella}, \emph{Mucor}, \emph{Mycocentrospora}, \emph{Nannizzia}, \emph{Necator}, \emph{Nectria}, \emph{Ochroconis}, \emph{Oesophagostomum}, \emph{Oidiodendron}, \emph{Opisthorchis}, \emph{Paecilomyces}, \emph{Paracoccidioides}, \emph{Pediculus}, \emph{Penicillium}, \emph{Phaeoacremonium}, \emph{Phaeomoniella}, \emph{Phialophora}, \emph{Phlebotomus}, \emph{Phoma}, \emph{Pichia}, \emph{Piedraia}, \emph{Pithomyces}, \emph{Pityrosporum}, \emph{Pneumocystis}, \emph{Pseudallescheria}, \emph{Pseudoscopulariopsis}, \emph{Pseudoterranova}, \emph{Pulex}, \emph{Purpureocillium}, \emph{Quambalaria}, \emph{Rhinocladiella}, \emph{Rhizomucor}, \emph{Rhizopus}, \emph{Rhodotorula}, \emph{Saccharomyces}, \emph{Saksenaea}, \emph{Saprochaete}, \emph{Sarcoptes}, \emph{Scedosporium}, \emph{Schistosoma}, \emph{Schizosaccharomyces}, \emph{Scolecobasidium}, \emph{Scopulariopsis}, \emph{Scytalidium}, \emph{Spirometra}, \emph{Sporobolomyces}, \emph{Sporopachydermia}, \emph{Sporothrix}, \emph{Sporotrichum}, \emph{Stachybotrys}, \emph{Strongyloides}, \emph{Syncephalastrum}, \emph{Syngamus}, \emph{Taenia}, \emph{Talaromyces}, \emph{Teleomorph}, \emph{Toxocara}, \emph{Trichinella}, \emph{Trichobilharzia}, \emph{Trichoderma}, \emph{Trichomonas}, \emph{Trichophyton}, \emph{Trichosporon}, \emph{Trichostrongylus}, \emph{Trichuris}, \emph{Tritirachium}, \emph{Trombicula}, \emph{Trypanosoma}, \emph{Tunga}, \emph{Ulocladium}, \emph{Ustilago}, \emph{Verticillium}, \emph{Wallemia}, \emph{Wangiella}, \emph{Wickerhamomyces}, \emph{Wuchereria}, \emph{Yarrowia}, or \emph{Zygosaccharomyces};
 \item All other records have \code{prevalence = 2.0} in the \link{microorganisms} data set.
 }
 
@@ -170,9 +202,13 @@ When calculating the matching score, all characters in \eqn{x} and \eqn{n} are i
 All matches are sorted descending on their matching score and for all user input values, the top match will be returned. This will lead to the effect that e.g., \code{"E. coli"} will return the microbial ID of \emph{Escherichia coli} (\eqn{m = 0.688}, a highly prevalent microorganism found in humans) and not \emph{Entamoeba coli} (\eqn{m = 0.381}, a less prevalent microorganism in humans), although the latter would alphabetically come first.
 }
 
-\section{Reference Data Publicly Available}{
+\section{Download Our Reference Data}{
 
-All data sets in this \code{AMR} package (about microorganisms, antibiotics, SIR interpretation, EUCAST rules, etc.) are publicly and freely available for download in the following formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, SAS, and Stata. We also provide tab-separated plain text files that are machine-readable and suitable for input in any software program, such as laboratory information systems. Please visit \href{https://msberends.github.io/AMR/articles/datasets.html}{our website for the download links}. The actual files are of course available on \href{https://github.com/msberends/AMR/tree/main/data-raw}{our GitHub repository}.
+All reference data sets in the AMR package - including information on microorganisms, antimicrobials, and clinical breakpoints - are freely available for download in multiple formats: R, MS Excel, Apache Feather, Apache Parquet, SPSS, and Stata.
+
+For maximum compatibility, we also provide machine-readable, tab-separated plain text files suitable for use in any software, including laboratory information systems.
+
+Visit \href{https://amr-for-r.org/articles/datasets.html}{our website for direct download links}, or explore the actual files in \href{https://github.com/msberends/AMR/tree/main/data-raw/datasets}{our GitHub repository}.
 }
 
 \examples{

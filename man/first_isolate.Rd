@@ -5,86 +5,66 @@
 \alias{filter_first_isolate}
 \title{Determine First Isolates}
 \source{
-Methodology of this function is strictly based on:
+Methodology of these functions is strictly based on:
 \itemize{
 \item \strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 5th Edition}, 2022, \emph{Clinical and Laboratory Standards Institute (CLSI)}. \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
 \item Hindler JF and Stelling J (2007). \strong{Analysis and Presentation of Cumulative Antibiograms: A New Consensus Guideline from the Clinical and Laboratory Standards Institute.} Clinical Infectious Diseases, 44(6), 867-873. \doi{10.1086/511864}
 }
 }
 \usage{
-first_isolate(
-  x = NULL,
-  col_date = NULL,
-  col_patient_id = NULL,
-  col_mo = NULL,
-  col_testcode = NULL,
-  col_specimen = NULL,
-  col_icu = NULL,
-  col_keyantimicrobials = NULL,
-  episode_days = 365,
-  testcodes_exclude = NULL,
-  icu_exclude = FALSE,
-  specimen_group = NULL,
-  type = "points",
-  method = c("phenotype-based", "episode-based", "patient-based", "isolate-based"),
-  ignore_I = TRUE,
-  points_threshold = 2,
-  info = interactive(),
-  include_unknown = FALSE,
-  include_untested_sir = TRUE,
-  ...
-)
+first_isolate(x = NULL, col_date = NULL, col_patient_id = NULL,
+  col_mo = NULL, col_testcode = NULL, col_specimen = NULL,
+  col_icu = NULL, col_keyantimicrobials = NULL, episode_days = 365,
+  testcodes_exclude = NULL, icu_exclude = FALSE, specimen_group = NULL,
+  type = "points", method = c("phenotype-based", "episode-based",
+  "patient-based", "isolate-based"), ignore_I = TRUE, points_threshold = 2,
+  info = interactive(), include_unknown = FALSE,
+  include_untested_sir = TRUE, ...)
 
-filter_first_isolate(
-  x = NULL,
-  col_date = NULL,
-  col_patient_id = NULL,
-  col_mo = NULL,
-  episode_days = 365,
-  method = c("phenotype-based", "episode-based", "patient-based", "isolate-based"),
-  ...
-)
+filter_first_isolate(x = NULL, col_date = NULL, col_patient_id = NULL,
+  col_mo = NULL, episode_days = 365, method = c("phenotype-based",
+  "episode-based", "patient-based", "isolate-based"), ...)
 }
 \arguments{
-\item{x}{a \link{data.frame} containing isolates. Can be left blank for automatic determination, see \emph{Examples}.}
+\item{x}{A \link{data.frame} containing isolates. Can be left blank for automatic determination, see \emph{Examples}.}
 
-\item{col_date}{column name of the result date (or date that is was received on the lab) - the default is the first column with a date class}
+\item{col_date}{Column name of the result date (or date that is was received on the lab) - the default is the first column with a date class.}
 
-\item{col_patient_id}{column name of the unique IDs of the patients - the default is the first column that starts with 'patient' or 'patid' (case insensitive)}
+\item{col_patient_id}{Column name of the unique IDs of the patients - the default is the first column that starts with 'patient' or 'patid' (case insensitive).}
 
-\item{col_mo}{column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
+\item{col_mo}{Column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
 
-\item{col_testcode}{column name of the test codes. Use \code{col_testcode = NULL} to \strong{not} exclude certain test codes (such as test codes for screening). In that case \code{testcodes_exclude} will be ignored.}
+\item{col_testcode}{Column name of the test codes. Use \code{col_testcode = NULL} to \strong{not} exclude certain test codes (such as test codes for screening). In that case \code{testcodes_exclude} will be ignored.}
 
-\item{col_specimen}{column name of the specimen type or group}
+\item{col_specimen}{Column name of the specimen type or group.}
 
-\item{col_icu}{column name of the logicals (\code{TRUE}/\code{FALSE}) whether a ward or department is an Intensive Care Unit (ICU). This can also be a \link{logical} vector with the same length as rows in \code{x}.}
+\item{col_icu}{Column name of the logicals (\code{TRUE}/\code{FALSE}) whether a ward or department is an Intensive Care Unit (ICU). This can also be a \link{logical} vector with the same length as rows in \code{x}.}
 
 \item{col_keyantimicrobials}{(only useful when \code{method = "phenotype-based"}) column name of the key antimicrobials to determine first isolates, see \code{\link[=key_antimicrobials]{key_antimicrobials()}}. The default is the first column that starts with 'key' followed by 'ab' or 'antibiotics' or 'antimicrobials' (case insensitive). Use \code{col_keyantimicrobials = FALSE} to prevent this. Can also be the output of \code{\link[=key_antimicrobials]{key_antimicrobials()}}.}
 
-\item{episode_days}{episode in days after which a genus/species combination will be determined as 'first isolate' again. The default of 365 days is based on the guideline by CLSI, see \emph{Source}.}
+\item{episode_days}{Episode in days after which a genus/species combination will be determined as 'first isolate' again. The default of 365 days is based on the guideline by CLSI, see \emph{Source}.}
 
-\item{testcodes_exclude}{a \link{character} vector with test codes that should be excluded (case-insensitive)}
+\item{testcodes_exclude}{A \link{character} vector with test codes that should be excluded (case-insensitive).}
 
-\item{icu_exclude}{a \link{logical} to indicate whether ICU isolates should be excluded (rows with value \code{TRUE} in the column set with \code{col_icu})}
+\item{icu_exclude}{A \link{logical} to indicate whether ICU isolates should be excluded (rows with value \code{TRUE} in the column set with \code{col_icu}).}
 
-\item{specimen_group}{value in the column set with \code{col_specimen} to filter on}
+\item{specimen_group}{Value in the column set with \code{col_specimen} to filter on.}
 
-\item{type}{type to determine weighed isolates; can be \code{"keyantimicrobials"} or \code{"points"}, see \emph{Details}}
+\item{type}{Type to determine weighed isolates; can be \code{"keyantimicrobials"} or \code{"points"}, see \emph{Details}.}
 
-\item{method}{the method to apply, either \code{"phenotype-based"}, \code{"episode-based"}, \code{"patient-based"} or \code{"isolate-based"} (can be abbreviated), see \emph{Details}. The default is \code{"phenotype-based"} if antimicrobial test results are present in the data, and \code{"episode-based"} otherwise.}
+\item{method}{The method to apply, either \code{"phenotype-based"}, \code{"episode-based"}, \code{"patient-based"} or \code{"isolate-based"} (can be abbreviated), see \emph{Details}. The default is \code{"phenotype-based"} if antimicrobial test results are present in the data, and \code{"episode-based"} otherwise.}
 
-\item{ignore_I}{\link{logical} to indicate whether antibiotic interpretations with \code{"I"} will be ignored when \code{type = "keyantimicrobials"}, see \emph{Details}}
+\item{ignore_I}{\link{logical} to indicate whether antibiotic interpretations with \code{"I"} will be ignored when \code{type = "keyantimicrobials"}, see \emph{Details}.}
 
-\item{points_threshold}{minimum number of points to require before differences in the antibiogram will lead to inclusion of an isolate when \code{type = "points"}, see \emph{Details}}
+\item{points_threshold}{Minimum number of points to require before differences in the antibiogram will lead to inclusion of an isolate when \code{type = "points"}, see \emph{Details}.}
 
-\item{info}{a \link{logical} to indicate info should be printed - the default is \code{TRUE} only in interactive mode}
+\item{info}{A \link{logical} to indicate info should be printed - the default is \code{TRUE} only in interactive mode.}
 
-\item{include_unknown}{a \link{logical} to indicate whether 'unknown' microorganisms should be included too, i.e. microbial code \code{"UNKNOWN"}, which defaults to \code{FALSE}. For WHONET users, this means that all records with organism code \code{"con"} (\emph{contamination}) will be excluded at default. Isolates with a microbial ID of \code{NA} will always be excluded as first isolate.}
+\item{include_unknown}{A \link{logical} to indicate whether 'unknown' microorganisms should be included too, i.e. microbial code \code{"UNKNOWN"}, which defaults to \code{FALSE}. For WHONET users, this means that all records with organism code \code{"con"} (\emph{contamination}) will be excluded at default. Isolates with a microbial ID of \code{NA} will always be excluded as first isolate.}
 
-\item{include_untested_sir}{a \link{logical} to indicate whether also rows without antibiotic results are still eligible for becoming a first isolate. Use \code{include_untested_sir = FALSE} to always return \code{FALSE} for such rows. This checks the data set for columns of class \code{sir} and consequently requires transforming columns with antibiotic results using \code{\link[=as.sir]{as.sir()}} first.}
+\item{include_untested_sir}{A \link{logical} to indicate whether also rows without antibiotic results are still eligible for becoming a first isolate. Use \code{include_untested_sir = FALSE} to always return \code{FALSE} for such rows. This checks the data set for columns of class \code{sir} and consequently requires transforming columns with antibiotic results using \code{\link[=as.sir]{as.sir()}} first.}
 
-\item{...}{arguments passed on to \code{\link[=first_isolate]{first_isolate()}} when using \code{\link[=filter_first_isolate]{filter_first_isolate()}}, otherwise arguments passed on to \code{\link[=key_antimicrobials]{key_antimicrobials()}} (such as \code{universal}, \code{gram_negative}, \code{gram_positive})}
+\item{...}{Arguments passed on to \code{\link[=first_isolate]{first_isolate()}} when using \code{\link[=filter_first_isolate]{filter_first_isolate()}}, otherwise arguments passed on to \code{\link[=key_antimicrobials]{key_antimicrobials()}} (such as \code{universal}, \code{gram_negative}, \code{gram_positive}).}
 }
 \value{
 A \link{logical} vector
@@ -93,6 +73,8 @@ A \link{logical} vector
 Determine first isolates of all microorganisms of every patient per episode and (if needed) per specimen type. These functions support all four methods as summarised by Hindler \emph{et al.} in 2007 (\doi{10.1086/511864}). To determine patient episodes not necessarily based on microorganisms, use \code{\link[=is_new_episode]{is_new_episode()}} that also supports grouping with the \code{dplyr} package.
 }
 \details{
+The methodology implemented in these functions is strictly based on the recommendations outlined in \href{https://clsi.org/standards/products/microbiology/documents/m39}{CLSI Guideline M39} and the research overview by Hindler \emph{et al.} (2007, \doi{10.1086/511864}).
+
 To conduct epidemiological analyses on antimicrobial resistance data, only so-called first isolates should be included to prevent overestimation and underestimation of antimicrobial resistance. Different methods can be used to do so, see below.
 
 These functions are context-aware. This means that the \code{x} argument can be left blank if used inside a \link{data.frame} call, see \emph{Examples}.
@@ -102,7 +84,7 @@ The \code{\link[=first_isolate]{first_isolate()}} function is a wrapper around t
 All isolates with a microbial ID of \code{NA} will be excluded as first isolate.
 \subsection{Different methods}{
 
-According to Hindler \emph{et al.} (2007, \doi{10.1086/511864}), there are different methods (algorithms) to select first isolates with increasing reliability: isolate-based, patient-based, episode-based and phenotype-based. All methods select on a combination of the taxonomic genus and species (not subspecies).
+According to previously-mentioned sources, there are different methods (algorithms) to select first isolates with increasing reliability: isolate-based, patient-based, episode-based and phenotype-based. All methods select on a combination of the taxonomic genus and species (not subspecies).
 
 All mentioned methods are covered in the \code{\link[=first_isolate]{first_isolate()}} function:\tabular{ll}{
    \strong{Method} \tab \strong{Function to apply} \cr
@@ -135,12 +117,12 @@ This method does not require any selection, as all isolates should be included. 
 
 \subsection{Patient-based}{
 
-To include every genus-species combination per patient once, set the \code{episode_days} to \code{Inf}. Although often inappropriate, this method makes sure that no duplicate isolates are selected from the same patient. In a large longitudinal data set, this could mean that isolates are \emph{excluded} that were found years after the initial isolate.
+To include every genus-species combination per patient once, set the \code{episode_days} to \code{Inf}. This method makes sure that no duplicate isolates are selected from the same patient. This method is preferred to e.g. identify the first MRSA finding of each patient to determine the incidence. Conversely, in a large longitudinal data set, this could mean that isolates are \emph{excluded} that were found years after the initial isolate.
 }
 
 \subsection{Episode-based}{
 
-To include every genus-species combination per patient episode once, set the \code{episode_days} to a sensible number of days. Depending on the type of analysis, this could be 14, 30, 60 or 365. Short episodes are common for analysing specific hospital or ward data, long episodes are common for analysing regional and national data.
+To include every genus-species combination per patient episode once, set the \code{episode_days} to a sensible number of days. Depending on the type of analysis, this could be 14, 30, 60 or 365. Short episodes are common for analysing specific hospital or ward data or ICU cases, long episodes are common for analysing regional and national data.
 
 This is the most common method to correct for duplicate isolates. Patients are categorised into episodes based on their ID and dates (e.g., the date of specimen receipt or laboratory result). While this is a common method, it does not take into account antimicrobial test results. This means that e.g. a methicillin-resistant \emph{Staphylococcus aureus} (MRSA) isolate cannot be differentiated from a wildtype \emph{Staphylococcus aureus} isolate.
 }

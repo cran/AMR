@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,16 +24,15 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Define Custom EUCAST Rules
 #'
 #' Define custom EUCAST rules for your organisation or specific analysis and use the output of this function in [eucast_rules()].
-#' @param ... rules in [formula][base::tilde] notation, see *Examples*
+#' @param ... Rules in [formula][base::tilde] notation, see below for instructions, and in *Examples*.
 #' @details
 #' Some organisations have their own adoption of EUCAST rules. This function can be used to define custom EUCAST rules to be used in the [eucast_rules()] function.
-#' @section How it works:
 #'
 #' ### Basics
 #'
@@ -69,7 +68,11 @@
 #' #> 1      Escherichia coli   R    S     S
 #' #> 2 Klebsiella pneumoniae   R    S     S
 #'
-#' eucast_rules(df, rules = "custom", custom_rules = x, info = FALSE)
+#' eucast_rules(df,
+#'              rules = "custom",
+#'              custom_rules = x,
+#'              info = FALSE,
+#'              overwrite = TRUE)
 #' #>                      mo TZP ampi cipro
 #' #> 1      Escherichia coli   R    R     S
 #' #> 2 Klebsiella pneumoniae   R    R     S
@@ -80,20 +83,43 @@
 #' There is one exception in columns used for the rules: all column names of the [microorganisms] data set can also be used, but do not have to exist in the data set. These column names are: `r vector_and(colnames(microorganisms), sort = FALSE)`. Thus, this next example will work as well, despite the fact that the `df` data set does not contain a column `genus`:
 #'
 #' ```r
-#' y <- custom_eucast_rules(TZP == "S" & genus == "Klebsiella" ~ aminopenicillins == "S",
-#'                          TZP == "R" & genus == "Klebsiella" ~ aminopenicillins == "R")
+#' y <- custom_eucast_rules(
+#'   TZP == "S" & genus == "Klebsiella" ~ aminopenicillins == "S",
+#'   TZP == "R" & genus == "Klebsiella" ~ aminopenicillins == "R"
+#' )
 #'
-#' eucast_rules(df, rules = "custom", custom_rules = y, info = FALSE)
+#' eucast_rules(df,
+#'              rules = "custom",
+#'              custom_rules = y,
+#'              info = FALSE,
+#'              overwrite = TRUE)
 #' #>                      mo TZP ampi cipro
 #' #> 1      Escherichia coli   R    S     S
 #' #> 2 Klebsiella pneumoniae   R    R     S
 #' ```
 #'
-#' ### Usage of antibiotic group names
+#' ### Sharing rules among multiple users
 #'
-#' It is possible to define antibiotic groups instead of single antibiotics for the rule consequence, the part *after* the tilde. In above examples, the antibiotic group `aminopenicillins` is used to include ampicillin and amoxicillin. The following groups are allowed (case-insensitive). Within parentheses are the drugs that will be matched when running the rule.
+#' The rules set (the `y` object in this case) could be exported to a shared file location using [saveRDS()] if you collaborate with multiple users. The custom rules set could then be imported using [readRDS()].
 #'
-#' `r paste0("  * ", sapply(DEFINED_AB_GROUPS, function(x) paste0("\"", tolower(gsub("^AB_", "", x)), "\"\\cr(", vector_and(ab_name(eval(parse(text = x), envir = asNamespace("AMR")), language = NULL, tolower = TRUE), quotes = FALSE), ")"), USE.NAMES = FALSE), "\n", collapse = "")`
+#' ### Usage of multiple antimicrobials and antimicrobial group names
+#'
+#' You can define antimicrobial groups instead of single antimicrobials for the rule consequence, which is the part *after* the tilde (~). In the examples above, the antimicrobial group `aminopenicillins` includes both ampicillin and amoxicillin.
+#'
+#' Rules can also be applied to multiple antimicrobials and antimicrobial groups simultaneously. Use the `c()` function to combine multiple antimicrobials. For instance, the following example sets all aminopenicillins and ureidopenicillins to "R" if column TZP (piperacillin/tazobactam) is "R":
+#'
+#' ```r
+#' x <- custom_eucast_rules(TZP == "R" ~ c(aminopenicillins, ureidopenicillins) == "R")
+#' x
+#' #> A set of custom EUCAST rules:
+#' #>
+#' #>   1. If TZP is "R" then set to "R":
+#' #>      amoxicillin (AMX), ampicillin (AMP), azlocillin (AZL), mezlocillin (MEZ), piperacillin (PIP), piperacillin/tazobactam (TZP)
+#' ```
+#'
+#' These `r length(DEFINED_AB_GROUPS)` antimicrobial groups are allowed in the rules (case-insensitive) and can be used in any combination:
+#'
+#' `r paste0("  * ", sapply(DEFINED_AB_GROUPS, function(x) paste0(tolower(gsub("^AB_", "", x)), "\\cr(", vector_and(ab_name(eval(parse(text = x), envir = asNamespace("AMR")), language = NULL, tolower = TRUE), quotes = FALSE), ")"), USE.NAMES = FALSE), "\n", collapse = "")`
 #' @returns A [list] containing the custom rules
 #' @export
 #' @examples
@@ -108,6 +134,7 @@
 #'   rules = "custom",
 #'   custom_rules = x,
 #'   info = FALSE,
+#'   overwrite = TRUE,
 #'   verbose = TRUE
 #' )
 #'
@@ -156,24 +183,36 @@ custom_eucast_rules <- function(...) {
       "the result of rule ", i, " (the part after the `~`) must contain `==`, such as in `... ~ ampicillin == \"R\"`, see `?custom_eucast_rules`"
     )
     result_group <- as.character(result)[[2]]
-    if (paste0("AB_", toupper(result_group), "S") %in% DEFINED_AB_GROUPS) {
-      # support for e.g. 'aminopenicillin' if user meant 'aminopenicillins'
-      result_group <- paste0(result_group, "s")
+    result_group <- as.character(str2lang(result_group))
+    result_group <- result_group[result_group != "c"]
+    result_group_agents <- character(0)
+    for (j in seq_len(length(result_group))) {
+      if (paste0("AB_", toupper(result_group[j]), "S") %in% DEFINED_AB_GROUPS) {
+        # support for e.g. 'aminopenicillin' if user meant 'aminopenicillins'
+        result_group[j] <- paste0(result_group[j], "s")
+      }
+      if (paste0("AB_", toupper(result_group[j])) %in% DEFINED_AB_GROUPS) {
+        result_group_agents <- c(
+          result_group_agents,
+          eval(parse(text = paste0("AB_", toupper(result_group[j]))), envir = asNamespace("AMR"))
+        )
+      } else {
+        out_group <- tryCatch(
+          suppressWarnings(as.ab(result_group[j],
+            fast_mode = TRUE,
+            flag_multiple_results = FALSE
+          )),
+          error = function(e) NA_character_
+        )
+        if (!all(is.na(out_group))) {
+          result_group_agents <- c(result_group_agents, out_group)
+        }
+      }
     }
-    if (paste0("AB_", toupper(result_group)) %in% DEFINED_AB_GROUPS) {
-      result_group <- eval(parse(text = paste0("AB_", toupper(result_group))), envir = asNamespace("AMR"))
-    } else {
-      result_group <- tryCatch(
-        suppressWarnings(as.ab(result_group,
-          fast_mode = TRUE,
-          flag_multiple_results = FALSE
-        )),
-        error = function(e) NA_character_
-      )
-    }
+    result_group_agents <- result_group_agents[!is.na(result_group_agents)]
 
     stop_if(
-      any(is.na(result_group)),
+      length(result_group_agents) == 0,
       "this result of rule ", i, " could not be translated to a single antimicrobial drug/group: \"",
       as.character(result)[[2]], "\".\n\nThe input can be a name or code of an antimicrobial drug, or be one of: ",
       vector_or(tolower(gsub("AB_", "", DEFINED_AB_GROUPS)), quotes = FALSE), "."
@@ -181,12 +220,12 @@ custom_eucast_rules <- function(...) {
     result_value <- as.character(result)[[3]]
     result_value[result_value == "NA"] <- NA
     stop_ifnot(
-      result_value %in% c("S", "I", "R", NA),
-      "the resulting value of rule ", i, " must be either \"S\", \"I\", \"R\" or NA"
+      result_value %in% c("S", "SDD", "I", "R", "NI", NA),
+      "the resulting value of rule ", i, " must be either \"S\", \"SDD\", \"I\", \"R\", \"NI\" or NA"
     )
     result_value <- as.sir(result_value)
 
-    out[[i]]$result_group <- result_group
+    out[[i]]$result_group <- result_group_agents
     out[[i]]$result_value <- result_value
   }
 
@@ -227,7 +266,7 @@ print.custom_eucast_rules <- function(x, ...) {
     if (is.na(rule$result_value)) {
       val <- font_red("<NA>")
     } else if (rule$result_value == "R") {
-      val <- font_red_bg(" R ")
+      val <- font_rose_bg(" R ")
     } else if (rule$result_value == "S") {
       val <- font_green_bg(" S ")
     } else {
@@ -251,36 +290,4 @@ print.custom_eucast_rules <- function(x, ...) {
     rule_then <- paste0("     ", word_wrap(paste0(agents, collapse = ", "), extra_indent = 5))
     cat("\n  ", rule_if, "\n", rule_then, "\n", sep = "")
   }
-}
-
-format_custom_query_rule <- function(query, colours = has_colour()) {
-  # font_black() is a bit expensive so do it once:
-  txt <- font_black("{text}")
-  query <- gsub(" & ", sub("{text}", font_bold(" and "), txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" | ", sub("{text}", " or ", txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" + ", sub("{text}", " plus ", txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" - ", sub("{text}", " minus ", txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" / ", sub("{text}", " divided by ", txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" * ", sub("{text}", " times ", txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" == ", sub("{text}", " is ", txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" > ", sub("{text}", " is higher than ", txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" < ", sub("{text}", " is lower than ", txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" >= ", sub("{text}", " is higher than or equal to ", txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" <= ", sub("{text}", " is lower than or equal to ", txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" ^ ", sub("{text}", " to the power of ", txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" %in% ", sub("{text}", " is one of ", txt, fixed = TRUE), query, fixed = TRUE)
-  query <- gsub(" %like% ", sub("{text}", " resembles ", txt, fixed = TRUE), query, fixed = TRUE)
-  if (colours == TRUE) {
-    query <- gsub('"R"', font_red_bg(" R "), query, fixed = TRUE)
-    query <- gsub('"S"', font_green_bg(" S "), query, fixed = TRUE)
-    query <- gsub('"I"', font_orange_bg(" I "), query, fixed = TRUE)
-  }
-  # replace the black colour 'stops' with blue colour 'starts'
-  query <- gsub("\033[39m", "\033[34m", as.character(query), fixed = TRUE)
-  # start with blue
-  query <- paste0("\033[34m", query)
-  if (colours == FALSE) {
-    query <- font_stripstyle(query)
-  }
-  query
 }

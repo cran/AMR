@@ -17,17 +17,17 @@ reset_AMR_locale()
 translate_AMR(x, language = get_AMR_locale())
 }
 \arguments{
-\item{language}{language to choose. Use one of these supported language names or ISO-639-1 codes: English (en), Chinese (zh), Czech (cs), Danish (da), Dutch (nl), Finnish (fi), French (fr), German (de), Greek (el), Italian (it), Japanese (ja), Norwegian (no), Polish (pl), Portuguese (pt), Romanian (ro), Russian (ru), Spanish (es), Swedish (sv), Turkish (tr), or Ukrainian (uk).}
+\item{language}{Language to choose. Use one of these supported language names or \href{https://en.wikipedia.org/wiki/ISO_639-1}{ISO 639-1 codes}: English (en), Arabic (ar), Bengali (bn), Chinese (zh), Czech (cs), Danish (da), Dutch (nl), Finnish (fi), French (fr), German (de), Greek (el), Hindi (hi), Indonesian (id), Italian (it), Japanese (ja), Korean (ko), Norwegian (no), Polish (pl), Portuguese (pt), Romanian (ro), Russian (ru), Spanish (es), Swahili (sw), Swedish (sv), Turkish (tr), Ukrainian (uk), Urdu (ur), or Vietnamese (vi).}
 
-\item{x}{text to translate}
+\item{x}{Text to translate.}
 }
 \description{
 For language-dependent output of \code{AMR} functions, such as \code{\link[=mo_name]{mo_name()}}, \code{\link[=mo_gramstain]{mo_gramstain()}}, \code{\link[=mo_type]{mo_type()}} and \code{\link[=ab_name]{ab_name()}}.
 }
 \details{
-The currently 20 supported languages are English (en), Chinese (zh), Czech (cs), Danish (da), Dutch (nl), Finnish (fi), French (fr), German (de), Greek (el), Italian (it), Japanese (ja), Norwegian (no), Polish (pl), Portuguese (pt), Romanian (ro), Russian (ru), Spanish (es), Swedish (sv), Turkish (tr), and Ukrainian (uk). All these languages have translations available for all antimicrobial drugs and colloquial microorganism names.
+The currently 28 supported languages are English (en), Arabic (ar), Bengali (bn), Chinese (zh), Czech (cs), Danish (da), Dutch (nl), Finnish (fi), French (fr), German (de), Greek (el), Hindi (hi), Indonesian (id), Italian (it), Japanese (ja), Korean (ko), Norwegian (no), Polish (pl), Portuguese (pt), Romanian (ro), Russian (ru), Spanish (es), Swahili (sw), Swedish (sv), Turkish (tr), Ukrainian (uk), Urdu (ur), and Vietnamese (vi). All these languages have translations available for all antimicrobial drugs and colloquial microorganism names.
 
-To permanently silence the once-per-session language note on a non-English operating system, you can set the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_locale}} in your \code{.Rprofile} file like this:
+To permanently silence the once-per-session language note on a non-English operating system, you can set the package option \code{\link[=AMR-options]{AMR_locale}} in your \code{.Rprofile} file like this:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{# Open .Rprofile file
 utils::file.edit("~/.Rprofile")
@@ -43,13 +43,13 @@ Please read about adding or updating a language in \href{https://github.com/msbe
 
 The system language will be used at default (as returned by \code{Sys.getenv("LANG")} or, if \code{LANG} is not set, \code{\link[=Sys.getlocale]{Sys.getlocale("LC_COLLATE")}}), if that language is supported. But the language to be used can be overwritten in two ways and will be checked in this order:
 \enumerate{
-\item Setting the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_locale}}, either by using e.g. \code{set_AMR_locale("German")} or by running e.g. \code{options(AMR_locale = "German")}.
+\item Setting the package option \code{\link[=AMR-options]{AMR_locale}}, either by using e.g. \code{set_AMR_locale("German")} or by running e.g. \code{options(AMR_locale = "German")}.
 
 Note that setting an \R option only works in the same session. Save the command \code{options(AMR_locale = "(your language)")} to your \code{.Rprofile} file to apply it for every session. Run \code{utils::file.edit("~/.Rprofile")} to edit your \code{.Rprofile} file.
 \item Setting the system variable \code{LANGUAGE} or \code{LANG}, e.g. by adding \code{LANGUAGE="de_DE.utf8"} to your \code{.Renviron} file in your home directory.
 }
 
-Thus, if the \link[=AMR-options]{package option} \code{\link[=AMR-options]{AMR_locale}} is set, the system variables \code{LANGUAGE} and \code{LANG} will be ignored.
+Thus, if the package option \code{\link[=AMR-options]{AMR_locale}} is set, the system variables \code{LANGUAGE} and \code{LANG} will be ignored.
 }
 }
 \examples{
@@ -67,7 +67,7 @@ set_AMR_locale("German")
 ab_name("Ciprofloxacin")
 mo_name("Coagulase-negative Staphylococcus (CoNS)")
 
-# set_AMR_locale() understands endonyms, English exonyms, and ISO-639-1:
+# set_AMR_locale() understands endonyms, English exonyms, and ISO 639-1:
 set_AMR_locale("Deutsch")
 set_AMR_locale("German")
 set_AMR_locale("de")

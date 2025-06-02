@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,19 +24,19 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Get Properties of an Antiviral Drug
 #'
 #' Use these functions to return a specific property of an antiviral drug from the [antivirals] data set. All input values will be evaluated internally with [as.av()].
-#' @param x any (vector of) text that can be coerced to a valid antiviral drug code with [as.av()]
-#' @param tolower a [logical] to indicate whether the first [character] of every output should be transformed to a lower case [character].
-#' @param property one of the column names of one of the [antivirals] data set: `vector_or(colnames(antivirals), sort = FALSE)`.
-#' @param language language of the returned text - the default is system language (see [get_AMR_locale()]) and can also be set with the [package option][AMR-options] [`AMR_locale`][AMR-options]. Use `language = NULL` or `language = ""` to prevent translation.
-#' @param administration way of administration, either `"oral"` or `"iv"`
-#' @param open browse the URL using [utils::browseURL()]
-#' @param ... other arguments passed on to [as.av()]
+#' @param x Any (vector of) text that can be coerced to a valid antiviral drug code with [as.av()].
+#' @param tolower A [logical] to indicate whether the first [character] of every output should be transformed to a lower case [character].
+#' @param property One of the column names of one of the [antivirals] data set: `vector_or(colnames(antivirals), sort = FALSE)`.
+#' @param language Language of the returned text - the default is system language (see [get_AMR_locale()]) and can also be set with the package option [`AMR_locale`][AMR-options]. Use `language = NULL` or `language = ""` to prevent translation.
+#' @param administration Way of administration, either `"oral"` or `"iv"`.
+#' @param open Browse the URL using [utils::browseURL()].
+#' @param ... Other arguments passed on to [as.av()].
 #' @details All output [will be translated][translate] where possible.
 #'
 #' The function [av_url()] will return the direct URL to the official WHO website. A warning will be returned if the required ATC code is not available.
@@ -50,7 +50,7 @@
 #' - A [character] in all other cases
 #' @export
 #' @seealso [antivirals]
-#' @inheritSection AMR Reference Data Publicly Available
+#' @inheritSection AMR Download Our Reference Data
 #' @examples
 #' # all properties:
 #' av_name("ACI")
@@ -164,7 +164,7 @@ av_ddd <- function(x, administration = "oral", ...) {
     warning_(
       "in `av_ddd()`: DDDs of some combined products are available for different dose combinations and not (yet) part of the AMR package.",
       "Please refer to the WHOCC website:\n",
-      "www.whocc.no/ddd/list_of_ddds_combined_products/"
+      "atcddd.fhi.no/ddd/list_of_ddds_combined_products/"
     )
   }
   out
@@ -184,7 +184,7 @@ av_ddd_units <- function(x, administration = "oral", ...) {
     warning_(
       "in `av_ddd_units()`: DDDs of some combined products are available for different dose combinations and not (yet) part of the AMR package.",
       "Please refer to the WHOCC website:\n",
-      "www.whocc.no/ddd/list_of_ddds_combined_products/"
+      "atcddd.fhi.no/ddd/list_of_ddds_combined_products/"
     )
   }
   out
@@ -227,7 +227,7 @@ av_url <- function(x, open = FALSE, ...) {
 
   av <- as.av(x = x, ...)
   atcs <- av_atc(av, only_first = TRUE)
-  u <- paste0("https://www.whocc.no/atc_ddd_index/?code=", atcs, "&showdescription=no")
+  u <- paste0("https://atcddd.fhi.no/atc_ddd_index/?code=", atcs, "&showdescription=no")
   u[is.na(atcs)] <- NA_character_
   names(u) <- av_name(av)
 

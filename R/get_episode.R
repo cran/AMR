@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,16 +24,16 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Determine Clinical or Epidemic Episodes
 #'
 #' These functions determine which items in a vector can be considered (the start of) a new episode. This can be used to determine clinical episodes for any epidemiological analysis. The [get_episode()] function returns the index number of the episode per group, while the [is_new_episode()] function returns `TRUE` for every new [get_episode()] index. Both absolute and relative episode determination are supported.
-#' @param x vector of dates (class `Date` or `POSIXt`), will be sorted internally to determine episodes
-#' @param episode_days episode length in days to specify the time period after which a new episode begins, can also be less than a day or `Inf`, see *Details*
-#' @param case_free_days (inter-epidemic) interval length in days after which a new episode will start, can also be less than a day or `Inf`, see *Details*
-#' @param ... ignored, only in place to allow future extensions
+#' @param x Vector of dates (class `Date` or `POSIXt`), will be sorted internally to determine episodes.
+#' @param episode_days Episode length in days to specify the time period after which a new episode begins, can also be less than a day or `Inf`, see *Details*.
+#' @param case_free_days (inter-epidemic) interval length in days after which a new episode will start, can also be less than a day or `Inf`, see *Details*.
+#' @param ... Ignored, only in place to allow future extensions.
 #' @details Episodes can be determined in two ways: absolute and relative.
 #'
 #' 1. Absolute
@@ -221,11 +221,11 @@ exec_episode <- function(x, episode_days, case_free_days, ...) {
 
   # running as.double() on a POSIXct object will return its number of seconds since 1970-01-01
   x <- as.double(as.POSIXct(x)) # as.POSIXct() required for Date classes
-  
+
   # since x is now in seconds, get seconds from episode_days as well
   episode_seconds <- episode_days * 60 * 60 * 24
   case_free_seconds <- case_free_days * 60 * 60 * 24
-  
+
   if (length(x) == 1) { # this will also match 1 NA, which is fine
     return(1)
   } else if (length(x) == 2 && all(!is.na(x))) {

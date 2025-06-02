@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,25 +24,26 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Determine Bug-Drug Combinations
 #'
 #' Determine antimicrobial resistance (AMR) of all bug-drug combinations in your data set where at least 30 (default) isolates are available per species. Use [format()] on the result to prettify it to a publishable/printable format, see *Examples*.
 #' @inheritParams eucast_rules
-#' @param combine_SI a [logical] to indicate whether values S and I should be summed, so resistance will be based on only R - the default is `TRUE`
-#' @param add_ab_group a [logical] to indicate where the group of the antimicrobials must be included as a first column
-#' @param remove_intrinsic_resistant [logical] to indicate that rows and columns with 100% resistance for all tested antimicrobials must be removed from the table
-#' @param FUN the function to call on the `mo` column to transform the microorganism codes - the default is [mo_shortname()]
-#' @param translate_ab a [character] of length 1 containing column names of the [antibiotics] data set
-#' @param ... arguments passed on to `FUN`
+#' @param combine_SI A [logical] to indicate whether values S, SDD, and I should be summed, so resistance will be based on only R - the default is `TRUE`.
+#' @param add_ab_group A [logical] to indicate where the group of the antimicrobials must be included as a first column.
+#' @param remove_intrinsic_resistant [logical] to indicate that rows and columns with 100% resistance for all tested antimicrobials must be removed from the table.
+#' @param FUN The function to call on the `mo` column to transform the microorganism codes - the default is [mo_shortname()].
+#' @param translate_ab A [character] of length 1 containing column names of the [antimicrobials] data set.
+#' @param include_n_rows A [logical] to indicate if the total number of rows must be included in the output.
+#' @param ... Arguments passed on to `FUN`.
 #' @inheritParams sir_df
 #' @inheritParams base::formatC
 #' @details The function [format()] calculates the resistance per bug-drug combination and returns a table ready for reporting/publishing. Use `combine_SI = TRUE` (default) to test R vs. S+I and `combine_SI = FALSE` to test R+I vs. S. This table can also directly be used in R Markdown / Quarto without the need for e.g. [knitr::kable()].
 #' @export
 #' @rdname bug_drug_combinations
-#' @return The function [bug_drug_combinations()] returns a [data.frame] with columns "mo", "ab", "S", "I", "R" and "total".
+#' @return The function [bug_drug_combinations()] returns a [data.frame] with columns "mo", "ab", "S", "SDD", "I", "R", and "total".
 #' @examples
 #' # example_isolates is a data set available in the AMR package.
 #' # run ?example_isolates for more info.
@@ -70,8 +71,10 @@
 bug_drug_combinations <- function(x,
                                   col_mo = NULL,
                                   FUN = mo_shortname,
+                                  include_n_rows = FALSE,
                                   ...) {
-  meet_criteria(x, allow_class = "data.frame", contains_column_class = c("sir", "rsi"))
+  meet_criteria(x, allow_class = "data.frame")
+  x <- ascertain_sir_classes(x, "x")
   meet_criteria(col_mo, allow_class = "character", is_in = colnames(x), has_length = 1, allow_NULL = TRUE)
   meet_criteria(FUN, allow_class = "function", has_length = 1)
 
@@ -90,7 +93,7 @@ bug_drug_combinations <- function(x,
 
   unique_mo <- sort(unique(x[, col_mo, drop = TRUE]))
 
-  # select only groups and antibiotics
+  # select only groups and antimicrobials
   if (is_null_or_grouped_tbl(x.bak)) {
     data_has_groups <- TRUE
     groups <- get_group_names(x.bak)
@@ -105,9 +108,11 @@ bug_drug_combinations <- function(x,
       mo = character(0),
       ab = character(0),
       S = integer(0),
+      SDD = integer(0),
       I = integer(0),
       R = integer(0),
       total = integer(0),
+      total_rows = integer(0),
       stringsAsFactors = FALSE
     )
     if (data_has_groups) {
@@ -121,17 +126,28 @@ bug_drug_combinations <- function(x,
       x_mo_filter <- x[which(x[, col_mo, drop = TRUE] == unique_mo[i]), names(which(vapply(FUN.VALUE = logical(1), x, is.sir))), drop = FALSE]
       # turn and merge everything
       pivot <- lapply(x_mo_filter, function(x) {
-        m <- as.matrix(table(x))
-        data.frame(S = m["S", ], I = m["I", ], R = m["R", ], stringsAsFactors = FALSE)
+        m <- as.matrix(table(as.sir(x), useNA = "always"))
+        data.frame(
+          S = m["S", ],
+          SDD = m["SDD", ],
+          I = m["I", ],
+          R = m["R", ],
+          NI = m["NI", ],
+          na = m[which(is.na(rownames(m))), ],
+          stringsAsFactors = FALSE
+        )
       })
       merged <- do.call(rbind_AMR, pivot)
       out_group <- data.frame(
         mo = rep(unique_mo[i], NROW(merged)),
         ab = rownames(merged),
         S = merged$S,
+        SDD = merged$SDD,
         I = merged$I,
         R = merged$R,
-        total = merged$S + merged$I + merged$R,
+        NI = merged$NI,
+        total = merged$S + merged$SDD + merged$I + merged$R + merged$NI,
+        total_rows = merged$S + merged$SDD + merged$I + merged$R + merged$NI + merged$na,
         stringsAsFactors = FALSE
       )
       if (data_has_groups) {
@@ -164,10 +180,16 @@ bug_drug_combinations <- function(x,
   } else {
     out <- run_it(x)
   }
-  out <- out %pm>% pm_arrange(mo, ab)
+
+  if (include_n_rows == FALSE) {
+    out <- out[, colnames(out)[colnames(out) != "total_rows"], drop = FALSE]
+  }
+
   out <- as_original_data_class(out, class(x.bak)) # will remove tibble groups
+  out <- out %pm>% pm_arrange(mo, ab)
+  class(out) <- c("bug_drug_combinations", if (data_has_groups) "grouped" else NULL, class(out))
   rownames(out) <- NULL
-  structure(out, class = c("bug_drug_combinations", ifelse(data_has_groups, "grouped", character(0)), class(out)))
+  out
 }
 
 #' @method format bug_drug_combinations
@@ -203,12 +225,16 @@ format.bug_drug_combinations <- function(x,
       mo = gsub("(.*)%%(.*)", "\\1", names(idx)),
       ab = gsub("(.*)%%(.*)", "\\2", names(idx)),
       S = vapply(FUN.VALUE = double(1), idx, function(i) sum(x$S[i], na.rm = TRUE)),
+      SDD = vapply(FUN.VALUE = double(1), idx, function(i) sum(x$SDD[i], na.rm = TRUE)),
       I = vapply(FUN.VALUE = double(1), idx, function(i) sum(x$I[i], na.rm = TRUE)),
       R = vapply(FUN.VALUE = double(1), idx, function(i) sum(x$R[i], na.rm = TRUE)),
+      NI = vapply(FUN.VALUE = double(1), idx, function(i) sum(x$NI[i], na.rm = TRUE)),
       total = vapply(FUN.VALUE = double(1), idx, function(i) {
         sum(x$S[i], na.rm = TRUE) +
+          sum(x$SDD[i], na.rm = TRUE) +
           sum(x$I[i], na.rm = TRUE) +
-          sum(x$R[i], na.rm = TRUE)
+          sum(x$R[i], na.rm = TRUE) +
+          sum(x$NI[i], na.rm = TRUE)
       }),
       stringsAsFactors = FALSE
     )
@@ -223,7 +249,7 @@ format.bug_drug_combinations <- function(x,
   if (combine_SI == TRUE) {
     x$isolates <- x$R
   } else {
-    x$isolates <- x$R + x$I
+    x$isolates <- x$R + x$I + x$SDD
   }
 
   give_ab_name <- function(ab, format, language) {
@@ -282,7 +308,7 @@ format.bug_drug_combinations <- function(x,
 
   # replace tidyr::pivot_wider() from here
   for (i in unique(y$mo)) {
-    mo_group <- y[which(y$mo == i), c("ab", "txt"), drop = FALSE]
+    mo_group <- y[which(as.character(y$mo) == i), c("ab", "txt"), drop = FALSE]
     colnames(mo_group) <- c("ab", i)
     rownames(mo_group) <- NULL
     y <- y %pm>%
@@ -330,7 +356,8 @@ format.bug_drug_combinations <- function(x,
   as_original_data_class(y, class(x.bak), extra_class = "formatted_bug_drug_combinations") # will remove tibble groups
 }
 
-# will be exported in zzz.R
+# this prevents the requirement for putting the dependency in Imports:
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(knitr::knit_print, formatted_bug_drug_combinations)
 knit_print.formatted_bug_drug_combinations <- function(x, ...) {
   stop_ifnot_installed("knitr")
   # make columns with MO names italic according to nomenclature

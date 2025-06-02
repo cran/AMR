@@ -1,69 +1,91 @@
 Package: AMR
-Version: 2.1.1
-Date: 2023-10-20
+Version: 3.0.0
+Date: 2025-06-01
 Title: Antimicrobial Resistance Data Analysis
 Description: Functions to simplify and standardise antimicrobial resistance (AMR)
   data analysis and to work with microbial and antimicrobial properties by
   using evidence-based methods, as described in <doi:10.18637/jss.v104.i03>.
 Authors@R: c(
-  person(family = "Berends",     c("Matthijs", "S."), role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7620-1800"), email = "m.s.berends@umcg.nl"),
-  person(family = "Luz",         c("Christian", "F."), role = c("aut", "ctb"), comment = c(ORCID = "0000-0001-5809-5995")),
-  person(family = "Souverein",   c("Dennis"), role = c("aut", "ctb"), comment = c(ORCID = "0000-0003-0455-0336")),
-  person(family = "Hassing",     c("Erwin", "E.", "A."), role = c("aut", "ctb")),
-  person(family = "Albers",      c("Casper", "J."), role = "ths", comment = c(ORCID = "0000-0002-9213-6743")),
-  person(family = "Dutey-Magni", c("Peter"), role = "ctb", comment = c(ORCID = "0000-0002-8942-9836")),
-  person(family = "Fonville",    c("Judith", "M."), role = "ctb"),
-  person(family = "Friedrich",   c("Alex", "W."), role = "ths", comment = c(ORCID = "0000-0003-4881-038X")),
-  person(family = "Glasner",     c("Corinna"), role = "ths", comment = c(ORCID = "0000-0003-1241-1328")),
-  person(family = "Hazenberg",   c("Eric", "H.", "L.", "C.", "M."), role = "ctb"),
-  person(family = "Knight",      c("Gwen"), role = "ctb", comment = c(ORCID = "0000-0002-7263-9896")),
-  person(family = "Lenglet",     c("Annick"), role = "ctb", comment = c(ORCID = "0000-0003-2013-8405")),
-  person(family = "Meijer",      c("Bart", "C."), role = "ctb"),
-  person(family = "Mykhailenko", c("Dmytro"), role = "ctb"),
-  person(family = "Mymrikov",    c("Anton"), role = "ctb"),
-  person(family = "Norgan",      c("Andrew", "P."), role = "ctb", comment = c(ORCID = "0000-0002-2955-2066")),
-  person(family = "Ny",          c("Sofia"), role = "ctb", comment = c(ORCID = "0000-0002-2017-1363")),
-  person(family = "Salm",        c("Jonas"), role = "ctb"),
-  person(family = "Schade",      c("Rogier", "P."), role = "ctb"),
-  person(family = "Sinha",       c("Bhanu", "N.", "M."), role = "ths", comment = c(ORCID = "0000-0003-1634-0010")),
-  person(family = "Underwood",   c("Anthony"), role = "ctb", comment = c(ORCID = "0000-0002-8547-4277")),
-  person(family = "Williams",    c("Anita"), role = "ctb", comment = c(ORCID = "0000-0002-5295-8451")))
+  person(given = c("Matthijs", "S."),               family = "Berends",     role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7620-1800"), email = "m.s.berends@umcg.nl"),
+  person(given = c("Dennis"),                       family = "Souverein",   role = c("aut", "ctb"), comment = c(ORCID = "0000-0003-0455-0336")),
+  person(given = c("Erwin", "E.", "A."),            family = "Hassing",     role = c("aut", "ctb")),
+  person(given = c("Aislinn"),                      family = "Cook",        role = "ctb", comment = c(ORCID = "0000-0002-9189-7815")),
+  person(given = c("Andrew", "P."),                 family = "Norgan",      role = "ctb", comment = c(ORCID = "0000-0002-2955-2066")),
+  person(given = c("Anita"),                        family = "Williams",    role = "ctb", comment = c(ORCID = "0000-0002-5295-8451")),
+  person(given = c("Annick"),                       family = "Lenglet",     role = "ctb", comment = c(ORCID = "0000-0003-2013-8405")),
+  person(given = c("Anthony"),                      family = "Underwood",   role = "ctb", comment = c(ORCID = "0000-0002-8547-4277")),
+  person(given = c("Anton"),                        family = "Mymrikov",    role = "ctb"),
+  person(given = c("Bart", "C."),                   family = "Meijer",      role = "ctb"),
+  person(given = c("Christian", "F."),              family = "Luz",         role = "ctb", comment = c(ORCID = "0000-0001-5809-5995")),
+  person(given = c("Dmytro"),                       family = "Mykhailenko", role = "ctb"),
+  person(given = c("Eric", "H.", "L.", "C.", "M."), family = "Hazenberg",   role = "ctb"),
+  person(given = c("Gwen"),                         family = "Knight",      role = "ctb", comment = c(ORCID = "0000-0002-7263-9896")),
+  person(given = c("Jane"),                         family = "Hawkey",      role = "ctb", comment = c(ORCID = "0000-0001-9661-5293")),
+  person(given = c("Jason"),                        family = "Stull",       role = "ctb", comment = c(ORCID = "0000-0002-9028-8153")),
+  person(given = c("Javier"),                       family = "Sanchez",     role = "ctb", comment = c(ORCID = "0000-0003-2605-8094")),
+  person(given = c("Jonas"),                        family = "Salm",        role = "ctb"),
+  person(given = c("Judith", "M."),                 family = "Fonville",    role = "ctb"),
+  person(given = c("Kathryn"),                      family = "Holt",        role = "ctb", comment = c(ORCID = "0000-0003-3949-2471")),
+  person(given = c("Larisse"),                      family = "Bolton",      role = "ctb", comment = c(ORCID = "0000-0001-7879-2173")),
+  person(given = c("Matthew"),                      family = "Saab",        role = "ctb"),
+  person(given = c("Natacha"),                      family = "Couto",       role = "ctb", comment = c(ORCID = "0000-0002-9152-5464")),
+  person(given = c("Peter"),                        family = "Dutey-Magni", role = "ctb", comment = c(ORCID = "0000-0002-8942-9836")),
+  person(given = c("Rogier", "P."),                 family = "Schade",      role = "ctb"),
+  person(given = c("Sofia"),                        family = "Ny",          role = "ctb", comment = c(ORCID = "0000-0002-2017-1363")),
+  person(given = c("Alex", "W."),                   family = "Friedrich",   role = "ths", comment = c(ORCID = "0000-0003-4881-038X")),
+  person(given = c("Bhanu", "N.", "M."),            family = "Sinha",       role = "ths", comment = c(ORCID = "0000-0003-1634-0010")),
+  person(given = c("Casper", "J."),                 family = "Albers",      role = "ths", comment = c(ORCID = "0000-0002-9213-6743")),
+  person(given = c("Corinna"),                      family = "Glasner",     role = "ths", comment = c(ORCID = "0000-0003-1241-1328")))
 Depends: R (>= 3.0.0)
-Enhances: cleaner, ggplot2, janitor, skimr, tibble, tidyselect, tsibble
-Suggests: cli, curl, data.table, dplyr, knitr, progress, readxl,
-        rmarkdown, rvest, tinytest, xml2
+Suggests: cleaner, cli, crayon, curl, data.table, dplyr, ggplot2,
+        knitr, openxlsx, parallelly, pillar, progress, readxl,
+        rmarkdown, rstudioapi, rvest, skimr, testthat, tibble,
+        tidymodels, tidyselect, tinytest, vctrs, xml2
 VignetteBuilder: knitr,rmarkdown
-URL: https://msberends.github.io/AMR/, https://github.com/msberends/AMR
+URL: https://amr-for-r.org, https://github.com/msberends/AMR
 BugReports: https://github.com/msberends/AMR/issues
 License: GPL-2 | file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 NeedsCompilation: no
-Packaged: 2023-10-20 16:04:38 UTC; msberends
-Author: Matthijs S. Berends [aut, cre]
-    (<https://orcid.org/0000-0001-7620-1800>),
-  Christian F. Luz [aut, ctb] (<https://orcid.org/0000-0001-5809-5995>),
-  Dennis Souverein [aut, ctb] (<https://orcid.org/0000-0003-0455-0336>),
+Packaged: 2025-06-01 16:52:48 UTC; msberends
+Author: Matthijs S. Berends [aut, cre] (ORCID:
+    <https://orcid.org/0000-0001-7620-1800>),
+  Dennis Souverein [aut, ctb] (ORCID:
+    <https://orcid.org/0000-0003-0455-0336>),
   Erwin E. A. Hassing [aut, ctb],
-  Casper J. Albers [ths] (<https://orcid.org/0000-0002-9213-6743>),
-  Peter Dutey-Magni [ctb] (<https://orcid.org/0000-0002-8942-9836>),
-  Judith M. Fonville [ctb],
-  Alex W. Friedrich [ths] (<https://orcid.org/0000-0003-4881-038X>),
-  Corinna Glasner [ths] (<https://orcid.org/0000-0003-1241-1328>),
-  Eric H. L. C. M. Hazenberg [ctb],
-  Gwen Knight [ctb] (<https://orcid.org/0000-0002-7263-9896>),
-  Annick Lenglet [ctb] (<https://orcid.org/0000-0003-2013-8405>),
-  Bart C. Meijer [ctb],
-  Dmytro Mykhailenko [ctb],
+  Aislinn Cook [ctb] (ORCID: <https://orcid.org/0000-0002-9189-7815>),
+  Andrew P. Norgan [ctb] (ORCID: <https://orcid.org/0000-0002-2955-2066>),
+  Anita Williams [ctb] (ORCID: <https://orcid.org/0000-0002-5295-8451>),
+  Annick Lenglet [ctb] (ORCID: <https://orcid.org/0000-0003-2013-8405>),
+  Anthony Underwood [ctb] (ORCID:
+    <https://orcid.org/0000-0002-8547-4277>),
   Anton Mymrikov [ctb],
-  Andrew P. Norgan [ctb] (<https://orcid.org/0000-0002-2955-2066>),
-  Sofia Ny [ctb] (<https://orcid.org/0000-0002-2017-1363>),
+  Bart C. Meijer [ctb],
+  Christian F. Luz [ctb] (ORCID: <https://orcid.org/0000-0001-5809-5995>),
+  Dmytro Mykhailenko [ctb],
+  Eric H. L. C. M. Hazenberg [ctb],
+  Gwen Knight [ctb] (ORCID: <https://orcid.org/0000-0002-7263-9896>),
+  Jane Hawkey [ctb] (ORCID: <https://orcid.org/0000-0001-9661-5293>),
+  Jason Stull [ctb] (ORCID: <https://orcid.org/0000-0002-9028-8153>),
+  Javier Sanchez [ctb] (ORCID: <https://orcid.org/0000-0003-2605-8094>),
   Jonas Salm [ctb],
+  Judith M. Fonville [ctb],
+  Kathryn Holt [ctb] (ORCID: <https://orcid.org/0000-0003-3949-2471>),
+  Larisse Bolton [ctb] (ORCID: <https://orcid.org/0000-0001-7879-2173>),
+  Matthew Saab [ctb],
+  Natacha Couto [ctb] (ORCID: <https://orcid.org/0000-0002-9152-5464>),
+  Peter Dutey-Magni [ctb] (ORCID:
+    <https://orcid.org/0000-0002-8942-9836>),
   Rogier P. Schade [ctb],
-  Bhanu N. M. Sinha [ths] (<https://orcid.org/0000-0003-1634-0010>),
-  Anthony Underwood [ctb] (<https://orcid.org/0000-0002-8547-4277>),
-  Anita Williams [ctb] (<https://orcid.org/0000-0002-5295-8451>)
+  Sofia Ny [ctb] (ORCID: <https://orcid.org/0000-0002-2017-1363>),
+  Alex W. Friedrich [ths] (ORCID:
+    <https://orcid.org/0000-0003-4881-038X>),
+  Bhanu N. M. Sinha [ths] (ORCID:
+    <https://orcid.org/0000-0003-1634-0010>),
+  Casper J. Albers [ths] (ORCID: <https://orcid.org/0000-0002-9213-6743>),
+  Corinna Glasner [ths] (ORCID: <https://orcid.org/0000-0003-1241-1328>)
 Maintainer: Matthijs S. Berends <m.s.berends@umcg.nl>
 Repository: CRAN
-Date/Publication: 2023-10-21 23:10:16 UTC
+Date/Publication: 2025-06-02 10:10:02 UTC

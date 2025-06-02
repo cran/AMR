@@ -6,9 +6,9 @@
 # https://github.com/msberends/AMR                                     #
 #                                                                      #
 # PLEASE CITE THIS SOFTWARE AS:                                        #
-# Berends MS, Luz CF, Friedrich AW, Sinha BNM, Albers CJ, Glasner C    #
-# (2022). AMR: An R Package for Working with Antimicrobial Resistance  #
-# Data. Journal of Statistical Software, 104(3), 1-31.                 #
+# Berends MS, Luz CF, Friedrich AW, et al. (2022).                     #
+# AMR: An R Package for Working with Antimicrobial Resistance Data.    #
+# Journal of Statistical Software, 104(3), 1-31.                       #
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
@@ -24,17 +24,17 @@
 # useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 #                                                                      #
 # Visit our website for the full manual and a complete tutorial about  #
-# how to conduct AMR data analysis: https://msberends.github.io/AMR/   #
+# how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
 #' Guess Antibiotic Column
 #'
-#' This tries to find a column name in a data set based on information from the [antibiotics] data set. Also supports WHONET abbreviations.
-#' @param x a [data.frame]
-#' @param search_string a text to search `x` for, will be checked with [as.ab()] if this value is not a column in `x`
-#' @param verbose a [logical] to indicate whether additional info should be printed
-#' @param only_sir_columns a [logical] to indicate whether only antibiotic columns must be detected that were transformed to class `sir` (see [as.sir()]) on beforehand (default is `FALSE`)
-#' @details You can look for an antibiotic (trade) name or abbreviation and it will search `x` and the [antibiotics] data set for any column containing a name or code of that antibiotic.
+#' This tries to find a column name in a data set based on information from the [antimicrobials] data set. Also supports WHONET abbreviations.
+#' @param x A [data.frame].
+#' @param search_string A text to search `x` for, will be checked with [as.ab()] if this value is not a column in `x`.
+#' @param verbose A [logical] to indicate whether additional info should be printed.
+#' @param only_sir_columns A [logical] to indicate whether only antimicrobial columns must be included that were transformed to class [sir][as.sir()] on beforehand. Defaults to `FALSE` if no columns of `x` have a class [sir][as.sir()].
+#' @details You can look for an antibiotic (trade) name or abbreviation and it will search `x` and the [antimicrobials] data set for any column containing a name or code of that antibiotic.
 #' @return A column name of `x`, or `NULL` when no result is found.
 #' @export
 #' @examples
@@ -47,7 +47,6 @@
 #' guess_ab_col(df, "J01AA07") # ATC code of tetracycline
 #'
 #' guess_ab_col(df, "J01AA07", verbose = TRUE)
-#' # NOTE: Using column 'tetr' as input for J01AA07 (tetracycline).
 #'
 #' # WHONET codes
 #' df <- data.frame(
@@ -56,7 +55,7 @@
 #' )
 #' guess_ab_col(df, "ampicillin")
 #' guess_ab_col(df, "J01CR02")
-#' guess_ab_col(df, as.ab("augmentin"))
+#' guess_ab_col(df, "augmentin")
 guess_ab_col <- function(x = NULL, search_string = NULL, verbose = FALSE, only_sir_columns = FALSE) {
   meet_criteria(x, allow_class = "data.frame", allow_NULL = TRUE)
   meet_criteria(search_string, allow_class = "character", has_length = 1, allow_NULL = TRUE)
@@ -105,7 +104,8 @@ get_column_abx <- function(x,
                            only_sir_columns = FALSE,
                            sort = TRUE,
                            reuse_previous_result = TRUE,
-                           fn = NULL) {
+                           fn = NULL,
+                           return_all = FALSE) {
   # check if retrieved before, then get it from package environment
   if (isTRUE(reuse_previous_result) && identical(
     unique_call_id(
@@ -211,7 +211,7 @@ get_column_abx <- function(x,
     newnames <- suppressWarnings(as.ab(names(dots), info = FALSE))
     if (anyNA(newnames)) {
       if (isTRUE(info)) {
-        message_(" WARNING", add_fn = list(font_yellow, font_bold), as_note = FALSE)
+        message_(paste0(font_yellow(font_bold(" WARNING: ")), "some columns returned `NA` for `as.ab()`"), as_note = FALSE)
       }
       warning_("Invalid antibiotic reference(s): ", vector_and(names(dots)[is.na(newnames)], quotes = FALSE),
         call = FALSE,
@@ -253,45 +253,54 @@ get_column_abx <- function(x,
   if (sort == TRUE) {
     out <- out[order(names(out), out)]
   }
-  # only keep the first hits, no duplicates
-  duplicates <- c(out[duplicated(names(out))], out[duplicated(unname(out))])
-  if (length(duplicates) > 0) {
-    all_okay <- FALSE
-  }
 
-  if (isTRUE(info)) {
-    if (all_okay == TRUE) {
-      message_(" OK.", add_fn = list(font_green, font_bold), as_note = FALSE)
-    } else {
-      message_(" WARNING.", add_fn = list(font_yellow, font_bold), as_note = FALSE)
-    }
-    for (i in seq_len(length(out))) {
-      if (isTRUE(verbose) && !names(out[i]) %in% names(duplicates)) {
-        message_(
-          "Using column '", font_bold(out[i]), "' as input for ", names(out)[i],
-          " (", ab_name(names(out)[i], tolower = TRUE, language = NULL), ")."
-        )
-      }
-      if (names(out[i]) %in% names(duplicates)) {
-        already_set_as <- out[unname(out) == unname(out[i])][1L]
-        warning_(
-          paste0(
-            "Column '", font_bold(out[i]), "' will not be used for ",
-            names(out)[i], " (", ab_name(names(out)[i], tolower = TRUE, language = NULL), ")",
-            ", as it is already set for ",
-            names(already_set_as), " (", ab_name(names(already_set_as), tolower = TRUE, language = NULL), ")"
-          ),
-          add_fn = font_red,
-          immediate = verbose
-        )
-      }
-    }
-  }
+  dups <- FALSE
 
-  out <- out[!duplicated(names(out))]
-  out <- out[!duplicated(unname(out))]
-  if (sort == TRUE) {
-    out <- out[order(names(out), out)]
+  if (return_all == FALSE) {
+    dups <- names(out)[names(out) %in% names(out)[duplicated(names(out))]]
+    # only keep the first hits, no duplicates
+    duplicates <- c(out[duplicated(names(out))], out[duplicated(unname(out))])
+    if (length(duplicates) > 0) {
+      all_okay <- FALSE
+    }
+
+    if (isTRUE(info)) {
+      if (all_okay == TRUE) {
+        message_(" OK.", add_fn = list(font_green, font_bold), as_note = FALSE)
+      } else if (!isFALSE(dups)) {
+        message_(paste0(font_yellow(font_bold(" WARNING: ")), "some results from `as.ab()` are duplicated: ", vector_and(dups, quotes = "`")), as_note = FALSE)
+      } else {
+        message_(" WARNING.", add_fn = list(font_yellow, font_bold), as_note = FALSE)
+      }
+
+      for (i in seq_len(length(out))) {
+        if (isTRUE(verbose) && !out[i] %in% duplicates) {
+          message_(
+            "Using column '", font_bold(out[i]), "' as input for ", names(out)[i],
+            " (", ab_name(names(out)[i], tolower = TRUE, language = NULL), ")."
+          )
+        }
+        if (out[i] %in% duplicates) {
+          already_set_as <- out[which(out == out[i])[1L]]
+          if (names(out)[i] != already_set_as) {
+            message_(
+              paste0(
+                "Column '", font_bold(out[i]), "' will not be used for ",
+                names(out)[i], " (", suppressMessages(ab_name(names(out)[i], tolower = TRUE, language = NULL, fast_mode = TRUE)), ")",
+                ", as this antimicrobial has already been set."
+              ),
+              add_fn = font_red
+            )
+          }
+        }
+      }
+    }
+
+    out <- out[!duplicated(names(out))]
+    out <- out[!duplicated(unname(out))]
+    if (sort == TRUE) {
+      out <- out[order(names(out), out)]
+    }
   }
 
   if (!is.null(hard_dependencies)) {
@@ -335,7 +344,7 @@ get_ab_from_namespace <- function(x, cols_ab) {
   x_new <- character()
   for (val in x) {
     if (paste0("AB_", val) %in% ls(envir = asNamespace("AMR"))) {
-      # antibiotic group names, as defined in data-raw/_pre_commit_hook.R, such as `AB_CARBAPENEMS`
+      # antibiotic group names, as defined in data-raw/_pre_commit_checks.R, such as `AB_CARBAPENEMS`
       val <- eval(parse(text = paste0("AB_", val)), envir = asNamespace("AMR"))
     } else if (val %in% AMR_env$AB_lookup$ab) {
       # separate drugs, such as `AMX`

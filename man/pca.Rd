@@ -4,20 +4,13 @@
 \alias{pca}
 \title{Principal Component Analysis (for AMR)}
 \usage{
-pca(
-  x,
-  ...,
-  retx = TRUE,
-  center = TRUE,
-  scale. = TRUE,
-  tol = NULL,
-  rank. = NULL
-)
+pca(x, ..., retx = TRUE, center = TRUE, scale. = TRUE, tol = NULL,
+  rank. = NULL)
 }
 \arguments{
-\item{x}{a \link{data.frame} containing \link{numeric} columns}
+\item{x}{A \link{data.frame} containing \link{numeric} columns.}
 
-\item{...}{columns of \code{x} to be selected for PCA, can be unquoted since it supports quasiquotation.}
+\item{...}{Columns of \code{x} to be selected for PCA, can be unquoted since it supports quasiquotation.}
 
 \item{retx}{a logical value indicating whether the rotated variables
     should be returned.}
@@ -39,7 +32,7 @@ pca(
     standard deviations are less than or equal to \code{tol} times the
     standard deviation of the first component.)  With the default null
     setting, no components are omitted (unless \code{rank.} is specified
-    less than \code{min(dim(x))}.).  Other settings for tol could be
+    less than \code{min(dim(x))}.).  Other settings for \code{tol} could be
     \code{tol = 0} or \code{tol = sqrt(.Machine$double.eps)}, which
     would omit essentially constant components.}
 
@@ -80,17 +73,18 @@ if (require("dplyr")) {
 
   pca_result
   summary(pca_result)
-
   # old base R plotting method:
   biplot(pca_result)
-  # new ggplot2 plotting method using this package:
-  if (require("ggplot2")) {
-    ggplot_pca(pca_result)
+}
 
+# new ggplot2 plotting method using this package:
+if (require("dplyr") && require("ggplot2")) {
+    ggplot_pca(pca_result)
+}
+if (require("dplyr") && require("ggplot2")) {
     ggplot_pca(pca_result) +
       scale_colour_viridis_d() +
       labs(title = "Title here")
-  }
 }
 }
 }

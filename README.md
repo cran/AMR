@@ -1,34 +1,75 @@
-# `AMR` (for R)
 
-<a href="https://msberends.github.io/AMR/"><img src="https://msberends.github.io/AMR/AMR_intro.png" align="center"></a>
+<!-- README.md is generated from README.Rmd; please edit that file. -->
 
-----
+# The `AMR` Package for R
 
-This work was published in the Journal of Statistical Software (Volume 104(3); [DOI 10.18637/jss.v104.i03](https://doi.org/10.18637/jss.v104.i03)) and formed the basis of two PhD theses ([DOI 10.33612/diss.177417131](https://doi.org/10.33612/diss.177417131) and [DOI 10.33612/diss.192486375](https://doi.org/10.33612/diss.192486375)).
+Please visit our comprehensive package website <https://amr-for-r.org>
+to read more about this package, including many examples and tutorials.
 
-`AMR` is a free, open-source and independent R package to simplify the analysis and prediction of Antimicrobial Resistance (AMR) and to work with microbial and antimicrobial data and properties, by using evidence-based methods. Our aim is to provide a standard for clean and reproducible antimicrobial resistance data analysis, that can therefore empower epidemiological analyses to continuously enable surveillance and treatment evaluation in any setting. It is currently being used in over 175 countries.
- 
-After installing this package, R knows ~52,000 distinct microbial species and all ~600 antibiotic, antimycotic, and antiviral drugs by name and code (including ATC, WHONET/EARS-Net, PubChem, LOINC and SNOMED CT), and knows all about valid SIR and MIC values. It supports any data format, including WHONET/EARS-Net data. Antimicrobial names and group names are available in English, Chinese, Danish, Dutch, French, German, Greek, Italian, Japanese, Polish, Portuguese, Russian, Spanish, Swedish, Turkish, and Ukrainian.
+Overview:
 
-This package is fully independent of any other R package and works on Windows, macOS and Linux with all versions of R since R-3.0.0 (April 2013). It was designed to work in any setting, including those with very limited resources. It was created for both routine data analysis and academic research at the Faculty of Medical Sciences of the University of Groningen, in collaboration with non-profit organisations Certe Medical Diagnostics and Advice Foundation and University Medical Center Groningen. This R package is actively maintained and free software; you can freely use and distribute it for both personal and commercial (but not patent) purposes under the terms of the GNU General Public License version 2.0 (GPL-2), as published by the Free Software Foundation.
+- Provides an **all-in-one solution** for antimicrobial resistance (AMR)
+  data analysis in a One Health approach
+- Peer-reviewed, used in over 175 countries, available in 28 languages
+- Generates **antibiograms** - traditional, combined, syndromic, and
+  even WISCA
+- Provides the **full microbiological taxonomy** of ~79 000 distinct
+  species and extensive info of ~620 antimicrobial drugs
+- Applies **CLSI 2011-2025** and **EUCAST 2011-2025** clinical and
+  veterinary breakpoints, and ECOFFs, for MIC and disk zone
+  interpretation
+- Corrects for duplicate isolates, **calculates** and **predicts** AMR
+  per antimicrobial class
+- Integrates with **WHONET**, ATC, **EARS-Net**, PubChem, **LOINC**,
+  **SNOMED CT**, and **NCBI**
+- 100% free of costs and dependencies, highly suitable for places with
+  **limited resources**
 
-This is the development source of the `AMR` package for R. Not a developer? Then please visit our website [https://msberends.github.io/AMR/](https://msberends.github.io/AMR/) to read more about this package.
+------------------------------------------------------------------------
 
-*NOTE: this source code is on GitHub (https://github.com/msberends/AMR), but also automatically mirrored to our university's Gitea server (https://git.web.rug.nl/P281424/AMR) and to GitLab (https://gitlab.com/msberends/AMR).*
+The `AMR` package is a peer-reviewed, free and open-source R package
+with zero dependencies to simplify the analysis and prediction of
+Antimicrobial Resistance (AMR) and to work with microbial and
+antimicrobial data and properties, by using evidence-based methods.
+**Our aim is to provide a standard** for clean and reproducible AMR data
+analysis, that can therefore empower epidemiological analyses to
+continuously enable surveillance and treatment evaluation in any
+setting.
+
+The `AMR` package supports and can read any data format, including
+WHONET data. This package works on Windows, macOS and Linux with all
+versions of R since R-3.0 (April 2013). **It was designed to work in any
+setting, including those with very limited resources**. It was created
+for both routine data analysis and academic research at the Faculty of
+Medical Sciences of the [University of Groningen](https://www.rug.nl)
+and the [University Medical Center Groningen](https://www.umcg.nl).
+
+------------------------------------------------------------------------
 
 ### How to get this package
-Please see [our website](https://msberends.github.io/AMR/#get-this-package).
 
-You can install or update the `AMR` package from CRAN using:
+To install the latest ‘release’ version from CRAN:
 
-```r
+``` r
 install.packages("AMR")
 ```
 
-It will be downloaded and installed automatically. For RStudio, click on the menu *Tools* > *Install Packages...* and then type in "AMR" and press <kbd>Install</kbd>.
+To install the latest ‘beta’ version:
 
-----
+``` r
+install.packages("AMR", repos = "beta.amr-for-r.org")
 
-<small>
-This AMR package for R is free, open-source software and licensed under the [GNU General Public License v2.0 (GPL-2)](https://msberends.github.io/AMR/LICENSE-text.html). These requirements are consequently legally binding: modifications must be released under the same license when distributing the package, changes made to the code must be documented, source code must be made available when the package is distributed, and a copy of the license and copyright notice must be included with the package.
-</small>
+# if this does not work, try to install directly from GitHub using the 'remotes' package:
+remotes::install_github("msberends/AMR")
+```
+
+------------------------------------------------------------------------
+
+<small> This AMR package for R is free, open-source software and
+licensed under the [GNU General Public License v2.0
+(GPL-2)](https://amr-for-r.org/LICENSE-text.html). These requirements
+are consequently legally binding: modifications must be released under
+the same license when distributing the package, changes made to the code
+must be documented, source code must be made available when the package
+is distributed, and a copy of the license and copyright notice must be
+included with the package. </small>
