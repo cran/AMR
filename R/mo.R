@@ -675,7 +675,7 @@ pillar_shaft.mo <- function(x, ...) {
   }
 
   # add the names to the bugs as mouse-over!
-  if (tryCatch(isTRUE(getExportedValue("ansi_has_hyperlink_support", ns = asNamespace("cli"))()), error = function(e) FALSE)) {
+  if (in_rstudio()) {
     out[!x %in% c("UNKNOWN", NA)] <- font_url(
       url = paste0(
         x[!x %in% c("UNKNOWN", NA)], ": ",
@@ -747,13 +747,17 @@ freq.mo <- function(x, ...) {
 # this prevents the requirement for putting the dependency in Imports:
 #' @rawNamespace if(getRversion() >= "3.0.0") S3method(skimr::get_skimmers, mo)
 get_skimmers.mo <- function(column) {
+  mo <- as.mo(column, keep_synonyms = TRUE, language = NULL, info = FALSE)
+  mo <- mo[!is.na(mo)]
+  spp <- mo[mo_species(mo, keep_synonyms = TRUE, language = NULL, info = FALSE) != ""]
   skimr::sfl(
     skim_type = "mo",
-    unique_total = ~ length(unique(stats::na.omit(.))),
-    gram_negative = ~ sum(mo_is_gram_negative(.), na.rm = TRUE),
-    gram_positive = ~ sum(mo_is_gram_positive(.), na.rm = TRUE),
-    top_genus = ~ names(sort(-table(mo_genus(stats::na.omit(.), language = NULL))))[1L],
-    top_species = ~ names(sort(-table(mo_name(stats::na.omit(.), language = NULL))))[1L]
+    n_unique = ~ length(unique(mo)),
+    gram_negative = ~ sum(mo_is_gram_negative(mo, keep_synonyms = TRUE, language = NULL, info = FALSE), na.rm = TRUE),
+    gram_positive = ~ sum(mo_is_gram_positive(mo, keep_synonyms = TRUE, language = NULL, info = FALSE), na.rm = TRUE),
+    yeast = ~ sum(mo_is_yeast(mo, keep_synonyms = TRUE, language = NULL, info = FALSE), na.rm = TRUE),
+    top_genus = ~ names(sort(-table(mo_genus(mo, keep_synonyms = TRUE, language = NULL, info = FALSE))))[1L],
+    top_species = ~ names(sort(-table(mo_name(spp, keep_synonyms = TRUE, language = NULL, info = FALSE))))[1L],
   )
 }
 
@@ -1186,7 +1190,7 @@ parse_and_convert <- function(x) {
         parsed <- gsub('"', "", parsed, fixed = TRUE)
         parsed
       },
-      error = function(e) stop(e$message, call. = FALSE)
+      error = function(e) stop(conditionMessage(e), call. = FALSE)
     ) # this will also be thrown when running `as.mo(no_existing_object)`
   }
   out <- trimws2(out)

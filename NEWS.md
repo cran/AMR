@@ -1,3 +1,34 @@
+# AMR 3.0.1
+
+This is a bugfix release following the release of v3.0.0 in June 2025.
+
+### Changed
+* Fixed bugs introduced by `ggplot2` v4.0.0 (#236)
+  * MIC scale functions (such as `scale_y_mic()`) will now be applied automatically when plotting values of class `mic`
+  * SIR scale functions (such as `scale_x_sir()`) will now be applied automatically when plotting values of class `sir`
+* Fixed a bug in `antibiogram()` for when no antimicrobials are set
+* Fixed a bug in `antibiogram()` to allow column names containing the `+` character (#222)
+* Fixed a bug in `as.ab()` for antimicrobial codes with a number in it if they are preceded by a space
+* Fixed a bug in `eucast_rules()` for using specific custom rules
+* Fixed a bug in `as.sir()` to allow any tidyselect language (#220)
+* Fixed a bug in `as.sir()` to pick right breakpoint when `uti = FALSE` (#216)
+* Fixed a bug in `ggplot_sir()` when using `combine_SI = FALSE` (#213)
+* Fixed a bug in `mdro()` to make sure all genes specified in arguments are acknowledged
+* Fixed a bug the `antimicrobials` data set to remove statins (#229)
+* Fixed a bug the `microorganisms` data set for MycoBank IDs and synonyms (#233)
+* Fixed ATC J01CR05 to map to piperacillin/tazobactam rather than piperacillin/sulbactam (#230)
+* Fixed skimmers (`skimr` package) of class `ab`, `sir`, and `disk` (#234)
+* Fixed all plotting to contain a separate colour for SDD (susceptible dose-dependent) (#223)
+* Fixed some specific Dutch translations for antimicrobials
+* Added a warning to `as.ab()` if input resembles antiviral codes or names (#232)
+* Added all reasons in verbose output of `mdro()` (#227)
+* Added `names` to `age_groups()` so that custom names can be given (#215)
+* Added note to `as.sir()` to make it explicit when higher-level taxonomic breakpoints are used (#218)
+* Added antibiotic codes from the Comprehensive Antibiotic Resistance Database (CARD) to the `antimicrobials` data set (#225)
+* Updated Fosfomycin to be of antibiotic class Phosphonics (#225)
+* Updated `random_mic()` and `random_disk()` to set skewedness of the distribution and allow multiple microorganisms
+
+
 # AMR 3.0.0
 
 This package now supports not only tools for AMR data analysis in clinical settings, but also for veterinary and environmental microbiology. This was made possible through a collaboration with the [University of Prince Edward Island's Atlantic Veterinary College](https://www.upei.ca/avc), Canada. To celebrate this great improvement of the package, we also updated the package logo to reflect this change.
@@ -122,7 +153,7 @@ This package now supports not only tools for AMR data analysis in clinical setti
 
 ## Older Versions
 
-This changelog only contains changes from AMR v3.0 (March 2025) and later.
+This changelog only contains changes from AMR v3.0 (June 2025) and later.
 
 * For prior v2 versions, please see [our v2 archive](https://github.com/msberends/AMR/blob/v2.1.1/NEWS.md).
 * For prior v1 versions, please see [our v1 archive](https://github.com/msberends/AMR/blob/v1.8.2/NEWS.md).

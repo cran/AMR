@@ -432,11 +432,17 @@ pillar_shaft.mic <- function(x, ...) {
   }
   crude_numbers <- as.double(x)
   operators <- gsub("[^<=>]+", "", as.character(x))
+  # colourise operators
   operators[!is.na(operators) & operators != ""] <- font_silver(operators[!is.na(operators) & operators != ""], collapse = NULL)
   out <- trimws(paste0(operators, trimws(format(crude_numbers))))
   out[is.na(x)] <- font_na(NA)
   # make trailing zeroes less visible
-  out[out %like% "[.]"] <- gsub("([.]?0+)$", font_silver("\\1"), out[out %like% "[.]"], perl = TRUE)
+  if (is_dark()) {
+    fn <- font_silver
+  } else {
+    fn <- font_white
+  }
+  out[out %like% "[.]"] <- gsub("([.]?0+)$", fn("\\1"), out[out %like% "[.]"], perl = TRUE)
   create_pillar_column(out, align = "right", width = max(nchar(font_stripstyle(out))))
 }
 
@@ -590,12 +596,12 @@ get_skimmers.mic <- function(column) {
   column <- as.mic(column) # make sure that currently implemented MIC levels are used
   skimr::sfl(
     skim_type = "mic",
-    p0 = ~ stats::quantile(., probs = 0, na.rm = TRUE, names = FALSE),
-    p25 = ~ stats::quantile(., probs = 0.25, na.rm = TRUE, names = FALSE),
-    p50 = ~ stats::quantile(., probs = 0.5, na.rm = TRUE, names = FALSE),
-    p75 = ~ stats::quantile(., probs = 0.75, na.rm = TRUE, names = FALSE),
-    p100 = ~ stats::quantile(., probs = 1, na.rm = TRUE, names = FALSE),
-    hist = ~ skimr::inline_hist(log2(stats::na.omit(.)), 5)
+    p0 = ~ stats::quantile(column, probs = 0, na.rm = TRUE, names = FALSE),
+    p25 = ~ stats::quantile(column, probs = 0.25, na.rm = TRUE, names = FALSE),
+    p50 = ~ stats::quantile(column, probs = 0.5, na.rm = TRUE, names = FALSE),
+    p75 = ~ stats::quantile(column, probs = 0.75, na.rm = TRUE, names = FALSE),
+    p100 = ~ stats::quantile(column, probs = 1, na.rm = TRUE, names = FALSE),
+    hist = ~ skimr::inline_hist(log2(stats::na.omit(column)), 10)
   )
 }
 

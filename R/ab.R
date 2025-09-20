@@ -184,7 +184,8 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
   x_new[known_codes_cid] <- AMR_env$AB_lookup$ab[match(x[known_codes_cid], AMR_env$AB_lookup$cid)]
   previously_coerced <- x %in% AMR_env$ab_previously_coerced$x
   x_new[previously_coerced & is.na(x_new)] <- AMR_env$ab_previously_coerced$ab[match(x[is.na(x_new) & x %in% AMR_env$ab_previously_coerced$x], AMR_env$ab_previously_coerced$x)]
-  if (any(previously_coerced) && isTRUE(info) && message_not_thrown_before("as.ab", entire_session = TRUE)) {
+  previously_coerced_mention <- x %in% AMR_env$ab_previously_coerced$x & !x %in% AMR_env$AB_lookup$ab & !x %in% AMR_env$AB_lookup$generalised_name
+  if (any(previously_coerced_mention) && isTRUE(info) && message_not_thrown_before("as.ab", entire_session = TRUE)) {
     message_(
       "Returning previously coerced ",
       ifelse(length(unique(which(x[which(previously_coerced)] %in% x_bak_clean))) > 1, "value for an antimicrobial", "values for various antimicrobials"),
@@ -201,6 +202,9 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
   if (sum(already_known) < length(x)) {
     progress <- progress_ticker(n = sum(!already_known), n_min = 25, print = info) # start if n >= 25
     on.exit(close(progress))
+    if (any(x_new[!already_known & !is.na(x_new)] %in% unlist(AMR_env$AV_lookup$generalised_all, use.names = FALSE), na.rm = TRUE)) {
+      warning_("in `as.ab()`: some input seems to resemble antiviral drugs - use `as.av()` or e.g. `av_name()` for these, not `as.ab()` or e.g. `ab_name()`.")
+    }
   }
 
   for (i in which(!already_known)) {
@@ -447,7 +451,7 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
   x_unknown <- x_unknown[!x_unknown %in% c("", NA)]
   if (length(x_unknown) > 0 && fast_mode == FALSE) {
     warning_(
-      "in `as.ab()`: these values could not be coerced to a valid antimicrobial ID: ",
+      "in `as.ab()`: ", ifelse(length(unique(x_unknown)) == 1, "this value", "these values"), " could not be coerced to a valid antimicrobial ID: ",
       vector_and(x_unknown), "."
     )
   }
@@ -510,7 +514,7 @@ pillar_shaft.ab <- function(x, ...) {
   out[is.na(x)] <- font_na(NA)
 
   # add the names to the drugs as mouse-over!
-  if (tryCatch(isTRUE(getExportedValue("ansi_has_hyperlink_support", ns = asNamespace("cli"))()), error = function(e) FALSE)) {
+  if (in_rstudio()) {
     out[!is.na(x)] <- font_url(
       url = paste0(x[!is.na(x)], ": ", ab_name(x[!is.na(x)])),
       txt = out[!is.na(x)]
@@ -626,6 +630,20 @@ rep.ab <- function(x, ...) {
   out
 }
 
+# this prevents the requirement for putting the dependency in Imports:
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(skimr::get_skimmers, ab)
+get_skimmers.ab <- function(column) {
+  ab <- as.ab(column, info = FALSE)
+  ab <- ab[!is.na(ab)]
+  skimr::sfl(
+    skim_type = "ab",
+    n_unique = ~ length(unique(ab)),
+    top_ab = ~ names(sort(-table(ab)))[1L],
+    top_ab_name = ~ names(sort(-table(ab_name(ab, info = FALSE))))[1L],
+    top_group = ~ names(sort(-table(ab_group(ab, info = FALSE))))[1L]
+  )
+}
+
 generalise_antibiotic_name <- function(x) {
   x <- toupper(x)
   # remove suffices
@@ -655,7 +673,9 @@ generalise_antibiotic_name <- function(x) {
   x <- trimws(gsub(" +", " ", x, perl = TRUE))
   # remove last couple of words if they numbers or units
   x <- gsub("( ([0-9]{3,}|U?M?C?G|L))+$", "", x, perl = TRUE)
-  # move HIGH to end
+  # remove whitespace prior to numbers if preceded by A-Z
+  x <- gsub("([A-Z]+) +([0-9]+)", "\\1\\2", x, perl = TRUE)
+  # move HIGH to the end
   x <- trimws(gsub("(.*) HIGH(.*)", "\\1\\2 HIGH", x, perl = TRUE))
   x
 }
