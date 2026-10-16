@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -30,8 +30,11 @@
 test_that("test-count.R", {
   skip_on_cran()
 
-  expect_equal(count_resistant(example_isolates$AMX), count_R(example_isolates$AMX))
-  expect_equal(count_susceptible(example_isolates$AMX), count_SI(example_isolates$AMX))
+  # the counts in this file are based on EUCAST, which must also hold when another guideline is set with the AMR_guideline option
+  expect_equal(count_R(example_isolates$AMX), count_resistant(example_isolates$AMX, guideline = "EUCAST"))
+  expect_equal(count_SI(example_isolates$AMX), count_susceptible(example_isolates$AMX, guideline = "EUCAST"))
+  expect_equal(count_IR(example_isolates$AMX), count_resistant(example_isolates$AMX, guideline = "CLSI"))
+  expect_equal(count_S(example_isolates$AMX), count_susceptible(example_isolates$AMX, guideline = "CLSI"))
   expect_equal(count_all(example_isolates$AMX), n_sir(example_isolates$AMX))
 
   # AMX resistance in `example_isolates`
@@ -62,9 +65,9 @@ test_that("test-count.R", {
   expect_error(count_df(example_isolates[, "date", drop = TRUE]))
 
   if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0", also_load = TRUE)) {
-    expect_equal(example_isolates %>% count_susceptible(AMC), 1433)
-    expect_equal(example_isolates %>% count_susceptible(AMC, GEN, only_all_tested = TRUE), 1687)
-    expect_equal(example_isolates %>% count_susceptible(AMC, GEN, only_all_tested = FALSE), 1764)
+    expect_equal(example_isolates %>% count_susceptible(AMC, guideline = "EUCAST"), 1433)
+    expect_equal(example_isolates %>% count_susceptible(AMC, GEN, only_all_tested = TRUE, guideline = "EUCAST"), 1687)
+    expect_equal(example_isolates %>% count_susceptible(AMC, GEN, only_all_tested = FALSE, guideline = "EUCAST"), 1764)
     expect_equal(example_isolates %>% count_all(AMC, GEN, only_all_tested = TRUE), 1798)
     expect_equal(example_isolates %>% count_all(AMC, GEN, only_all_tested = FALSE), 1936)
     expect_identical(
@@ -78,29 +81,56 @@ test_that("test-count.R", {
       example_isolates %>%
         group_by(ward) %>%
         summarise(
-          cipro = count_susceptible(CIP),
-          genta = count_susceptible(GEN),
-          combination = count_susceptible(CIP, GEN)
+          cipro = count_susceptible(CIP, guideline = "EUCAST"),
+          genta = count_susceptible(GEN, guideline = "EUCAST"),
+          combination = count_susceptible(CIP, GEN, guideline = "EUCAST")
         ) %>%
         pull(combination),
       c(946, 428, 94)
     )
 
-    # count_df
+    # count_df, which combines 'I' with S for EUCAST and with R for CLSI
     expect_equal(
-      example_isolates %>% select(AMX) %>% count_df() %>% pull(value),
+      example_isolates %>% select(AMX) %>% count_df(guideline = "EUCAST") %>% pull(value),
       c(
-        example_isolates$AMX %>% count_susceptible(),
-        example_isolates$AMX %>% count_resistant()
+        example_isolates$AMX %>% count_susceptible(guideline = "EUCAST"),
+        example_isolates$AMX %>% count_resistant(guideline = "EUCAST")
       )
     )
     expect_equal(
-      example_isolates %>% select(AMX) %>% count_df(combine_SI = FALSE) %>% pull(value),
+      example_isolates %>% select(AMX) %>% count_df(guideline = "CLSI") %>% pull(value),
+      c(
+        example_isolates$AMX %>% count_susceptible(guideline = "CLSI"),
+        example_isolates$AMX %>% count_resistant(guideline = "CLSI")
+      )
+    )
+    expect_identical(
+      levels(count_df(example_isolates[, "AMX"], guideline = "CLSI")$interpretation),
+      c("S", "IR")
+    )
+    old_opts <- options(AMR_guideline = "CLSI")
+    expect_identical(count_df(example_isolates[, "AMX"]), count_df(example_isolates[, "AMX"], guideline = "CLSI"))
+    options(old_opts)
+    # guideline = NULL or FALSE keeps S, I, and R separate
+    expect_equal(
+      example_isolates %>% select(AMX) %>% count_df(guideline = NULL) %>% pull(value),
       c(
         suppressWarnings(example_isolates$AMX %>% count_S()),
         example_isolates$AMX %>% count_I(),
         example_isolates$AMX %>% count_R()
       )
+    )
+    expect_identical(count_df(example_isolates[, "AMX"], guideline = FALSE), count_df(example_isolates[, "AMX"], guideline = NULL))
+    expect_error(count_df(example_isolates[, "AMX"], guideline = "WHO"))
+    expect_error(count_susceptible(example_isolates$AMX, guideline = NULL))
+    # the deprecated combine_SI must be followed literally if set, regardless of the guideline
+    expect_identical(
+      suppressWarnings(count_df(example_isolates[, "AMX"], combine_SI = TRUE, guideline = "CLSI")),
+      count_df(example_isolates[, "AMX"], guideline = "EUCAST")
+    )
+    expect_identical(
+      suppressWarnings(count_df(example_isolates[, "AMX"], combine_SI = FALSE, guideline = "CLSI")),
+      count_df(example_isolates[, "AMX"], guideline = NULL)
     )
 
     # grouping in sir_calc_df() (= backbone of sir_df())

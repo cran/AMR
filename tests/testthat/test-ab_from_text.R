@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -44,10 +44,13 @@ test_that("test-ab_from_text.R", {
     ab_from_text("28/03/2020 amoxicilliin 500mg po tds", thorough_search = FALSE)[[1]],
     as.ab("Amoxicillin")
   )
+  # translated names are in the language of the system, and are tested here in English
+  old_opts <- options(AMR_locale = "en")
   expect_identical(
     ab_from_text("28/03/2020 amoxicilliin 500mg po tds", translate_ab = TRUE)[[1]],
     "Amoxicillin"
   )
+  options(old_opts)
   expect_identical(
     ab_from_text("administered amoxi/clav and cipro", collapse = ", ")[[1]],
     "AMC, CIP"

@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -354,8 +354,11 @@ pm_group_data_worker <- function(.data, pm_groups) {
   class(res) <- "data.frame"
   nrow_res <- nrow(res)
   rows <- rep(list(NA), nrow_res)
+  # compute the group keys only once, instead of for every group
+  data_keys <- as.character(interaction(.data[, pm_groups]))
+  res_keys <- as.character(interaction(res[, pm_groups]))
   for (i in seq_len(nrow_res)) {
-    rows[[i]] <- which(interaction(.data[, pm_groups]) %in% interaction(res[i, pm_groups]))
+    rows[[i]] <- which(data_keys %in% res_keys[i])
   }
   res$`.rows` <- rows
   res <- res[do.call(order, lapply(pm_groups, function(x) res[, x])), , drop = FALSE]

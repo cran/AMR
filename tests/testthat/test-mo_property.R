@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -30,8 +30,7 @@
 test_that("test-mo_property.R", {
   skip_on_cran()
 
-  expect_equal(mo_kingdom("Escherichia coli"), "Bacteria")
-  expect_equal(mo_kingdom("Escherichia coli"), mo_domain("Escherichia coli"))
+  expect_equal(mo_kingdom("Escherichia coli"), "Pseudomonadati")
   expect_equal(mo_phylum("Escherichia coli"), "Pseudomonadota")
   expect_equal(mo_class("Escherichia coli"), "Gammaproteobacteria")
   expect_equal(mo_order("Escherichia coli"), "Enterobacterales")
@@ -76,10 +75,13 @@ test_that("test-mo_property.R", {
     "Negativicutes",
     "Nitriliruptoria",
     "Rubrobacteria",
+    "Syntrophomonadia",
     "Tepidiformia",
+    "Thermaerobacteria",
     "Thermoflexia",
     "Thermoleophilia",
-    "Thermolithobacteria"
+    "Thermolithobacteria",
+    "Tissierellia"
   )
   expect_identical(
     sort(unique(microorganisms[which(microorganisms$phylum %in% current_grampos_phyla), "class", drop = TRUE])),
@@ -92,16 +94,17 @@ test_that("test-mo_property.R", {
   expect_equal(mo_gramstain("Escherichia coli", language = "en"), "Gram-negative")
   expect_inherits(mo_taxonomy("Escherichia coli"), "list")
   expect_equal(names(mo_taxonomy("Escherichia coli")), c(
-    "kingdom", "phylum", "class", "order",
+    "domain", "kingdom", "phylum", "class", "order",
     "family", "genus", "species", "subspecies"
   ))
-  expect_equal(mo_synonyms("Escherichia coli"), NULL)
+  # (since the taxonomy update of October 2026, LPSN's basionym Bacillus coli is linked to E. coli)
+  expect_true("Bacillus coli" %in% mo_synonyms("Escherichia coli"))
   expect_true(length(mo_synonyms("Candida albicans")) > 1)
   expect_inherits(mo_synonyms(c("Candida albicans", "Escherichia coli")), "list")
   expect_equal(names(mo_info("Escherichia coli")), c(
     "mo", "rank",
-    "kingdom", "phylum", "class", "order", "family", "genus", "species", "subspecies",
-    "status", "synonyms", "gramstain", "oxygen_tolerance",
+    "domain", "kingdom", "phylum", "class", "order", "family", "genus", "species", "subspecies",
+    "status", "synonyms", "gramstain", "morphology", "oxygen_tolerance",
     "url", "ref", "snomed", "lpsn", "mycobank", "gbif", "group_members"
   ))
   expect_inherits(mo_info(c("Escherichia coli", "Staphylococcus aureus")), "list")
@@ -115,7 +118,7 @@ test_that("test-mo_property.R", {
 
   expect_equal(
     as.character(table(mo_pathogenicity(example_isolates$mo))),
-    c("1911", "66", "1", "22")
+    c("1912", "71", "1", "16")
   )
 
   expect_equal(mo_ref("Escherichia coli"), "Castellani et al., 1919")
@@ -185,7 +188,7 @@ test_that("test-mo_property.R", {
     c("Shimwellia blattae", "Escherichia coli")
   )
 
-  expect_identical(mo_ref("Chlamydia psittaci"), "Garcia-Lopez et al., 2019")
+  expect_identical(mo_ref("Chlamydia psittaci"), "Page, 1968")
   expect_identical(mo_ref("Chlamydophila psittaci", keep_synonyms = TRUE), "Everett et al., 1999")
 
   expect_true(112283007 %in% mo_snomed("Escherichia coli")[[1]])

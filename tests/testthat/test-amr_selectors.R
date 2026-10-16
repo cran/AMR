@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -52,9 +52,11 @@ test_that("test-amr selectors.R", {
   expect_equal(ncol(example_isolates[, oxazolidinones(), drop = FALSE]), 1, tolerance = 0.5)
   expect_equal(ncol(example_isolates[, penicillins(), drop = FALSE]), 7, tolerance = 0.5)
   expect_equal(ncol(example_isolates[, phenicols(), drop = FALSE]), 1, tolerance = 0.5)
+  expect_equal(ncol(example_isolates[, phosphonics(), drop = FALSE]), 1, tolerance = 0.5)
   expect_equal(ncol(example_isolates[, polymyxins(), drop = FALSE]), 1, tolerance = 0.5)
   expect_equal(ncol(example_isolates[, quinolones(), drop = FALSE]), 2, tolerance = 0.5)
   expect_equal(ncol(example_isolates[, rifamycins(), drop = FALSE]), 1, tolerance = 0.5)
+  expect_equal(ncol(example_isolates[, spiropyrimidinetriones(), drop = FALSE]), 0, tolerance = 0.5)
   expect_equal(ncol(example_isolates[, streptogramins(), drop = FALSE]), 0, tolerance = 0.5)
   expect_equal(ncol(example_isolates[, tetracyclines(), drop = FALSE]), 3, tolerance = 0.5)
   expect_equal(ncol(example_isolates[, trimethoprims(), drop = FALSE]), 2, tolerance = 0.5)
@@ -86,7 +88,7 @@ test_that("test-amr selectors.R", {
   expect_equal(nrow(example_isolates[any(carbapenems() != "R"), ]), 910, tolerance = 0.5)
   expect_equal(nrow(example_isolates[carbapenems() != "R", ]), 704, tolerance = 0.5)
 
-  # filter with multiple antibiotic selectors using c()
+  # filter with multiple antimicrobial selectors using c()
   expect_equal(nrow(example_isolates[all(c(carbapenems(), aminoglycosides()) == "R"), ]), 26, tolerance = 0.5)
 
   # filter + select in one go: get penicillins in carbapenems-resistant strains

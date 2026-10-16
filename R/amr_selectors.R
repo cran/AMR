@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -73,7 +73,6 @@
 #' # Though they are primarily intended to use for selections and filters.
 #' # Examples sections below are split into 'dplyr', 'base R', and 'data.table':
 #'
-#' \donttest{
 #' \dontrun{
 #' # dplyr -------------------------------------------------------------------
 #'
@@ -94,8 +93,10 @@
 #' # get AMR for all aminoglycosides e.g., per ward:
 #' example_isolates %>%
 #'   group_by(ward) %>%
-#'   summarise(across(aminoglycosides(),
-#'                    resistance))
+#'   summarise(across(
+#'     aminoglycosides(),
+#'     resistance
+#'   ))
 #'
 #' # You can combine selectors with '&' to be more specific:
 #' example_isolates %>%
@@ -105,8 +106,10 @@
 #' example_isolates %>%
 #'   filter(mo_genus() %in% c("Escherichia", "Klebsiella")) %>%
 #'   group_by(ward) %>%
-#'   summarise_at(not_intrinsic_resistant(),
-#'                resistance)
+#'   summarise_at(
+#'     not_intrinsic_resistant(),
+#'     resistance
+#'   )
 #'
 #' # get susceptibility for antimicrobials whose name contains "trim":
 #' example_isolates %>%
@@ -159,8 +162,9 @@
 #' y <- example_isolates %>% filter(carbapenems() == "R")
 #' z <- example_isolates %>% filter(if_all(carbapenems(), ~ .x == "R"))
 #' identical(x, y) && identical(y, z)
-#'
 #' }
+#'
+#' \donttest{
 #' # base R ------------------------------------------------------------------
 #'
 #' # select columns 'IPM' (imipenem) and 'MEM' (meropenem)
@@ -202,7 +206,7 @@
 #' # data.table --------------------------------------------------------------
 #'
 #' # data.table is supported as well, just use it in the same way as with
-#' # base R, but add `with = FALSE` if using a single AB selector.
+#' # base R, but add `with = FALSE` if using a single AMR selector.
 #'
 #' if (require("data.table")) {
 #'   dt <- as.data.table(example_isolates)
@@ -215,7 +219,7 @@
 #'   dt[, carbapenems(), with = FALSE]
 #' }
 #'
-#' # for multiple selections or AB selectors, `with = FALSE` is not needed:
+#' # for multiple selections or AMR selectors, `with = FALSE` is not needed:
 #' if (require("data.table")) {
 #'   dt[, c("mo", aminoglycosides())]
 #' }
@@ -354,6 +358,14 @@ glycopeptides <- function(only_sir_columns = FALSE, return_all = TRUE, ...) {
 
 #' @rdname antimicrobial_selectors
 #' @export
+ionophores <- function(only_sir_columns = FALSE, return_all = TRUE, ...) {
+  meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
+  meet_criteria(return_all, allow_class = "logical", has_length = 1)
+  amr_select_exec("ionophores", only_sir_columns = only_sir_columns, return_all = return_all)
+}
+
+#' @rdname antimicrobial_selectors
+#' @export
 isoxazolylpenicillins <- function(only_sir_columns = FALSE, only_treatable = TRUE, return_all = TRUE, ...) {
   meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
   meet_criteria(return_all, allow_class = "logical", has_length = 1)
@@ -419,10 +431,26 @@ penicillins <- function(only_sir_columns = FALSE, return_all = TRUE, ...) {
 
 #' @rdname antimicrobial_selectors
 #' @export
+peptides <- function(only_sir_columns = FALSE, return_all = TRUE, ...) {
+  meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
+  meet_criteria(return_all, allow_class = "logical", has_length = 1)
+  amr_select_exec("peptides", only_sir_columns = only_sir_columns, return_all = return_all)
+}
+
+#' @rdname antimicrobial_selectors
+#' @export
 phenicols <- function(only_sir_columns = FALSE, return_all = TRUE, ...) {
   meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
   meet_criteria(return_all, allow_class = "logical", has_length = 1)
   amr_select_exec("phenicols", only_sir_columns = only_sir_columns, return_all = return_all)
+}
+
+#' @rdname antimicrobial_selectors
+#' @export
+phosphonics <- function(only_sir_columns = FALSE, return_all = TRUE, ...) {
+  meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
+  meet_criteria(return_all, allow_class = "logical", has_length = 1)
+  amr_select_exec("phosphonics", only_sir_columns = only_sir_columns, return_all = return_all)
 }
 
 #' @rdname antimicrobial_selectors
@@ -448,6 +476,14 @@ rifamycins <- function(only_sir_columns = FALSE, return_all = TRUE, ...) {
   meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
   meet_criteria(return_all, allow_class = "logical", has_length = 1)
   amr_select_exec("rifamycins", only_sir_columns = only_sir_columns, return_all = return_all)
+}
+
+#' @rdname antimicrobial_selectors
+#' @export
+spiropyrimidinetriones <- function(only_sir_columns = FALSE, return_all = TRUE, ...) {
+  meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
+  meet_criteria(return_all, allow_class = "logical", has_length = 1)
+  amr_select_exec("spiropyrimidinetriones", only_sir_columns = only_sir_columns, return_all = return_all)
 }
 
 #' @rdname antimicrobial_selectors
@@ -646,7 +682,7 @@ not_intrinsic_resistant <- function(only_sir_columns = FALSE, col_mo = NULL, ver
   agents <- ab_in_data[ab_in_data %in% names(vars_df_R[which(vars_df_R)])]
   if (length(agents) > 0 &&
     message_not_thrown_before("not_intrinsic_resistant", sort(agents))) {
-    agents_formatted <- paste0("'", font_bold(agents, collapse = NULL), "'")
+    agents_formatted <- paste0("{.field ", font_bold(agents, collapse = NULL), "}")
     agents_names <- ab_name(names(agents), tolower = TRUE, language = NULL)
     need_name <- generalise_antibiotic_name(agents) != generalise_antibiotic_name(agents_names)
     agents_formatted[need_name] <- paste0(agents_formatted[need_name], " (", agents_names[need_name], ")")
@@ -685,12 +721,12 @@ amr_select_exec <- function(function_name,
   }
 
   # untreatable drugs
-  untreatable <- AMR_env$AB_lookup$ab[which(AMR_env$AB_lookup$name %like% "(-high|EDTA|polysorbate|macromethod|screening|nacubactam)")]
+  untreatable <- AMR_env$AB_lookup$ab[which(AMR_env$AB_lookup$name %like% "(-high|EDTA|polysorbate|macromethod|screening|nacubactam|inducible)")]
   if (!is.null(vars_df) && only_treatable == TRUE) {
     if (any(untreatable %in% names(ab_in_data))) {
       if (message_not_thrown_before(function_name, "amr_class", "untreatable")) {
         warning_(
-          "in `", function_name, "()`: some drugs were ignored since they cannot be used for treatment: ",
+          "in {.help [{.fun ", function_name, "}](AMR::", function_name, ")}: some drugs were ignored since they cannot be used for treatment: ",
           vector_and(
             ab_name(names(ab_in_data)[names(ab_in_data) %in% untreatable],
               language = NULL,
@@ -713,9 +749,9 @@ amr_select_exec <- function(function_name,
   if (is.null(amr_class_args) || isTRUE(function_name %in% c("antifungals", "antimycobacterials"))) {
     ab_group <- NULL
     if (isTRUE(function_name == "antifungals")) {
-      abx <- AMR_env$AB_lookup$ab[which(AMR_env$AB_lookup$group == "Antifungals")]
+      abx <- AMR_env$AB_lookup$ab[which(vapply(FUN.VALUE = logical(1), AMR_env$AB_lookup$group, function(x) "Antifungals" %in% x))]
     } else if (isTRUE(function_name == "antimycobacterials")) {
-      abx <- AMR_env$AB_lookup$ab[which(AMR_env$AB_lookup$group == "Antimycobacterials")]
+      abx <- AMR_env$AB_lookup$ab[which(vapply(FUN.VALUE = logical(1), AMR_env$AB_lookup$group, function(x) "Antimycobacterials" %in% x))]
     } else {
       # their upper case equivalent are vectors with class 'ab', created in data-raw/_pre_commit_checks.R
       # carbapenems() gets its codes from AMR:::AB_CARBAPENEMS
@@ -723,7 +759,11 @@ amr_select_exec <- function(function_name,
       # manually added codes from add_custom_antimicrobials() must also be supported
       if (length(AMR_env$custom_ab_codes) > 0) {
         custom_ab <- AMR_env$AB_lookup[which(AMR_env$AB_lookup$ab %in% AMR_env$custom_ab_codes), ]
-        check_string <- paste0(custom_ab$group, custom_ab$atc_group1, custom_ab$atc_group2)
+        check_string <- paste0(
+          vapply(FUN.VALUE = character(1), custom_ab$group, function(x) paste(x, collapse = " ")),
+          custom_ab$atc_group1,
+          custom_ab$atc_group2
+        )
         if (function_name == "betalactams") {
           find_group <- "beta[-]?lactams"
         } else if (function_name %like% "cephalosporins_") {
@@ -761,14 +801,14 @@ amr_select_exec <- function(function_name,
     if (only_treatable == TRUE) {
       if (message_not_thrown_before(function_name, "amr_class", "untreatable")) {
         message_(
-          "in `", function_name, "()`: ",
+          "in {.help [{.fun ", function_name, "}](AMR::", function_name, ")}: ",
           vector_and(
             paste0(
               ab_name(abx[abx %in% untreatable],
                 language = NULL,
                 tolower = TRUE
               ),
-              " (`", abx[abx %in% untreatable], "`)"
+              " ({.field ", font_bold(abx[abx %in% untreatable], collapse = NULL), "})"
             ),
             quotes = FALSE,
             sort = TRUE,
@@ -801,10 +841,10 @@ amr_select_exec <- function(function_name,
 #' @export
 #' @noRd
 print.amr_selector <- function(x, ...) {
-  warning_("It should never be needed to print an antimicrobial selector class. Are you using data.table? Then add the argument `with = FALSE`, see our examples at `?amr_selector`.",
+  warning_("It should never be needed to print an antimicrobial selector class. Are you using {.pkg data.table}? Then add the argument {.arg with = FALSE}, see our examples at {.help [{.fun amr_selector}](AMR::amr_selector)}.",
     immediate = TRUE
   )
-  cat("Class 'amr_selector'\n")
+  cat(format_inline_("Class {.cls amr_selector}\n"))
   print(as.character(x), quote = FALSE)
 }
 
@@ -819,10 +859,10 @@ c.amr_selector <- function(...) {
 
 all_any_amr_selector <- function(type, ..., na.rm = TRUE) {
   cols_ab <- c(...)
-  result <- cols_ab[toupper(cols_ab) %in% c("S", "SDD", "I", "R", "NI")]
+  result <- cols_ab[toupper(cols_ab) %in% VALID_SIR_LEVELS]
   if (length(result) == 0) {
-    message_("Filtering ", type, " of columns ", vector_and(font_bold(cols_ab, collapse = NULL), quotes = "'"), ' to contain value "S", "I" or "R"')
-    result <- c("S", "SDD", "I", "R", "NI")
+    message_("Filtering ", type, " of columns ", vector_and(paste0("{.field ", font_bold(cols_ab, collapse = NULL), "}"), quotes = FALSE), " to only contain values ", vector_or(VALID_SIR_LEVELS))
+    result <- VALID_SIR_LEVELS
   }
   cols_ab <- cols_ab[!cols_ab %in% result]
   df <- get_current_data(arg_name = NA, call = -3)
@@ -901,7 +941,7 @@ any.amr_selector_any_all <- function(..., na.rm = FALSE) {
     if (length(e1) > 1) {
       message_(
         "Assuming a filter on ", type, " ", length(e1), " ", gsub("[\\(\\)]", "", fn_name),
-        ". Wrap around `all()` or `any()` to prevent this note."
+        ". Wrap around {.fun all} or {.fun any} to prevent this note."
       )
     }
   }
@@ -926,12 +966,12 @@ any.amr_selector_any_all <- function(..., na.rm = FALSE) {
     if (length(e1) > 1) {
       message_(
         "Assuming a filter on ", type, " ", length(e1), " ", gsub("[\\(\\)]", "", fn_name),
-        ". Wrap around `all()` or `any()` to prevent this note."
+        ". Wrap around {.fun all} or {.fun any} to prevent this note."
       )
     }
   }
   # this is `!=`, so turn around the values
-  sir <- c("S", "SDD", "I", "R", "NI")
+  sir <- VALID_SIR_LEVELS
   e2 <- sir[sir != e2]
   structure(all_any_amr_selector(type = type, e1, e2),
     class = c("amr_selector_any_all", "logical")
@@ -1001,11 +1041,11 @@ find_ab_names <- function(ab_group, n = 3) {
   # try popular first, they have DDDs
   drugs <- AMR_env$AB_lookup[which((!is.na(AMR_env$AB_lookup$iv_ddd) | !is.na(AMR_env$AB_lookup$oral_ddd)) &
     AMR_env$AB_lookup$name %unlike% " " &
-    AMR_env$AB_lookup$group %like% ab_group &
+    vapply(FUN.VALUE = character(1), AMR_env$AB_lookup$group, function(x) paste(x, collapse = " ")) %like% ab_group &
     AMR_env$AB_lookup$ab %unlike% "[0-9]$"), ]$name
   if (length(drugs) < n) {
     # now try it all
-    drugs <- AMR_env$AB_lookup[which((AMR_env$AB_lookup$group %like% ab_group |
+    drugs <- AMR_env$AB_lookup[which((vapply(FUN.VALUE = character(1), AMR_env$AB_lookup$group, function(x) paste(x, collapse = " ")) %like% ab_group |
       AMR_env$AB_lookup$atc_group1 %like% ab_group |
       AMR_env$AB_lookup$atc_group2 %like% ab_group) &
       AMR_env$AB_lookup$ab %unlike% "[0-9]$"), ]$name
@@ -1026,7 +1066,7 @@ message_agent_names <- function(function_name, agents, ab_group = NULL, examples
   if (message_not_thrown_before(function_name, sort(agents))) {
     if (length(agents) == 0) {
       if (is.null(ab_group)) {
-        message_("For `", function_name, "()` no antimicrobial drugs found", examples, ".")
+        message_("For {.help [{.fun ", function_name, "}](AMR::", function_name, ")} no antimicrobial drugs found", examples, ".")
       } else if (ab_group == "administrable_per_os") {
         message_("No orally administrable drugs found", examples, ".")
       } else if (ab_group == "administrable_iv") {
@@ -1035,12 +1075,12 @@ message_agent_names <- function(function_name, agents, ab_group = NULL, examples
         message_("No antimicrobial drugs of class '", ab_group, "' found", examples, ".")
       }
     } else {
-      agents_formatted <- paste0("'", font_bold(agents, collapse = NULL), "'")
+      agents_formatted <- paste0("{.field ", font_bold(agents, collapse = NULL), "}")
       agents_names <- ab_name(names(agents), tolower = TRUE, language = NULL)
       need_name <- generalise_antibiotic_name(agents) != generalise_antibiotic_name(agents_names)
       agents_formatted[need_name] <- paste0(agents_formatted[need_name], " (", agents_names[need_name], ")")
       message_(
-        "For `", function_name, "(",
+        "For {.help [", function_name, "(",
         ifelse(function_name == "amr_class",
           paste0("\"", amr_class_args, "\""),
           ifelse(!is.null(call),
@@ -1048,7 +1088,7 @@ message_agent_names <- function(function_name, agents, ab_group = NULL, examples
             ""
           )
         ),
-        ")` using ",
+        ")](AMR::", function_name, ")} using ",
         ifelse(length(agents) == 1, "column ", "columns "),
         vector_and(agents_formatted, quotes = FALSE, sort = FALSE)
       )

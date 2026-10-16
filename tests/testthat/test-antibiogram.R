@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -30,23 +30,60 @@
 test_that("test-antibiogram.R", {
   skip_on_cran()
 
+  # 'I' follows the guideline, see section 'Interpretation of SIR' in ?as.sir
+  get_gen <- function(...) suppressWarnings(antibiogram(example_isolates, antimicrobials = "GEN", ab_transform = NULL, formatting_type = 1, ...))$GEN
+  gen_eucast <- get_gen(guideline = "EUCAST")
+  gen_clsi <- get_gen(guideline = "CLSI")
+  expect_true(all(gen_eucast >= gen_clsi, na.rm = TRUE) && any(gen_eucast > gen_clsi, na.rm = TRUE))
+  expect_error(antibiogram(example_isolates, antimicrobials = "GEN", guideline = NULL))
+  # the deprecated combine_SI must be followed literally if set, regardless of the guideline
+  expect_identical(get_gen(combine_SI = TRUE, guideline = "CLSI"), gen_eucast)
+  expect_identical(get_gen(combine_SI = FALSE, guideline = "EUCAST"), gen_clsi) # identical since example_isolates contains no SDD
+
+  # isolates of unknown species must be included, also in WISCA
+  set.seed(1)
+  wisca_all <- suppressMessages(wisca(example_isolates, antimicrobials = "GEN", simulations = 100, info = FALSE, guideline = "EUCAST"))
+  set.seed(1)
+  wisca_known <- suppressMessages(wisca(example_isolates[example_isolates$mo != "UNKNOWN", ], antimicrobials = "GEN", simulations = 100, info = FALSE, guideline = "EUCAST"))
+  expect_true("UNKNOWN" %in% attributes(wisca_all)$wisca_parameters$mo)
+  expect_false(identical(as.data.frame(wisca_all), as.data.frame(wisca_known)))
+  if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0", also_load = TRUE)) {
+    ab_grouped <- tryCatch(
+      # pathogen names are translated, so test in English, which must also hold on systems in another language
+      example_isolates %>%
+        group_by(ward) %>%
+        antibiogram(antimicrobials = "GEN", minimum = 0, formatting_type = 1, guideline = "EUCAST", language = "en"),
+      warning = function(w) conditionMessage(w)
+    )
+    expect_inherits(ab_grouped, "antibiogram")
+    expect_true(mo_shortname("UNKNOWN", language = NULL) %in% ab_grouped[[2]])
+    expect_false(any(as.character(ab_grouped[[2]]) %in% c("UNKNOWN", "B_ESCHR_COLI")))
+  }
+
   # Traditional antibiogram ----------------------------------------------
 
+
+  ab0 <- antibiogram(example_isolates)
+
+  # the column names of ab1 to ab6 and ab8 to ab9 are tested in English, which must also hold on systems in another language
   ab1 <- antibiogram(example_isolates,
-    antimicrobials = c(aminoglycosides(), carbapenems())
+    antimicrobials = c(aminoglycosides(), carbapenems()),
+    language = "en"
   )
 
   ab2 <- antibiogram(example_isolates,
     antimicrobials = aminoglycosides(),
     ab_transform = "atc",
-    mo_transform = "gramstain"
+    mo_transform = "gramstain",
+    language = "en"
   )
 
   ab3 <- antibiogram(example_isolates,
     antimicrobials = carbapenems(),
     ab_transform = "ab",
     mo_transform = "name",
-    formatting_type = 1
+    formatting_type = 1,
+    language = "en"
   )
 
   expect_inherits(ab1, "antibiogram")
@@ -62,7 +99,8 @@ test_that("test-antibiogram.R", {
   # combined antibiogram yield higher empiric coverage
   ab4 <- antibiogram(example_isolates,
     antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"),
-    mo_transform = "gramstain"
+    mo_transform = "gramstain",
+    language = "en"
   )
 
   ab5 <- antibiogram(example_isolates,
@@ -70,7 +108,8 @@ test_that("test-antibiogram.R", {
     mo_transform = "gramstain",
     ab_transform = "name",
     sep = " & ",
-    add_total_n = FALSE
+    add_total_n = FALSE,
+    language = "en"
   )
 
   expect_inherits(ab4, "antibiogram")
@@ -84,7 +123,8 @@ test_that("test-antibiogram.R", {
   ab6 <- antibiogram(example_isolates,
     antimicrobials = c(aminoglycosides(), carbapenems()),
     syndromic_group = "ward",
-    ab_transform = NULL
+    ab_transform = NULL,
+    language = "en"
   )
 
   # with a custom language, though this will be determined automatically
@@ -109,7 +149,8 @@ test_that("test-antibiogram.R", {
   # the data set could contain a filter for e.g. respiratory specimens
   ab8 <- suppressWarnings(antibiogram(example_isolates,
     antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"),
-    wisca = TRUE
+    wisca = TRUE,
+    language = "en"
   ))
 
   expect_inherits(ab8, "antibiogram")
@@ -122,11 +163,82 @@ test_that("test-antibiogram.R", {
     expect_warning(
       ab9 <- example_isolates %>%
         group_by(ward, gender) %>%
-        wisca(antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"))
+        wisca(antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"), language = "en")
     )
     expect_equal(colnames(ab9), c("ward", "gender", "Piperacillin/tazobactam", "Piperacillin/tazobactam + Gentamicin", "Piperacillin/tazobactam + Tobramycin"))
   }
 
+  # Parallel computing ----------------------------------------------------
+  # Tests must pass even when only 1 core is available; parallel = TRUE then
+  # silently falls back to sequential, but results must still be correct.
+
+  if (AMR:::pkg_is_available("future.apply")) {
+    set.seed(42)
+
+    # sequential reference for WISCA
+    wisca_seq <- suppressWarnings(suppressMessages(
+      wisca(example_isolates, antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"), simulations = 100, info = FALSE)
+    ))
+
+    future::plan(future::multicore)
+
+    # 1. parallel = TRUE produces the same antibiogram structure as sequential
+    wisca_par <- suppressWarnings(suppressMessages(
+      wisca(example_isolates, antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"), simulations = 100, parallel = TRUE, info = FALSE)
+    ))
+    expect_inherits(wisca_par, "antibiogram")
+    expect_equal(colnames(wisca_par), colnames(wisca_seq))
+    expect_true(isTRUE(attributes(wisca_par)$wisca))
+
+    # 2. coverage values are non-NA and fall within [0, 1]
+    ln <- attributes(wisca_par)$long_numeric
+    expect_false(anyNA(ln$coverage))
+    expect_false(anyNA(ln$lower_ci))
+    expect_false(anyNA(ln$upper_ci))
+    expect_true(all(ln$coverage >= 0 & ln$coverage <= 1))
+    expect_true(all(ln$lower_ci <= ln$coverage))
+    expect_true(all(ln$upper_ci >= ln$coverage))
+
+    # 3. a second parallel run gives the same column names
+    wisca_par2 <- suppressWarnings(suppressMessages(
+      wisca(example_isolates, antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"), simulations = 100, parallel = TRUE, info = FALSE)
+    ))
+    expect_equal(colnames(wisca_par), colnames(wisca_par2))
+
+    # 4. parallel with workers = 1 gives same structure as sequential
+    future::plan(future::multicore, workers = 1)
+    wisca_par1 <- suppressWarnings(suppressMessages(
+      wisca(example_isolates, antimicrobials = c("TZP", "TZP+TOB", "TZP+GEN"), simulations = 100, parallel = TRUE, info = FALSE)
+    ))
+    expect_equal(colnames(wisca_seq), colnames(wisca_par1))
+
+    # 5. grouped antibiogram in parallel yields identical structure to sequential
+    if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0", also_load = TRUE)) {
+      future::plan(future::sequential)
+      ab_grp_seq <- suppressWarnings(suppressMessages(
+        example_isolates %>%
+          group_by(ward) %>%
+          wisca(antimicrobials = c("TZP", "TZP+TOB"), simulations = 50, info = FALSE)
+      ))
+      future::plan(future::multicore)
+      ab_grp_par <- suppressWarnings(suppressMessages(
+        example_isolates %>%
+          group_by(ward) %>%
+          wisca(antimicrobials = c("TZP", "TZP+TOB"), simulations = 50, parallel = TRUE, info = FALSE)
+      ))
+      expect_equal(colnames(ab_grp_seq), colnames(ab_grp_par))
+      expect_equal(nrow(ab_grp_seq), nrow(ab_grp_par))
+    }
+
+    # 6. parallel = TRUE without a plan raises an informative error
+    future::plan(future::sequential)
+    expect_error(
+      suppressWarnings(wisca(example_isolates, antimicrobials = "TZP", parallel = TRUE, info = FALSE)),
+      "non-sequential"
+    )
+
+    future::plan(future::sequential)
+  }
 
   # Generate plots with ggplot2 or base R --------------------------------
 

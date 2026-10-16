@@ -14,42 +14,65 @@
 \alias{proportion_df}
 \alias{sir_df}
 \title{Calculate Antimicrobial Resistance}
-\source{
-\strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 5th Edition}, 2022, \emph{Clinical and Laboratory Standards Institute (CLSI)}. \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
-}
 \usage{
-resistance(..., minimum = 30, as_percent = FALSE,
-  only_all_tested = FALSE)
+resistance(
+  ...,
+  minimum = 30,
+  as_percent = FALSE,
+  only_all_tested = FALSE,
+  guideline = getOption("AMR_guideline", "EUCAST")
+)
 
-susceptibility(..., minimum = 30, as_percent = FALSE,
-  only_all_tested = FALSE)
+susceptibility(
+  ...,
+  minimum = 30,
+  as_percent = FALSE,
+  only_all_tested = FALSE,
+  guideline = getOption("AMR_guideline", "EUCAST")
+)
 
-sir_confidence_interval(..., ab_result = "R", minimum = 30,
-  as_percent = FALSE, only_all_tested = FALSE, confidence_level = 0.95,
-  side = "both", collapse = FALSE)
+sir_confidence_interval(
+  ...,
+  ab_result = "R",
+  minimum = 30,
+  as_percent = FALSE,
+  only_all_tested = FALSE,
+  confidence_level = 0.95,
+  side = "both",
+  collapse = FALSE
+)
 
-proportion_R(..., minimum = 30, as_percent = FALSE,
-  only_all_tested = FALSE)
+proportion_R(..., minimum = 30, as_percent = FALSE, only_all_tested = FALSE)
 
-proportion_IR(..., minimum = 30, as_percent = FALSE,
-  only_all_tested = FALSE)
+proportion_IR(..., minimum = 30, as_percent = FALSE, only_all_tested = FALSE)
 
-proportion_I(..., minimum = 30, as_percent = FALSE,
-  only_all_tested = FALSE)
+proportion_I(..., minimum = 30, as_percent = FALSE, only_all_tested = FALSE)
 
-proportion_SI(..., minimum = 30, as_percent = FALSE,
-  only_all_tested = FALSE)
+proportion_SI(..., minimum = 30, as_percent = FALSE, only_all_tested = FALSE)
 
-proportion_S(..., minimum = 30, as_percent = FALSE,
-  only_all_tested = FALSE)
+proportion_S(..., minimum = 30, as_percent = FALSE, only_all_tested = FALSE)
 
-proportion_df(data, translate_ab = "name", language = get_AMR_locale(),
-  minimum = 30, as_percent = FALSE, combine_SI = TRUE,
-  confidence_level = 0.95)
+proportion_df(
+  data,
+  translate_ab = "name",
+  language = get_AMR_locale(),
+  minimum = 30,
+  as_percent = FALSE,
+  combine_SI,
+  confidence_level = 0.95,
+  guideline = getOption("AMR_guideline", "EUCAST")
+)
 
-sir_df(data, translate_ab = "name", language = get_AMR_locale(),
-  minimum = 30, as_percent = FALSE, combine_SI = TRUE,
-  confidence_level = 0.95)
+sir_df(
+  data,
+  translate_ab = "name",
+  language = get_AMR_locale(),
+  minimum = 30,
+  as_percent = FALSE,
+  combine_SI,
+  confidence_level = 0.95,
+  guideline = getOption("AMR_guideline", "EUCAST")
+)
 }
 \arguments{
 \item{...}{One or more vectors (or columns) with antibiotic interpretations. They will be transformed internally with \code{\link[=as.sir]{as.sir()}} if needed. Use multiple columns to calculate (the lack of) co-resistance: the probability where one of two drugs have a resistant or susceptible result. See \emph{Examples}.}
@@ -58,7 +81,9 @@ sir_df(data, translate_ab = "name", language = get_AMR_locale(),
 
 \item{as_percent}{A \link{logical} to indicate whether the output must be returned as a hundred fold with \% sign (a character). A value of \code{0.123456} will then be returned as \code{"12.3\%"}.}
 
-\item{only_all_tested}{(for combination therapies, i.e. using more than one variable for \code{...}): a \link{logical} to indicate that isolates must be tested for all antimicrobials, see section \emph{Combination Therapy} below.}
+\item{only_all_tested}{(for combination therapies, i.e. using more than one variable for \code{...}): a \link{logical} to indicate that isolates must be tested for all antimicrobials, see section \emph{Combination Therapy} below. Use \code{\link[=sir_combine]{sir_combine()}} to create a new variable for a combination therapy.}
+
+\item{guideline}{A guideline name, \code{"EUCAST"} or \code{"CLSI"} (or any version thereof, e.g. \code{"CLSI 2025"}), to determine whether the 'I' category is considered susceptible (EUCAST) or resistant (CLSI). The default is the package option \code{\link[=AMR-options]{AMR_guideline}}, or \code{"EUCAST"} if it is not set. For functions that return results per category, i.e., \code{\link[=count_df]{count_df()}}, \code{\link[=proportion_df]{proportion_df()}}, \code{\link[=sir_df]{sir_df()}}, \code{\link[=ggplot_sir]{ggplot_sir()}}, \code{\link[=geom_sir]{geom_sir()}}, and \code{\link[=labels_sir_count]{labels_sir_count()}}, this can also be \code{NULL} or \code{FALSE} to keep S, I, and R separate. See section \emph{Interpretation of SIR} below.}
 
 \item{ab_result}{Antibiotic results to test against, must be one or more values of "S", "SDD", "I", or "R".}
 
@@ -74,7 +99,7 @@ sir_df(data, translate_ab = "name", language = get_AMR_locale(),
 
 \item{language}{Language of the returned text - the default is the current system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can also be set with the package option \code{\link[=AMR-options]{AMR_locale}}. Use \code{language = NULL} or \code{language = ""} to prevent translation.}
 
-\item{combine_SI}{A \link{logical} to indicate whether all values of S, SDD, and I must be merged into one, so the output only consists of S+SDD+I vs. R (susceptible vs. resistant) - the default is \code{TRUE}.}
+\item{combine_SI}{\emph{(deprecated in favour of \code{guideline})} A \link{logical}. If set, it takes precedence over \code{guideline}: \code{TRUE} merges S, SDD, and I into \code{"SI"} vs. \code{"R"}, and \code{FALSE} keeps S, I, and R separate.}
 }
 \value{
 A \link{double} or, when \code{as_percent = TRUE}, a \link{character}.
@@ -97,48 +122,74 @@ These functions are not meant to count isolates, but to calculate the proportion
 
 The function \code{\link[=proportion_df]{proportion_df()}} takes any variable from \code{data} that has an \code{\link{sir}} class (created with \code{\link[=as.sir]{as.sir()}}) and calculates the proportions S, I, and R. It also supports grouped variables. The function \code{\link[=sir_df]{sir_df()}} works exactly like \code{\link[=proportion_df]{proportion_df()}}, but adds the number of isolates.
 }
+\section{Interpretation of SIR}{
+
+In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R (\url{https://www.eucast.org/bacteria/clinical-breakpoints-and-interpretation/definition-of-s-i-and-r/}).
+
+In aggregated analyses, such as proportions, counts, antibiograms, and plots, the 'I' category must be considered either susceptible or resistant. In epidemiological AMR data analysis, this follows the guideline: EUCAST considers 'I' susceptible, while CLSI considers 'I' resistant. The dose-dependent susceptibility of CLSI ('SDD') is always considered susceptible, as it equals what EUCAST defines as 'I'. All functions with a \code{guideline} argument for this purpose use these categories:\tabular{lll}{
+   \code{guideline} \tab Susceptible \tab Resistant \cr
+   \code{"EUCAST"} \tab S, SDD, I, WT \tab R, NWT, NS \cr
+   \code{"CLSI"} \tab S, SDD, WT \tab I, R, NWT, NS \cr
+}
+
+
+The values 'WT' (wild type) and 'NWT' (non-wild type) result from epidemiological cut-off values (ECOFFs) instead of clinical breakpoints. Since they are no clinical categories, 'WT' is always considered susceptible and 'NWT' always resistant, regardless of the guideline. The value 'NS' (non-susceptible) is always considered resistant, and 'NI' (non-interpretable) is always considered a missing result.
+
+The \code{guideline} argument can be:
+\itemize{
+\item \strong{Left unset}, to use the package option \code{\link[=AMR-options]{AMR_guideline}}, or \code{"EUCAST"} if this option is not set. In the latter case, a message is shown once per session (but not in R Markdown or Quarto documents); set the option to silence it.
+\item \strong{\code{"EUCAST"}}, or any EUCAST version such as \code{"EUCAST 2025"}, to consider 'I' susceptible, e.g., to return \code{"SI"} vs. \code{"R"} in \code{\link[=proportion_df]{proportion_df()}}.
+\item \strong{\code{"CLSI"}}, or any CLSI version such as \code{"CLSI 2025"}, to consider 'I' resistant, e.g., to return \code{"S"} vs. \code{"IR"} in \code{\link[=proportion_df]{proportion_df()}}.
+\item \strong{\code{NULL} or \code{FALSE}}, to keep S, I, and R separate. This is only possible in functions that return results per category: \code{\link[=count_df]{count_df()}}, \code{\link[=proportion_df]{proportion_df()}}, \code{\link[=sir_df]{sir_df()}}, \code{\link[=ggplot_sir]{ggplot_sir()}}, \code{\link[=geom_sir]{geom_sir()}}, \code{\link[=labels_sir_count]{labels_sir_count()}}, and \code{\link[=bug_drug_combinations]{bug_drug_combinations()}}. Functions that return a single proportion or count, such as \code{\link[=susceptibility]{susceptibility()}}, \code{\link[=count_resistant]{count_resistant()}}, \code{\link[=antibiogram]{antibiogram()}}, \code{\link[=wisca]{wisca()}}, and \code{\link[=format]{format()}} on the result of \code{\link[=bug_drug_combinations]{bug_drug_combinations()}}, require 'I' to be considered either susceptible or resistant, and return an error.
+}
+
+Use \code{\link[=susceptibility]{susceptibility()}} and \code{\link[=resistance]{resistance()}} (or \code{\link[=count_susceptible]{count_susceptible()}} and \code{\link[=count_resistant]{count_resistant()}}) to follow the guideline, or e.g. \code{\link[=proportion_SI]{proportion_SI()}} and \code{\link[=proportion_R]{proportion_R()}} to be explicit regardless of the guideline.
+
+The \code{combine_SI} argument of the functions that return results per category, \code{\link[=antibiogram]{antibiogram()}}, and \code{\link[=wisca]{wisca()}} is deprecated in favour of \code{guideline}. If set, it is followed literally and takes precedence over \code{guideline}.
+}
+
 \section{Combination Therapy}{
 
-When using more than one variable for \code{...} (= combination therapy), use \code{only_all_tested} to only count isolates that are tested for all antimicrobials/variables that you test them for. See this example for two antimicrobials, Drug A and Drug B, about how \code{\link[=susceptibility]{susceptibility()}} works to calculate the \%SI:
+Results are ordered from susceptible to resistant: S (and WT), SDD, I, R (and NWT, NS). With \code{method = "most_susceptible"} (in \code{\link[=sir_combine]{sir_combine()}}), the most susceptible result of the antimicrobials is returned, and with \code{method = "most_resistant"}, the most resistant result. The value \code{"NI"} (non-interpretable) is considered a missing result.
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{--------------------------------------------------------------------
-                    only_all_tested = FALSE  only_all_tested = TRUE
-                    -----------------------  -----------------------
- Drug A    Drug B   considered   considered  considered   considered
-                    susceptible    tested    susceptible    tested
---------  --------  -----------  ----------  -----------  ----------
- S or I    S or I        X            X           X            X
-   R       S or I        X            X           X            X
-  <NA>     S or I        X            X           -            -
- S or I      R           X            X           X            X
-   R         R           -            X           -            X
-  <NA>       R           -            -           -            -
- S or I     <NA>         X            X           -            -
-   R        <NA>         -            -           -            -
-  <NA>      <NA>         -            -           -            -
---------------------------------------------------------------------
+A missing result can only be ignored if it cannot change the conclusion: a susceptible result for \code{"most_susceptible"}, and a non-susceptible result for \code{"most_resistant"}. Under EUCAST, the 'I' category is considered susceptible (\emph{susceptible, increased exposure}), and under CLSI, it is not. With \code{only_all_tested = TRUE}, any missing result leads to \code{NA}.
+
+This is an example for two antimicrobials, Drug A and Drug B, under EUCAST (the order of the antimicrobials does not matter):
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{-------------------------------------------------------------------------
+                      Result of method =            Result of method =
+                     "most_susceptible"              "most_resistant"
+                   -----------------------  -----------------------------
+                    only_all_tested =        only_all_tested =
+ Drug A    Drug B     FALSE      TRUE          FALSE         TRUE
+--------  --------  ---------  ---------    -----------  -------------
+    S        S          S          S             S             S
+    S        I          S          S             I             I
+    S        R          S          S             R             R
+    I        R          I          I             R             R
+    R        R          R          R             R             R
+    S      <NA>         S        <NA>          <NA>          <NA>
+    I      <NA>         I        <NA>          <NA>          <NA>
+    R      <NA>       <NA>       <NA>            R           <NA>
+  <NA>     <NA>       <NA>       <NA>          <NA>          <NA>
+-------------------------------------------------------------------------
 }\if{html}{\out{</div>}}
 
-Please note that, in combination therapies, for \code{only_all_tested = TRUE} applies that:
+Under CLSI, the combination of I with a missing result is \verb{<NA>} for \code{"most_susceptible"} and I for \code{"most_resistant"}.
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{    count_S()    +   count_I()    +   count_R()    = count_all()
-  proportion_S() + proportion_I() + proportion_R() = 1
-}\if{html}{\out{</div>}}
-
-and that, in combination therapies, for \code{only_all_tested = FALSE} applies that:
+The \code{\link[=count]{count_*()}} and \code{\link[=proportion]{proportion_*()}} functions apply these rules when more than one variable is used. With \code{only_all_tested = FALSE} (default), the functions for susceptibility, such as \code{\link[=susceptibility]{susceptibility()}} and \code{\link[=count_susceptible]{count_susceptible()}}, count an isolate as susceptible if any of the antimicrobials is susceptible (\code{"most_susceptible"}), and the functions for resistance, such as \code{\link[=resistance]{resistance()}} and \code{\link[=count_resistant]{count_resistant()}}, count an isolate as resistant if any of the antimicrobials is resistant (\code{"most_resistant"}). An isolate is considered tested if it has such a result, or if it was tested for all antimicrobials. Therefore, for combinations with \code{only_all_tested = FALSE}:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{    count_S()    +   count_I()    +   count_R()    >= count_all()
   proportion_S() + proportion_I() + proportion_R() >= 1
 }\if{html}{\out{</div>}}
 
-Using \code{only_all_tested} has no impact when only using one antibiotic as input.
-}
+With \code{only_all_tested = TRUE}, all these functions count the result of the combination therapy (\code{"most_susceptible"}) of isolates tested for all antimicrobials, so that:
 
-\section{Interpretation of SIR}{
+\if{html}{\out{<div class="sourceCode">}}\preformatted{    count_S()    +   count_I()    +   count_R()    = count_all()
+  proportion_S() + proportion_I() + proportion_R() = 1
+}\if{html}{\out{</div>}}
 
-In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R (\url{https://www.eucast.org/newsiandr}).
-
-This AMR package follows insight; use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
+In \code{\link[=antibiogram]{antibiogram()}} and \code{\link[=wisca]{wisca()}}, the result of the combination therapy (\code{"most_susceptible"}) is used, the 'I' category is considered susceptible or not following the \code{guideline} argument ('SDD' is always considered susceptible), and the result is then reduced to S or R.
 }
 
 \examples{
@@ -264,6 +315,9 @@ if (require("dplyr")) {
     sir_df(translate = FALSE)
 }
 }
+}
+\references{
+\strong{M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 5th Edition}, 2022, \emph{Clinical and Laboratory Standards Institute (CLSI)}. \url{https://clsi.org/standards/products/microbiology/documents/m39/}.
 }
 \seealso{
 \code{\link[=count]{count()}} to count resistant and susceptible isolates.

@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -83,6 +83,19 @@ test_that("test-mo.R", {
   expect_equal(as.character(as.mo(c("Gram negative", "Gram positive"))), c("B_GRAMN", "B_GRAMP"))
 
   # expect_warning(as.mo("Acinetobacter calcoaceticus/baumannii complex"))
+
+  # Issue #287: "X complex" fallback to "X" when complex is not a distinct taxon
+  expect_identical(as.character(suppressWarnings(as.mo("Proteus vulgaris complex"))), as.character(suppressWarnings(as.mo("Proteus vulgaris"))))
+  expect_identical(as.character(suppressWarnings(as.mo("Enterobacter cloacae complex"))), as.character(as.mo("Enterobacter cloacae complex")))
+  # a complex named after several of its species returns the complex, not one of the species
+  expect_identical(as.character(as.mo(c("Acinetobacter calcoaceticus-baumannii complex", "Acinetobacter calcoaceticus/baumannii complex"))), c("B_ACNTB_BMNN-C", "B_ACNTB_BMNN-C"))
+  expect_identical(as.character(as.mo("Klebsiella pneumoniae-variicola complex")), "B_KLBSL_PNMN-C")
+
+  # Issue #288: abbreviated genus with exact species epithet match should win
+  expect_identical(
+    as.character(suppressWarnings(as.mo("S. apiospermum"))),
+    as.character(suppressWarnings(as.mo("Scedosporium apiospermum")))
+  )
 
   # prevalent MO
   expect_identical(
@@ -245,10 +258,10 @@ test_that("test-mo.R", {
   # # expect_warning(as.mo("TestingOwnID", reference_df = NULL))
   expect_error(as.mo("E. coli", reference_df = data.frame(mycol = "TestingOwnID")))
 
-  # combination of existing mo and other code
+  # combination of an unknown MO code and other code: MO codes are never guessed (see test-data-microorganisms.R)
   expect_identical(
     suppressWarnings(as.character(as.mo(c("B_ESCHR_COL", "ESCCOL")))),
-    c("B_ESCHR_COLI", "B_ESCHR_COLI")
+    c(NA, "B_ESCHR_COLI")
   )
 
   # from different sources
@@ -270,10 +283,8 @@ test_that("test-mo.R", {
     ))),
     c("B_MCRBC_PRXY", "B_STRPT_SUIS", "B_KLBSL_TRRG")
   )
-  expect_output(print(mo_uncertainties()))
+
   x <- as.mo("Sta. aur")
-  # many hits
-  expect_output(print(mo_uncertainties()))
 
   # no viruses
   expect_equal(suppressWarnings(as.mo("Virus")), as.mo("UNKNOWN"))
@@ -329,4 +340,42 @@ test_that("test-mo.R", {
       c("skim_type", "skim_variable", "n_missing", "complete_rate", "mo.n_unique", "mo.gram_negative", "mo.gram_positive", "mo.yeast", "mo.top_genus", "mo.top_species")
     )
   }
+
+  # "P. knowlesi" must resolve to Plasmodium knowlesi, not a Pseudomonas species,
+  # even though P. knowlesi has subspecies (curtisi, wallikeri) sharing the epithet.
+  expect_identical(
+    as.mo("P. knowlesi", keep_synonyms = TRUE, info = FALSE),
+    as.mo("Plasmodium knowlesi", keep_synonyms = TRUE, info = FALSE)
+  )
+  expect_identical(
+    mo_name("P. knowlesi", keep_synonyms = TRUE, language = NULL),
+    "Plasmodium knowlesi"
+  )
+
+  # Non-regression: the original #288 example must still work.
+  expect_identical(
+    mo_genus("S. apiospermum", keep_synonyms = TRUE, language = NULL),
+    "Scedosporium"
+  )
+
+  # Salmonella serovars written with the species (these returned S. bongori or S. enterica diarizonae until 2026)
+  expect_identical(
+    as.character(as.mo(c(
+      "Salmonella enterica Typhi", "Salmonella enterica serovar Typhi",
+      "Salmonella enterica subsp. enterica serovar Typhi", "Salmonella enterica Typhimurium",
+      "Salmonella enterica Paratyphi A", "Salmonella grupo B"
+    ), info = FALSE)),
+    c("B_SLMNL_TYPH", "B_SLMNL_TYPH", "B_SLMNL_TYPH", "B_SLMNL_HMRM", "B_SLMNL_PRTA", "B_SLMNL_GRPB")
+  )
+  expect_identical(as.character(as.mo("Salmonella enterica arizonae", info = FALSE)), "B_SLMNL_ENTR_ARZN")
+
+  # translated names, such as the output of mo_name() in the set language
+  translated_mos <- c("B_STPHY_CONS", "B_STPHY_COPS", "B_STRPT_HAEM", "B_STRPT_GRPA", "B_STRPT_GRPB", "B_STRPT_ABCG", "B_STRPT_MILL", "B_STRPT_VIRI", "B_SLMNL_GRPB", "B_GRAMN", "B_GRAMP", "F_YEAST", "F_FUNGUS", "P_PROTOZOAN", "UNKNOWN")
+  for (lang in setdiff(AMR:::LANGUAGES_SUPPORTED, "en")) {
+    expect_identical(as.character(as.mo(mo_name(translated_mos, language = lang), language = lang, info = FALSE)), translated_mos, info = lang)
+  }
+  expect_identical(
+    as.character(as.mo(c("Staphylocoque à coagulase négative", "Streptocoque Bêta-hémolytique", "streptocoque beta-hemolytique", "Streptococcus groupe A"), language = "fr", info = FALSE)),
+    c("B_STPHY_CONS", "B_STRPT_HAEM", "B_STRPT_HAEM", "B_STRPT_GRPA")
+  )
 })

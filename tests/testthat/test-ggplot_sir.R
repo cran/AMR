@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -59,6 +59,13 @@ test_that("test-ggplot_sir.R", {
         ggplot_sir(x = "antibiotic", facet = "interpretation"),
       "gg"
     )
+    # the facet is passed on as value, so the plot can be built
+    expect_inherits(
+      ggplot_build(example_isolates %>%
+        select(AMC, CIP) %>%
+        ggplot_sir(x = "interpretation", facet = "antibiotic")),
+      "ggplot_built"
+    )
 
     expect_equal(
       (example_isolates %>%
@@ -94,6 +101,22 @@ test_that("test-ggplot_sir.R", {
         select(AMC, CIP) %>%
         summarise_all(count_resistant) %>%
         as.double()
+    )
+
+    # the 'I' category is merged with R for CLSI
+    expect_identical(
+      levels(ggplot_sir(example_isolates[, c("AMC", "CIP")], guideline = "CLSI")$layers[[1]]$data(example_isolates[, c("AMC", "CIP")])$interpretation),
+      c("S", "IR")
+    )
+    # S, I, and R are kept separate with guideline = NULL
+    expect_identical(
+      levels(ggplot_sir(example_isolates[, c("AMC", "CIP")], guideline = NULL)$layers[[1]]$data(example_isolates[, c("AMC", "CIP")])$interpretation),
+      c("S", "I", "R")
+    )
+    # the deprecated combine_SI must be followed literally if set, regardless of the guideline
+    expect_identical(
+      levels(suppressWarnings(ggplot_sir(example_isolates[, c("AMC", "CIP")], combine_SI = TRUE, guideline = "CLSI"))$layers[[1]]$data(example_isolates[, c("AMC", "CIP")])$interpretation),
+      c("SI", "R")
     )
 
     # support for scale_type ab and mo

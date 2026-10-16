@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -69,6 +69,14 @@ as.data.frame.deprecated_amr_dataset <- function(x, ...) {
 # currently deprecated arguments at least:
 # - `antibiotics` in `antibiogram()`
 # - `converse_capped_values` in `as.sir()`
+# - `combine_SI` in `count_df()`, `proportion_df()`, `sir_df()`, `ggplot_sir()`, `geom_sir()`, `labels_sir_count()`, `antibiogram()`, `wisca()`, and `format()` for `bug_drug_combinations()`
+
+#' @rdname AMR-deprecated
+#' @export
+custom_eucast_rules <- function(...) {
+  deprecation_warning("custom_eucast_rules", "custom_interpretive_rules", is_function = TRUE)
+  custom_interpretive_rules(...)
+}
 
 #' @rdname AMR-deprecated
 #' @export
@@ -124,7 +132,7 @@ deprecation_warning <- function(old = NULL, new = NULL, fn = NULL, extra_msg = N
           ". The old name will be removed in future version, so please update your code.",
           ifelse(type == "argument",
             ". While the old argument still works, it will be removed in a future version, so please update your code.",
-            " and will be removed in a future version, see `?AMR-deprecated`."
+            " and will be removed in a future version, see {.topic [AMR-deprecated](AMR::AMR-deprecated)}."
           )
         ),
         ifelse(!is.null(extra_msg),

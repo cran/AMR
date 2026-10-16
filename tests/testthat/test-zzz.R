@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -36,6 +36,7 @@ test_that("test-zzz.R", {
   # functions used by import_fn()
   import_functions <- c(
     "%chin%" = "data.table",
+    "ansi_has_hyperlink_support" = "cli",
     "anti_join" = "dplyr",
     "as.data.table" = "data.table",
     "as_tibble" = "tibble",
@@ -79,9 +80,20 @@ test_that("test-zzz.R", {
     "freq.default" = "cleaner",
     "percentage" = "cleaner",
     # cli
+    "ansi_has_hyperlink_support" = "cli",
+    "cli_abort" = "cli",
+    "cli_inform" = "cli",
+    "cli_warn" = "cli",
+    "code_highlight" = "cli",
+    "format_inline" = "cli",
     "symbol" = "cli",
     # curl
     "has_internet" = "curl",
+    # future
+    "plan" = "future",
+    "nbrOfWorkers" = "future",
+    # future.apply
+    "future_lapply" = "future.apply",
     # ggplot2
     "aes" = "ggplot2",
     "arrow" = "ggplot2",
@@ -120,10 +132,10 @@ test_that("test-zzz.R", {
     "kable" = "knitr",
     "knit_print" = "knitr",
     "opts_chunk" = "knitr",
-    # parallelly
-    "availableCores" = "parallelly",
     # pillar
     "pillar_shaft" = "pillar",
+    "style_na" = "pillar",
+    "style_subtle" = "pillar",
     "tbl_format_footer" = "pillar",
     "tbl_sum" = "pillar",
     "type_sum" = "pillar",
@@ -161,7 +173,9 @@ test_that("test-zzz.R", {
     "vec_math" = "vctrs",
     "vec_ptype2" = "vctrs",
     "vec_ptype_abbr" = "vctrs",
-    "vec_ptype_full" = "vctrs"
+    "vec_ptype_full" = "vctrs",
+    # usethis
+    "use_course" = "usethis"
   )
 
   import_functions <- c(import_functions, call_functions)
@@ -178,9 +192,15 @@ test_that("test-zzz.R", {
       also_load = FALSE,
       min_version = if (pkg == "dplyr") "1.0.0" else NULL
     )) {
-      expect_true(!is.null(AMR:::import_fn(name = fn, pkg = pkg, error_on_fail = FALSE)),
-        info = paste0("Function does not exist (anymore): function `", pkg, "::", fn, "()`")
-      )
+      if (pkg == "rstudioapi") {
+        expect_true(is.function(tryCatch(get(fn, envir = asNamespace(pkg)), error = function(e) NULL)),
+          info = paste0("Function does not exist (anymore): function `", pkg, "::", fn, "()`")
+        )
+      } else {
+        expect_true(!is.null(AMR:::import_fn(name = fn, pkg = pkg, error_on_fail = FALSE)),
+          info = paste0("Function does not exist (anymore): function `", pkg, "::", fn, "()`")
+        )
+      }
     } else if (pkg != "rstudioapi") {
       warning("Package '", pkg, "' not available")
     }
@@ -199,4 +219,44 @@ test_that("test-zzz.R", {
     expect_true(is.function(ggplot2::scale_colour_discrete()$transform))
     expect_true(is.function(ggplot2::scale_fill_discrete()$transform))
   }
+})
+
+test_that("test-zzz.R: no installation-time dependency on suggested packages", {
+  skip_on_cran()
+  # code outside functions runs when the package is installed, not when it is loaded: anything it takes from a suggested package is then decided by the machine that built the package (e.g., the CRAN binary builders, which have all suggested packages), and fails for users who do not have that package, see .onLoad() in R/zzz.R
+  r_dir <- file.path("..", "..", "R")
+  skip_if(!dir.exists(r_dir), "R source files not available")
+  suggests <- trimws(gsub("[(].*", "", strsplit(read.dcf(file.path(r_dir, "..", "DESCRIPTION"), fields = "Suggests")[1, 1], ",")[[1]]))
+  runtime_calls <- c("import_fn", "requireNamespace", "loadNamespace", "pkg_is_available", "l10n_info", "require", "library")
+  find_offending <- function(expr) {
+    if (!is.call(expr)) {
+      return(character(0))
+    }
+    fn <- expr[[1]]
+    if (identical(fn, as.name("function"))) {
+      # function bodies run at runtime, so these are fine
+      return(character(0))
+    }
+    found <- character(0)
+    fn_name <- if (is.name(fn)) as.character(fn) else if (is.call(fn) && (identical(fn[[1]], as.name("::")) || identical(fn[[1]], as.name(":::")))) as.character(fn[[3]]) else ""
+    if (fn_name %in% runtime_calls) {
+      found <- paste0(fn_name, "()")
+    }
+    if ((identical(fn, as.name("::")) || identical(fn, as.name(":::"))) && as.character(expr[[2]]) %in% suggests) {
+      found <- paste0(as.character(expr[[2]]), "::", as.character(expr[[3]]))
+    }
+    c(found, unlist(lapply(as.list(expr)[-1], find_offending)))
+  }
+  offending <- character(0)
+  for (f in list.files(r_dir, pattern = "[.]R$", full.names = TRUE)) {
+    exprs <- parse(f, keep.source = TRUE)
+    lines <- vapply(FUN.VALUE = integer(1), attr(exprs, "srcref"), function(x) x[1])
+    for (i in seq_along(exprs)) {
+      found <- find_offending(exprs[[i]])
+      if (length(found) > 0) {
+        offending <- c(offending, paste0(basename(f), ":", lines[i], ": ", paste(unique(found), collapse = ", ")))
+      }
+    }
+  }
+  expect_identical(offending, character(0), info = paste(offending, collapse = "\n"))
 })

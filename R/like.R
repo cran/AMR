@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -49,8 +49,9 @@
 #' @seealso [grepl()]
 
 #' @examples
-#' # data.table has a more limited version of %like%, so unload it:
-#' try(detach("package:data.table", unload = TRUE), silent = TRUE)
+#' # data.table has a more limited version of %like%, so detach it
+#' # (without unloading it, as data.table does not support being unloaded):
+#' try(detach("package:data.table"), silent = TRUE)
 #'
 #' a <- "This is a test"
 #' b <- "TEST"

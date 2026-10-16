@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -41,4 +41,21 @@ test_that("test-random.R", {
   expect_inherits(random_disk(100, mo = "Klebsiella pneumoniae", ab = "meropenem"), "disk")
   expect_inherits(random_disk(100, ab = "meropenem"), "disk")
   expect_inherits(random_sir(100), "sir")
+
+  # guideline: without a year the latest version is used, and the AMR_guideline option is the default
+  latest_clsi <- max(AMR::clinical_breakpoints$guideline[AMR::clinical_breakpoints$guideline %like% "CLSI"])
+  set.seed(1)
+  x1 <- random_disk(100, "Klebsiella pneumoniae", "ampicillin", guideline = "CLSI")
+  set.seed(1)
+  x2 <- random_disk(100, "Klebsiella pneumoniae", "ampicillin", guideline = latest_clsi)
+  old_opt <- options(AMR_guideline = "CLSI")
+  set.seed(1)
+  x3 <- random_disk(100, "Klebsiella pneumoniae", "ampicillin")
+  options(old_opt)
+  set.seed(1)
+  x4 <- random_disk(100, "Klebsiella pneumoniae", "ampicillin", guideline = "EUCAST")
+  expect_identical(x1, x2)
+  expect_identical(x1, x3)
+  expect_false(identical(x1, x4))
+  expect_error(random_mic(10, guideline = "EUCAST 1999"))
 })

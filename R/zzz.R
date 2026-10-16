@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -40,16 +40,9 @@ AMR_env$mo_uncertainties <- data.frame(
   stringsAsFactors = FALSE
 )
 AMR_env$mo_renamed <- list()
-AMR_env$mo_previously_coerced <- data.frame(
-  x = character(0),
-  mo = character(0),
-  stringsAsFactors = FALSE
-)
-AMR_env$ab_previously_coerced <- data.frame(
-  x = character(0),
-  ab = character(0),
-  stringsAsFactors = FALSE
-)
+# session caches of as.ab() and as.mo(), see R/aa_session_cache.R
+AMR_env$mo_previously_coerced <- new_coercion_cache()
+AMR_env$ab_previously_coerced <- new_coercion_cache()
 AMR_env$av_previously_coerced <- data.frame(
   x = character(0),
   av = character(0),
@@ -79,21 +72,22 @@ AMR_env$sir_interpretation_history <- data.frame(
 
 
 AMR_env$custom_ab_codes <- character(0)
+AMR_env$custom_ab_synonyms <- data.frame(ab = character(0), synonym = character(0), key = character(0), stringsAsFactors = FALSE)
 AMR_env$custom_mo_codes <- character(0)
 AMR_env$is_dark_theme <- NULL
 AMR_env$supports_colour <- NULL
-AMR_env$chmatch <- import_fn("chmatch", "data.table", error_on_fail = FALSE)
-AMR_env$chin <- import_fn("%chin%", "data.table", error_on_fail = FALSE)
-
-# take cli symbols and error function if available
-AMR_env$bullet_icon <- import_fn("symbol", "cli", error_on_fail = FALSE)$bullet %or% "*"
-AMR_env$ellipsis_icon <- import_fn("symbol", "cli", error_on_fail = FALSE)$ellipsis %or% "..."
-AMR_env$info_icon <- import_fn("symbol", "cli", error_on_fail = FALSE)$info %or% "i"
-AMR_env$sup_1_icon <- import_fn("symbol", "cli", error_on_fail = FALSE)$sup_1 %or% "*"
-AMR_env$cli_abort <- import_fn("cli_abort", "cli", error_on_fail = FALSE)
-AMR_env$cross_icon <- if (isTRUE(base::l10n_info()$`UTF-8`)) "\u00d7" else "x"
 
 .onLoad <- function(libname, pkgname) {
+  # functions and symbols from suggested packages must be retrieved here, at runtime: code outside functions runs at installation, so it would store what was available on the machine that built the package (e.g., CRAN), which fails if these packages are not available to the user
+  AMR_env$chmatch <- import_fn("chmatch", "data.table", error_on_fail = FALSE)
+  AMR_env$chin <- import_fn("%chin%", "data.table", error_on_fail = FALSE)
+  # take cli symbols and error function if available
+  AMR_env$bullet_icon <- import_fn("symbol", "cli", error_on_fail = FALSE)$bullet %||% "*"
+  AMR_env$ellipsis_icon <- import_fn("symbol", "cli", error_on_fail = FALSE)$ellipsis %||% "..."
+  AMR_env$info_icon <- import_fn("symbol", "cli", error_on_fail = FALSE)$info %||% "i"
+  AMR_env$sup_1_icon <- import_fn("symbol", "cli", error_on_fail = FALSE)$sup_1 %||% "*"
+  AMR_env$cross_icon <- if (isTRUE(base::l10n_info()$`UTF-8`)) "\u00d7" else "x"
+
   # if mo source exists, fire it up (see mo_source())
   if (tryCatch(file.exists(getOption("AMR_mo_source", "~/mo_source.rds")), error = function(e) FALSE)) {
     try(invisible(get_mo_source()), silent = TRUE)
@@ -111,39 +105,46 @@ AMR_env$cross_icon <- if (isTRUE(base::l10n_info()$`UTF-8`)) "\u00d7" else "x"
   }
 
   AMR_env$AB_lookup <- cbind(AMR::antimicrobials, AB_LOOKUP)
+  reset_ab_cache()
   AMR_env$AV_lookup <- cbind(AMR::antivirals, AV_LOOKUP)
 }
 
 .onAttach <- function(libname, pkgname) {
+  if (interactive() && is.null(getOption("AMR_guideline"))) {
+    packageStartupMessage(format_inline_(
+      "Assuming ", AMR::clinical_breakpoints$guideline[1], " as the default AMR guideline, see {.topic [AMR-options](AMR::AMR-options)} to change this."
+    ))
+  }
+
   # if custom ab option is available, load it
   if (!is.null(getOption("AMR_custom_ab")) && file.exists(getOption("AMR_custom_ab", default = ""))) {
     if (getOption("AMR_custom_ab") %unlike% "[.]rds$") {
-      packageStartupMessage("The file with custom antimicrobials must be an RDS file. Set the option `AMR_custom_ab` to another path.")
+      packageStartupMessage(format_inline_("The file with custom antimicrobials must be an RDS file. Set the option {.code AMR_custom_ab} to another path."))
     } else {
-      packageStartupMessage("Adding custom antimicrobials from '", getOption("AMR_custom_ab"), "'...", appendLF = FALSE)
+      packageStartupMessage(format_inline_("Adding custom antimicrobials from '", getOption("AMR_custom_ab"), "'..."), appendLF = FALSE)
       x <- readRDS_AMR(getOption("AMR_custom_ab"))
       tryCatch(
         {
           suppressWarnings(suppressMessages(add_custom_antimicrobials(x)))
           packageStartupMessage("OK.")
         },
-        error = function(e) packageStartupMessage("Failed: ", conditionMessage(e))
+        error = function(e) packageStartupMessage(format_inline_("Failed: ", conditionMessage(e)))
       )
     }
   }
   # if custom mo option is available, load it
   if (!is.null(getOption("AMR_custom_mo")) && file.exists(getOption("AMR_custom_mo", default = ""))) {
     if (getOption("AMR_custom_mo") %unlike% "[.]rds$") {
-      packageStartupMessage("The file with custom microorganisms must be an RDS file. Set the option `AMR_custom_mo` to another path.")
+      packageStartupMessage(format_inline_("The file with custom microorganisms must be an RDS file. Set the option {.code AMR_custom_mo} to another path."))
     } else {
-      packageStartupMessage("Adding custom microorganisms from '", getOption("AMR_custom_mo"), "'...", appendLF = FALSE)
+      packageStartupMessage(format_inline_("Adding custom microorganisms from '", getOption("AMR_custom_mo"), "'..."), appendLF = FALSE)
       x <- readRDS_AMR(getOption("AMR_custom_mo"))
       tryCatch(
         {
           suppressWarnings(suppressMessages(add_custom_microorganisms(x)))
           packageStartupMessage("OK.")
         },
-        error = function(e) packageStartupMessage("Failed: ", conditionMessage(e))
+        error = function(e) packageStartupMessage(format_inline_("Failed: ", conditionMessage(e)))
       )
     }
   }

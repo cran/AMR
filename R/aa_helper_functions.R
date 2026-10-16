@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -253,12 +253,9 @@ search_type_in_df <- function(x, type, info = TRUE, add_col_prefix = TRUE) {
       # WHONET support
       found <- sort(colnames(x)[colnames_formatted %like_case% "^(specimen date|specimen_date|spec_date)"])
       if (!inherits(pm_pull(x, found), c("Date", "POSIXct"))) {
-        stop(
-          font_red(paste0(
-            "Found column '", font_bold(found), "' to be used as input for `", ifelse(add_col_prefix, "col_", ""), type,
-            "`, but this column contains no valid dates. Transform its values to valid dates first."
-          )),
-          call. = FALSE
+        stop_("Found column {.field ", font_bold(found), "} to be used as input for {.arg ", ifelse(add_col_prefix, "col_", ""), type,
+          "}, but this column contains no valid dates. Transform its values to valid dates first.",
+          call = FALSE
         )
       }
     } else if (any(vapply(FUN.VALUE = logical(1), x, function(x) inherits(x, c("Date", "POSIXct"))))) {
@@ -304,9 +301,9 @@ search_type_in_df <- function(x, type, info = TRUE, add_col_prefix = TRUE) {
     if (!is.null(found)) {
       # this column should contain logicals
       if (!is.logical(x[, found, drop = TRUE])) {
-        message_("Column '", font_bold(found), "' found as input for `", ifelse(add_col_prefix, "col_", ""), type,
-          "`, but this column does not contain 'logical' values (TRUE/FALSE) and was ignored.",
-          add_fn = font_red
+        message_(
+          "Column {.field ", font_bold(found), "} found as input for {.arg ", ifelse(add_col_prefix, "col_", ""), type,
+          "}, but this column does not contain {.code TRUE}/{.code FALSE} values and was ignored."
         )
         found <- NULL
       }
@@ -317,9 +314,9 @@ search_type_in_df <- function(x, type, info = TRUE, add_col_prefix = TRUE) {
 
   if (!is.null(found) && isTRUE(info)) {
     if (message_not_thrown_before("search_in_type", type)) {
-      msg <- paste0("Using column '", font_bold(found), "' as input for `", ifelse(add_col_prefix, "col_", ""), type, "`.")
+      msg <- paste0("Using column {.field ", font_bold(found), "} as input for {.arg ", ifelse(add_col_prefix, "col_", ""), type, "}.")
       if (type %in% c("keyantibiotics", "keyantimicrobials", "specimen")) {
-        msg <- paste(msg, "Use", font_bold(paste0(ifelse(add_col_prefix, "col_", ""), type), "= FALSE"), "to prevent this.")
+        msg <- paste(msg, "Use {.arg ", paste0(ifelse(add_col_prefix, "col_", ""), type), "= FALSE} to prevent this.")
       }
       message_(msg)
     }
@@ -362,9 +359,9 @@ stop_ifnot_installed <- function(package) {
   if (any(!installed) && any(package == "rstudioapi")) {
     stop("This function only works in RStudio when using R >= 3.2.", call. = FALSE)
   } else if (any(!installed)) {
-    stop("This requires the ", vector_and(package[!installed]), " package.",
-      "\nTry to install with install.packages().",
-      call. = FALSE
+    stop_(
+      "This requires the ", vector_and(paste0("{.pkg ", package[!installed], "}"), quotes = FALSE), " package.",
+      "\nTry to install with {.fun install.packages}."
     )
   } else {
     return(invisible())
@@ -387,13 +384,18 @@ import_fn <- function(name, pkg, error_on_fail = TRUE) {
   if (isTRUE(error_on_fail)) {
     stop_ifnot_installed(pkg)
   }
+  if (pkg == "rstudioapi" && (!in_rstudio() || !interactive())) {
+    # only allow rstudioapi to be imported if we're in RStudio
+    return(NULL)
+  }
+
   tryCatch(
     # don't use get() to avoid fetching non-API functions
     getExportedValue(name = name, ns = asNamespace(pkg)),
     error = function(e) {
       if (isTRUE(error_on_fail)) {
-        stop_("function `", name, "()` is not an exported object from package '", pkg,
-          "'. Please create an issue at ", font_url("https://github.com/msberends/AMR/issues"), ". Many thanks!",
+        stop_("function {.code ", name, "()} is not an exported object from package '", pkg,
+          "'. Please create an issue at https://github.com/msberends/AMR/issues. Many thanks!",
           call = FALSE
         )
       } else {
@@ -403,30 +405,136 @@ import_fn <- function(name, pkg, error_on_fail = TRUE) {
   )
 }
 
+has_cli_rlang <- function() {
+  pkg_is_available("cli", min_version = "3.0.0") && pkg_is_available("rlang", min_version = "1.0.3")
+}
+
+highlight_code <- function(code) {
+  if (has_cli_rlang()) {
+    cli::code_highlight(code)
+  } else {
+    code
+  }
+}
+
+# Format a cli-markup string for output, with a plain-text fallback when cli is
+# unavailable. Unlike message_() / warning_() / stop_(), this function returns
+# the formatted string rather than emitting it, so it can be passed to any
+# output function (e.g. packageStartupMessage()).
+format_inline_ <- function(...) {
+  msg <- paste0(c(...), collapse = "")
+  if (has_cli_rlang()) {
+    if (!cli::ansi_has_hyperlink_support()) {
+      msg <- simplify_help_markup(msg)
+    }
+    cli::format_inline(msg)
+  } else {
+    cli_to_plain(msg, envir = parent.frame())
+  }
+}
+
+# Convert cli glue markup to plain text for the non-cli fallback path.
+# Called by message_(), warning_(), and stop_() when cli is not available.
+cli_to_plain <- function(msg, envir = parent.frame()) {
+  resolve <- function(x) {
+    # If x looks like {expr}, evaluate the inner expression
+    if (grepl("^\\{.+\\}$", x)) {
+      inner <- substring(x, 2L, nchar(x) - 1L)
+      tryCatch(
+        paste0(as.character(eval(parse(text = inner), envir = envir)), collapse = ", "),
+        error = function(e) x
+      )
+    } else {
+      x
+    }
+  }
+
+  apply_sub <- function(msg, pattern, formatter) {
+    while (grepl(pattern, msg, perl = TRUE)) {
+      m <- regexec(pattern, msg)
+      matches <- regmatches(msg, m)[[1]]
+      if (length(matches) < 2L) break
+      full_match <- matches[1L]
+      content <- matches[2L]
+      replacement <- formatter(content)
+      idx <- regexpr(full_match, msg, fixed = TRUE)
+      if (idx == -1L) break
+      msg <- paste0(
+        substr(msg, 1L, idx - 1L),
+        replacement,
+        substr(msg, idx + nchar(full_match), nchar(msg))
+      )
+    }
+    msg
+  }
+
+  # cli inline markup -> plain-text equivalents (one level of glue nesting allowed)
+  msg <- apply_sub(msg, "\\{\\.fun[[:space:]]+(\\{[^}]+\\}|[^}]+)\\}", function(c) paste0("`", resolve(c), "()`"))
+  msg <- apply_sub(msg, "\\{\\.arg[[:space:]]+(\\{[^}]+\\}|[^}]+)\\}", function(c) paste0("`", resolve(c), "`"))
+  msg <- apply_sub(msg, "\\{\\.code[[:space:]]+(\\{[^}]+\\}|[^}]+)\\}", function(c) paste0("`", resolve(c), "`"))
+  msg <- apply_sub(msg, "\\{\\.val[[:space:]]+(\\{[^}]+\\}|[^}]+)\\}", function(c) paste0('"', resolve(c), '"'))
+  msg <- apply_sub(msg, "\\{\\.field[[:space:]]+(\\{[^}]+\\}|[^}]+)\\}", function(c) paste0('"', resolve(c), '"'))
+  msg <- apply_sub(msg, "\\{\\.cls[[:space:]]+(\\{[^}]+\\}|[^}]+)\\}", function(c) paste0("<", resolve(c), ">"))
+  msg <- apply_sub(msg, "\\{\\.pkg[[:space:]]+(\\{[^}]+\\}|[^}]+)\\}", function(c) resolve(c))
+  msg <- apply_sub(msg, "\\{\\.strong[[:space:]]+(\\{[^}]+\\}|[^}]+)\\}", function(c) paste0("*", resolve(c), "*"))
+  msg <- apply_sub(msg, "\\{\\.emph[[:space:]]+(\\{[^}]+\\}|[^}]+)\\}", function(c) paste0("*", resolve(c), "*"))
+  msg <- apply_sub(msg, "\\{\\.help[[:space:]]+([^}]+)\\}", function(c) {
+    # Handle [display text](topic) markdown link format: extract just the display text
+    m <- regmatches(c, regexec("^\\[(.*)\\]\\([^)]*\\)$", c))[[1L]]
+    if (length(m) >= 2L) m[2L] else paste0("`", resolve(c), "`")
+  })
+  msg <- apply_sub(msg, "\\{\\.topic[[:space:]]+([^}]+)\\}", function(c) {
+    # Handle [display text](topic) markdown link format: extract just the display text
+    m <- regmatches(c, regexec("^\\[(.*)\\]\\([^)]*\\)$", c))[[1L]]
+    if (length(m) >= 2L) m[2L] else paste0("?", resolve(c))
+  })
+  msg <- apply_sub(msg, "\\{\\.url[[:space:]]+(\\{[^}]+\\}|[^}]+)\\}", function(c) resolve(c))
+  msg <- apply_sub(msg, "\\{\\.href[[:space:]]+([^}]+)\\}", function(c) {
+    # Handle [display text](url) markdown link format: extract just the URL
+    m <- regmatches(c, regexec("^\\[.*\\]\\(([^)]+)\\)$", c))[[1L]]
+    if (length(m) >= 2L) m[2L] else resolve(c)
+  })
+
+  # bare {variable} or {expression} -> evaluate in caller's environment;
+  # processed from left to right, so that an expression that cannot be evaluated is kept as is
+  out <- ""
+  repeat {
+    idx <- regexpr("\\{[^{}]+\\}", msg)
+    if (idx == -1L) break
+    full_match <- regmatches(msg, idx)
+    inner <- substr(full_match, 2L, nchar(full_match) - 1L)
+    replacement <- tryCatch(
+      paste0(as.character(eval(parse(text = inner), envir = envir)), collapse = ", "),
+      error = function(e) full_match
+    )
+    out <- paste0(out, substr(msg, 1L, idx - 1L), replacement)
+    msg <- substr(msg, idx + attr(idx, "match.length"), nchar(msg))
+  }
+
+  paste0(out, msg)
+}
+
 # this alternative wrapper to the message(), warning() and stop() functions:
-# - wraps text to never break lines within words
-# - ignores formatted text while wrapping
-# - adds indentation dependent on the type of message (such as NOTE)
-# - can add additional formatting functions like blue or bold text
+# - wraps text to never break lines within words (plain-text fallback only)
+# - adds indentation for note-style messages (plain-text fallback only)
+# When cli is available this just returns the pasted input; cli handles formatting.
 word_wrap <- function(...,
-                      add_fn = list(),
                       as_note = FALSE,
                       width = 0.95 * getOption("width"),
                       extra_indent = 0) {
+  if (has_cli_rlang()) {
+    return(paste0(c(...), collapse = ""))
+  }
   msg <- paste0(c(...), collapse = "")
-
   if (isTRUE(as_note)) {
     msg <- paste0(AMR_env$info_icon, " ", gsub("^note:? ?", "", msg, ignore.case = TRUE))
   }
-
-  if (msg %like% "\n") {
-    # run word_wraps() over every line here, bind them and return again
+  if (grepl("\n", msg, fixed = TRUE)) {
     return(paste0(
       vapply(
         FUN.VALUE = character(1),
         trimws(unlist(strsplit(msg, "\n", fixed = TRUE)), which = "right"),
         word_wrap,
-        add_fn = add_fn,
         as_note = FALSE,
         width = width,
         extra_indent = extra_indent
@@ -434,151 +542,140 @@ word_wrap <- function(...,
       collapse = "\n"
     ))
   }
-
-  # correct for operators (will add the space later on)
-  ops <- "([,./><\\]\\[])"
-  msg <- gsub(paste0(ops, " ", ops), "\\1\\2", msg, perl = TRUE)
-  # we need to correct for already applied style, that adds text like "\033[31m\"
-  msg_stripped <- gsub("(.*)?\\033\\]8;;.*\\a(.*?)\\033\\]8;;\\a(.*)", "\\1\\2\\3", msg, perl = TRUE) # for font_url()
-  msg_stripped <- font_stripstyle(msg_stripped)
-  # where are the spaces now?
-  msg_stripped_wrapped <- paste0(
-    strwrap(msg_stripped,
-      simplify = TRUE,
-      width = width
-    ),
-    collapse = "\n"
-  )
-  msg_stripped_wrapped <- paste0(unlist(strsplit(msg_stripped_wrapped, "(\n|\\*\\|\\*)")),
-    collapse = "\n"
-  )
-  msg_stripped_spaces <- which(unlist(strsplit(msg_stripped, "", fixed = TRUE)) == " ")
-  msg_stripped_wrapped_spaces <- which(unlist(strsplit(msg_stripped_wrapped, "", fixed = TRUE)) != "\n")
-  # so these are the indices of spaces that need to be replaced
-  replace_spaces <- which(!msg_stripped_spaces %in% msg_stripped_wrapped_spaces)
-  # put it together
-  msg <- unlist(strsplit(msg, " ", fixed = TRUE))
-  msg[replace_spaces] <- paste0(msg[replace_spaces], "\n")
-  # add space around operators again
-  msg <- gsub(paste0(ops, ops), "\\1 \\2", msg, perl = TRUE)
-  msg <- paste0(msg, collapse = " ")
-  msg <- gsub("\n ", "\n", msg, fixed = TRUE)
-
-  if (msg_stripped %like% "\u2139 ") {
-    indentation <- 2 + extra_indent
-  } else if (msg_stripped %like% "^=> ") {
-    indentation <- 3 + extra_indent
+  wrapped <- paste0(strwrap(msg, width = width), collapse = "\n")
+  if (grepl("\u2139 ", msg, fixed = TRUE)) {
+    indentation <- 2L + extra_indent
+  } else if (grepl("^=> ", msg)) {
+    indentation <- 3L + extra_indent
   } else {
-    indentation <- 0 + extra_indent
+    indentation <- 0L + extra_indent
   }
-  msg <- gsub("\n", paste0("\n", strrep(" ", indentation)), msg, fixed = TRUE)
-  # remove trailing empty characters
-  msg <- gsub("(\n| )+$", "", msg)
-
-  if (length(add_fn) > 0) {
-    if (!is.list(add_fn)) {
-      add_fn <- list(add_fn)
-    }
-    for (i in seq_len(length(add_fn))) {
-      msg <- add_fn[[i]](msg)
-    }
+  if (indentation > 0L) {
+    wrapped <- gsub("\n", paste0("\n", strrep("\u00a0", indentation)), wrapped, fixed = TRUE)
   }
+  gsub("(\n| )+$", "", wrapped)
+}
 
-  # format backticks
-  if (pkg_is_available("cli") && in_rstudio() &&
-    tryCatch(getExportedValue("versionInfo", ns = asNamespace("rstudioapi"))()$version > "2023.6.0.0", error = function(e) {
-      return(FALSE)
-    })) {
-    # we are in a recent version of RStudio, so do something nice: add links to our help pages in the console.
-    parts <- strsplit(msg, "`", fixed = TRUE)[[1]]
-    cmds <- parts %in% paste0(ls(envir = asNamespace("AMR")), "()")
-    # functions with a dot are not allowed: https://github.com/rstudio/rstudio/issues/11273#issuecomment-1156193252
-    # lead them to the help page of our package
-    parts[cmds & parts %like% "[.]"] <- font_url(
-      url = paste0("ide:help:AMR::", gsub("()", "", parts[cmds & parts %like% "[.]"], fixed = TRUE)),
-      txt = parts[cmds & parts %like% "[.]"]
-    )
-    # otherwise, give a 'click to run' popup
-    parts[cmds & parts %unlike% "[.]"] <- font_url(
-      url = paste0("ide:run:AMR::", parts[cmds & parts %unlike% "[.]"]),
-      txt = parts[cmds & parts %unlike% "[.]"]
-    )
-    # datasets should give help page as well
-    parts[parts %in% c("antimicrobials", "microorganisms", "microorganisms.codes", "microorganisms.groups")] <- font_url(
-      url = paste0("ide:help:AMR::", gsub("()", "", parts[parts %in% c("antimicrobials", "microorganisms", "microorganisms.codes", "microorganisms.groups")], fixed = TRUE)),
-      txt = parts[parts %in% c("antimicrobials", "microorganisms", "microorganisms.codes", "microorganisms.groups")]
-    )
-    # text starting with `?` must also lead to the help page
-    parts[parts %like% "^[?].+"] <- font_url(
-      url = paste0("ide:help:AMR::", gsub("?", "", parts[parts %like% "^[?].+"], fixed = TRUE)),
-      txt = parts[parts %like% "^[?].+"]
-    )
-    msg <- paste0(parts, collapse = "`")
-  }
-  msg <- gsub("`(.+?)`", font_grey_bg("`\\1`"), msg)
-
-  # clean introduced whitespace in between fullstops
-  msg <- gsub("[.] +[.]", "..", msg)
-  # remove extra space that was introduced (e.g. "Smith et al. , 2022")
-  msg <- gsub(". ,", ".,", msg, fixed = TRUE)
-  msg <- gsub("[ ,", "[,", msg, fixed = TRUE)
-  msg <- gsub("/ /", "//", msg, fixed = TRUE)
-
+simplify_help_markup <- function(msg) {
+  # {.help [{.fun fn}](pkg::fn)} -> {.code fn()}
+  # {.help [display](topic)}     -> {.code display}
+  msg <- gsub(
+    "\\{\\.help \\[\\{\\.fun ([^}]+)\\}\\]\\([^)]+\\)\\}",
+    "{.code \\1()}",
+    msg,
+    perl = TRUE
+  )
+  msg <- gsub(
+    "\\{\\.help \\[([^]]+)\\]\\([^)]+\\)\\}",
+    "{.code \\1}",
+    msg,
+    perl = TRUE
+  )
+  # {.topic [display](topic)} -> {.code ?display}
+  msg <- gsub(
+    "\\{\\.topic \\[([^]]+)\\]\\([^)]+\\)\\}",
+    "{.code ?\\1}",
+    msg,
+    perl = TRUE
+  )
   msg
 }
 
 message_ <- function(...,
                      appendLF = TRUE,
-                     add_fn = list(font_blue),
-                     as_note = TRUE) {
-  message(
-    word_wrap(...,
-      add_fn = add_fn,
-      as_note = as_note
-    ),
-    appendLF = appendLF
-  )
+                     as_note = TRUE,
+                     as_check = FALSE,
+                     extra_indent = 0,
+                     with_bullet = FALSE) {
+  msg <- paste0(c(...), collapse = "")
+  if (with_bullet == TRUE) {
+    as_note <- FALSE
+    msg <- paste0(AMR_env$bullet_icon, "\u00a0", msg)
+  }
+  if (extra_indent > 0) {
+    msg <- paste0(strrep("\u00a0", extra_indent), msg)
+  }
+  if (has_cli_rlang()) {
+    # prevent errors with single opening curly brackets, we don't evaluate cli's/glue's {} in AMR anyway
+    msg <- gsub("\\{(?!\\.)", "", msg, perl = TRUE)
+    if (!cli::ansi_has_hyperlink_support()) {
+      msg <- simplify_help_markup(msg)
+    }
+    if (isTRUE(as_check)) {
+      cli::cli_inform(c("v" = msg), .envir = parent.frame())
+    } else if (isTRUE(as_note)) {
+      cli::cli_inform(c("i" = msg), .envir = parent.frame())
+    } else if (isTRUE(appendLF)) {
+      cli::cli_inform(msg, .envir = parent.frame())
+    } else {
+      # This mirrors what rlang::inform() does internally (cat() to stderr), so it behaves consistently with cli_inform() output
+      cat(format_inline_(msg), file = stderr())
+    }
+  } else {
+    plain_msg <- cli_to_plain(msg, envir = parent.frame())
+    message(word_wrap(plain_msg, as_note = as_note), appendLF = appendLF)
+  }
 }
 
 warning_ <- function(...,
-                     add_fn = list(),
                      immediate = FALSE,
-                     call = FALSE) {
-  warning(
-    trimws2(word_wrap(...,
-      add_fn = add_fn,
-      as_note = FALSE
-    )),
-    immediate. = immediate,
-    call. = call
-  )
+                     call = FALSE,
+                     extra_indent = 0) {
+  msg <- paste0(c(...), collapse = "")
+  if (extra_indent > 0) {
+    msg <- paste0(strrep("\u00a0", extra_indent), msg)
+  }
+  if (has_cli_rlang()) {
+    # prevent errors with single opening curly brackets, we don't evaluate cli's/glue's {} in AMR anyway
+    msg <- gsub("\\{(?!\\.)", "", msg, perl = TRUE)
+    if (!cli::ansi_has_hyperlink_support()) {
+      msg <- simplify_help_markup(msg)
+    }
+    cli::cli_warn(msg, .envir = parent.frame())
+  } else {
+    plain_msg <- cli_to_plain(msg, envir = parent.frame())
+    warning(trimws2(word_wrap(plain_msg, as_note = FALSE)), immediate. = immediate, call. = call)
+  }
 }
 
 # this alternative to the stop() function:
-# - adds the function name where the error was thrown
-# - wraps text to never break lines within words
-stop_ <- function(..., call = TRUE) {
+# - adds the function name where the error was thrown (plain-text fallback)
+# - wraps text to never break lines within words (plain-text fallback)
+stop_ <- function(...,
+                  call = TRUE,
+                  extra_indent = 0) {
   msg <- paste0(c(...), collapse = "")
-  msg_call <- ""
-  if (!isFALSE(call)) {
-    if (isTRUE(call)) {
-      call <- as.character(sys.call(-1)[1])
-    } else {
-      # so you can go back more than 1 call, as used in sir_calc(), that now throws a reference to e.g. n_sir()
-      call <- as.character(sys.call(call)[1])
-    }
-    msg_call <- paste0("in ", call, "():")
+  if (extra_indent > 0) {
+    msg <- paste0(strrep("\u00a0", extra_indent), msg)
   }
-  msg <- trimws2(word_wrap(msg, add_fn = list(), as_note = FALSE))
-  if (!is.null(AMR_env$cli_abort) && length(unlist(strsplit(msg, "\n", fixed = TRUE))) <= 1) {
-    if (is.character(call)) {
-      call <- as.call(str2lang(paste0(call, "()")))
-    } else {
-      call <- NULL
+  # prevent errors with single opening curly brackets, we don't evaluate cli's/glue's {} in AMR anyway
+  msg <- gsub("\\{(?!\\.)", "", msg, perl = TRUE)
+  if (has_cli_rlang()) {
+    if (!cli::ansi_has_hyperlink_support()) {
+      msg <- simplify_help_markup(msg)
     }
-    AMR_env$cli_abort(msg, call = call)
+    if (isTRUE(call)) {
+      call_obj <- sys.call(-1)
+    } else if (!isFALSE(call)) {
+      call_obj <- sys.call(call)
+    } else {
+      call_obj <- NULL
+    }
+    cli::cli_abort(msg, call = call_obj, .envir = parent.frame())
   } else {
-    stop(paste(msg_call, msg), call. = FALSE)
+    msg_call <- ""
+    if (!isFALSE(call)) {
+      if (isTRUE(call)) {
+        call_name <- as.character(sys.call(-1)[1])
+      } else {
+        # go back more than 1 call, as used in sir_calc() to reference e.g. n_sir()
+        call_name <- as.character(sys.call(call)[1])
+      }
+      msg_call <- paste0("in ", call_name, "():")
+    }
+    # convert before wrapping, as wrapping could otherwise break the markup
+    plain_msg <- trimws2(word_wrap(cli_to_plain(msg, envir = parent.frame()), as_note = FALSE))
+    stop(paste(msg_call, plain_msg), call. = FALSE)
   }
 }
 
@@ -608,7 +705,7 @@ stop_ifnot <- function(expr, ..., call = TRUE) {
   }
 }
 
-"%or%" <- function(x, y) {
+"%or_if_na%" <- function(x, y) {
   if (is.null(x) || is.null(y)) {
     if (is.null(x)) {
       return(y)
@@ -621,8 +718,18 @@ stop_ifnot <- function(expr, ..., call = TRUE) {
 
 return_after_integrity_check <- function(value, type, check_vector) {
   if (!all(value[!is.na(value)] %in% check_vector)) {
-    warning_(paste0("invalid ", type, ", NA generated"))
+    warning_("invalid ", type, ", NA generated")
     value[!value %in% check_vector] <- NA
+  }
+  value
+}
+
+return_after_mo_integrity_check <- function(value) {
+  # same as return_after_integrity_check(), but with a hashed lookup of the codes, see mo_codes_valid()
+  valid <- is.na(value) | mo_codes_valid(value)
+  if (!all(valid)) {
+    warning_("invalid microorganism code, NA generated")
+    value[!valid] <- NA
   }
   value
 }
@@ -658,7 +765,7 @@ documentation_date <- function(d) {
   suffix[day %in% c(1, 21, 31)] <- "st"
   suffix[day %in% c(2, 22)] <- "nd"
   suffix[day %in% c(3, 23)] <- "rd"
-  paste0(month.name[as.integer(format(d, "%m"))], " ", day, suffix, ", ", format(d, "%Y"))
+  paste0(day, suffix, " of ", month.name[as.integer(format(d, "%m"))], ", ", format(d, "%Y"))
 }
 
 format_included_data_number <- function(data) {
@@ -682,51 +789,71 @@ format_included_data_number <- function(data) {
   paste0(ifelse(rounder == 0, "", "~"), format(round(n, rounder), decimal.mark = ".", big.mark = " "))
 }
 
-vector_or <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE, initial_captital = FALSE, last_sep = " or ") {
+vector_or <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE, initial_captital = FALSE, last_sep = " or ", documentation = FALSE) {
   # makes unique and sorts, and this also removed NAs
   v <- unique(v)
+  has_na <- anyNA(v)
   if (isTRUE(sort)) {
     v <- sort(v)
+    if (has_na) {
+      v <- c(v, NA)
+    }
   }
   if (isTRUE(reverse)) {
     v <- rev(v)
   }
   if (isTRUE(quotes)) {
-    quotes <- '"'
+    if (isTRUE(documentation)) {
+      quotes <- c("`\"", "\"`")
+    } else {
+      # use cli to format as values
+      quotes <- c("{.val ", "}")
+    }
   } else if (isFALSE(quotes)) {
     quotes <- ""
   } else {
     quotes <- quotes[1L]
   }
+  if (length(quotes) == 1) {
+    quotes <- c(quotes, quotes)
+  }
   if (isTRUE(initial_captital)) {
     v[1] <- gsub("^([a-z])", "\\U\\1", v[1], perl = TRUE)
   }
   if (length(v) <= 1) {
-    return(paste0(quotes, v, quotes))
+    return(paste0(quotes[1], v, quotes[2]))
   }
   if (identical(v, c("I", "R", "S"))) {
     # class 'sir' should be sorted like this
     v <- c("S", "I", "R")
   }
-  if (identical(v, c("I", "NI", "R", "S", "SDD"))) {
+  if (identical(v, sort(VALID_SIR_LEVELS))) {
     # class 'sir' should be sorted like this
-    v <- c("S", "SDD", "I", "R", "NI")
+    v <- VALID_SIR_LEVELS
   }
   # oxford comma
   if (last_sep %in% c(" or ", " and ") && length(v) > 2) {
     last_sep <- paste0(",", last_sep)
   }
+  NAs <- which(is.na(v))
+
+  if (is.numeric(v)) {
+    v <- trimws(vapply(FUN.VALUE = character(1), v, format, scientific = FALSE))
+  }
+  quoted <- paste0(quotes[1], v, quotes[2])
+  quoted[NAs] <- "NA"
   # all commas except for last item, so will become '"val1", "val2", "val3" or "val4"'
   paste0(
-    paste0(quotes, v[seq_len(length(v) - 1)], quotes, collapse = ", "),
-    last_sep, paste0(quotes, v[length(v)], quotes)
+    paste(quoted[seq_len(length(quoted) - 1)], collapse = ", "),
+    last_sep, quoted[length(quoted)]
   )
 }
 
-vector_and <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE, initial_captital = FALSE) {
+vector_and <- function(v, quotes = TRUE, reverse = FALSE, sort = TRUE, initial_captital = FALSE, documentation = FALSE) {
   vector_or(
     v = v, quotes = quotes, reverse = reverse, sort = sort,
-    initial_captital = initial_captital, last_sep = " and "
+    initial_captital = initial_captital, documentation = documentation,
+    last_sep = " and "
   )
 }
 
@@ -746,7 +873,7 @@ format_class <- function(class, plural = FALSE) {
     ifelse(plural, "s", "")
   )
   # exceptions
-  class[class == "logical"] <- ifelse(plural, "a vector of `TRUE`/`FALSE`", "`TRUE` or `FALSE`")
+  class[class == "logical"] <- ifelse(plural, "a vector of {.code TRUE}/{.code FALSE}", "{.code TRUE} or {.code FALSE}")
   class[class == "data.frame"] <- "a data set"
   if ("list" %in% class) {
     class <- "a list"
@@ -755,12 +882,12 @@ format_class <- function(class, plural = FALSE) {
     class <- "a matrix"
   }
   if ("custom_eucast_rules" %in% class) {
-    class <- "input created with `custom_eucast_rules()`"
+    class <- "input created with {.fun custom_eucast_rules}"
   }
   if (any(c("mo", "ab", "sir") %in% class)) {
-    class <- paste0("of class '", class[1L], "'")
+    class <- paste0("of class {.cls ", class[1L], "}")
   }
-  class[class == class.bak] <- paste0("of class '", class[class == class.bak], "'")
+  class[class == class.bak] <- paste0("of class {.cls ", class[class == class.bak], "}")
   # output
   vector_or(class, quotes = FALSE, sort = FALSE)
 }
@@ -795,11 +922,11 @@ meet_criteria <- function(object, # can be literally `list(...)` for `allow_argu
   AMR_env$meet_criteria_error_txt <- NULL
 
   if (is.null(object)) {
-    stop_if(allow_NULL == FALSE, "argument `", obj_name, "` must not be NULL", call = call_depth)
+    stop_if(allow_NULL == FALSE, "argument {.arg ", obj_name, "} must not be NULL", call = call_depth)
     return(invisible())
   }
   if (is.null(dim(object)) && length(object) == 1 && suppressWarnings(is.na(object))) { # suppressWarnings for functions
-    stop_if(allow_NA == FALSE, "argument `", obj_name, "` must not be NA", call = call_depth)
+    stop_if(allow_NA == FALSE, "argument {.arg ", obj_name, "} must not be NA", call = call_depth)
     return(invisible())
   }
 
@@ -809,32 +936,32 @@ meet_criteria <- function(object, # can be literally `list(...)` for `allow_argu
   }
 
   if (!is.null(allow_class) && !(suppressWarnings(all(is.na(object))) && allow_NA == TRUE)) {
-    stop_ifnot(inherits(object, allow_class), "argument `", obj_name,
-      "` must be ", format_class(allow_class, plural = isTRUE(has_length > 1)),
+    stop_ifnot(inherits(object, allow_class), "argument {.arg ", obj_name,
+      "} must be ", format_class(allow_class, plural = isTRUE(has_length > 1)),
       ", i.e. not be ", format_class(class(object), plural = isTRUE(has_length > 1)),
       call = call_depth
     )
     # check data.frames for data
     if (inherits(object, "data.frame")) {
       stop_if(any(dim(object) == 0),
-        "the data provided in argument `", obj_name,
-        "` must contain rows and columns (current dimensions: ",
+        "the data provided in argument {.arg ", obj_name,
+        "} must contain rows and columns (current dimensions: ",
         paste(dim(object), collapse = "x"), ")",
         call = call_depth
       )
     }
   }
   if (!is.null(has_length)) {
-    stop_ifnot(length(object) %in% has_length, "argument `", obj_name,
-      "` must ", # ifelse(allow_NULL, "be NULL or must ", ""),
+    stop_ifnot(length(object) %in% has_length, "argument {.arg ", obj_name,
+      "} must ", # ifelse(allow_NULL, "be NULL or must ", ""),
       "be of length ", vector_or(has_length, quotes = FALSE),
       ", not ", length(object),
       call = call_depth
     )
   }
   if (!is.null(looks_like)) {
-    stop_ifnot(object %like% looks_like, "argument `", obj_name,
-      "` must ", # ifelse(allow_NULL, "be NULL or must ", ""),
+    stop_ifnot(object %like% looks_like, "argument {.arg ", obj_name,
+      "} must ", # ifelse(allow_NULL, "be NULL or must ", ""),
       "resemble the regular expression \"", looks_like, "\"",
       call = call_depth
     )
@@ -852,10 +979,14 @@ meet_criteria <- function(object, # can be literally `list(...)` for `allow_argu
     if ("logical" %in% allow_class) {
       or_values <- paste0(or_values, ", or TRUE or FALSE")
     }
-    stop_ifnot(all(object %in% is_in.bak, na.rm = TRUE), "argument `", obj_name, "` ",
-      ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1,
-        "must be either ",
-        "must only contain values "
+    stop_ifnot(all(object %in% is_in.bak, na.rm = TRUE),
+      "argument {.arg ", obj_name, "} ",
+      ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1 && length(is_in.bak) == 1,
+        "must be ",
+        ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1,
+          "must be either ",
+          "must only contain values "
+        )
       ),
       or_values,
       ifelse(allow_NA == TRUE, ", or NA", ""),
@@ -863,8 +994,8 @@ meet_criteria <- function(object, # can be literally `list(...)` for `allow_argu
     )
   }
   if (isTRUE(is_positive)) {
-    stop_if(is.numeric(object) && !all(object > 0, na.rm = TRUE), "argument `", obj_name,
-      "` must ",
+    stop_if(is.numeric(object) && !all(object > 0, na.rm = TRUE), "argument {.arg ", obj_name,
+      "} must ",
       ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1,
         "be a number higher than zero",
         "all be numbers higher than zero"
@@ -873,8 +1004,8 @@ meet_criteria <- function(object, # can be literally `list(...)` for `allow_argu
     )
   }
   if (isTRUE(is_positive_or_zero)) {
-    stop_if(is.numeric(object) && !all(object >= 0, na.rm = TRUE), "argument `", obj_name,
-      "` must ",
+    stop_if(is.numeric(object) && !all(object >= 0, na.rm = TRUE), "argument {.arg ", obj_name,
+      "} must ",
       ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1,
         "be zero or a positive number",
         "all be zero or numbers higher than zero"
@@ -883,8 +1014,8 @@ meet_criteria <- function(object, # can be literally `list(...)` for `allow_argu
     )
   }
   if (isTRUE(is_finite)) {
-    stop_if(is.numeric(object) && !all(is.finite(object[!is.na(object)]), na.rm = TRUE), "argument `", obj_name,
-      "` must ",
+    stop_if(is.numeric(object) && !all(is.finite(object[!is.na(object)]), na.rm = TRUE), "argument {.arg ", obj_name,
+      "} must ",
       ifelse(!is.null(has_length) && length(has_length) == 1 && has_length == 1,
         "be a finite number",
         "all be finite numbers"
@@ -918,9 +1049,9 @@ ascertain_sir_classes <- function(x, obj_name) {
   sirs <- vapply(FUN.VALUE = logical(1), x, is.sir)
   if (!any(sirs, na.rm = TRUE)) {
     warning_(
-      "the data provided in argument `", obj_name,
-      "` should contain at least one column of class 'sir'. Eligible SIR column were now guessed. ",
-      "See `?as.sir`.",
+      "the data provided in argument {.arg ", obj_name,
+      "} should contain at least one column of class {.cls sir}. Eligible SIR columns were now guessed. ",
+      "See {.help [{.fun as.sir}](AMR::as.sir)}.",
       immediate = TRUE
     )
     sirs_eligible <- is_sir_eligible(x)
@@ -966,8 +1097,13 @@ get_current_data <- function(arg_name, call) {
       # an element `.data` will be in the environment when using dplyr::select()
       return(env$`.data`)
     } else if (valid_df(env$training)) {
-      # an element `training` will be in the environment when using some tidymodels functions such as `prep()`
-      return(env$training)
+      if (!is.null(env$x) && valid_df(env$x$template)) {
+        # an element `x$template` will be in the environment when using some tidymodels functions such as `prep()`
+        return(env$x$template)
+      } else {
+        # this is a fallback for some tidymodels functions such as `prep()`
+        return(env$training)
+      }
     } else if (valid_df(env$data)) {
       # an element `data` will be in the environment when using older dplyr versions, or some tidymodels functions such as `fit()`
       return(env$data)
@@ -1017,13 +1153,13 @@ get_current_data <- function(arg_name, call) {
     } else {
       examples <- ""
     }
-    stop_("this function must be used inside a `dplyr` verb or `data.frame` call",
+    stop_("this function must be used inside a {.pkg dplyr} verb or {.cls data.frame} call",
       examples,
       call = call
     )
   } else {
     # mimic a base R error that the argument is missing
-    stop_("argument `", arg_name, "` is missing with no default", call = call)
+    stop_("argument {.arg ", arg_name, "} is missing with no default", call = call)
   }
 }
 
@@ -1037,24 +1173,8 @@ get_current_column <- function() {
 
   # cur_column() doesn't always work (only allowed for certain conditions set by dplyr), but it's probably still possible:
   frms <- lapply(sys.frames(), function(env) {
-    if (tryCatch(!is.null(env$i), error = function(e) FALSE)) {
-      if (!is.null(env$tibble_vars)) {
-        # for mutate_if()
-        # TODO remove later, was part of older dplyr versions (at least not in dplyr 1.1.4)
-        env$tibble_vars[env$i]
-      } else {
-        # for mutate(across())
-        if (!is.null(env$data) && is.data.frame(env$data)) {
-          df <- env$data
-        } else {
-          df <- tryCatch(get_current_data(NA, 0), error = function(e) NULL)
-        }
-        if (is.data.frame(df)) {
-          colnames(df)[env$i]
-        } else {
-          env$i
-        }
-      }
+    if (all(c("dots", "i") %in% names(env))) {
+      names(env$dots)[env$i]
     } else {
       NULL
     }
@@ -1086,7 +1206,43 @@ get_group_names <- function(x) {
   }
 }
 
-format_custom_query_rule <- function(query, colours = has_colour()) {
+format_sir_badge <- function(x, guideline = getOption("AMR_guideline", "EUCAST")[1]) {
+  # same styling as in pillar_shaft.sir(), so 'I' depends on the guideline
+  vapply(
+    FUN.VALUE = character(1),
+    as.character(x),
+    function(val) {
+      if (is.na(val)) {
+        font_red("NA")
+      } else if (!has_colour()) {
+        val
+      } else {
+        # non-breaking spaces, so that line wrapping cannot split a badge
+        val_padded <- paste0("\u00a0", val, "\u00a0")
+        if (val %in% c("S", "WT")) {
+          font_green_bg(val_padded)
+        } else if (val == "SDD") {
+          font_green_lighter_bg(val_padded)
+        } else if (val == "I") {
+          if (guideline %like% "EUCAST") {
+            font_green_lighter_bg(val_padded)
+          } else {
+            font_orange_bg(val_padded)
+          }
+        } else if (val %in% c("R", "NS", "NWT")) {
+          font_rose_bg(val_padded)
+        } else if (val == "NI") {
+          font_grey_bg(font_black(val_padded, adapt = FALSE))
+        } else {
+          val
+        }
+      }
+    },
+    USE.NAMES = FALSE
+  )
+}
+
+format_custom_query_rule <- function(query, colours = has_colour(), guideline = getOption("AMR_guideline", "EUCAST")[1]) {
   # this is used by custom EUCAST and custom MDRO rules
 
   # font_black() is a bit expensive so do it once:
@@ -1108,11 +1264,9 @@ format_custom_query_rule <- function(query, colours = has_colour()) {
   query <- gsub("any\\((.*)\\)$", paste0(font_black("any of "), "\\1"), query)
   query <- gsub("all\\((.*)\\)$", paste0(font_black("all of "), "\\1"), query)
   if (colours == TRUE) {
-    query <- gsub("[\"']R[\"']", font_rose_bg(" R "), query)
-    query <- gsub("[\"']SDD[\"']", font_orange_bg(" SDD "), query)
-    query <- gsub("[\"']S[\"']", font_green_bg(" S "), query)
-    query <- gsub("[\"']NI[\"']", font_grey_bg(font_black(" NI ")), query)
-    query <- gsub("[\"']I[\"']", font_orange_bg(" I "), query)
+    for (sir_level in VALID_SIR_LEVELS) {
+      query <- gsub(paste0("[\"']", sir_level, "[\"']"), format_sir_badge(sir_level, guideline = guideline), query)
+    }
   }
   # replace the black colour 'stops' with blue colour 'starts'
   query <- gsub("\033[39m", "\033[34m", as.character(query), fixed = TRUE)
@@ -1222,10 +1376,14 @@ try_colour <- function(..., before, after, collapse = " ") {
   }
 }
 is_dark <- function() {
-  AMR_env$current_theme <- tryCatch(getExportedValue("getThemeInfo", ns = asNamespace("rstudioapi"))()$editor, error = function(e) NULL)
+  AMR_env$current_theme <- NULL
+  current_theme_fn <- import_fn("getThemeInfo", "rstudioapi", error_on_fail = FALSE)
+  if (!is.null(current_theme_fn)) {
+    AMR_env$current_theme <- current_theme_fn()$editor
+  }
   if (!identical(AMR_env$current_theme, AMR_env$former_theme) || is.null(AMR_env$is_dark_theme)) {
     AMR_env$former_theme <- AMR_env$current_theme
-    AMR_env$is_dark_theme <- !has_colour() || tryCatch(isTRUE(getExportedValue("getThemeInfo", ns = asNamespace("rstudioapi"))()$dark), error = function(e) TRUE)
+    AMR_env$is_dark_theme <- !has_colour() || tryCatch(isTRUE(current_theme_fn()$dark), error = function(e) TRUE)
   }
   isTRUE(AMR_env$is_dark_theme)
 }
@@ -1550,14 +1708,14 @@ add_MO_lookup_to_AMR_env <- function() {
   if (is.null(AMR_env$MO_lookup)) {
     MO_lookup <- AMR::microorganisms
 
-    MO_lookup$kingdom_index <- NA_real_
-    MO_lookup[which(MO_lookup$kingdom == "Bacteria" | as.character(MO_lookup$mo) == "UNKNOWN"), "kingdom_index"] <- 1
-    MO_lookup[which(MO_lookup$kingdom == "Fungi"), "kingdom_index"] <- 1.25
-    MO_lookup[which(MO_lookup$kingdom == "Protozoa"), "kingdom_index"] <- 1.5
-    MO_lookup[which(MO_lookup$kingdom == "Chromista"), "kingdom_index"] <- 1.75
-    MO_lookup[which(MO_lookup$kingdom == "Archaea"), "kingdom_index"] <- 2
+    MO_lookup$domain_index <- NA_real_
+    MO_lookup[which(MO_lookup$domain == "Bacteria" | as.character(MO_lookup$mo) == "UNKNOWN"), "domain_index"] <- 1
+    MO_lookup[which(MO_lookup$domain == "Fungi"), "domain_index"] <- 1.25
+    MO_lookup[which(MO_lookup$domain == "Protozoa"), "domain_index"] <- 1.5
+    MO_lookup[which(MO_lookup$domain == "Chromista"), "domain_index"] <- 1.75
+    MO_lookup[which(MO_lookup$domain == "Archaea"), "domain_index"] <- 2
     # all the rest
-    MO_lookup[which(is.na(MO_lookup$kingdom_index)), "kingdom_index"] <- 3
+    MO_lookup[which(is.na(MO_lookup$domain_index)), "domain_index"] <- 3
 
     # the fullname lowercase, important for the internal algorithms in as.mo()
     MO_lookup$fullname_lower <- tolower(trimws2(paste(
@@ -1577,6 +1735,8 @@ add_MO_lookup_to_AMR_env <- function() {
     MO_lookup$species_first <- tolower(substr(MO_lookup$species, 1, 1)) # tolower for groups (Streptococcus, Salmonella)
     MO_lookup$subspecies_first <- tolower(substr(MO_lookup$subspecies, 1, 1)) # tolower for Salmonella serovars
     AMR_env$MO_lookup <- MO_lookup
+    # a new lookup table, so derived caches must be rebuilt
+    reset_mo_cache()
   }
 }
 
@@ -1596,62 +1756,41 @@ readRDS_AMR <- function(file, refhook = NULL) {
   readRDS(con, refhook = refhook)
 }
 
-get_n_cores <- function(max_cores = Inf) {
-  if (pkg_is_available("parallelly", min_version = "0.8.0", also_load = FALSE)) {
-    available_cores <- import_fn("availableCores", "parallelly")
-    n_cores <- min(available_cores(), na.rm = TRUE)
-  } else {
-    # `parallel` is part of base R since 2.14.0, but detectCores() is not very precise on exotic systems like Docker and quota-set Linux environments
-    n_cores <- parallel::detectCores()[1]
-    if (is.na(n_cores)) {
-      n_cores <- 1
-    }
+# Support `where()`, also if tidyselect not installed ----
+# this must be decided at runtime, not at installation: a copy of tidyselect::where() made during installation fails if tidyselect is not available at runtime, e.g. for binary packages built on a machine with tidyselect
+where <- function(fn) {
+  if (pkg_is_available("tidyselect") && !is.null(tryCatch(tidyselect::peek_vars(fn = "where"), error = function(e) NULL))) {
+    # called inside a tidyselect selection, such as dplyr::select(), so let tidyselect handle it
+    return(tidyselect::where(fn))
   }
-  max_cores <- floor(max_cores)
-  if (max_cores == 0) {
-    n_cores <- 1
-  } else if (max_cores < 0) {
-    n_cores <- max(1, n_cores - abs(max_cores))
-  } else if (max_cores > 0) {
-    n_cores <- min(n_cores, max_cores)
+  # based on https://github.com/nathaneastwood/poorman/blob/52eb6947e0b4430cd588976ed8820013eddf955f/R/where.R#L17-L32
+  if (!is.function(fn)) {
+    stop_("{.fun ", deparse(substitute(fn)), "} is not a valid predicate function.")
   }
-  n_cores
-}
-
-# Support `where()` if tidyselect not installed ----
-if (!is.null(import_fn("where", "tidyselect", error_on_fail = FALSE))) {
-  # tidyselect::where() exists, load the namespace to make `where()`s work across the package in default arguments
-  loadNamespace("tidyselect")
-} else {
-  where <- function(fn) {
-    # based on https://github.com/nathaneastwood/poorman/blob/52eb6947e0b4430cd588976ed8820013eddf955f/R/where.R#L17-L32
-    if (!is.function(fn)) {
-      stop_("`", deparse(substitute(fn)), "()` is not a valid predicate function.")
-    }
-    df <- pm_select_env$.data
-    cols <- pm_select_env$get_colnames()
-    if (is.null(df)) {
-      df <- get_current_data("where", call = FALSE)
-      cols <- colnames(df)
-    }
-    preds <- unlist(lapply(
-      df,
-      function(x, fn) {
-        do.call("fn", list(x))
-      },
-      fn
-    ))
-    if (!is.logical(preds)) stop_("`where()` must be used with functions that return `TRUE` or `FALSE`.")
-    data_cols <- cols
-    cols <- data_cols[preds]
-    which(data_cols %in% cols)
+  df <- pm_select_env$.data
+  cols <- pm_select_env$get_colnames()
+  if (is.null(df)) {
+    df <- get_current_data("where", call = FALSE)
+    cols <- colnames(df)
   }
+  preds <- unlist(lapply(
+    df,
+    function(x, fn) {
+      do.call("fn", list(x))
+    },
+    fn
+  ))
+  if (!is.logical(preds)) stop_("{.fun where} must be used with functions that return {.code TRUE} or {.code FALSE}.")
+  data_cols <- cols
+  cols <- data_cols[preds]
+  which(data_cols %in% cols)
 }
 
 # Faster data.table implementations ----
 
 match <- function(x, table, ...) {
-  if (!is.null(AMR_env$chmatch) && inherits(x, "character") && inherits(table, "character")) {
+  # data.table must still be loaded: calling its compiled code after it was unloaded (e.g., using detach("package:data.table", unload = TRUE)) crashes R
+  if (!is.null(AMR_env$chmatch) && inherits(x, "character") && inherits(table, "character") && isNamespaceLoaded("data.table")) {
     # data.table::chmatch() is much faster than base::match() for character
     tryCatch(AMR_env$chmatch(x, table, ...), error = function(e) base::match(x, table, ...))
   } else {
@@ -1659,7 +1798,7 @@ match <- function(x, table, ...) {
   }
 }
 `%in%` <- function(x, table) {
-  if (!is.null(AMR_env$chin) && inherits(x, "character") && inherits(table, "character")) {
+  if (!is.null(AMR_env$chin) && inherits(x, "character") && inherits(table, "character") && isNamespaceLoaded("data.table")) {
     # data.table::`%chin%`() is much faster than base::`%in%`() for character
     tryCatch(AMR_env$chin(x, table), error = function(e) base::`%in%`(x, table))
   } else {
@@ -1749,6 +1888,12 @@ if (getRversion() < "3.6.0") {
 if (getRversion() < "4.0.0") {
   deparse1 <- function(expr, collapse = " ", width.cutoff = 500L, ...) {
     paste(deparse(expr, width.cutoff, ...), collapse = collapse)
+  }
+}
+
+if (getRversion() < "4.4.0") {
+  `%||%` <- function(x, y) {
+    if (is.null(x)) y else x
   }
 }
 

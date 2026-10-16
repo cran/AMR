@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -34,8 +34,10 @@ sir_df <- function(data,
                    language = get_AMR_locale(),
                    minimum = 30,
                    as_percent = FALSE,
-                   combine_SI = TRUE,
-                   confidence_level = 0.95) {
+                   combine_SI,
+                   confidence_level = 0.95,
+                   guideline = getOption("AMR_guideline", "EUCAST")) {
+  guideline <- get_aggregation_guideline(guideline, missing(guideline), combine_SI, missing(combine_SI), fn = "sir_df")
   tryCatch(
     sir_calc_df(
       type = "both",
@@ -44,8 +46,8 @@ sir_df <- function(data,
       language = language,
       minimum = minimum,
       as_percent = as_percent,
-      combine_SI = combine_SI,
-      confidence_level = confidence_level
+      confidence_level = confidence_level,
+      guideline = guideline
     ),
     error = function(e) stop_(gsub("in sir_calc_df(): ", "", conditionMessage(e), fixed = TRUE), call = -5)
   )

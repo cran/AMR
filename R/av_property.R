@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -32,7 +32,7 @@
 #' Use these functions to return a specific property of an antiviral drug from the [antivirals] data set. All input values will be evaluated internally with [as.av()].
 #' @param x Any (vector of) text that can be coerced to a valid antiviral drug code with [as.av()].
 #' @param tolower A [logical] to indicate whether the first [character] of every output should be transformed to a lower case [character].
-#' @param property One of the column names of one of the [antivirals] data set: `vector_or(colnames(antivirals), sort = FALSE)`.
+#' @param property One of the column names of one of the [antivirals] data set: `r vector_or(colnames(antivirals), documentation = TRUE, sort = FALSE)`.
 #' @param language Language of the returned text - the default is system language (see [get_AMR_locale()]) and can also be set with the package option [`AMR_locale`][AMR-options]. Use `language = NULL` or `language = ""` to prevent translation.
 #' @param administration Way of administration, either `"oral"` or `"iv"`.
 #' @param open Browse the URL using [utils::browseURL()].
@@ -162,7 +162,7 @@ av_ddd <- function(x, administration = "oral", ...) {
 
   if (any(av_name(x, language = NULL) %like% "/" & is.na(out))) {
     warning_(
-      "in `av_ddd()`: DDDs of some combined products are available for different dose combinations and not (yet) part of the AMR package.",
+      "in {.help [{.fun av_ddd}](AMR::av_ddd)}: DDDs of some combined products are available for different dose combinations and not (yet) part of the AMR package.",
       "Please refer to the WHOCC website:\n",
       "atcddd.fhi.no/ddd/list_of_ddds_combined_products/"
     )
@@ -182,7 +182,7 @@ av_ddd_units <- function(x, administration = "oral", ...) {
 
   if (any(av_name(x, language = NULL) %like% "/" & is.na(out))) {
     warning_(
-      "in `av_ddd_units()`: DDDs of some combined products are available for different dose combinations and not (yet) part of the AMR package.",
+      "in {.help [{.fun av_ddd_units}](AMR::av_ddd_units)}: DDDs of some combined products are available for different dose combinations and not (yet) part of the AMR package.",
       "Please refer to the WHOCC website:\n",
       "atcddd.fhi.no/ddd/list_of_ddds_combined_products/"
     )
@@ -233,12 +233,12 @@ av_url <- function(x, open = FALSE, ...) {
 
   NAs <- av_name(av, tolower = TRUE, language = NULL)[!is.na(av) & is.na(atcs)]
   if (length(NAs) > 0) {
-    warning_("in `av_url()`: no ATC code available for ", vector_and(NAs, quotes = FALSE), ".")
+    warning_("in {.fun av_url}: no ATC code available for ", vector_and(NAs, quotes = FALSE), ".")
   }
 
   if (open == TRUE) {
     if (length(u) > 1 && !is.na(u[1L])) {
-      warning_("in `av_url()`: only the first URL will be opened, as `browseURL()` only suports one string.")
+      warning_("in {.fun av_url}: only the first URL will be opened, as {.fun browseURL} only suports one string.")
     }
     if (!is.na(u[1L])) {
       utils::browseURL(u[1L])

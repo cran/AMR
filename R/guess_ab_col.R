@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -79,7 +79,6 @@ guess_ab_col <- function(x = NULL, search_string = NULL, verbose = FALSE, only_s
     if (isTRUE(verbose)) {
       message_("No column found as input for ", search_string,
         " (", ab_name(search_string, language = NULL, tolower = TRUE), ").",
-        add_fn = font_black,
         as_note = FALSE
       )
     }
@@ -87,7 +86,7 @@ guess_ab_col <- function(x = NULL, search_string = NULL, verbose = FALSE, only_s
   } else {
     if (isTRUE(verbose)) {
       message_(
-        "Using column '", font_bold(ab_result), "' as input for ", search_string,
+        "Using column {.field ", font_bold(ab_result), "} as input for ", search_string,
         " (", ab_name(search_string, language = NULL, tolower = TRUE), ")."
       )
     }
@@ -147,7 +146,7 @@ get_column_abx <- function(x,
   meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
   meet_criteria(sort, allow_class = "logical", has_length = 1)
 
-  if (isTRUE(info)) {
+  if (isTRUE(info) && message_not_thrown_before("get_column_abx", colnames(x))) {
     message_("Auto-guessing columns suitable for analysis", appendLF = FALSE, as_note = FALSE)
   }
 
@@ -211,7 +210,7 @@ get_column_abx <- function(x,
     newnames <- suppressWarnings(as.ab(names(dots), info = FALSE))
     if (anyNA(newnames)) {
       if (isTRUE(info)) {
-        message_(paste0(font_yellow(font_bold(" WARNING: ")), "some columns returned `NA` for `as.ab()`"), as_note = FALSE)
+        message_("WARNING: some columns returned NA for {.help [{.fun as.ab}](AMR::as.ab)}", as_note = FALSE)
       }
       warning_("Invalid antibiotic reference(s): ", vector_and(names(dots)[is.na(newnames)], quotes = FALSE),
         call = FALSE,
@@ -222,7 +221,7 @@ get_column_abx <- function(x,
     unexisting_cols <- which(!vapply(FUN.VALUE = logical(1), dots, function(col) all(col %in% x_columns)))
     if (length(unexisting_cols) > 0) {
       if (isTRUE(info)) {
-        message_(" ERROR", add_fn = list(font_red, font_bold), as_note = FALSE)
+        message_(" ERROR", as_note = FALSE)
       }
       stop_("Column(s) not found: ", vector_and(unlist(dots[[unexisting_cols]]), quotes = FALSE),
         call = FALSE
@@ -266,17 +265,17 @@ get_column_abx <- function(x,
 
     if (isTRUE(info)) {
       if (all_okay == TRUE) {
-        message_(" OK.", add_fn = list(font_green, font_bold), as_note = FALSE)
+        message_(" OK.", as_note = FALSE)
       } else if (!isFALSE(dups)) {
-        message_(paste0(font_yellow(font_bold(" WARNING: ")), "some results from `as.ab()` are duplicated: ", vector_and(dups, quotes = "`")), as_note = FALSE)
+        message_("WARNING: some results from {.help [{.fun as.ab}](AMR::as.ab)} are duplicated: ", vector_and(dups, quotes = FALSE), as_note = FALSE)
       } else {
-        message_(" WARNING.", add_fn = list(font_yellow, font_bold), as_note = FALSE)
+        message_(" WARNING.", as_note = FALSE)
       }
 
       for (i in seq_len(length(out))) {
         if (isTRUE(verbose) && !out[i] %in% duplicates) {
           message_(
-            "Using column '", font_bold(out[i]), "' as input for ", names(out)[i],
+            "Using column {.field ", font_bold(out[i]), "} as input for ", names(out)[i],
             " (", ab_name(names(out)[i], tolower = TRUE, language = NULL), ")."
           )
         }
@@ -285,11 +284,10 @@ get_column_abx <- function(x,
           if (names(out)[i] != already_set_as) {
             message_(
               paste0(
-                "Column '", font_bold(out[i]), "' will not be used for ",
+                "Column {.field ", font_bold(out[i]), "} will not be used for ",
                 names(out)[i], " (", suppressMessages(ab_name(names(out)[i], tolower = TRUE, language = NULL, fast_mode = TRUE)), ")",
                 ", as this antimicrobial has already been set."
-              ),
-              add_fn = font_red
+              )
             )
           }
         }
@@ -342,14 +340,13 @@ get_ab_from_namespace <- function(x, cols_ab) {
 
   x <- trimws2(unique(toupper(unlist(strsplit(x, ",", fixed = TRUE)))))
   x_new <- character()
+  ns <- asNamespace("AMR")
   for (val in x) {
-    if (paste0("AB_", val) %in% ls(envir = asNamespace("AMR"))) {
+    if (exists(paste0("AB_", val), envir = ns, inherits = FALSE)) {
       # antibiotic group names, as defined in data-raw/_pre_commit_checks.R, such as `AB_CARBAPENEMS`
-      val <- eval(parse(text = paste0("AB_", val)), envir = asNamespace("AMR"))
-    } else if (val %in% AMR_env$AB_lookup$ab) {
-      # separate drugs, such as `AMX`
-      val <- as.ab(val)
-    } else {
+      val <- get(paste0("AB_", val), envir = ns, inherits = FALSE)
+    } else if (!val %in% AMR_env$AB_lookup$ab) {
+      # anything else must be a separate drug, such as `AMX`, which is then already a valid code
       stop_("unknown antimicrobial drug (group): ", val, call = FALSE)
     }
     x_new <- c(x_new, val)

@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -30,8 +30,11 @@
 test_that("test-proportion.R", {
   skip_on_cran()
 
-  expect_equal(proportion_R(example_isolates$AMX), resistance(example_isolates$AMX))
-  expect_equal(proportion_SI(example_isolates$AMX), susceptibility(example_isolates$AMX))
+  # with EUCAST, which must also hold when another guideline is set with the AMR_guideline option
+  expect_equal(proportion_R(example_isolates$AMX), resistance(example_isolates$AMX, guideline = "EUCAST"))
+  expect_equal(proportion_SI(example_isolates$AMX), susceptibility(example_isolates$AMX, guideline = "EUCAST"))
+  expect_equal(proportion_IR(example_isolates$AMX), resistance(example_isolates$AMX, guideline = "CLSI"))
+  expect_equal(proportion_S(example_isolates$AMX), susceptibility(example_isolates$AMX, guideline = "CLSI"))
   # AMX resistance in `example_isolates`
   expect_equal(proportion_R(example_isolates$AMX), 0.5955556, tolerance = 0.0001)
   expect_equal(proportion_I(example_isolates$AMX), 0.002222222, tolerance = 0.0001)
@@ -96,21 +99,41 @@ test_that("test-proportion.R", {
       c(1181, 577, 116)
     )
 
-    # proportion_df
+    # proportion_df, which combines 'I' with S for EUCAST and with R for CLSI
     expect_equal(
-      example_isolates %>% select(AMX) %>% proportion_df() %>% pull(value),
+      example_isolates %>% select(AMX) %>% proportion_df(guideline = "EUCAST") %>% pull(value),
       c(
         example_isolates$AMX %>% proportion_SI(),
         example_isolates$AMX %>% proportion_R()
       )
     )
     expect_equal(
-      example_isolates %>% select(AMX) %>% proportion_df(combine_SI = FALSE) %>% pull(value),
+      example_isolates %>% select(AMX) %>% proportion_df(guideline = "CLSI") %>% pull(value),
+      c(
+        example_isolates$AMX %>% proportion_S(),
+        example_isolates$AMX %>% proportion_IR()
+      )
+    )
+    expect_equal(
+      example_isolates %>% select(AMX) %>% sir_df(guideline = "CLSI") %>% pull(isolates),
+      c(
+        example_isolates$AMX %>% count_S(),
+        example_isolates$AMX %>% count_IR()
+      )
+    )
+    expect_equal(
+      example_isolates %>% select(AMX) %>% proportion_df(guideline = NULL) %>% pull(value),
       c(
         example_isolates$AMX %>% proportion_S(),
         example_isolates$AMX %>% proportion_I(),
         example_isolates$AMX %>% proportion_R()
       )
+    )
+
+    expect_error(susceptibility(example_isolates$AMX, guideline = NULL))
+    expect_identical(
+      suppressWarnings(sir_df(example_isolates[, "AMX"], combine_SI = TRUE, guideline = "CLSI")),
+      sir_df(example_isolates[, "AMX"], guideline = "EUCAST")
     )
 
     # expect_warning(example_isolates %>% group_by(ward) %>% summarise(across(KAN, sir_confidence_interval)))
@@ -136,7 +159,6 @@ test_that("test-proportion.R", {
   expect_error(proportion_I("test", as_percent = "test"))
   expect_error(proportion_S("test", minimum = "test"))
   expect_error(proportion_S("test", as_percent = "test"))
-  expect_error(proportion_S("test", also_single_tested = TRUE))
 
   # check too low amount of isolates
   expect_identical(

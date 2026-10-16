@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -35,7 +35,7 @@
 #' @param na.rm A [logical] indicating whether missing values should be removed.
 #' @details Interpret disk values as SIR values with [as.sir()]. It supports guidelines from EUCAST and CLSI.
 #'
-#' Disk diffusion growth zone sizes must be between 0 and 50 millimetres. Values higher than 50 but lower than 100 will be maximised to 50. All others input values outside the 0-50 range will return `NA`.
+#' Disk diffusion growth zone sizes must be between 0 and 50 millimetres. Decimal values are rounded up. All input values outside the 0-50 range, including values higher than 50, return `NA` with a warning.
 #' @return An [integer] with additional class [`disk`]
 #' @aliases disk
 #' @export
@@ -83,34 +83,31 @@ as.disk <- function(x, na.rm = FALSE) {
 
     na_before <- length(x[is.na(x)])
 
-    # heavily based on cleaner::clean_double():
-    clean_double2 <- function(x, remove = "[^0-9.,-]", fixed = FALSE) {
+    # extract a plausible numeric disk zone value from character input
+    extract_disk_value <- function(x) {
+      x <- as.character(x)
+      # normalise decimal separators
       x <- gsub(",", ".", x, fixed = TRUE)
-      # remove ending dot/comma
-      x <- gsub("[,.]$", "", x)
-      # only keep last dot/comma
-      reverse <- function(x) vapply(FUN.VALUE = character(1), lapply(strsplit(x, NULL), rev), paste, collapse = "")
-      x <- sub("{{dot}}", ".",
-        gsub(".", "",
-          reverse(sub(".", "}}tod{{",
-            reverse(x),
-            fixed = TRUE
-          )),
-          fixed = TRUE
-        ),
-        fixed = TRUE
-      )
-      x_clean <- gsub(remove, "", x, ignore.case = TRUE, fixed = fixed)
-      # remove everything that is not a number or dot
-      as.double(gsub("[^0-9.]+", "", x_clean))
+      # strip known context: leading/trailing whitespace, SIR interpretations,
+      # comparison operators, semicolons, and surrounding whitespace
+      x <- trimws(x)
+      # remove trailing SIR interpretation (e.g., "42; S", "28 R")
+      x <- gsub("[;[:space:]]+[SIRsir]$", "", x)
+      # remove leading comparison operators (e.g., ">=20", "<=6")
+      x <- gsub("^[<>=]+\\s*", "", x)
+      x <- trimws(x)
+      # now the remainder must be a plausible standalone number
+      out <- rep(NA_real_, length(x))
+      is_numeric <- grepl("^[0-9]+\\.?[0-9]*$", x)
+      out[is_numeric] <- as.double(x[is_numeric])
+      out
     }
 
-    # round up and make it an integer
-    x <- as.integer(ceiling(clean_double2(x)))
+    # round up and coerce to integer
+    x <- as.integer(ceiling(extract_disk_value(x)))
+    # valid disk diffusion zones: 0-50 mm
+    x[x < 0 | x > 50] <- NA_integer_
 
-    # disks can never be less than 0 mm or more than 50 mm
-    x[x < 0 | x > 99] <- NA_integer_
-    x[x > 50] <- 50L
     na_after <- length(x[is.na(x)])
 
     if (na_before != na_after) {
@@ -119,9 +116,9 @@ as.disk <- function(x, na.rm = FALSE) {
         sort() %pm>%
         vector_and(quotes = TRUE)
       cur_col <- get_current_column()
-      warning_("in `as.disk()`: ", na_after - na_before, " result",
+      warning_("in {.help [{.fun as.disk}](AMR::as.disk)}: ", na_after - na_before, " result",
         ifelse(na_after - na_before > 1, "s", ""),
-        ifelse(is.null(cur_col), "", paste0(" in index '", cur_col, "'")),
+        ifelse(is.null(cur_col), "", paste0(" in column {.field ", font_bold(cur_col, collapse = NULL), "}")),
         " truncated (",
         round(((na_after - na_before) / length(x)) * 100),
         "%) that were invalid disk zones: ",
@@ -162,7 +159,7 @@ is.disk <- function(x) {
 #' @rawNamespace if(getRversion() >= "3.0.0") S3method(pillar::pillar_shaft, disk)
 pillar_shaft.disk <- function(x, ...) {
   out <- trimws(format(x))
-  out[is.na(x)] <- font_na(NA)
+  out[is.na(x)] <- pillar::style_na(NA)
   create_pillar_column(out, align = "right", width = 2)
 }
 
@@ -170,7 +167,7 @@ pillar_shaft.disk <- function(x, ...) {
 #' @export
 #' @noRd
 print.disk <- function(x, ...) {
-  cat("Class 'disk'\n")
+  cat(format_inline_("Class {.cls disk}\n"))
   print(as.integer(x), quote = FALSE)
 }
 

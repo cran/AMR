@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -35,11 +35,12 @@
 #' @param ... One or more vectors (or columns) with antibiotic interpretations. They will be transformed internally with [as.sir()] if needed. Use multiple columns to calculate (the lack of) co-resistance: the probability where one of two drugs have a resistant or susceptible result. See *Examples*.
 #' @param minimum The minimum allowed number of available (tested) isolates. Any isolate count lower than `minimum` will return `NA` with a warning. The default number of `30` isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see *Source*.
 #' @param as_percent A [logical] to indicate whether the output must be returned as a hundred fold with % sign (a character). A value of `0.123456` will then be returned as `"12.3%"`.
-#' @param only_all_tested (for combination therapies, i.e. using more than one variable for `...`): a [logical] to indicate that isolates must be tested for all antimicrobials, see section *Combination Therapy* below.
+#' @param only_all_tested (for combination therapies, i.e. using more than one variable for `...`): a [logical] to indicate that isolates must be tested for all antimicrobials, see section *Combination Therapy* below. Use [sir_combine()] to create a new variable for a combination therapy.
 #' @param data A [data.frame] containing columns with class [`sir`] (see [as.sir()]).
 #' @param translate_ab A column name of the [antimicrobials] data set to translate the antibiotic abbreviations to, using [ab_property()].
+#' @param guideline A guideline name, `"EUCAST"` or `"CLSI"` (or any version thereof, e.g. `"CLSI 2025"`), to determine whether the 'I' category is considered susceptible (EUCAST) or resistant (CLSI). The default is the package option [`AMR_guideline`][AMR-options], or `"EUCAST"` if it is not set. For functions that return results per category, i.e., [count_df()], [proportion_df()], [sir_df()], [ggplot_sir()], [geom_sir()], and [labels_sir_count()], this can also be `NULL` or `FALSE` to keep S, I, and R separate. See section *Interpretation of SIR* below.
 #' @inheritParams ab_property
-#' @param combine_SI A [logical] to indicate whether all values of S, SDD, and I must be merged into one, so the output only consists of S+SDD+I vs. R (susceptible vs. resistant) - the default is `TRUE`.
+#' @param combine_SI *(deprecated in favour of `guideline`)* A [logical]. If set, it takes precedence over `guideline`: `TRUE` merges S, SDD, and I into `"SI"` vs. `"R"`, and `FALSE` keeps S, I, and R separate.
 #' @param ab_result Antibiotic results to test against, must be one or more values of "S", "SDD", "I", or "R".
 #' @param confidence_level The confidence level for the returned confidence interval. For the calculation, the number of S or SI isolates, and R isolates are compared with the total number of available isolates with R, S, or I by using [binom.test()], i.e., the Clopper-Pearson method.
 #' @param side The side of the confidence interval to return. The default is `"both"` for a length 2 vector, but can also be (abbreviated as) `"min"`/`"left"`/`"lower"`/`"less"` or `"max"`/`"right"`/`"higher"`/`"greater"`.
@@ -57,45 +58,8 @@
 #' These functions are not meant to count isolates, but to calculate the proportion of resistance/susceptibility. Use the [`count_*()`][AMR::count()] functions to count isolates. The function [susceptibility()] is essentially equal to [count_susceptible()]` / `[count_all()]. *Low counts can influence the outcome - the `proportion_*()` functions may camouflage this, since they only return the proportion (albeit dependent on the `minimum` argument).*
 #'
 #' The function [proportion_df()] takes any variable from `data` that has an [`sir`] class (created with [as.sir()]) and calculates the proportions S, I, and R. It also supports grouped variables. The function [sir_df()] works exactly like [proportion_df()], but adds the number of isolates.
-#' @section Combination Therapy:
-#' When using more than one variable for `...` (= combination therapy), use `only_all_tested` to only count isolates that are tested for all antimicrobials/variables that you test them for. See this example for two antimicrobials, Drug A and Drug B, about how [susceptibility()] works to calculate the %SI:
-#'
-#'
-#' ```
-#' --------------------------------------------------------------------
-#'                     only_all_tested = FALSE  only_all_tested = TRUE
-#'                     -----------------------  -----------------------
-#'  Drug A    Drug B   considered   considered  considered   considered
-#'                     susceptible    tested    susceptible    tested
-#' --------  --------  -----------  ----------  -----------  ----------
-#'  S or I    S or I        X            X           X            X
-#'    R       S or I        X            X           X            X
-#'   <NA>     S or I        X            X           -            -
-#'  S or I      R           X            X           X            X
-#'    R         R           -            X           -            X
-#'   <NA>       R           -            -           -            -
-#'  S or I     <NA>         X            X           -            -
-#'    R        <NA>         -            -           -            -
-#'   <NA>      <NA>         -            -           -            -
-#' --------------------------------------------------------------------
-#' ```
-#'
-#' Please note that, in combination therapies, for `only_all_tested = TRUE` applies that:
-#'
-#' ```
-#'     count_S()    +   count_I()    +   count_R()    = count_all()
-#'   proportion_S() + proportion_I() + proportion_R() = 1
-#' ```
-#'
-#' and that, in combination therapies, for `only_all_tested = FALSE` applies that:
-#'
-#' ```
-#'     count_S()    +   count_I()    +   count_R()    >= count_all()
-#'   proportion_S() + proportion_I() + proportion_R() >= 1
-#' ```
-#'
-#' Using `only_all_tested` has no impact when only using one antibiotic as input.
-#' @source **M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 5th Edition**, 2022, *Clinical and Laboratory Standards Institute (CLSI)*. <https://clsi.org/standards/products/microbiology/documents/m39/>.
+#' @inheritSection sir_combine Combination Therapy
+#' @references **M39 Analysis and Presentation of Cumulative Antimicrobial Susceptibility Test Data, 5th Edition**, 2022, *Clinical and Laboratory Standards Institute (CLSI)*. <https://clsi.org/standards/products/microbiology/documents/m39/>.
 #' @seealso [AMR::count()] to count resistant and susceptible isolates.
 #' @return A [double] or, when `as_percent = TRUE`, a [character].
 #' @rdname proportion
@@ -228,13 +192,23 @@
 resistance <- function(...,
                        minimum = 30,
                        as_percent = FALSE,
-                       only_all_tested = FALSE) {
+                       only_all_tested = FALSE,
+                       guideline = getOption("AMR_guideline", "EUCAST")) {
+  # other arguments for meet_criteria are handled by sir_calc()
+  if (missing(guideline)) {
+    message_guideline_assumed("resistance", txt = ". Use {.code guideline = \"CLSI\"} to consider it resistant.")
+  }
+  guideline <- validate_sir_guideline(guideline, fn = "resistance")
   tryCatch(
     sir_calc(...,
-      ab_result = "R",
+      ab_result = c(
+        "R", "NWT", "NS",
+        if (identical(guideline, "CLSI")) "I"
+      ),
       minimum = minimum,
       as_percent = as_percent,
       only_all_tested = only_all_tested,
+      guideline = guideline,
       only_count = FALSE
     ),
     error = function(e) stop_(gsub("in sir_calc(): ", "", conditionMessage(e), fixed = TRUE), call = -5)
@@ -246,13 +220,23 @@ resistance <- function(...,
 susceptibility <- function(...,
                            minimum = 30,
                            as_percent = FALSE,
-                           only_all_tested = FALSE) {
+                           only_all_tested = FALSE,
+                           guideline = getOption("AMR_guideline", "EUCAST")) {
+  # other arguments for meet_criteria are handled by sir_calc()
+  if (missing(guideline)) {
+    message_guideline_assumed("susceptibility", txt = ". Use {.code guideline = \"CLSI\"} to consider it resistant.")
+  }
+  guideline <- validate_sir_guideline(guideline, fn = "susceptibility")
   tryCatch(
     sir_calc(...,
-      ab_result = c("S", "SDD", "I"),
+      ab_result = c(
+        "S", "SDD", "WT",
+        if (identical(guideline, "EUCAST")) "I"
+      ),
       minimum = minimum,
       as_percent = as_percent,
       only_all_tested = only_all_tested,
+      guideline = guideline,
       only_count = FALSE
     ),
     error = function(e) stop_(gsub("in sir_calc(): ", "", conditionMessage(e), fixed = TRUE), call = -5)
@@ -269,7 +253,7 @@ sir_confidence_interval <- function(...,
                                     confidence_level = 0.95,
                                     side = "both",
                                     collapse = FALSE) {
-  meet_criteria(ab_result, allow_class = c("character", "sir"), has_length = c(1:5), is_in = c("S", "SDD", "I", "R", "NI"))
+  meet_criteria(ab_result, allow_class = c("character", "sir"), has_length = seq_along(VALID_SIR_LEVELS), is_in = VALID_SIR_LEVELS)
   meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_positive_or_zero = TRUE, is_finite = TRUE)
   meet_criteria(as_percent, allow_class = "logical", has_length = 1)
   meet_criteria(only_all_tested, allow_class = "logical", has_length = 1)
@@ -287,7 +271,7 @@ sir_confidence_interval <- function(...,
   )
   n <- tryCatch(
     sir_calc(...,
-      ab_result = c("S", "SDD", "I", "R", "NI"),
+      ab_result = VALID_SIR_LEVELS,
       only_all_tested = only_all_tested,
       only_count = TRUE
     ),
@@ -321,7 +305,7 @@ sir_confidence_interval <- function(...,
   if (n < minimum) {
     warning_("Introducing NA: ",
       ifelse(n == 0, "no", paste("only", n)),
-      " results available for `sir_confidence_interval()` (`minimum` = ", minimum, ").",
+      " results available for {.help [{.fun sir_confidence_interval}](AMR::sir_confidence_interval)} (whilst {.arg minimum = ", minimum, "}).",
       call = FALSE
     )
     if (is.character(out)) {
@@ -341,7 +325,7 @@ proportion_R <- function(...,
                          only_all_tested = FALSE) {
   tryCatch(
     sir_calc(...,
-      ab_result = "R",
+      ab_result = c("R", "NWT", "NS"),
       minimum = minimum,
       as_percent = as_percent,
       only_all_tested = only_all_tested,
@@ -359,7 +343,7 @@ proportion_IR <- function(...,
                           only_all_tested = FALSE) {
   tryCatch(
     sir_calc(...,
-      ab_result = c("I", "SDD", "R"),
+      ab_result = c("I", "SDD", "R", "NWT", "NS"),
       minimum = minimum,
       as_percent = as_percent,
       only_all_tested = only_all_tested,
@@ -395,7 +379,7 @@ proportion_SI <- function(...,
                           only_all_tested = FALSE) {
   tryCatch(
     sir_calc(...,
-      ab_result = c("S", "I", "SDD"),
+      ab_result = c("S", "I", "SDD", "WT"),
       minimum = minimum,
       as_percent = as_percent,
       only_all_tested = only_all_tested,
@@ -413,7 +397,7 @@ proportion_S <- function(...,
                          only_all_tested = FALSE) {
   tryCatch(
     sir_calc(...,
-      ab_result = "S",
+      ab_result = c("S", "WT"),
       minimum = minimum,
       as_percent = as_percent,
       only_all_tested = only_all_tested,
@@ -430,8 +414,10 @@ proportion_df <- function(data,
                           language = get_AMR_locale(),
                           minimum = 30,
                           as_percent = FALSE,
-                          combine_SI = TRUE,
-                          confidence_level = 0.95) {
+                          combine_SI,
+                          confidence_level = 0.95,
+                          guideline = getOption("AMR_guideline", "EUCAST")) {
+  guideline <- get_aggregation_guideline(guideline, missing(guideline), combine_SI, missing(combine_SI), fn = "proportion_df")
   tryCatch(
     sir_calc_df(
       type = "proportion",
@@ -440,8 +426,8 @@ proportion_df <- function(data,
       language = language,
       minimum = minimum,
       as_percent = as_percent,
-      combine_SI = combine_SI,
-      confidence_level = confidence_level
+      confidence_level = confidence_level,
+      guideline = guideline
     ),
     error = function(e) stop_(gsub("in sir_calc_df(): ", "", conditionMessage(e), fixed = TRUE), call = -5)
   )

@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -32,7 +32,7 @@
 #' Use these functions to return a specific property of an antibiotic from the [antimicrobials] data set. All input values will be evaluated internally with [as.ab()].
 #' @param x Any (vector of) text that can be coerced to a valid antibiotic drug code with [as.ab()].
 #' @param tolower A [logical] to indicate whether the first [character] of every output should be transformed to a lower case [character]. This will lead to e.g. "polymyxin B" and not "polymyxin b".
-#' @param property One of the column names of one of the [antimicrobials] data set: `vector_or(colnames(antimicrobials), sort = FALSE)`.
+#' @param property One of the column names of one of the [antimicrobials] data set: `r vector_or(colnames(antimicrobials), documentation = TRUE, sort = FALSE)`.
 #' @param language Language of the returned text - the default is the current system language (see [get_AMR_locale()]) and can also be set with the package option [`AMR_locale`][AMR-options]. Use `language = NULL` or `language = ""` to prevent translation.
 #' @param administration Way of administration, either `"oral"` or `"iv"`.
 #' @param open Browse the URL using [utils::browseURL()].
@@ -65,6 +65,7 @@
 #' ab_synonyms("AMX")
 #' ab_tradenames("AMX")
 #' ab_group("AMX")
+#' ab_group("AMX", all_groups = TRUE) # most specific to most general
 #' ab_atc_group1("AMX")
 #' ab_atc_group2("AMX")
 #' ab_url("AMX")
@@ -163,11 +164,34 @@ ab_tradenames <- function(x, ...) {
 }
 
 #' @rdname ab_property
+#' @param all_groups A [logical] to indicate whether all antimicrobial groups must be return as a vector for each input value. For example, an antibiotic in the "aminopenicillins" group, is also in the "penicillins" and "beta-lactams" groups. Setting `all_groups = TRUE` would return all three for such an antibiotic, while `all_groups = FALSE` (default) only returns the most specific group name.
 #' @export
-ab_group <- function(x, language = get_AMR_locale(), ...) {
+ab_group <- function(x, language = get_AMR_locale(), all_groups = FALSE, ...) {
   meet_criteria(x, allow_NA = TRUE)
   language <- validate_language(language)
-  translate_into_language(ab_validate(x = x, property = "group", ...), language = language, only_affect_ab_names = TRUE)
+  meet_criteria(all_groups, allow_class = "logical", has_length = 1)
+
+  grps <- ab_validate(x = x, property = "group", ...)
+  for (i in seq_along(grps)) {
+    if (is.null(grps[[i]]) || all(is.na(grps[[i]]))) {
+      grps[[i]] <- NA_character_
+    }
+    if (all_groups == FALSE) {
+      # take the first match based on ABX_PRIORITY_LIST
+      grps[[i]] <- grps[[i]][1]
+    }
+  }
+  if (language != "en" && length(grps) > 0) {
+    # translate all groups at once
+    grps_translated <- translate_into_language(unlist(grps, use.names = FALSE), language = language, only_affect_ab_names = TRUE)
+    grps[] <- split(grps_translated, factor(rep(seq_along(grps), lengths(grps)), levels = seq_along(grps)))
+  }
+  names(grps) <- x
+  if (length(grps) == 1 || all_groups == FALSE) {
+    unname(unlist(grps))
+  } else {
+    grps
+  }
 }
 
 #' @rdname ab_property
@@ -243,7 +267,7 @@ ab_ddd <- function(x, administration = "oral", ...) {
 
   if (any(ab_name(x, language = NULL) %like% "/" & is.na(out))) {
     warning_(
-      "in `ab_ddd()`: DDDs of some combined products are available for different dose combinations and not (yet) part of the AMR package.",
+      "in {.help [{.fun ab_ddd}](AMR::ab_ddd)}: DDDs of some combined products are available for different dose combinations and not (yet) part of the AMR package.",
       "Please refer to the WHOCC website:\n",
       "atcddd.fhi.no/ddd/list_of_ddds_combined_products/"
     )
@@ -263,7 +287,7 @@ ab_ddd_units <- function(x, administration = "oral", ...) {
 
   if (any(ab_name(x, language = NULL) %like% "/" & is.na(out))) {
     warning_(
-      "in `ab_ddd_units()`: DDDs of some combined products are available for different dose combinations and not (yet) part of the AMR package.",
+      "in {.help [{.fun ab_ddd_units}](AMR::ab_ddd_units)}: DDDs of some combined products are available for different dose combinations and not (yet) part of the AMR package.",
       "Please refer to the WHOCC website:\n",
       "atcddd.fhi.no/ddd/list_of_ddds_combined_products/"
     )
@@ -282,7 +306,7 @@ ab_info <- function(x, language = get_AMR_locale(), ...) {
     ab = as.character(x),
     cid = ab_cid(x),
     name = ab_name(x, language = language),
-    group = ab_group(x, language = language),
+    group = ab_group(x, language = language, all_groups = TRUE),
     atc = ab_atc(x),
     atc_group1 = ab_atc_group1(x, language = language),
     atc_group2 = ab_atc_group2(x, language = language),
@@ -319,12 +343,12 @@ ab_url <- function(x, open = FALSE, ...) {
 
   NAs <- ab_name(ab, tolower = TRUE, language = NULL)[!is.na(ab) & is.na(atcs)]
   if (length(NAs) > 0) {
-    warning_("in `ab_url()`: no ATC code available for ", vector_and(NAs, quotes = FALSE), ".")
+    warning_("in {.fun ab_url}: no ATC code available for ", vector_and(NAs, quotes = FALSE), ".")
   }
 
   if (open == TRUE) {
     if (length(u) > 1 && !is.na(u[1L])) {
-      warning_("in `ab_url()`: only the first URL will be opened, as `browseURL()` only suports one string.")
+      warning_("in {.fun ab_url}: only the first URL will be opened, as {.fun browseURL} only suports one string.")
     }
     if (!is.na(u[1L])) {
       utils::browseURL(u[1L])
@@ -339,7 +363,7 @@ ab_property <- function(x, property = "name", language = get_AMR_locale(), ...) 
   meet_criteria(x, allow_NA = TRUE)
   meet_criteria(property, is_in = colnames(AMR::antimicrobials), has_length = 1)
   language <- validate_language(language)
-  translate_into_language(ab_validate(x = x, property = property, ...), language = language)
+  translate_into_language(ab_validate(x = x, property = property, ...), language = language, only_affect_ab_names = TRUE)
 }
 
 #' @rdname ab_property
@@ -375,7 +399,7 @@ set_ab_names <- function(data, ..., property = "name", language = get_AMR_locale
     }
     vars <- get_column_abx(df, info = FALSE, only_sir_columns = FALSE, sort = FALSE, fn = "set_ab_names")
     if (length(vars) == 0) {
-      message_("No columns with antibiotic results found for `set_ab_names()`, leaving names unchanged.")
+      message_("No columns with antibiotic results found for {.fun set_ab_names}, leaving names unchanged.")
       return(data)
     }
   } else {
@@ -402,7 +426,7 @@ set_ab_names <- function(data, ..., property = "name", language = get_AMR_locale
   )
   if (any(x %in% c("", NA))) {
     warning_(
-      "in `set_ab_names()`: no ", property, " found for column(s): ",
+      "in {.help [{.fun set_ab_names}](AMR::set_ab_names)}: no ", property, " found for column(s): ",
       vector_and(vars[x %in% c("", NA)], sort = FALSE)
     )
     x[x %in% c("", NA)] <- vars[x %in% c("", NA)]

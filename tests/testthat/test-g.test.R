@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -45,6 +45,10 @@ test_that("test-g.test.R", {
     0.017873,
     tolerance = 0.0001
   )
+  # degrees of freedom are returned as the standard 'htest' component, so print() shows them
+  expect_identical(g.test(x)$parameter, c(df = 1))
+  expect_identical(names(g.test(matrix(c(762, 327, 468, 484, 239, 477), nrow = 2))$parameter), "df")
+  expect_equal(unname(g.test(matrix(c(762, 327, 468, 484, 239, 477), nrow = 2))$parameter), 2)
 
   expect_error(g.test(0))
   expect_error(g.test(c(0, 1), 0))

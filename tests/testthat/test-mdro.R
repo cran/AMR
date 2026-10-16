@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -296,4 +296,71 @@ test_that("test-mdro.R", {
     expect_output(x <- mdro(example_isolates %>% group_by(ward), info = TRUE, pct_required_classes = 0))
     expect_output(x <- mdro(example_isolates %>% group_by(ward), guideline = custom, info = TRUE))
   }
+
+  # drug+inhibitor inference for missing base drug columns (issue #209) -------
+  # Resistance in drug+inhibitor implies resistance in the base drug.
+  # MRGN guideline is used because it explicitly requires PIP=R (not PIP OR TZP)
+  # for Pseudomonas aeruginosa 4MRGN, making the proxy effect directly testable.
+  pseud_no_pip <- data.frame(
+    mo = as.mo("Pseudomonas aeruginosa"),
+    TZP = as.sir("R"), # piperacillin/tazobactam; no PIP column
+    CAZ = as.sir("R"),
+    IPM = as.sir("R"),
+    MEM = as.sir("R"),
+    CIP = as.sir("R"),
+    stringsAsFactors = FALSE
+  )
+  # Inference message goes to message() / stderr, not stdout
+  # -> must use expect_message(), NOT expect_output()
+  expect_message(
+    suppressWarnings(mdro(pseud_no_pip, guideline = "mrgn", info = TRUE)),
+    "Inferring resistance"
+  )
+  inferred <- suppressWarnings(mdro(pseud_no_pip, guideline = "mrgn", info = FALSE))
+  not_inferred <- suppressWarnings(mdro(pseud_no_pip, guideline = "mrgn", info = FALSE, infer_from_combinations = FALSE))
+  expect_equal(as.character(inferred), "4MRGN")
+  expect_equal(as.character(not_inferred), "Negative")
+
+  # Susceptibility in combo does NOT propagate: proxy = NA, not S
+  # -> 4MRGN criteria no longer met -> lower level than when TZP=R
+  pseud_tzp_s <- pseud_no_pip
+  pseud_tzp_s$TZP <- as.sir("S")
+  result_tzp_s <- suppressMessages(suppressWarnings(
+    mdro(pseud_tzp_s, guideline = "mrgn", info = FALSE)
+  ))
+  expect_true(as.integer(result_tzp_s) < as.integer(inferred))
+
+  # Multiple combos for the same base drug: AMX can come from AMC (amoxi/clavulanic acid) and AXS (amoxi/sulbactam)
+  ente_no_amx <- data.frame(
+    mo = as.mo("Enterococcus faecium"),
+    AMC = as.sir("R"), # amoxicillin/clavulanic acid
+    AXS = as.sir("R"), # amoxicillin/sulbactam
+    VAN = as.sir("R"),
+    TEC = as.sir("R"),
+    LNZ = as.sir("R"),
+    DAP = as.sir("R"),
+    stringsAsFactors = FALSE
+  )
+  # Should have multiple columns in the verbose explanation
+  out <- mdro(ente_no_amx, guideline = "EUCAST 3.3", info = FALSE, verbose = TRUE)
+  expect_identical(
+    out$all_nonsusceptible_columns,
+    "AMC, AMX (inferred from AMC/AXS), AXS, DAP, LNZ, TEC, VAN"
+  )
+})
+
+test_that("test-mdro.R - PDR does not depend on the row position", {
+  # a pandrug-resistant S. aureus must be PDR regardless of the rows before it, which other microorganisms take
+  abx <- c("GEN", "RIF", "CPT", "OXA", "FOX", "CIP", "MFX", "SXT", "FUS", "VAN", "TEC", "TLV", "TGC", "CLI", "DAP", "ERY", "LNZ", "CHL", "FOS", "QDA", "TCY", "DOX", "MNO")
+  pdr_first <- data.frame(mo = as.mo(c("S. aureus", "E. coli", "E. coli", "E. coli")))
+  pdr_last <- data.frame(mo = as.mo(c("E. coli", "E. coli", "E. coli", "S. aureus")))
+  for (ab in abx) {
+    pdr_first[[ab]] <- as.sir(c("R", "S", "S", "S"))
+    pdr_last[[ab]] <- as.sir(c("S", "S", "S", "R"))
+  }
+  out_first <- suppressMessages(suppressWarnings(mdro(pdr_first, guideline = "CMI 2012", info = FALSE)))
+  out_last <- suppressMessages(suppressWarnings(mdro(pdr_last, guideline = "CMI 2012", info = FALSE)))
+  expect_identical(as.character(out_first[1]), "Pandrug-resistant (PDR)")
+  expect_identical(as.character(out_last[4]), "Pandrug-resistant (PDR)")
+  expect_identical(as.character(out_first[2:4]), as.character(out_last[1:3]))
 })

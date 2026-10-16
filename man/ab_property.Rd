@@ -27,7 +27,7 @@ ab_synonyms(x, ...)
 
 ab_tradenames(x, ...)
 
-ab_group(x, language = get_AMR_locale(), ...)
+ab_group(x, language = get_AMR_locale(), all_groups = FALSE, ...)
 
 ab_atc(x, only_first = FALSE, ...)
 
@@ -47,8 +47,13 @@ ab_url(x, open = FALSE, ...)
 
 ab_property(x, property = "name", language = get_AMR_locale(), ...)
 
-set_ab_names(data, ..., property = "name", language = get_AMR_locale(),
-  snake_case = NULL)
+set_ab_names(
+  data,
+  ...,
+  property = "name",
+  language = get_AMR_locale(),
+  snake_case = NULL
+)
 }
 \arguments{
 \item{x}{Any (vector of) text that can be coerced to a valid antibiotic drug code with \code{\link[=as.ab]{as.ab()}}.}
@@ -59,13 +64,15 @@ set_ab_names(data, ..., property = "name", language = get_AMR_locale(),
 
 \item{...}{In case of \code{\link[=set_ab_names]{set_ab_names()}} and \code{data} is a \link{data.frame}: columns to select (supports tidy selection such as \code{column1:column4}), otherwise other arguments passed on to \code{\link[=as.ab]{as.ab()}}.}
 
+\item{all_groups}{A \link{logical} to indicate whether all antimicrobial groups must be return as a vector for each input value. For example, an antibiotic in the "aminopenicillins" group, is also in the "penicillins" and "beta-lactams" groups. Setting \code{all_groups = TRUE} would return all three for such an antibiotic, while \code{all_groups = FALSE} (default) only returns the most specific group name.}
+
 \item{only_first}{A \link{logical} to indicate whether only the first ATC code must be returned, with giving preference to J0-codes (i.e., the antimicrobial drug group).}
 
 \item{administration}{Way of administration, either \code{"oral"} or \code{"iv"}.}
 
 \item{open}{Browse the URL using \code{\link[utils:browseURL]{utils::browseURL()}}.}
 
-\item{property}{One of the column names of one of the \link{antimicrobials} data set: \code{vector_or(colnames(antimicrobials), sort = FALSE)}.}
+\item{property}{One of the column names of one of the \link{antimicrobials} data set: \code{"ab"}, \code{"cid"}, \code{"name"}, \code{"group"}, \code{"atc"}, \code{"atc_group1"}, \code{"atc_group2"}, \code{"abbreviations"}, \code{"synonyms"}, \code{"oral_ddd"}, \code{"oral_units"}, \code{"iv_ddd"}, \code{"iv_units"}, or \code{"loinc"}.}
 
 \item{data}{A \link{data.frame} of which the columns need to be renamed, or a \link{character} vector of column names.}
 
@@ -94,7 +101,7 @@ The function \code{\link[=set_ab_names]{set_ab_names()}} is a special column ren
 
 World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://atcddd.fhi.no/atc_ddd_index/}
 
-European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
+European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/index_en.htm}
 }
 
 \section{Download Our Reference Data}{
@@ -114,6 +121,7 @@ ab_cid("AMX")
 ab_synonyms("AMX")
 ab_tradenames("AMX")
 ab_group("AMX")
+ab_group("AMX", all_groups = TRUE) # most specific to most general
 ab_atc_group1("AMX")
 ab_atc_group2("AMX")
 ab_url("AMX")

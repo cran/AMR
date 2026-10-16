@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -159,13 +159,13 @@ key_antimicrobials <- function(x = NULL,
     col_mo <- search_type_in_df(x = x, type = "mo", info = FALSE)
   }
   if (is.null(col_mo)) {
-    warning_("in `key_antimicrobials()`: no column found for `col_mo`, ignoring antibiotics set in `gram_negative` and `gram_positive`, and antimycotics set in `antifungal`")
+    warning_("in {.fun key_antimicrobials}: no column found for {.arg col_mo}, ignoring antibiotics set in {.arg gram_negative} and {.arg gram_positive}, and antimycotics set in {.arg antifungal}")
     gramstain <- NA_character_
-    kingdom <- NA_character_
+    domain <- NA_character_
   } else {
     x.mo <- as.mo(x[, col_mo, drop = TRUE])
     gramstain <- mo_gramstain(x.mo, language = NULL)
-    kingdom <- mo_kingdom(x.mo, language = NULL)
+    domain <- mo_domain(x.mo, language = NULL)
   }
 
   AMR_string <- function(x, values, name, filter, cols = cols) {
@@ -182,12 +182,12 @@ key_antimicrobials <- function(x = NULL,
       any(filter, na.rm = TRUE) &&
       message_not_thrown_before("key_antimicrobials", name)) {
       warning_(
-        "in `key_antimicrobials()`: ",
+        "in {.help [{.fun key_antimicrobials}](AMR::key_antimicrobials)}: ",
         ifelse(values_new_length == 0,
           "No columns available ",
           paste0("Only using ", values_new_length, " out of ", values_old_length, " defined columns ")
         ),
-        "as key antimicrobials for ", name, "s. See `?key_antimicrobials`."
+        "as key antimicrobials for ", name, "s. See {.help [{.fun key_antimicrobials}](AMR::key_antimicrobials)}."
       )
     }
 
@@ -219,11 +219,11 @@ key_antimicrobials <- function(x = NULL,
     cols = cols
   )
 
-  key_ab[which(kingdom == "Fungi")] <- AMR_string(
+  key_ab[which(domain == "Fungi")] <- AMR_string(
     x = x,
     values = antifungal,
     name = "antifungal",
-    filter = kingdom == "Fungi",
+    filter = domain == "Fungi",
     cols = cols
   )
 
@@ -237,7 +237,7 @@ key_antimicrobials <- function(x = NULL,
   )
 
   if (length(unique(key_ab)) == 1) {
-    warning_("in `key_antimicrobials()`: no distinct key antibiotics determined.")
+    warning_("in {.fun key_antimicrobials}: no distinct key antibiotics determined.")
   }
 
   key_ab
@@ -282,6 +282,9 @@ generate_antimicrobials_string <- function(df) {
           function(x) {
             x <- toupper(as.character(x))
             x[x == "SDD"] <- "I"
+            x[x == "WT"] <- "S"
+            x[x == "NWT"] <- "R"
+            x[x == "NS"] <- "R"
             # ignore "NI" here, no use for determining first isolates
             x[!x %in% c("S", "I", "R")] <- "."
             paste(x)
@@ -307,14 +310,12 @@ antimicrobials_equal <- function(y,
   meet_criteria(type, allow_class = "character", has_length = 1, is_in = c("points", "keyantimicrobials"))
   meet_criteria(ignore_I, allow_class = "logical", has_length = 1)
   meet_criteria(points_threshold, allow_class = c("numeric", "integer"), has_length = 1, is_positive = TRUE, is_finite = TRUE)
-  stop_ifnot(length(y) == length(z), "length of `y` and `z` must be equal")
+  stop_ifnot(length(y) == length(z), "length of {.arg y} and {.arg z} must be equal")
 
   key2sir <- function(val) {
     val <- strsplit(val, "", fixed = TRUE)[[1L]]
     val.int <- rep(NA_real_, length(val))
-    val.int[val == "S"] <- 1
-    val.int[val %in% c("I", "SDD")] <- 2
-    val.int[val == "R"] <- 3
+    val.int[val %in% VALID_SIR_LEVELS] <- as.double(as.sir(val[val %in% VALID_SIR_LEVELS]))
     val.int
   }
   # only run on uniques

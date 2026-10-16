@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -30,6 +30,15 @@
 test_that("test-_deprecated.R", {
   skip_on_cran()
 
-  expect_warning(example_isolates[, ab_class("mycobact")])
-  expect_warning(example_isolates[, ab_selector(name %like% "trim")])
+  if (getRversion() > "4.0.0") {
+    expect_warning(example_isolates[, ab_class("mycobact")])
+    expect_warning(example_isolates[, ab_selector(name %like% "trim")])
+
+    # deprecated custom_interpretive_rules() still works and emits a warning
+    expect_warning(
+      x_old <- custom_eucast_rules(AMC == "R" ~ aminopenicillins == "R"),
+      "custom_eucast_rules"
+    )
+    expect_inherits(x_old, "custom_interpretive_rules")
+  }
 })

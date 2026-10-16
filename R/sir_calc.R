@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -35,13 +35,63 @@ dots2vars <- function(...) {
   paste0(dots[dots != "."], collapse = "+")
 }
 
+validate_sir_guideline <- function(guideline, fn, allow_none = FALSE) {
+  # returns "EUCAST" or "CLSI" to consider 'I' susceptible or resistant, or NULL to not merge 'I' at all, see the section 'Interpretation of SIR' in ?as.sir
+  if (is.null(guideline) || isFALSE(guideline)) {
+    stop_ifnot(
+      allow_none,
+      "{.arg guideline} must be {.val EUCAST} or {.val CLSI} in {.help [{.fun ", fn, "}](AMR::", fn, ")}, since a single proportion or count requires the 'I' category to be considered either susceptible (EUCAST) or resistant (CLSI). See the section 'Interpretation of SIR' in {.help [{.fun as.sir}](AMR::as.sir)}.",
+      call = FALSE
+    )
+    return(NULL)
+  }
+  stop_ifnot(
+    is.character(guideline) && length(guideline) == 1 && !is.na(guideline) && (guideline %like% "EUCAST" || guideline %like% "CLSI"),
+    "{.arg guideline} must be {.val EUCAST} or {.val CLSI}", ifelse(allow_none, ", or {.code NULL} to keep S, I, and R separate,", ""), " in {.help [{.fun ", fn, "}](AMR::", fn, ")}. See the section 'Interpretation of SIR' in {.help [{.fun as.sir}](AMR::as.sir)}.",
+    call = FALSE
+  )
+  if (guideline %like% "EUCAST") "EUCAST" else "CLSI"
+}
+
+message_guideline_assumed <- function(fn, txt) {
+  # informs once per session that EUCAST is assumed, only to be called when the `guideline` argument is missing
+  # - not when the AMR_guideline option is set, since that is a deliberate choice
+  # - not when knitting R Markdown or Quarto documents, so it will not end up in reports
+  if (is.null(getOption("AMR_guideline")) && !isTRUE(getOption("knitr.in.progress")) && message_not_thrown_before(fn, "guideline_assumed", entire_session = TRUE)) {
+    message_(
+      "{.help [{.fun ", fn, "}](AMR::", fn, ")} assumes the EUCAST guideline and thus considers the 'I' category susceptible", txt,
+      " Set the {.arg guideline} argument, or set the {.code AMR_guideline} option to change the default (see {.topic [AMR-options](AMR::AMR-options)}). This message is shown once per session."
+    )
+  }
+}
+
+get_aggregation_guideline <- function(guideline, guideline_missing, combine_SI, combine_SI_missing, fn) {
+  # for functions that return results per category: returns "EUCAST" ("SI" vs. "R"), "CLSI" ("S" vs. "IR"), or NULL (S, I, and R separately)
+  if (!combine_SI_missing) {
+    # deprecated argument, if set it must be followed literally, regardless of the guideline
+    meet_criteria(combine_SI, allow_class = "logical", has_length = 1, .call_depth = 1)
+    deprecation_warning("combine_SI", "guideline", fn = fn, is_argument = TRUE, extra_msg = "As long as `combine_SI` is set, it takes precedence over `guideline`. Use `guideline = \"EUCAST\"` to merge 'I' with S, `guideline = \"CLSI\"` to merge 'I' with R, or `guideline = NULL` to keep S, I, and R separate.")
+    if (isTRUE(combine_SI)) {
+      return("EUCAST")
+    } else {
+      return(NULL)
+    }
+  }
+  guideline <- validate_sir_guideline(guideline, fn = fn, allow_none = TRUE)
+  if (isTRUE(guideline_missing) && !is.null(guideline)) {
+    message_guideline_assumed(fn, txt = paste0(" (S+SDD+I vs. R). Use {.code guideline = \"CLSI\"} for S+SDD vs. I+R, or {.code guideline = NULL} to keep S, I, and R separate."))
+  }
+  guideline
+}
+
 sir_calc <- function(...,
                      ab_result,
                      minimum = 0,
                      as_percent = FALSE,
                      only_all_tested = FALSE,
-                     only_count = FALSE) {
-  meet_criteria(ab_result, allow_class = c("character", "numeric", "integer"), has_length = c(1:5))
+                     only_count = FALSE,
+                     guideline = getOption("AMR_guideline", "EUCAST")) {
+  meet_criteria(ab_result, allow_class = c("character", "sir"), has_length = seq_along(VALID_SIR_LEVELS), is_in = VALID_SIR_LEVELS)
   meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_positive_or_zero = TRUE, is_finite = TRUE)
   meet_criteria(as_percent, allow_class = "logical", has_length = 1)
   meet_criteria(only_all_tested, allow_class = "logical", has_length = 1)
@@ -60,11 +110,6 @@ sir_calc <- function(...,
   dots <- eval(substitute(alist(...)))
   stop_if(length(dots) == 0, "no variables selected", call = -2)
 
-  stop_if("also_single_tested" %in% names(dots),
-    "`also_single_tested` was replaced by `only_all_tested`.\n",
-    "Please read Details in the help page (`?proportion`) as this may have a considerable impact on your analysis.",
-    call = -2
-  )
   ndots <- length(dots)
 
   if (is.data.frame(dots_df)) {
@@ -117,6 +162,8 @@ sir_calc <- function(...,
   print_warning <- FALSE
 
   ab_result <- as.sir(ab_result)
+  denominator_vals <- levels(ab_result)
+  denominator_vals <- denominator_vals[denominator_vals != "NI"]
 
   if (is.data.frame(x)) {
     sir_integrity_check <- character(0)
@@ -132,46 +179,38 @@ sir_calc <- function(...,
       # this will give a warning for invalid results, of all input columns (so only 1 warning)
       sir_integrity_check <- as.sir(sir_integrity_check)
     }
+    if (ncol(x) == 1) {
+      x <- x[, 1, drop = TRUE]
+    } else if (isTRUE(only_all_tested)) {
+      # combination therapy of isolates tested for all antimicrobials, see ?sir_combine
+      x <- sir_combine_engine(as.list(x), S_values = get_susceptible_values(guideline), only_all_tested = TRUE)
+    }
+  } else if (!is.sir(x)) {
+    x <- as.sir(x)
+    print_warning <- TRUE
+  }
 
-    x_transposed <- as.list(as.data.frame(t(x), stringsAsFactors = FALSE))
-    if (isTRUE(only_all_tested)) {
-      # no NAs in any column
-      y <- apply(
-        X = as.data.frame(lapply(x, as.double), stringsAsFactors = FALSE),
-        MARGIN = 1,
-        FUN = min
-      )
-      if ("SDD" %in% ab_result && "SDD" %in% y && message_not_thrown_before("sir_calc", only_count, ab_result, entire_session = TRUE)) {
-        message_("Note that `", ifelse(only_count, "count", "proportion"), "_", ifelse("S" %in% ab_result, "S", ""), "I", ifelse("R" %in% ab_result, "R", ""), "()` will also include dose-dependent susceptibility, 'SDD'. This note will be shown once for this session.", as_note = FALSE)
-      }
-      numerator <- sum(!is.na(y) & y %in% as.double(ab_result), na.rm = TRUE)
-      denominator <- sum(vapply(FUN.VALUE = logical(1), x_transposed, function(y) !(anyNA(y))))
-    } else {
-      # may contain NAs in any column
-      other_values <- setdiff(c(NA, levels(ab_result)), ab_result)
-      if ("SDD" %in% ab_result && "SDD" %in% unlist(x_transposed) && message_not_thrown_before("sir_calc", only_count, ab_result, entire_session = TRUE)) {
-        message_("Note that `", ifelse(only_count, "count", "proportion"), "_", ifelse("S" %in% ab_result, "S", ""), "I", ifelse("R" %in% ab_result, "R", ""), "()` will also include dose-dependent susceptibility, 'SDD'. This note will be shown once for this session.", as_note = FALSE)
-      }
-      numerator <- sum(vapply(FUN.VALUE = logical(1), x_transposed, function(y) any(y %in% ab_result, na.rm = TRUE)))
-      denominator <- sum(vapply(FUN.VALUE = logical(1), x_transposed, function(y) !(all(y %in% other_values) & anyNA(y))))
-    }
+  if ("SDD" %in% ab_result && "SDD" %in% unlist(lapply(as.list(x), as.character)) && message_not_thrown_before("sir_calc", only_count, ab_result, entire_session = TRUE)) {
+    message_("Note that {.fun ", ifelse(only_count, "count", "proportion"), "_", ifelse("S" %in% ab_result, "S", ""), "I", ifelse("R" %in% ab_result, "R", ""), "} will also include dose-dependent susceptibility, {.val SDD}. This note will be shown once for this session.", as_note = FALSE)
+  }
+  if (is.data.frame(x)) {
+    # multiple antimicrobials with only_all_tested = FALSE: an isolate counts if any antimicrobial has a result in `ab_result`, and is considered tested if it has such a result or was tested for all antimicrobials, see ?sir_combine
+    # this equals sir_combine(method = "most_susceptible") for susceptibility and sir_combine(method = "most_resistant") for resistance
+    # 'NI' is a missing result
+    numerator_vals <- intersect(as.character(ab_result), denominator_vals)
+    is_counted <- Reduce(`|`, lapply(x, function(col) as.character(col) %in% numerator_vals))
+    is_complete <- Reduce(`&`, lapply(x, function(col) as.character(col) %in% denominator_vals))
+    numerator <- sum(is_counted)
+    denominator <- sum(is_counted | is_complete)
   } else {
-    # x is not a data.frame
-    if (!is.sir(x)) {
-      x <- as.sir(x)
-      print_warning <- TRUE
-    }
-    if ("SDD" %in% ab_result && "SDD" %in% x && message_not_thrown_before("sir_calc", only_count, ab_result, entire_session = TRUE)) {
-      message_("Note that `", ifelse(only_count, "count", "proportion"), "_", ifelse("S" %in% ab_result, "S", ""), "I", ifelse("R" %in% ab_result, "R", ""), "()` will also include dose-dependent susceptibility, 'SDD'. This note will be shown once for this session.", as_note = FALSE)
-    }
     numerator <- sum(x %in% ab_result, na.rm = TRUE)
-    denominator <- sum(x %in% levels(ab_result), na.rm = TRUE)
+    denominator <- sum(x %in% denominator_vals, na.rm = TRUE)
   }
 
   if (print_warning == TRUE) {
     if (message_not_thrown_before("sir_calc")) {
-      warning_("Increase speed by transforming to class 'sir' on beforehand:\n",
-        "  your_data %>% mutate_if(is_sir_eligible, as.sir)",
+      warning_("Increase speed by transforming to class {.cls sir} on beforehand:\n",
+        highlight_code("  your_data %>% mutate_if(is_sir_eligible, as.sir)"),
         call = FALSE
       )
     }
@@ -207,7 +246,7 @@ sir_calc <- function(...,
       ifelse(denominator == 0, "no", paste("only", denominator)),
       " results available",
       data_vars,
-      " (`minimum` = ", minimum, ").",
+      " (whilst {.arg minimum = ", minimum, "}).",
       call = FALSE
     )
     fraction <- NA_real_
@@ -229,8 +268,8 @@ sir_calc_df <- function(type, # "proportion", "count" or "both"
                         language = get_AMR_locale(),
                         minimum = 30,
                         as_percent = FALSE,
-                        combine_SI = TRUE,
-                        confidence_level = 0.95) {
+                        confidence_level = 0.95,
+                        guideline = "EUCAST") { # must be "EUCAST", "CLSI", or NULL, see get_aggregation_guideline()
   meet_criteria(type, is_in = c("proportion", "count", "both"), has_length = 1)
   meet_criteria(data, allow_class = "data.frame")
   data <- ascertain_sir_classes(data, "data")
@@ -238,8 +277,11 @@ sir_calc_df <- function(type, # "proportion", "count" or "both"
   language <- validate_language(language)
   meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_positive_or_zero = TRUE, is_finite = TRUE)
   meet_criteria(as_percent, allow_class = "logical", has_length = 1)
-  meet_criteria(combine_SI, allow_class = "logical", has_length = 1)
   meet_criteria(confidence_level, allow_class = "numeric", has_length = 1)
+  meet_criteria(guideline, allow_class = "character", has_length = 1, is_in = c("EUCAST", "CLSI"), allow_NULL = TRUE)
+  # with EUCAST, 'I' is merged with S into 'SI', with CLSI, 'I' is merged with R into 'IR', and with NULL, 'I' is not merged
+  combine_SI <- !is.null(guideline)
+  combined_levels <- if (identical(guideline, "CLSI")) c("S", "IR") else c("SI", "R")
 
   translate_ab <- get_translate_ab(translate_ab)
 
@@ -259,13 +301,15 @@ sir_calc_df <- function(type, # "proportion", "count" or "both"
   for (i in seq_len(ncol(data))) {
     # transform SIR columns
     if (is.sir(data[, i, drop = TRUE])) {
-      data[, i] <- as.character(data[, i, drop = TRUE])
-      if (isTRUE(combine_SI)) {
-        if ("SDD" %in% data[, i, drop = TRUE] && message_not_thrown_before("sir_calc_df", combine_SI, entire_session = TRUE)) {
-          message_("Note that `sir_calc_df()` will also count dose-dependent susceptibility, 'SDD', as 'SI' when `combine_SI = TRUE`. This note will be shown once for this session.", as_note = FALSE)
-        }
-        data[, i] <- gsub("(I|S|SDD)", "SI", data[, i, drop = TRUE])
+      data[, i] <- as.character(as.sir(data[, i, drop = TRUE]))
+      data[which(data[, i, drop = TRUE] %in% c("S", "SDD", "WT")), i] <- "S"
+      data[which(data[, i, drop = TRUE] %in% c("R", "NWT", "NS")), i] <- "R"
+      if (isTRUE(combine_SI) && identical(guideline, "CLSI")) {
+        data[which(data[, i, drop = TRUE] %in% c("I", "R")), i] <- "IR"
+      } else if (isTRUE(combine_SI)) {
+        data[which(data[, i, drop = TRUE] %in% c("I", "S")), i] <- "SI"
       }
+      data[which(!data[, i, drop = TRUE] %in% c("S", "SI", "I", "IR", "R")), i] <- NA_character_
     }
   }
 
@@ -287,7 +331,7 @@ sir_calc_df <- function(type, # "proportion", "count" or "both"
     for (i in seq_len(ncol(.data))) {
       values <- .data[, i, drop = TRUE]
       if (isTRUE(combine_SI)) {
-        values <- factor(values, levels = c("SI", "R", "NI"), ordered = TRUE)
+        values <- factor(values, levels = c(combined_levels, "NI"), ordered = TRUE)
       } else {
         values <- factor(values, levels = c("S", "SDD", "I", "R", "NI"), ordered = TRUE)
       }
@@ -362,7 +406,7 @@ sir_calc_df <- function(type, # "proportion", "count" or "both"
 
   # apply factors for right sorting in interpretation
   if (isTRUE(combine_SI)) {
-    out$interpretation <- factor(out$interpretation, levels = c("SI", "R"), ordered = TRUE)
+    out$interpretation <- factor(out$interpretation, levels = combined_levels, ordered = TRUE)
   } else {
     # don't use as.sir() here, as it would add the class 'sir' and we would like
     # the same data structure as output, regardless of input

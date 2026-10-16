@@ -1,6 +1,6 @@
 Package: AMR
-Version: 3.0.1
-Date: 2025-09-20
+Version: 3.1.0
+Date: 2026-10-16
 Title: Antimicrobial Resistance Data Analysis
 Description: Functions to simplify and standardise antimicrobial resistance (AMR)
   data analysis and to work with microbial and antimicrobial properties by
@@ -27,29 +27,30 @@ Authors@R: c(
   person(given = c("Judith", "M."),                 family = "Fonville",    role = "ctb"),
   person(given = c("Kathryn"),                      family = "Holt",        role = "ctb", comment = c(ORCID = "0000-0003-3949-2471")),
   person(given = c("Larisse"),                      family = "Bolton",      role = "ctb", comment = c(ORCID = "0000-0001-7879-2173")),
-  person(given = c("Matthew"),                      family = "Saab",        role = "ctb"),
+  person(given = c("Matthew"),                      family = "Saab",        role = "ctb", comment = c(ORCID = "0009-0008-6626-7919")),
   person(given = c("Natacha"),                      family = "Couto",       role = "ctb", comment = c(ORCID = "0000-0002-9152-5464")),
   person(given = c("Peter"),                        family = "Dutey-Magni", role = "ctb", comment = c(ORCID = "0000-0002-8942-9836")),
-  person(given = c("Rogier", "P."),                 family = "Schade",      role = "ctb"),
+  person(given = c("Rogier", "P."),                 family = "Schade",      role = "ctb", comment = c(ORCID = "0000-0002-9487-4467")),
   person(given = c("Sofia"),                        family = "Ny",          role = "ctb", comment = c(ORCID = "0000-0002-2017-1363")),
   person(given = c("Alex", "W."),                   family = "Friedrich",   role = "ths", comment = c(ORCID = "0000-0003-4881-038X")),
   person(given = c("Bhanu", "N.", "M."),            family = "Sinha",       role = "ths", comment = c(ORCID = "0000-0003-1634-0010")),
   person(given = c("Casper", "J."),                 family = "Albers",      role = "ths", comment = c(ORCID = "0000-0002-9213-6743")),
   person(given = c("Corinna"),                      family = "Glasner",     role = "ths", comment = c(ORCID = "0000-0003-1241-1328")))
 Depends: R (>= 3.0.0)
-Suggests: cleaner, cli, crayon, curl, data.table, dplyr, ggplot2,
-        knitr, openxlsx, parallelly, pillar, progress, readxl, recipes,
-        rlang, rmarkdown, rstudioapi, rvest, skimr, testthat, tibble,
-        tidymodels, tidyselect, tinytest, vctrs, xml2
+Suggests: cleaner, cli, crayon, curl, data.table, dplyr, future,
+        future.apply, ggplot2, knitr, openxlsx, pillar, progress,
+        readxl, recipes, rlang, rmarkdown, rstudioapi, rvest, skimr,
+        testthat, tibble, tidymodels, tidyselect, tinytest, vctrs,
+        xml2, usethis
 VignetteBuilder: knitr,rmarkdown
 URL: https://amr-for-r.org, https://github.com/msberends/AMR
 BugReports: https://github.com/msberends/AMR/issues
 License: GPL-2 | file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.3
+Config/roxygen2/version: 8.1.0
 NeedsCompilation: no
-Packaged: 2025-09-20 10:56:39 UTC; m.s.berends
+Packaged: 2026-10-16 10:22:50 UTC; m.s.berends
 Author: Matthijs S. Berends [aut, cre] (ORCID:
     <https://orcid.org/0000-0001-7620-1800>),
   Dennis Souverein [aut, ctb] (ORCID:
@@ -74,11 +75,11 @@ Author: Matthijs S. Berends [aut, cre] (ORCID:
   Judith M. Fonville [ctb],
   Kathryn Holt [ctb] (ORCID: <https://orcid.org/0000-0003-3949-2471>),
   Larisse Bolton [ctb] (ORCID: <https://orcid.org/0000-0001-7879-2173>),
-  Matthew Saab [ctb],
+  Matthew Saab [ctb] (ORCID: <https://orcid.org/0009-0008-6626-7919>),
   Natacha Couto [ctb] (ORCID: <https://orcid.org/0000-0002-9152-5464>),
   Peter Dutey-Magni [ctb] (ORCID:
     <https://orcid.org/0000-0002-8942-9836>),
-  Rogier P. Schade [ctb],
+  Rogier P. Schade [ctb] (ORCID: <https://orcid.org/0000-0002-9487-4467>),
   Sofia Ny [ctb] (ORCID: <https://orcid.org/0000-0002-2017-1363>),
   Alex W. Friedrich [ths] (ORCID:
     <https://orcid.org/0000-0003-4881-038X>),
@@ -88,4 +89,4 @@ Author: Matthijs S. Berends [aut, cre] (ORCID:
   Corinna Glasner [ths] (ORCID: <https://orcid.org/0000-0003-1241-1328>)
 Maintainer: Matthijs S. Berends <m.s.berends@umcg.nl>
 Repository: CRAN
-Date/Publication: 2025-09-20 11:40:03 UTC
+Date/Publication: 2026-10-16 12:10:02 UTC

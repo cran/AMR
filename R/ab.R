@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -48,13 +48,15 @@
 #'
 #' Use the [`ab_*`][ab_property()] functions to get properties based on the returned antibiotic ID, see *Examples*.
 #'
+#' Results of non-exact input are remembered during the session, so that the same input is not matched again. Use [ab_reset_session()] to forget these results. They are also forgotten after [add_custom_antimicrobials()] or [clear_custom_antimicrobials()].
+#'
 #' Note: the [as.ab()] and [`ab_*`][ab_property()] functions may use very long regular expression to match brand names of antimicrobial drugs. This may fail on some systems.
 #'
 #' You can add your own manual codes to be considered by [as.ab()] and all [`ab_*`][ab_property()] functions, see [add_custom_antimicrobials()].
 #' @section Source:
 #' World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://atcddd.fhi.no/atc_ddd_index/}
 #'
-#' European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
+#' European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/index_en.htm}
 #' @aliases ab
 #' @return A [character] [vector] with additional class [`ab`]
 #' @seealso
@@ -108,6 +110,62 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
   already_regex <- isTRUE(list(...)$already_regex)
   fast_mode <- isTRUE(list(...)$fast_mode)
 
+  # text that is not valid UTF-8 (e.g. exported in a local encoding such as CP949) makes the string
+  # functions below fail in a UTF-8 locale, so such values are returned as NA with a warning
+  # (checked on unique values only, as this runs on every call)
+  if (is.factor(x)) {
+    x <- as.character(x)
+  }
+  if (is.character(x)) {
+    x_unique <- unique(x[!is.na(x)])
+    invalid <- x %in% x_unique[!custom_ab_valid_utf8(x_unique)]
+    if (any(invalid)) {
+      warning_("in `as.ab()`: ", nr2char(sum(invalid)), " value", ifelse(sum(invalid) > 1, "s were", " was"), " not valid UTF-8 text and returned as `NA`. Convert such input first, e.g. with `iconv(x, from = \"CP949\", to = \"UTF-8\")`.")
+      x[invalid] <- NA_character_
+      if (all(is.na(x))) {
+        return(set_clean_class(rep(NA_character_, length(x)), new_class = c("ab", "character")))
+      }
+    }
+  }
+
+  # user-added synonyms (add_custom_antimicrobial_synonyms()) are matched on the input as given,
+  # before the input is transliterated to ASCII below, so that names in non-Latin scripts can be used
+  if (NROW(AMR_env$custom_ab_synonyms) > 0 && already_regex == FALSE && !isTRUE(list(...)$skip_custom_synonyms)) {
+    x_unique <- unique(x)
+    keys_unique <- custom_ab_synonym_key(x_unique)
+    hit_unique <- match(keys_unique, AMR_env$custom_ab_synonyms$key)
+    # no exact match: remove one trailing part at a time (part in parentheses or a strength such as "4.5g")
+    # and look the rest up after each removal, so that e.g. "Brand (comment) 4.5g" matches "Brand (comment)"
+    # before "Brand"; no words are removed, in any language; not for input that already identifies an antimicrobial as given
+    retry <- is.na(hit_unique) & !is.na(keys_unique) & !keys_unique %in% custom_ab_identifier_keys_cached()$key
+    if (any(retry)) {
+      idx <- which(retry)
+      cand <- custom_ab_strip_normalise(x_unique[idx])
+      repeat {
+        h <- match(custom_ab_synonym_key(cand), AMR_env$custom_ab_synonyms$key, incomparables = NA)
+        hit_unique[idx] <- h
+        left <- is.na(h)
+        if (!any(left)) break
+        idx <- idx[left]
+        stripped <- custom_ab_strip_step(cand[left])
+        moved <- stripped != cand[left]
+        if (!any(moved)) break
+        idx <- idx[moved]
+        cand <- stripped[moved]
+      }
+    }
+    hit <- hit_unique[match(x, x_unique)]
+    if (any(!is.na(hit))) {
+      out <- rep(NA_character_, length(x))
+      out[!is.na(hit)] <- AMR_env$custom_ab_synonyms$ab[hit[!is.na(hit)]]
+      rest <- is.na(hit) & !is.na(x)
+      if (any(rest)) {
+        out[rest] <- as.character(as.ab(x[rest], flag_multiple_results = flag_multiple_results, language = language, info = info, skip_custom_synonyms = TRUE, ...))
+      }
+      return(set_clean_class(out, new_class = c("ab", "character")))
+    }
+  }
+
   x_bak <- x
   x <- toupper(x)
 
@@ -119,7 +177,14 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
   x[x %like_case% "^PENICILLIN" & x %unlike_case% "[ /+-]"] <- "benzylpenicillin"
   x_bak_clean <- x
   if (already_regex == FALSE) {
+    x_bak_clean_before_gen <- x_bak_clean
     x_bak_clean <- generalise_antibiotic_name(x_bak_clean)
+    # generalise_antibiotic_name() rewrites "PH"->"F" and "TH"->"T", which
+    # mangles short valid AB codes (e.g. "ETH"->"ET", "PHN"->"FN", "STH"->"ST")
+    # making them unrecognisable in the lookup. Restore any values that were
+    # already valid AB codes before generalisation (#245).
+    is_valid_ab_code <- x_bak_clean_before_gen %in% AMR_env$AB_lookup$ab
+    x_bak_clean[is_valid_ab_code] <- x_bak_clean_before_gen[is_valid_ab_code]
   }
 
   x <- unique(x_bak_clean) # this means that every x is in fact generalise_antibiotic_name(x)
@@ -153,43 +218,29 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
   known_names <- x %in% AMR_env$AB_lookup$generalised_name
   x_new[known_names] <- AMR_env$AB_lookup$ab[match(x[known_names], AMR_env$AB_lookup$generalised_name)]
   known_codes_ab <- x %in% AMR_env$AB_lookup$ab
-  known_codes_atc <- vapply(FUN.VALUE = logical(1), gsub(" ", "", x), function(x_) x_ %in% unlist(AMR_env$AB_lookup$atc), USE.NAMES = FALSE)
-  known_codes_synonyms <- vapply(FUN.VALUE = logical(1), gsub(" ", "", tolower(x)), function(x_) x_ %in% tolower(unlist(AMR_env$AB_lookup$synonyms)), USE.NAMES = FALSE)
+  # ATC codes and synonyms are looked up in flat vectors that are built once per session
+  ab_index <- get_ab_index()
+  x_atc <- gsub(" ", "", x, fixed = TRUE)
+  x_synonym <- gsub(" ", "", tolower(x), fixed = TRUE)
+  known_codes_atc <- x_atc %in% ab_index$atc
+  known_codes_synonyms <- x_synonym %in% ab_index$synonyms
   known_codes_cid <- x %in% AMR_env$AB_lookup$cid
   x_new[known_codes_ab] <- AMR_env$AB_lookup$ab[match(x[known_codes_ab], AMR_env$AB_lookup$ab)]
-  x_new[known_codes_atc] <- AMR_env$AB_lookup$ab[vapply(
-    FUN.VALUE = integer(1),
-    gsub(" ", "", x[known_codes_atc]),
-    function(x_) {
-      which(vapply(
-        FUN.VALUE = logical(1),
-        AMR_env$AB_lookup$atc,
-        function(atc) x_ %in% atc
-      ))[1L]
-    },
-    USE.NAMES = FALSE
-  )]
-  x_new[known_codes_synonyms] <- AMR_env$AB_lookup$ab[vapply(
-    FUN.VALUE = integer(1),
-    gsub(" ", "", tolower(x[known_codes_synonyms])),
-    function(x_) {
-      which(vapply(
-        FUN.VALUE = logical(1),
-        AMR_env$AB_lookup$synonyms,
-        function(syns) x_ %in% tolower(syns)
-      ))[1L]
-    },
-    USE.NAMES = FALSE
-  )]
+  x_new[known_codes_atc] <- ab_index$atc_ab[match(x_atc[known_codes_atc], ab_index$atc)]
+  x_new[known_codes_synonyms] <- ab_index$synonyms_ab[match(x_synonym[known_codes_synonyms], ab_index$synonyms)]
   x_new[known_codes_cid] <- AMR_env$AB_lookup$ab[match(x[known_codes_cid], AMR_env$AB_lookup$cid)]
-  previously_coerced <- x %in% AMR_env$ab_previously_coerced$x
-  x_new[previously_coerced & is.na(x_new)] <- AMR_env$ab_previously_coerced$ab[match(x[is.na(x_new) & x %in% AMR_env$ab_previously_coerced$x], AMR_env$ab_previously_coerced$x)]
-  previously_coerced_mention <- x %in% AMR_env$ab_previously_coerced$x & !x %in% AMR_env$AB_lookup$ab & !x %in% AMR_env$AB_lookup$generalised_name
+  # From previous hits in this session ----
+  # the key contains all settings that can change the outcome, so that e.g. a `fast_mode` result is never reused otherwise
+  cache_keys <- coercion_cache_key(x, fast_mode, flag_multiple_results, language)
+  previously_coerced <- !is.na(x) & is.na(x_new) & coercion_cache_has("ab", cache_keys)
+  x_new[previously_coerced] <- coercion_cache_get("ab", cache_keys[previously_coerced])
+  previously_coerced_mention <- previously_coerced & !is.na(x_new)
   if (any(previously_coerced_mention) && isTRUE(info) && message_not_thrown_before("as.ab", entire_session = TRUE)) {
+    only_one <- sum(previously_coerced_mention) == 1
     message_(
-      "Returning previously coerced ",
-      ifelse(length(unique(which(x[which(previously_coerced)] %in% x_bak_clean))) > 1, "value for an antimicrobial", "values for various antimicrobials"),
-      ". Run `ab_reset_session()` to reset this. This note will be shown once per session."
+      "Returning ", ifelse(only_one, "a ", ""), "previously coerced ",
+      ifelse(only_one, "value for an antimicrobial", "values for various antimicrobials"),
+      ". Run {.help [{.fun ab_reset_session}](AMR::ab_reset_session)} to reset this. This note will be shown once per session."
     )
   }
 
@@ -203,7 +254,7 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
     progress <- progress_ticker(n = sum(!already_known), n_min = 25, print = info) # start if n >= 25
     on.exit(close(progress))
     if (any(x_new[!already_known & !is.na(x_new)] %in% unlist(AMR_env$AV_lookup$generalised_all, use.names = FALSE), na.rm = TRUE)) {
-      warning_("in `as.ab()`: some input seems to resemble antiviral drugs - use `as.av()` or e.g. `av_name()` for these, not `as.ab()` or e.g. `ab_name()`.")
+      warning_("in {.help [{.fun as.ab}](AMR::as.ab)}: some input seems to resemble antiviral drugs - use {.help [{.fun as.av}](AMR::as.av)} or e.g. {.help [{.fun av_name}](AMR::av_name)} for these, not {.help [{.fun as.ab}](AMR::as.ab)} or e.g. {.help [{.fun ab_name}](AMR::ab_name)}.")
     }
   }
 
@@ -248,34 +299,25 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
     }
 
     # exact LOINC code
-    loinc_found <- unlist(lapply(
-      AMR_env$AB_lookup$generalised_loinc,
-      function(s) x[i] %in% s
-    ))
-    found <- AMR_env$AB_lookup$ab[loinc_found == TRUE]
+    idx <- get_ab_index()$generalised_loinc
+    found <- AMR_env$AB_lookup$ab[sort(unique(idx$row[idx$value %in% x[i]]))]
     if (length(found) > 0) {
       x_new[i] <- note_if_more_than_one_found(found, i, from_text)
       next
     }
 
     # exact synonym
-    synonym_found <- unlist(lapply(
-      AMR_env$AB_lookup$generalised_synonyms,
-      function(s) x[i] %in% s
-    ))
-    found <- AMR_env$AB_lookup$ab[synonym_found == TRUE]
+    idx <- get_ab_index()$generalised_synonyms
+    found <- AMR_env$AB_lookup$ab[sort(unique(idx$row[idx$value %in% x[i]]))]
     if (length(found) > 0) {
       x_new[i] <- note_if_more_than_one_found(found, i, from_text)
       next
     }
 
     # exact abbreviation
-    abbr_found <- unlist(lapply(
-      AMR_env$AB_lookup$generalised_abbreviations,
-      # require at least 2 characters for abbreviations
-      function(s) x[i] %in% s && nchar(x[i]) >= 2
-    ))
-    found <- AMR_env$AB_lookup$ab[abbr_found == TRUE]
+    idx <- get_ab_index()$generalised_abbreviations
+    # require at least 2 characters for abbreviations
+    found <- AMR_env$AB_lookup$ab[sort(unique(idx$row[idx$value %in% x[i] & nchar(x[i]) >= 2]))]
     if (length(found) > 0) {
       x_new[i] <- note_if_more_than_one_found(found, i, from_text)
       next
@@ -341,11 +383,8 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
     }
 
     # and try if any synonym starts with it
-    synonym_found <- unlist(lapply(
-      AMR_env$AB_lookup$generalised_synonyms,
-      function(s) any(s %like% paste0("^", x_spelling))
-    ))
-    found <- AMR_env$AB_lookup$ab[synonym_found == TRUE]
+    idx <- get_ab_index()$generalised_synonyms
+    found <- AMR_env$AB_lookup$ab[sort(unique(idx$row[idx$value %like% paste0("^", x_spelling)]))]
     if (length(found) > 0) {
       x_new[i] <- note_if_more_than_one_found(found, i, from_text)
       next
@@ -362,24 +401,19 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
         costs = c(insertions = 1, deletions = 1, substitutions = 2),
         counts = FALSE
       ))
-      ab_df$lev_syn <- vapply(
-        FUN.VALUE = double(1),
-        ab_df$generalised_synonyms,
-        function(y) {
-          ifelse(all(is.na(y)) || length(y[nchar(y) >= 5]) == 0,
-            999,
-            min(as.double(utils::adist(x[i], y[nchar(y) >= 5],
-              ignore.case = FALSE,
-              fixed = TRUE,
-              costs = c(insertions = 1, deletions = 1, substitutions = 2),
-              counts = FALSE
-            )), na.rm = TRUE)
-          )
-        },
-        USE.NAMES = FALSE
-      )
+      # lowest distance to the synonyms of at least 5 characters, 999 if there are none
+      idx <- get_ab_index()$generalised_synonyms_long
+      lev_syn <- as.double(utils::adist(x[i], idx$value,
+        ignore.case = FALSE,
+        fixed = TRUE,
+        costs = c(insertions = 1, deletions = 1, substitutions = 2),
+        counts = FALSE
+      ))
+      ab_df$lev_syn <- 999
+      lev_syn_min <- vapply(FUN.VALUE = double(1), split(lev_syn, idx$row), min)
+      ab_df$lev_syn[as.integer(names(lev_syn_min))] <- lev_syn_min
       if (!is.null(language) && language != "en") {
-        ab_df$trans <- generalise_antibiotic_name(translate_AMR(ab_df$name, language = language))
+        ab_df$trans <- get_ab_translated_index(language)
         ab_df$lev_trans <- as.double(utils::adist(x[i], ab_df$trans,
           ignore.case = FALSE,
           fixed = TRUE,
@@ -423,21 +457,18 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
   }
 
   # save to package env to save time for next time
-  AMR_env$ab_previously_coerced <- AMR_env$ab_previously_coerced[which(!AMR_env$ab_previously_coerced$x %in% x), , drop = FALSE]
-  AMR_env$ab_previously_coerced <- unique(rbind_AMR(
-    AMR_env$ab_previously_coerced,
-    data.frame(
-      x = x,
-      ab = x_new,
-      x_bak = x_bak[match(x, x_bak_clean)],
-      stringsAsFactors = FALSE
-    )
-  ))
+  coerced_now <- which(!already_known & !is.na(x))
+  coercion_cache_add(
+    "ab",
+    keys = cache_keys[coerced_now],
+    inputs = x_bak[match(x[coerced_now], x_bak_clean)],
+    values = x_new[coerced_now]
+  )
 
   # take failed ATC codes apart from rest
   if (length(x_unknown_ATCs) > 0 && fast_mode == FALSE) {
     warning_(
-      "in `as.ab()`: these ATC codes are not (yet) in the antimicrobials data set: ",
+      "in {.help [{.fun as.ab}](AMR::as.ab)}: these ATC codes are not (yet) in the antimicrobials data set: ",
       vector_and(x_unknown_ATCs), "."
     )
   }
@@ -446,26 +477,28 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
   x_unknown <- x_unknown[!x_unknown %in% x_unknown_ATCs]
   x_unknown <- c(
     x_unknown,
-    AMR_env$ab_previously_coerced$x_bak[which(AMR_env$ab_previously_coerced$x %in% x & is.na(AMR_env$ab_previously_coerced$ab))]
+    x_bak[match(x[previously_coerced & is.na(x_new)], x_bak_clean)]
   )
-  x_unknown <- x_unknown[!x_unknown %in% c("", NA)]
+  x_unknown <- unique(x_unknown[!x_unknown %in% c("", NA)])
   if (length(x_unknown) > 0 && fast_mode == FALSE) {
     warning_(
-      "in `as.ab()`: ", ifelse(length(unique(x_unknown)) == 1, "this value", "these values"), " could not be coerced to a valid antimicrobial ID: ",
+      "in {.help [{.fun as.ab}](AMR::as.ab)}: ", ifelse(length(unique(x_unknown)) == 1, "this value", "these values"), " could not be coerced to a valid antimicrobial ID: ",
       vector_and(x_unknown), "."
     )
   }
 
   # Throw note about uncertainties
+  x_uncertain <- x_uncertain[!is.na(x_uncertain)]
   if (isTRUE(info) && length(x_uncertain) > 0 && fast_mode == FALSE) {
     x_uncertain <- unique(x_uncertain)
     if (message_not_thrown_before("as.ab", "uncertainties", x_bak)) {
       if (length(x_uncertain) <= 3) {
+        ab_uncertain <- x_new[match(x_bak_clean[match(x_uncertain, x_bak)], x)]
         examples <- vector_and(
           paste0(
             '"', x_uncertain, '" (assumed ',
-            ab_name(AMR_env$ab_previously_coerced$ab[which(AMR_env$ab_previously_coerced$x_bak %in% x_uncertain)], language = NULL, tolower = TRUE),
-            ", ", AMR_env$ab_previously_coerced$ab[which(AMR_env$ab_previously_coerced$x_bak %in% x_uncertain)], ")"
+            ab_name(ab_uncertain, language = NULL, tolower = TRUE),
+            ", ", ab_uncertain, ")"
           ),
           quotes = FALSE
         )
@@ -474,7 +507,7 @@ as.ab <- function(x, flag_multiple_results = TRUE, language = get_AMR_locale(), 
       }
       message_(
         "Antimicrobial translation was uncertain for ", examples,
-        ". If required, use `add_custom_antimicrobials()` to add custom entries."
+        ". If required, use {.help [{.fun add_custom_antimicrobials}](AMR::add_custom_antimicrobials)} to add custom entries."
       )
     }
   }
@@ -500,18 +533,25 @@ is.ab <- function(x) {
 ab_reset_session <- function() {
   if (NROW(AMR_env$ab_previously_coerced) > 0) {
     message_("Reset ", nr2char(NROW(AMR_env$ab_previously_coerced)), " previously matched input value", ifelse(NROW(AMR_env$ab_previously_coerced) > 1, "s", ""), ".")
-    AMR_env$ab_previously_coerced <- AMR_env$ab_previously_coerced[0, , drop = FALSE]
-    AMR_env$mo_uncertainties <- AMR_env$mo_uncertainties[0, , drop = FALSE]
+    AMR_env$ab_previously_coerced <- new_coercion_cache()
   } else {
     message_("No previously matched input values to reset.")
   }
 }
 
+#' @rdname as.ab
+#' @details `NA_ab_` is a missing value of the new `ab` class, analogous to e.g. base \R's [`NA_character_`][base::NA].
+#' @format NULL
+#' @export
+NA_ab_ <- set_clean_class(NA_character_,
+  new_class = c("ab", "character")
+)
+
 # this prevents the requirement for putting the dependency in Imports:
 #' @rawNamespace if(getRversion() >= "3.0.0") S3method(pillar::pillar_shaft, ab)
 pillar_shaft.ab <- function(x, ...) {
   out <- trimws(format(x))
-  out[is.na(x)] <- font_na(NA)
+  out[is.na(x)] <- pillar::style_na(NA)
 
   # add the names to the drugs as mouse-over!
   if (in_rstudio()) {
@@ -536,16 +576,27 @@ type_sum.ab <- function(x, ...) {
 print.ab <- function(x, ...) {
   if (!is.null(attributes(x)$amr_selector)) {
     function_name <- attributes(x)$amr_selector
-    message_(
-      "This 'ab' vector was retrieved using `", function_name, "()`, which should normally be used inside a `dplyr` verb or `data.frame` call, e.g.:\n",
-      "  ", AMR_env$bullet_icon, " your_data %>% select(", function_name, "())\n",
-      "  ", AMR_env$bullet_icon, " your_data %>% select(column_a, column_b, ", function_name, "())\n",
-      "  ", AMR_env$bullet_icon, " your_data %>% filter(any(", function_name, "() == \"R\"))\n",
-      "  ", AMR_env$bullet_icon, " your_data[, ", function_name, "()]\n",
-      "  ", AMR_env$bullet_icon, " your_data[, c(\"column_a\", \"column_b\", ", function_name, "())]"
-    )
+    if (has_cli_rlang()) {
+      cli::cli_inform(c(
+        "i" = paste0("This {.cls ab} vector was retrieved using {.fun ", function_name, "}, which should normally be used inside a {.pkg dplyr} verb or {.cls data.frame} call, e.g.:"),
+        paste0("\u00a0\u00a0", AMR_env$bullet_icon, " ", highlight_code(paste0("your_data %>% select(", function_name, "())"))),
+        paste0("\u00a0\u00a0", AMR_env$bullet_icon, " ", highlight_code(paste0("your_data %>% select(column_a, column_b, ", function_name, "())"))),
+        paste0("\u00a0\u00a0", AMR_env$bullet_icon, " ", highlight_code(paste0("your_data %>% filter(any(", function_name, "() == \"R\"))"))),
+        paste0("\u00a0\u00a0", AMR_env$bullet_icon, " ", highlight_code(paste0("your_data[, ", function_name, "()]"))),
+        paste0("\u00a0\u00a0", AMR_env$bullet_icon, " ", highlight_code(paste0("your_data[, c(\"column_a\", \"column_b\", ", function_name, "())]")))
+      ))
+    } else {
+      message(word_wrap(paste0(
+        "This 'ab' vector was retrieved using `", function_name, "()`, which should normally be used inside a dplyr verb or data.frame call, e.g.:\n",
+        "\u00a0\u00a0", AMR_env$bullet_icon, " your_data %>% select(", function_name, "())\n",
+        "\u00a0\u00a0", AMR_env$bullet_icon, " your_data %>% select(column_a, column_b, ", function_name, "())\n",
+        "\u00a0\u00a0", AMR_env$bullet_icon, " your_data %>% filter(any(", function_name, "() == \"R\"))\n",
+        "\u00a0\u00a0", AMR_env$bullet_icon, " your_data[, ", function_name, "()]\n",
+        "\u00a0\u00a0", AMR_env$bullet_icon, " your_data[, c(\"column_a\", \"column_b\", ", function_name, "())]"
+      ), as_note = TRUE))
+    }
   }
-  cat("Class 'ab'\n")
+  cat(format_inline_("Class {.cls ab}\n"))
   print(as.character(x), quote = FALSE)
 }
 
@@ -689,8 +740,8 @@ get_translate_ab <- function(translate_ab) {
   } else {
     translate_ab <- tolower(translate_ab)
     stop_ifnot(translate_ab %in% colnames(AMR::antimicrobials),
-      "invalid value for 'translate_ab', this must be a column name of the `antimicrobials` data set\n",
-      "or `TRUE` (equals 'name') or `FALSE` to not translate at all.",
+      "invalid value for {.arg translate_ab}, this must be a column name of the {.help [antimicrobials](AMR::antimicrobials)} data set\n",
+      "or {.code TRUE} (equals {.val name}) or {.code FALSE} to not translate at all.",
       call = FALSE
     )
     translate_ab

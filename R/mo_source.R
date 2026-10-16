@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -75,7 +75,7 @@
 #'
 #' ```
 #' as.mo("lab_mo_ecoli")
-#' #> Class 'mo'
+#' #> Class <mo>
 #' #> [1] B_ESCHR_COLI
 #'
 #' mo_genus("lab_mo_kpneumoniae")
@@ -85,7 +85,7 @@
 #' as.mo(c("Escherichia coli", "E. coli", "lab_mo_ecoli"))
 #' #> NOTE: Translation to one microorganism was guessed with uncertainty.
 #' #>       Use mo_uncertainties() to review it.
-#' #> Class 'mo'
+#' #> Class <mo>
 #' #> [1] B_ESCHR_COLI B_ESCHR_COLI B_ESCHR_COLI
 #' ```
 #'
@@ -108,7 +108,7 @@
 #' #> NOTE: Updated mo_source file '/Users/me/mo_source.rds' (0.3 kB) from
 #' #>       '/Users/me/Documents/ourcodes.xlsx' (9 kB), columns
 #' #>        "Organisation XYZ" and "mo"
-#' #> Class 'mo'
+#' #> Class <mo>
 #' #> [1] B_ESCHR_COLI
 #'
 #' mo_genus("lab_Staph_aureus")
@@ -129,15 +129,18 @@ set_mo_source <- function(path, destination = getOption("AMR_mo_source", "~/mo_s
 
   meet_criteria(path, allow_class = "character", has_length = 1, allow_NULL = TRUE)
   meet_criteria(destination, allow_class = "character", has_length = 1)
-  stop_ifnot(destination %like% "[.]rds$", "the `destination` must be a file location with file extension .rds.")
+  stop_ifnot(destination %like% "[.]rds$", "the {.arg destination} must be a file location with file extension .rds.")
   mo_source_destination <- path.expand(destination)
 
   if (is.null(path) || path %in% c(FALSE, "")) {
+    if (!is.null(AMR_env$mo_source) || file.exists(mo_source_destination)) {
+      # earlier coercions might have been based on this mo_source; get_mo_source() calls this function on every as.mo() call when no mo_source exists, so only reset when there was one
+      AMR_env$mo_previously_coerced <- new_coercion_cache()
+    }
     AMR_env$mo_source <- NULL
     if (file.exists(mo_source_destination)) {
       unlink(mo_source_destination)
       message_("Removed mo_source file '", font_bold(mo_source_destination), "'",
-        add_fn = font_red,
         as_note = FALSE
       )
     }
@@ -227,6 +230,8 @@ set_mo_source <- function(path, destination = getOption("AMR_mo_source", "~/mo_s
   attr(df, "mo_source_timestamp") <- file.mtime(path)
   saveRDS(df, mo_source_destination)
   AMR_env$mo_source <- df
+  # earlier coercions might have been based on another mo_source
+  AMR_env$mo_previously_coerced <- new_coercion_cache()
   message_(
     action, " mo_source file '", font_bold(mo_source_destination),
     "' (", formatted_filesize(mo_source_destination),
@@ -240,9 +245,9 @@ set_mo_source <- function(path, destination = getOption("AMR_mo_source", "~/mo_s
 #' @export
 get_mo_source <- function(destination = getOption("AMR_mo_source", "~/mo_source.rds")) {
   if (!file.exists(path.expand(destination))) {
-    if (interactive()) {
-      # source file might have been deleted, so update reference
-      set_mo_source("")
+    if (interactive() && identical(attributes(AMR_env$mo_source)$mo_source_destination, path.expand(destination))) {
+      # the mo_source file in use was deleted, so remove the reference to it; this must only concern this destination, so that no other mo_source file is removed
+      set_mo_source("", destination = destination)
     }
     return(NULL)
   }
@@ -250,17 +255,26 @@ get_mo_source <- function(destination = getOption("AMR_mo_source", "~/mo_source.
     current_ext <- regexpr("\\.([[:alnum:]]+)$", destination)
     current_ext <- ifelse(current_ext > -1L, substring(destination, current_ext + 1L), "")
     vowel <- ifelse(current_ext %like% "^[AEFHILMNORSX]", "n", "")
-    stop_("The AMR mo source must be an RDS file, not a", vowel, " ", toupper(current_ext), " file. If `\"", basename(destination), "\"` was meant as your input file, use `set_mo_source()` on this file. In any case, the option `AMR_mo_source` must be set to another path.")
+    stop_("The AMR mo source must be an RDS file, not a", vowel, " ", toupper(current_ext), " file. If \"", basename(destination), "\" was meant as your input file, use {.help [{.fun set_mo_source}](AMR::set_mo_source)} on this file. In any case, the option {.code AMR_mo_source} must be set to another path.")
   }
-  if (is.null(AMR_env$mo_source)) {
+  if (is.null(AMR_env$mo_source) || !identical(attributes(AMR_env$mo_source)$mo_source_destination, path.expand(destination))) {
+    # not loaded yet, or loaded from another destination
     AMR_env$mo_source <- readRDS_AMR(path.expand(destination))
+    # files created before AMR 1.5.0 lack this attribute
+    attr(AMR_env$mo_source, "mo_source_destination") <- path.expand(destination)
   }
 
-  old_time <- attributes(AMR_env$mo_source)$mo_source_timestamp
-  new_time <- file.mtime(attributes(AMR_env$mo_source)$mo_source_location)
-  if (interactive() && !identical(old_time, new_time)) {
-    # source file was updated, also update reference
-    set_mo_source(attributes(AMR_env$mo_source)$mo_source_location)
+  source_location <- attributes(AMR_env$mo_source)$mo_source_location
+  if (interactive() && !is.null(source_location)) {
+    if (!file.exists(source_location)) {
+      # the original file was moved or deleted, so remove the mo_source file as documented
+      set_mo_source("", destination = destination)
+      return(NULL)
+    }
+    if (!identical(attributes(AMR_env$mo_source)$mo_source_timestamp, file.mtime(source_location))) {
+      # the original file was updated, so update the mo_source file at this destination too
+      set_mo_source(source_location, destination = destination)
+    }
   }
   AMR_env$mo_source
 }
@@ -290,7 +304,7 @@ check_validity_mo_source <- function(x, refer_to_name = "`reference_df`", stop_o
   }
   if (!"mo" %in% colnames(x)) {
     if (stop_on_error == TRUE) {
-      stop_(refer_to_name, " must contain a column 'mo'", call = FALSE)
+      stop_(refer_to_name, " must contain a column {.code mo}", call = FALSE)
     } else {
       return(FALSE)
     }
@@ -314,14 +328,14 @@ check_validity_mo_source <- function(x, refer_to_name = "`reference_df`", stop_o
   }
   if (colnames(x)[1] != "mo" && nrow(x) > length(unique(x[, 1, drop = TRUE]))) {
     if (stop_on_error == TRUE) {
-      stop_(refer_to_name, " contains duplicate values in column '", colnames(x)[1], "'", call = FALSE)
+      stop_(refer_to_name, " contains duplicate values in column {.field ", font_bold(colnames(x)[1]), "}", call = FALSE)
     } else {
       return(FALSE)
     }
   }
   if (colnames(x)[2] != "mo" && nrow(x) > length(unique(x[, 2, drop = TRUE]))) {
     if (stop_on_error == TRUE) {
-      stop_(refer_to_name, " contains duplicate values in column '", colnames(x)[2], "'", call = FALSE)
+      stop_(refer_to_name, " contains duplicate values in column {.field ", font_bold(colnames(x)[2]), "}", call = FALSE)
     } else {
       return(FALSE)
     }

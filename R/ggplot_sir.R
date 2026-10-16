@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -49,6 +49,7 @@
 #' @param x.title Text to show as x axis description.
 #' @param y.title Text to show as y axis description.
 #' @param ... Other arguments passed on to [geom_sir()] or, in case of [scale_sir_colours()], named values to set colours. The default colours are colour-blind friendly, while maintaining the convention that e.g. 'susceptible' should be green and 'resistant' should be red. See *Examples*.
+#' @inheritSection as.sir Interpretation of SIR
 #' @details At default, the names of antimicrobials will be shown on the plots using [ab_name()]. This can be set with the `translate_ab` argument. See [count_df()].
 #'
 #' [geom_sir()] will take any variable from the data that has an [`sir`] class (created with [as.sir()]) using [sir_df()] and will plot bars with the percentage S, I, and R. The default behaviour is to have the bars stacked and to have the different antimicrobials on the x axis.
@@ -171,9 +172,10 @@ ggplot_sir <- function(data,
                        breaks = seq(0, 1, 0.1),
                        limits = NULL,
                        translate_ab = "name",
-                       combine_SI = TRUE,
+                       combine_SI,
                        minimum = 30,
                        language = get_AMR_locale(),
+                       guideline = getOption("AMR_guideline", "EUCAST"),
                        nrow = NULL,
                        colours = c(
                          S = "#3CAEA3",
@@ -202,7 +204,7 @@ ggplot_sir <- function(data,
   meet_criteria(breaks, allow_class = c("numeric", "integer"))
   meet_criteria(limits, allow_class = c("numeric", "integer"), has_length = 2, allow_NULL = TRUE, allow_NA = TRUE)
   meet_criteria(translate_ab, allow_class = c("character", "logical"), has_length = 1, allow_NA = TRUE)
-  meet_criteria(combine_SI, allow_class = "logical", has_length = 1)
+  guideline <- get_aggregation_guideline(guideline, missing(guideline), combine_SI, missing(combine_SI), fn = "ggplot_sir")
   meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_positive_or_zero = TRUE, is_finite = TRUE)
   language <- validate_language(language)
   meet_criteria(nrow, allow_class = c("numeric", "integer"), has_length = 1, allow_NULL = TRUE, is_positive = TRUE, is_finite = TRUE)
@@ -242,7 +244,7 @@ ggplot_sir <- function(data,
     geom_sir(
       position = position, x = x, fill = fill, translate_ab = translate_ab,
       minimum = minimum, language = language,
-      combine_SI = combine_SI, ...
+      guideline = guideline, ...
     ) +
     theme_sir()
 
@@ -262,14 +264,15 @@ ggplot_sir <- function(data,
       translate_ab = translate_ab,
       minimum = minimum,
       language = language,
-      combine_SI = combine_SI,
+      guideline = guideline,
       datalabels.size = datalabels.size,
       datalabels.colour = datalabels.colour
     )
   }
 
   if (!is.null(facet)) {
-    p <- p + facet_sir(facet = facet, nrow = nrow)
+    # pass the value, as facet_sir() takes an unquoted name as column name
+    p <- p + do.call(facet_sir, list(facet = facet, nrow = nrow))
   }
 
   p <- p + ggplot2::labs(
@@ -291,18 +294,19 @@ geom_sir <- function(position = NULL,
                      translate_ab = "name",
                      minimum = 30,
                      language = get_AMR_locale(),
-                     combine_SI = TRUE,
+                     combine_SI,
+                     guideline = getOption("AMR_guideline", "EUCAST"),
                      ...) {
   x <- x[1]
   stop_ifnot_installed("ggplot2")
-  stop_if(is.data.frame(position), "`position` is invalid. Did you accidentally use '%>%' instead of '+'?")
+  stop_if(is.data.frame(position), "{.arg position} is invalid. Did you accidentally use {.code %>%} instead of {.code +}?")
   meet_criteria(position, allow_class = "character", has_length = 1, is_in = c("fill", "stack", "dodge"), allow_NULL = TRUE)
   meet_criteria(x, allow_class = "character", has_length = 1)
   meet_criteria(fill, allow_class = "character", has_length = 1)
   meet_criteria(translate_ab, allow_class = c("character", "logical"), has_length = 1, allow_NA = TRUE)
   meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_positive_or_zero = TRUE, is_finite = TRUE)
   language <- validate_language(language)
-  meet_criteria(combine_SI, allow_class = "logical", has_length = 1)
+  guideline <- get_aggregation_guideline(guideline, missing(guideline), combine_SI, missing(combine_SI), fn = "geom_sir")
 
   y <- "value"
   if (missing(position) || is.null(position)) {
@@ -334,7 +338,7 @@ geom_sir <- function(position = NULL,
         translate_ab = translate_ab,
         language = language,
         minimum = minimum,
-        combine_SI = combine_SI
+        guideline = guideline
       )
     },
     mapping = utils::modifyList(ggplot2::aes(), list(x = str2lang(x), y = str2lang(y), fill = str2lang(fill))),

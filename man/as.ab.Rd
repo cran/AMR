@@ -5,14 +5,22 @@
 \alias{ab}
 \alias{is.ab}
 \alias{ab_reset_session}
+\alias{NA_ab_}
 \title{Transform Input to an Antibiotic ID}
 \usage{
-as.ab(x, flag_multiple_results = TRUE, language = get_AMR_locale(),
-  info = interactive(), ...)
+as.ab(
+  x,
+  flag_multiple_results = TRUE,
+  language = get_AMR_locale(),
+  info = interactive(),
+  ...
+)
 
 is.ab(x)
 
 ab_reset_session()
+
+NA_ab_
 }
 \arguments{
 \item{x}{A \link{character} vector to determine to antibiotic ID.}
@@ -44,20 +52,24 @@ All these properties will be searched for the user input. The \code{\link[=as.ab
 
 Use the \code{\link[=ab_property]{ab_*}} functions to get properties based on the returned antibiotic ID, see \emph{Examples}.
 
+Results of non-exact input are remembered during the session, so that the same input is not matched again. Use \code{\link[=ab_reset_session]{ab_reset_session()}} to forget these results. They are also forgotten after \code{\link[=add_custom_antimicrobials]{add_custom_antimicrobials()}} or \code{\link[=clear_custom_antimicrobials]{clear_custom_antimicrobials()}}.
+
 Note: the \code{\link[=as.ab]{as.ab()}} and \code{\link[=ab_property]{ab_*}} functions may use very long regular expression to match brand names of antimicrobial drugs. This may fail on some systems.
 
 You can add your own manual codes to be considered by \code{\link[=as.ab]{as.ab()}} and all \code{\link[=ab_property]{ab_*}} functions, see \code{\link[=add_custom_antimicrobials]{add_custom_antimicrobials()}}.
+
+\code{NA_ab_} is a missing value of the new \code{ab} class, analogous to e.g. base \R's \code{\link[base:NA]{NA_character_}}.
 }
 \section{Source}{
 
 World Health Organization (WHO) Collaborating Centre for Drug Statistics Methodology: \url{https://atcddd.fhi.no/atc_ddd_index/}
 
-European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}
+European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: \url{https://ec.europa.eu/health/documents/community-register/html/index_en.htm}
 }
 
 \section{WHOCC}{
 
-This package contains \strong{all ~550 antibiotic, antimycotic and antiviral drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://atcddd.fhi.no}) and the Pharmaceuticals Community Register of the European Commission (\url{https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm}).
+This package contains \strong{all ~550 antibiotic, antimycotic and antiviral drugs} and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, \url{https://atcddd.fhi.no}) and the Pharmaceuticals Community Register of the European Commission (\url{https://ec.europa.eu/health/documents/community-register/html/index_en.htm}).
 
 These have become the gold standard for international drug utilisation monitoring and research.
 

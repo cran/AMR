@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -37,12 +37,10 @@
 #' @inheritSection as.sir Interpretation of SIR
 #' @details These functions are meant to count isolates. Use the [resistance()]/[susceptibility()] functions to calculate microbial resistance/susceptibility.
 #'
-#' The function [count_resistant()] is equal to the function [count_R()]. The function [count_susceptible()] is equal to the function [count_SI()].
-#'
-#' The function [n_sir()] is an alias of [count_all()]. They can be used to count all available isolates, i.e. where all input antimicrobials have an available result (S, I or R). Their use is equal to `n_distinct()`. Their function is equal to `count_susceptible(...) + count_resistant(...)`.
+#' The function [n_sir()] is an alias of [count_all()]. They can be used to count all available isolates, i.e. where the input antimicrobial has an available result (S, I or R). For multiple antimicrobials, these are isolates with a result for any of the antimicrobials, or with `only_all_tested = TRUE`, for all of the antimicrobials (see *Combination Therapy* below). Their use is equal to `dplyr`'s `n_distinct()`. For one antimicrobial, their function is equal to `count_susceptible(...) + count_resistant(...)`.
 #'
 #' The function [count_df()] takes any variable from `data` that has an [`sir`] class (created with [as.sir()]) and counts the number of S's, I's and R's. It also supports grouped variables. The function [sir_df()] works exactly like [count_df()], but adds the percentage of S, I and R.
-#' @inheritSection proportion Combination Therapy
+#' @inheritSection sir_combine Combination Therapy
 #' @seealso [`proportion_*`][proportion] to calculate microbial resistance and susceptibility.
 #' @return An [integer]
 #' @rdname count
@@ -119,11 +117,22 @@
 #'     count_df(translate = FALSE)
 #' }
 #' }
-count_resistant <- function(..., only_all_tested = FALSE) {
+count_resistant <- function(...,
+                            only_all_tested = FALSE,
+                            guideline = getOption("AMR_guideline", "EUCAST")) {
+  # other arguments for meet_criteria are handled by sir_calc()
+  if (missing(guideline)) {
+    message_guideline_assumed("count_resistant", txt = ". Use {.code guideline = \"CLSI\"} to consider it resistant.")
+  }
+  guideline <- validate_sir_guideline(guideline, fn = "count_resistant")
   tryCatch(
     sir_calc(...,
-      ab_result = "R",
+      ab_result = c(
+        "R", "NWT", "NS",
+        if (identical(guideline, "CLSI")) "I"
+      ),
       only_all_tested = only_all_tested,
+      guideline = guideline,
       only_count = TRUE
     ),
     error = function(e) stop_(gsub("in sir_calc(): ", "", conditionMessage(e), fixed = TRUE), call = -5)
@@ -132,11 +141,22 @@ count_resistant <- function(..., only_all_tested = FALSE) {
 
 #' @rdname count
 #' @export
-count_susceptible <- function(..., only_all_tested = FALSE) {
+count_susceptible <- function(...,
+                              only_all_tested = FALSE,
+                              guideline = getOption("AMR_guideline", "EUCAST")) {
+  # other arguments for meet_criteria are handled by sir_calc()
+  if (missing(guideline)) {
+    message_guideline_assumed("count_susceptible", txt = ". Use {.code guideline = \"CLSI\"} to consider it resistant.")
+  }
+  guideline <- validate_sir_guideline(guideline, fn = "count_susceptible")
   tryCatch(
     sir_calc(...,
-      ab_result = c("S", "SDD", "I"),
+      ab_result = c(
+        "S", "SDD", "WT",
+        if (identical(guideline, "EUCAST")) "I"
+      ),
       only_all_tested = only_all_tested,
+      guideline = guideline,
       only_count = TRUE
     ),
     error = function(e) stop_(gsub("in sir_calc(): ", "", conditionMessage(e), fixed = TRUE), call = -5)
@@ -161,7 +181,7 @@ count_S <- function(..., only_all_tested = FALSE) {
 count_SI <- function(..., only_all_tested = FALSE) {
   tryCatch(
     sir_calc(...,
-      ab_result = c("S", "SDD", "I"),
+      ab_result = c("S", "SDD", "I", "WT"),
       only_all_tested = only_all_tested,
       only_count = TRUE
     ),
@@ -187,7 +207,7 @@ count_I <- function(..., only_all_tested = FALSE) {
 count_IR <- function(..., only_all_tested = FALSE) {
   tryCatch(
     sir_calc(...,
-      ab_result = c("I", "SDD", "R"),
+      ab_result = c("I", "SDD", "R", "NWT"),
       only_all_tested = only_all_tested,
       only_count = TRUE
     ),
@@ -200,7 +220,7 @@ count_IR <- function(..., only_all_tested = FALSE) {
 count_R <- function(..., only_all_tested = FALSE) {
   tryCatch(
     sir_calc(...,
-      ab_result = "R",
+      ab_result = c("R", "NWT", "NS"),
       only_all_tested = only_all_tested,
       only_count = TRUE
     ),
@@ -213,7 +233,7 @@ count_R <- function(..., only_all_tested = FALSE) {
 count_all <- function(..., only_all_tested = FALSE) {
   tryCatch(
     sir_calc(...,
-      ab_result = c("S", "SDD", "I", "R", "NI"),
+      ab_result = VALID_SIR_LEVELS,
       only_all_tested = only_all_tested,
       only_count = TRUE
     ),
@@ -230,15 +250,17 @@ n_sir <- count_all
 count_df <- function(data,
                      translate_ab = "name",
                      language = get_AMR_locale(),
-                     combine_SI = TRUE) {
+                     combine_SI,
+                     guideline = getOption("AMR_guideline", "EUCAST")) {
+  guideline <- get_aggregation_guideline(guideline, missing(guideline), combine_SI, missing(combine_SI), fn = "count_df")
   tryCatch(
     sir_calc_df(
       type = "count",
       data = data,
       translate_ab = translate_ab,
       language = language,
-      combine_SI = combine_SI,
-      confidence_level = 0.95 # doesn't matter, will be removed
+      confidence_level = 0.95, # doesn't matter, will be removed
+      guideline = guideline
     ),
     error = function(e) stop_(gsub("in sir_calc_df(): ", "", conditionMessage(e), fixed = TRUE), call = -5)
   )

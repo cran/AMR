@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -475,7 +475,7 @@ as.av <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
   # take failed ATC codes apart from rest
   if (length(x_unknown_ATCs) > 0 && fast_mode == FALSE) {
     warning_(
-      "in `as.av()`: these ATC codes are not (yet) in the antivirals data set: ",
+      "in {.help [{.fun as.av}](AMR::as.av)}: these ATC codes are not (yet) in the antivirals data set: ",
       vector_and(x_unknown_ATCs), "."
     )
   }
@@ -486,7 +486,7 @@ as.av <- function(x, flag_multiple_results = TRUE, info = interactive(), ...) {
   )
   if (length(x_unknown) > 0 && fast_mode == FALSE) {
     warning_(
-      "in `as.av()`: these values could not be coerced to a valid antiviral drug ID: ",
+      "in {.help [{.fun as.av}](AMR::as.av)}: these values could not be coerced to a valid antiviral drug ID: ",
       vector_and(x_unknown), "."
     )
   }
@@ -511,8 +511,8 @@ is.av <- function(x) {
 #' @rawNamespace if(getRversion() >= "3.0.0") S3method(pillar::pillar_shaft, av)
 pillar_shaft.av <- function(x, ...) {
   out <- trimws(format(x))
-  out[!is.na(x)] <- gsub("+", font_subtle("+"), out[!is.na(x)], fixed = TRUE)
-  out[is.na(x)] <- font_na(NA)
+  out[!is.na(x)] <- gsub("+", pillar::style_subtle("+"), out[!is.na(x)], fixed = TRUE)
+  out[is.na(x)] <- pillar::style_na(NA)
   create_pillar_column(out, align = "left", min_width = 4)
 }
 
@@ -526,7 +526,7 @@ type_sum.av <- function(x, ...) {
 #' @export
 #' @noRd
 print.av <- function(x, ...) {
-  cat("Class 'av'\n")
+  cat(format_inline_("Class {.cls av}\n"))
   print(as.character(x), quote = FALSE)
 }
 

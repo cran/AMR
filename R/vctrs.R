@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -91,7 +91,9 @@
 #' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, sir.sir)
 #' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_ptype2, character.sir)
 #' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, character.sir)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, factor.sir)
 #' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, sir.character)
+#' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, sir.factor)
 #' @rawNamespace if(getRversion() >= "3.0.0") S3method(vctrs::vec_cast, sir.sir)
 
 # S3: amr_selector ----
@@ -158,7 +160,7 @@ vec_cast.character.mo <- function(x, to, ...) {
 }
 vec_cast.mo.character <- function(x, to, ...) {
   add_MO_lookup_to_AMR_env()
-  return_after_integrity_check(x, "microorganism code", as.character(AMR_env$MO_lookup$mo))
+  return_after_mo_integrity_check(x)
 }
 
 # S3: disk ----
@@ -257,6 +259,12 @@ vec_cast.sir.sir <- function(x, to, ...) {
 vec_cast.character.sir <- function(x, to, ...) {
   as.character(x)
 }
+vec_cast.factor.sir <- function(x, to, ...) {
+  factor(as.sir(x))
+}
 vec_cast.sir.character <- function(x, to, ...) {
+  as.sir(x)
+}
+vec_cast.sir.factor <- function(x, to, ...) {
   as.sir(x)
 }

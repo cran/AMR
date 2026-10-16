@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -31,7 +31,7 @@
 #'
 #' Determine which isolates are multidrug-resistant organisms (MDRO) according to international, national, or custom guidelines.
 #' @param x A [data.frame] with antimicrobials columns, like `AMX` or `amox`. Can be left blank for automatic determination.
-#' @param guideline A specific guideline to follow, see sections *Supported international / national guidelines* and *Using Custom Guidelines* below. When left empty, the publication by Magiorakos *et al.* (see below) will be followed.
+#' @param guideline A specific guideline to follow, see sections *Supported International / National Guidelines* and *Using Custom Guidelines* below. When left empty, the publication by Magiorakos *et al.* (see below) will be followed.
 #' @param esbl [logical] values, or a column name containing logical values, indicating the presence of an ESBL gene (or production of its proteins).
 #' @param carbapenemase [logical] values, or a column name containing logical values, indicating the presence of a carbapenemase gene (or production of its proteins).
 #' @param mecA [logical] values, or a column name containing logical values, indicating the presence of a *mecA* gene (or production of its proteins).
@@ -40,8 +40,9 @@
 #' @param vanB [logical] values, or a column name containing logical values, indicating the presence of a *vanB* gene (or production of its proteins).
 #' @inheritParams eucast_rules
 #' @param pct_required_classes Minimal required percentage of antimicrobial classes that must be available per isolate, rounded down. For example, with the default guideline, 17 antimicrobial classes must be available for *S. aureus*. Setting this `pct_required_classes` argument to `0.5` (default) means that for every *S. aureus* isolate at least 8 different classes must be available. Any lower number of available classes will return `NA` for that isolate.
-#' @param combine_SI A [logical] to indicate whether all values of S and I must be merged into one, so resistance is only considered when isolates are R, not I. As this is the default behaviour of the [mdro()] function, it follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. When using `combine_SI = FALSE`, resistance is considered when isolates are R or I.
+#' @param combine_SI A [logical] to indicate whether all values of S and I must be merged into one, so resistance is only considered when isolates are R, not I. As this is the default behaviour of the [mdro()] function, it follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. When using `combine_SI = FALSE`, resistance is considered when isolates are R or I. In a future version, the handling of 'I' will follow the selected MDRO guideline ([#323](https://github.com/msberends/AMR/issues/323)).
 #' @param verbose A [logical] to turn Verbose mode on and off (default is off). In Verbose mode, the function returns a data set with the MDRO results in logbook form with extensive info about which isolates would be MDRO-positive, or why they are not.
+#' @param infer_from_combinations A [logical] to indicate whether resistance for a missing base beta-lactam drug should be inferred from an available drug+inhibitor combination (e.g., piperacillin from piperacillin/tazobactam). The clinical basis is that resistance in a combination always implies resistance in the base drug, since the enzyme inhibitor provides no benefit when the organism is truly resistant. Only resistance is inferred; susceptibility in a combination does **not** imply susceptibility in the base drug (the inhibitor may be responsible). Defaults to `TRUE`.
 #' @details
 #' These functions are context-aware. This means that the `x` argument can be left blank if used inside a [data.frame] call, see *Examples*.
 #'
@@ -83,7 +84,7 @@
 #'
 #' * `guideline = "BRMO 2024"` (or simply `guideline = "BRMO"`)
 #'
-#'   The Dutch national guideline - Samenwerkingverband Richtlijnen Infectiepreventie (SRI) (2024) "Bijzonder Resistente Micro-Organismen (BRMO)" ([link](https://www.sri-richtlijnen.nl/brmo))
+#'   The Dutch national guideline - Samenwerkingverband Richtlijnen Infectiepreventie (SRI) (2024) "Bijzonder Resistente Micro-Organismen (BRMO)" ([link](https://richtlijnendatabase.nl/richtlijn/bijzonder_resistente_micro-organismen_brmo))
 #'
 #'   Also:
 #'
@@ -143,6 +144,7 @@ mdro <- function(x = NULL,
                  combine_SI = TRUE,
                  verbose = FALSE,
                  only_sir_columns = any(is.sir(x)),
+                 infer_from_combinations = TRUE,
                  ...) {
   if (is_null_or_grouped_tbl(x)) {
     # when `x` is left blank, auto determine it (get_current_data() searches underlying data within call)
@@ -165,12 +167,12 @@ mdro <- function(x = NULL,
   meet_criteria(combine_SI, allow_class = "logical", has_length = 1)
   meet_criteria(verbose, allow_class = "logical", has_length = 1)
   meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
-
+  meet_criteria(infer_from_combinations, allow_class = "logical", has_length = 1)
 
   if (isTRUE(only_sir_columns) && !any(is.sir(x))) {
-    stop_("There were no SIR columns found in the data set, despite `only_sir_columns` being `TRUE`. Transform columns with `as.sir()` for valid antimicrobial interpretations.")
+    stop_("There were no SIR columns found in the data set, despite {.arg only_sir_columns} being {.code TRUE}. Transform columns with {.help [{.fun as.sir}](AMR::as.sir)} for valid antimicrobial interpretations.")
   } else if (!isTRUE(only_sir_columns) && !any(is.sir(x)) && !any(is_sir_eligible(x))) {
-    stop_("There were no eligible SIR columns found in the data set. Transform columns with `as.sir()` for valid antimicrobial interpretations.")
+    stop_("There were no eligible SIR columns found in the data set. Transform columns with {.help [{.fun as.sir}](AMR::as.sir)} for valid antimicrobial interpretations.")
   }
 
   # get gene values as TRUE/FALSE
@@ -211,7 +213,7 @@ mdro <- function(x = NULL,
       q_continue <- utils::menu(choices = c("OK", "Cancel"), graphics = FALSE, title = txt)
     }
     if (q_continue %in% c(FALSE, 2)) {
-      message_("Cancelled, returning original data", add_fn = font_red, as_note = FALSE)
+      message_("Cancelled, returning original data", as_note = FALSE)
       return(x)
     }
   }
@@ -249,7 +251,7 @@ mdro <- function(x = NULL,
   guideline.bak <- guideline
   if (is.list(guideline)) {
     # Custom MDRO guideline ---------------------------------------------------
-    stop_ifnot(inherits(guideline, "custom_mdro_guideline"), "use `custom_mdro_guideline()` to create custom guidelines")
+    stop_ifnot(inherits(guideline, "custom_mdro_guideline"), "use {.help [{.fun custom_mdro_guideline}](AMR::custom_mdro_guideline)} to create custom guidelines")
     if (isTRUE(info)) {
       txt <- paste0(
         "Determining MDROs based on custom rules",
@@ -326,13 +328,13 @@ mdro <- function(x = NULL,
   }
   if (is.null(col_mo) && guideline$code == "tb") {
     message_(
-      "No column found as input for `col_mo`, ",
+      "No column found as input for {.arg col_mo}, ",
       font_bold(paste0("assuming all rows contain ", font_italic("Mycobacterium tuberculosis"), "."))
     )
     x$mo <- as.mo("Mycobacterium tuberculosis", keep_synonyms = TRUE)
     col_mo <- "mo"
   }
-  stop_if(is.null(col_mo), "`col_mo` must be set")
+  stop_if(is.null(col_mo), "{.arg col_mo} must be set")
 
   if (guideline$code == "cmi2012") {
     guideline$name <- "Multidrug-resistant, extensively drug-resistant and pandrug-resistant bacteria: an international expert proposal for interim standard definitions for acquired resistance."
@@ -362,7 +364,7 @@ mdro <- function(x = NULL,
     guideline$name <- "Companion handbook to the WHO guidelines for the programmatic management of drug-resistant tuberculosis"
     guideline$author <- "WHO (World Health Organization)"
     guideline$version <- "WHO/HTM/TB/2014.11, 2014"
-    guideline$source_url <- font_url("https://www.who.int/publications/i/item/9789241548809", "Direct download")
+    guideline$source_url <- NA_character_
     guideline$type <- "MDR-TB's"
 
     # support per country:
@@ -377,7 +379,7 @@ mdro <- function(x = NULL,
     guideline$name <- "Bijzonder Resistente Micro-organismen (BRMO)"
     guideline$author <- "Samenwerkingsverband Richtlijnen Infectiepreventie (SRI)"
     guideline$version <- "November 2024"
-    guideline$source_url <- font_url("https://www.sri-richtlijnen.nl/brmo", "Direct link")
+    guideline$source_url <- font_url("https://richtlijnendatabase.nl/richtlijn/bijzonder_resistente_micro-organismen_brmo", "Direct link")
     guideline$type <- "BRMOs"
   } else if (guideline$code == "brmo2017") {
     guideline$name <- "WIP-Richtlijn Bijzonder Resistente Micro-organismen (BRMO)"
@@ -474,11 +476,57 @@ mdro <- function(x = NULL,
   if (!"AMP" %in% names(cols_ab) && "AMX" %in% names(cols_ab)) {
     # ampicillin column is missing, but amoxicillin is available
     if (isTRUE(info)) {
-      message_("Using column '", cols_ab[names(cols_ab) == "AMX"], "' as input for ampicillin since many MDRO rules depend on it.", add_fn = font_red)
+      message_("Using column {.field ", font_bold(cols_ab[names(cols_ab) == "AMX"]), "} as input for ampicillin since many MDRO rules depend on it.")
     }
     cols_ab <- c(cols_ab, c(AMP = unname(cols_ab[names(cols_ab) == "AMX"])))
   }
   cols_ab <- cols_ab[!duplicated(cols_ab)]
+
+  # Infer resistance for missing base drugs ----
+  if (isTRUE(infer_from_combinations)) {
+    .combos_in_data <- AB_BETALACTAMS_WITH_INHIBITOR[AB_BETALACTAMS_WITH_INHIBITOR %in% names(cols_ab)]
+    if (length(.combos_in_data) > 0) {
+      .base_drugs <- suppressMessages(
+        as.ab(gsub("/.*", "", ab_name(as.character(.combos_in_data), language = NULL)))
+      )
+      .unique_bases <- unique(.base_drugs[!is.na(.base_drugs)])
+      for (.base in .unique_bases) {
+        .base_code <- as.character(.base)
+        if (!.base_code %in% names(cols_ab)) {
+          # Base drug column absent; find all available combo columns for this base drug
+          .combos <- .combos_in_data[!is.na(.base_drugs) & as.character(.base_drugs) == .base_code]
+          .combo_cols <- unname(cols_ab[as.character(.combos)])
+          .combo_cols <- .combo_cols[!is.na(.combo_cols)]
+          if (length(.combo_cols) > 0) {
+            # Vectorised: if ANY combination is R, infer base drug as R; otherwise NA
+            .sir_chars <- as.data.frame(
+              lapply(x[, .combo_cols, drop = FALSE], function(col) as.character(as.sir(col))),
+              stringsAsFactors = FALSE
+            )
+            .new_col <- paste0(.base_code, ".inferred_sir_proxy_from#", paste0(.combos, collapse = "/"), "#")
+            x[[.new_col]] <- ifelse(rowSums(.sir_chars == "R", na.rm = TRUE) > 0L, "R", NA_character_)
+            cols_ab <- c(cols_ab, stats::setNames(.new_col, .base_code))
+            if (isTRUE(info.bak)) {
+              message_(
+                "Inferring resistance for ",
+                ab_name(.base_code, language = NULL, tolower = TRUE),
+                " (", font_italic("missing"), ") from ",
+                vector_or(
+                  quotes = FALSE,
+                  last_sep = " and/or ",
+                  paste0(
+                    ab_name(.combos, language = NULL, tolower = TRUE),
+                    " ({.field ", font_bold(.combo_cols, collapse = NULL), "}, ", font_italic("available"), ")"
+                  )
+                )
+              )
+            }
+          }
+        }
+      }
+      cols_ab <- cols_ab[!duplicated(names(cols_ab))]
+    }
+  }
 
   # nolint start
   AMC <- cols_ab["AMC"]
@@ -674,6 +722,16 @@ mdro <- function(x = NULL,
     x
   }
 
+  ab_without_inhibitor <- function(ab_codes) {
+    # Get the base drug AB code from a drug+inhibitor combination.
+    # e.g., AMC (amoxicillin/clavulanic acid)  -> AMX (amoxicillin)
+    #        TZP (piperacillin/tazobactam)      -> PIP (piperacillin)
+    #        SAM (ampicillin/sulbactam)          -> AMP (ampicillin)
+    combo_names <- ab_name(ab_codes, language = NULL)
+    base_names <- gsub("/.*", "", combo_names)
+    suppressMessages(as.ab(base_names))
+  }
+
   # antimicrobial classes
   # nolint start
   aminoglycosides <- c(TOB, GEN)
@@ -684,6 +742,19 @@ mdro <- function(x = NULL,
   carbapenems <- c(DOR, ETP, IPM, MEM, MEV)
   fluoroquinolones <- c(CIP, ENX, FLE, GAT, GEM, GRX, LVX, LOM, MFX, NOR, OFX, PAZ, PEF, PRU, RFL, SPX, TMX, TVA)
   # nolint end
+
+  # helper function returning a logical matrix (rows x cols) of which cells contain any of `values`
+  column_matches <- function(df, rows, cols, values) {
+    matrix(
+      vapply(
+        FUN.VALUE = logical(length(rows)),
+        cols,
+        function(col) as.character(df[rows, col, drop = TRUE]) %in% values
+      ),
+      nrow = length(rows),
+      dimnames = list(NULL, cols)
+    )
+  }
 
   # helper function for editing the table
   trans_tbl <- function(to, rows, cols, any_all, reason = NULL) {
@@ -701,19 +772,18 @@ mdro <- function(x = NULL,
         ),
         stringsAsFactors = FALSE
       )
+      # determine the non-susceptible columns per column instead of per cell, which is much faster
+      group_vct <- unique(unname(cols_ab))
+      nonsus <- column_matches(x, rows, group_vct, search_result)
+      current <- x[rows, "all_nonsusceptible_columns", drop = TRUE]
       x[rows, "all_nonsusceptible_columns"] <<- vapply(
         FUN.VALUE = character(1),
-        rows,
-        function(row, group_vct = cols_ab) {
-          cols_nonsus <- vapply(
-            FUN.VALUE = logical(1),
-            x[row, group_vct, drop = FALSE],
-            function(y) y %in% search_result
-          )
+        seq_along(rows),
+        function(i) {
           paste(
             unique(sort(c(
-              unlist(strsplit(x[row, "all_nonsusceptible_columns", drop = TRUE], ", ", fixed = TRUE)),
-              names(cols_nonsus)[cols_nonsus]
+              unlist(strsplit(current[i], ", ", fixed = TRUE)),
+              group_vct[nonsus[i, ]]
             ))),
             collapse = ", "
           )
@@ -769,55 +839,43 @@ mdro <- function(x = NULL,
         ),
         stringsAsFactors = FALSE
       )
+      # determine the matches per column instead of per cell, which is much faster
+      lst_cols <- unique(unname(lst_vector))
+      available <- column_matches(x, rows, lst_cols, VALID_SIR_LEVELS[VALID_SIR_LEVELS != "NI"])
+      nonsus <- column_matches(x, rows, lst_cols, search_result)
+      count_groups <- function(matches) {
+        rowSums(matrix(
+          vapply(
+            FUN.VALUE = logical(length(rows)),
+            lst,
+            function(group) {
+              group <- group[!is.na(group)]
+              rowSums(matches[, lst_cols %in% group, drop = FALSE]) > 0
+            }
+          ),
+          nrow = length(rows)
+        ))
+      }
+
       x[rows, "classes_in_guideline"] <<- length(lst)
-      x[rows, "classes_available"] <<- vapply(
-        FUN.VALUE = double(1),
-        rows,
-        function(row, group_tbl = lst) {
-          sum(vapply(
-            FUN.VALUE = logical(1),
-            group_tbl,
-            function(group) any(unlist(x[row, group[!is.na(group)], drop = TRUE]) %in% c("S", "SDD", "I", "R"))
-          ))
-        }
-      )
+      x[rows, "classes_available"] <<- count_groups(available)
 
       if (isTRUE(verbose)) {
         x[rows, "all_nonsusceptible_columns"] <<- vapply(
           FUN.VALUE = character(1),
-          rows,
-          function(row, group_vct = lst_vector) {
-            cols_nonsus <- vapply(FUN.VALUE = logical(1), x[row, group_vct, drop = FALSE], function(y) y %in% search_result)
-            paste(unique(sort(names(cols_nonsus)[cols_nonsus])), collapse = ", ")
-          }
+          seq_along(rows),
+          function(i) paste(sort(lst_cols[nonsus[i, ]]), collapse = ", ")
         )
       }
-      x[rows, "classes_affected"] <<- vapply(
-        FUN.VALUE = double(1),
-        rows,
-        function(row, group_tbl = lst) {
-          sum(
-            vapply(
-              FUN.VALUE = logical(1),
-              group_tbl,
-              function(group) {
-                any(unlist(x[row, group[!is.na(group)], drop = TRUE]) %in% search_result, na.rm = TRUE)
-              }
-            ),
-            na.rm = TRUE
-          )
-        }
-      )
+      x[rows, "classes_affected"] <<- count_groups(nonsus)
       # for PDR; all drugs are R (or I if combine_SI = FALSE)
-      x_transposed <- as.list(as.data.frame(t(x[rows, lst_vector, drop = FALSE]),
-        stringsAsFactors = FALSE
-      ))
-      row_filter <- vapply(FUN.VALUE = logical(1), x_transposed, function(y) all(y %in% search_result, na.rm = TRUE))
-      x[which(row_filter), "classes_affected"] <<- 999
+      row_filter <- rowSums(!nonsus) == 0
+      # `row_filter` is relative to `rows`, so it must be mapped back to the rows of `x`
+      x[rows[row_filter], "classes_affected"] <<- 999
     }
 
     if (isTRUE(info)) {
-      message_(" OK.", add_fn = list(font_green, font_bold), as_note = FALSE)
+      message_(" OK.", as_note = FALSE)
     }
   }
 
@@ -1453,8 +1511,8 @@ mdro <- function(x = NULL,
     fluoroquinolones <- c(CIP, NOR, LVX) # note 5:  ciprofloxacin or norfloxacin or levofloxacin
     carbapenems <- carbapenems[!is.na(carbapenems)]
     carbapenems_without_imipenem <- carbapenems[carbapenems != IPM]
-    amino <- AMX %or% AMP
-    third <- CAZ %or% CTX
+    amino <- AMX %or_if_na% AMP
+    third <- CAZ %or_if_na% CTX
     ESBLs <- c(amino, third)
     ESBLs <- ESBLs[!is.na(ESBLs)]
     if (length(ESBLs) != 2) {
@@ -1466,7 +1524,7 @@ mdro <- function(x = NULL,
       trans_tbl(
         2, # positive, unconfirmed
         rows = which(x$order == "Enterobacterales" & col_values(x, ESBLs[1]) == "R" & col_values(x, ESBLs[2]) == "R" & is.na(esbl)),
-        cols = c(AMX %or% AMP, cephalosporins_3rd),
+        cols = c(AMX %or_if_na% AMP, cephalosporins_3rd),
         any_all = "all",
         reason = "Enterobacterales: potential ESBL"
       )
@@ -1500,12 +1558,13 @@ mdro <- function(x = NULL,
       reason = "Enterobacterales: carbapenemase"
     )
     c.freundii_complex <- AMR::microorganisms.groups$mo_name[AMR::microorganisms.groups$mo_group_name == "Citrobacter freundii complex"]
+    c.freundii_complex <- paste(c.freundii_complex, collapse = "|")
     trans_tbl(
       3,
       rows = which(col_values(x, SXT) == "R" &
         (col_values(x, GEN) == "R" | col_values(x, TOB) == "R" | col_values(x, AMK) == "R") &
         (col_values(x, CIP) == "R" | col_values(x, NOR) == "R" | col_values(x, LVX) == "R") &
-        (x$genus %in% c("Enterobacter", "Providencia") | paste(x$genus, x$species) %in% c(c.freundii_complex, "Klebsiella aerogenes", "Hafnia alvei", "Morganella morganii"))),
+        (x$fullname %like_case% c.freundii_complex | x$genus %in% c("Enterobacter", "Providencia") | paste(x$genus, x$species) %in% c("Klebsiella aerogenes", "Hafnia alvei", "Morganella morganii"))),
       cols = c(SXT, aminoglycosides, fluoroquinolones),
       any_all = "any",
       reason = "Enterobacterales group II: aminoglycoside + fluoroquinolone + cotrimoxazol"
@@ -1522,25 +1581,27 @@ mdro <- function(x = NULL,
     )
 
     # Acinetobacter baumannii-calcoaceticus complex
+    a.baumannii_complex <- AMR::microorganisms.groups$mo_name[AMR::microorganisms.groups$mo_group_name == "Acinetobacter baumannii complex"]
+    a.baumannii_complex <- paste(a.baumannii_complex, collapse = "|")
     trans_tbl(
       3,
       rows = which((col_values(x, GEN) == "R" | col_values(x, TOB) == "R" | col_values(x, AMK) == "R") &
         (col_values(x, CIP) == "R" | col_values(x, LVX) == "R") &
-        x[[col_mo]] %in% AMR::microorganisms.groups$mo[AMR::microorganisms.groups$mo_group_name == "Acinetobacter baumannii complex"]),
+        x$fullname %like_case% a.baumannii_complex),
       cols = c(aminoglycosides, CIP, LVX),
       any_all = "any",
       reason = "A. baumannii-calcoaceticus complex: aminoglycoside + ciprofloxacin or levofloxacin"
     )
     trans_tbl(
       2, # unconfirmed
-      rows = which(x[[col_mo]] %in% AMR::microorganisms.groups$mo[AMR::microorganisms.groups$mo_group_name == "Acinetobacter baumannii complex"] & is.na(x$carbapenemase)),
+      rows = which(x$fullname %like_case% a.baumannii_complex & is.na(x$carbapenemase)),
       cols = carbapenems,
       any_all = "any",
       reason = "A. baumannii-calcoaceticus complex: potential carbapenemase"
     )
     trans_tbl(
       3,
-      rows = which(x[[col_mo]] %in% AMR::microorganisms.groups$mo[AMR::microorganisms.groups$mo_group_name == "Acinetobacter baumannii complex"] & x$carbapenemase == TRUE),
+      rows = which(x$fullname %like_case% a.baumannii_complex & x$carbapenemase == TRUE),
       cols = carbapenems,
       any_all = "any",
       reason = "A. baumannii-calcoaceticus complex: carbapenemase"
@@ -1573,7 +1634,7 @@ mdro <- function(x = NULL,
     trans_tbl(
       3,
       rows = which(x$genus == "Enterococcus" & x$species == "faecium"),
-      cols = c(PEN %or% AMX %or% AMP, VAN),
+      cols = c(PEN %or_if_na% AMX %or_if_na% AMP, VAN),
       any_all = "all",
       reason = "E. faecium: vancomycin + penicillin group"
     )
@@ -1616,8 +1677,8 @@ mdro <- function(x = NULL,
     aminoglycosides <- aminoglycosides[!is.na(aminoglycosides)]
     fluoroquinolones <- fluoroquinolones[!is.na(fluoroquinolones)]
     carbapenems <- carbapenems[!is.na(carbapenems)]
-    amino <- AMX %or% AMP
-    third <- CAZ %or% CTX
+    amino <- AMX %or_if_na% AMP
+    third <- CAZ %or_if_na% CTX
     ESBLs <- c(amino, third)
     ESBLs <- ESBLs[!is.na(ESBLs)]
     if (length(ESBLs) != 2) {
@@ -1793,6 +1854,7 @@ mdro <- function(x = NULL,
 
   if (isTRUE(info.bak)) {
     cat(group_msg)
+    cat("\n")
     if (sum(!is.na(x$MDRO)) == 0) {
       cat(font_bold(paste0("=> Found 0 MDROs since no isolates are covered by the guideline")))
     } else {
@@ -1815,14 +1877,15 @@ mdro <- function(x = NULL,
   ))
   if (length(rows_empty) > 0) {
     if (isTRUE(info.bak)) {
-      cat(font_italic(paste0(" (", length(rows_empty), " isolates had no test results)\n")))
+      cat(font_italic(paste0("\n   (another ", length(rows_empty), " isolates had no test results)\n")))
     }
   } else if (isTRUE(info.bak)) {
     cat("\n")
   }
 
   if (isTRUE(info.bak) && !isTRUE(verbose)) {
-    cat("\nRerun with 'verbose = TRUE' to retrieve detailed info and reasons for every MDRO classification.\n")
+    cat("\n")
+    cat(format_inline_("Rerun with {.code verbose = TRUE} to retrieve detailed info and reasons for every MDRO classification.\n"))
   }
 
   # Results ----
@@ -1830,8 +1893,8 @@ mdro <- function(x = NULL,
     if (any(x$MDRO == -1, na.rm = TRUE)) {
       if (message_not_thrown_before("mdro", "availability")) {
         warning_(
-          "in `mdro()`: NA introduced for isolates where the available percentage of antimicrobial classes was below ",
-          percentage(pct_required_classes), " (set with `pct_required_classes`)"
+          "in {.help [{.fun mdro}](AMR::mdro)}: NA introduced for isolates where the available percentage of antimicrobial classes was below ",
+          percentage(pct_required_classes), " (set with {.arg pct_required_classes})"
         )
       }
       # set these -1s to NA
@@ -1883,7 +1946,8 @@ mdro <- function(x = NULL,
     # format data set
     colnames(x)[colnames(x) == col_mo] <- "microorganism"
     x$microorganism <- mo_name(x$microorganism, language = NULL)
-    x$guideline <- paste0(guideline$author, " - ", guideline$name, ", ", guideline$version, ")")
+    x$guideline <- paste0(guideline$author, " - ", guideline$name, ifelse(is.na(guideline$version), "", paste0(" (", guideline$version, ")")))
+    x$all_nonsusceptible_columns <- gsub(".inferred_sir_proxy_from#(.*?)#", " (inferred from \\1)", x$all_nonsusceptible_columns, perl = TRUE)
     x[, c(
       "row_number",
       "microorganism",
@@ -1906,7 +1970,7 @@ brmo <- function(x = NULL, only_sir_columns = any(is.sir(x)), ...) {
   meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
   stop_if(
     "guideline" %in% names(list(...)),
-    "argument `guideline` must not be set since this is a guideline-specific function"
+    "argument {.arg guideline} must not be set since this is a guideline-specific function"
   )
   mdro(x = x, only_sir_columns = only_sir_columns, guideline = "BRMO", ...)
 }
@@ -1919,7 +1983,7 @@ mrgn <- function(x = NULL, only_sir_columns = any(is.sir(x)), verbose = FALSE, .
   meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
   stop_if(
     "guideline" %in% names(list(...)),
-    "argument `guideline` must not be set since this is a guideline-specific function"
+    "argument {.arg guideline} must not be set since this is a guideline-specific function"
   )
   mdro(x = x, only_sir_columns = only_sir_columns, verbose = verbose, guideline = "MRGN", ...)
 }
@@ -1931,7 +1995,7 @@ mdr_tb <- function(x = NULL, only_sir_columns = any(is.sir(x)), verbose = FALSE,
   meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
   stop_if(
     "guideline" %in% names(list(...)),
-    "argument `guideline` must not be set since this is a guideline-specific function"
+    "argument {.arg guideline} must not be set since this is a guideline-specific function"
   )
   mdro(x = x, only_sir_columns = only_sir_columns, verbose = verbose, guideline = "TB", ...)
 }
@@ -1943,7 +2007,7 @@ mdr_cmi2012 <- function(x = NULL, only_sir_columns = any(is.sir(x)), verbose = F
   meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
   stop_if(
     "guideline" %in% names(list(...)),
-    "argument `guideline` must not be set since this is a guideline-specific function"
+    "argument {.arg guideline} must not be set since this is a guideline-specific function"
   )
   mdro(x = x, only_sir_columns = only_sir_columns, verbose = verbose, guideline = "CMI 2012", ...)
 }
@@ -1955,7 +2019,7 @@ eucast_exceptional_phenotypes <- function(x = NULL, only_sir_columns = any(is.si
   meet_criteria(only_sir_columns, allow_class = "logical", has_length = 1)
   stop_if(
     "guideline" %in% names(list(...)),
-    "argument `guideline` must not be set since this is a guideline-specific function"
+    "argument {.arg guideline} must not be set since this is a guideline-specific function"
   )
   mdro(x = x, only_sir_columns = only_sir_columns, verbose = verbose, guideline = "EUCAST", ...)
 }

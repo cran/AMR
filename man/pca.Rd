@@ -4,8 +4,15 @@
 \alias{pca}
 \title{Principal Component Analysis (for AMR)}
 \usage{
-pca(x, ..., retx = TRUE, center = TRUE, scale. = TRUE, tol = NULL,
-  rank. = NULL)
+pca(
+  x,
+  ...,
+  retx = TRUE,
+  center = TRUE,
+  scale. = TRUE,
+  tol = NULL,
+  rank. = NULL
+)
 }
 \arguments{
 \item{x}{A \link{data.frame} containing \link{numeric} columns.}
@@ -79,12 +86,12 @@ if (require("dplyr")) {
 
 # new ggplot2 plotting method using this package:
 if (require("dplyr") && require("ggplot2")) {
-    ggplot_pca(pca_result)
+  ggplot_pca(pca_result)
 }
 if (require("dplyr") && require("ggplot2")) {
-    ggplot_pca(pca_result) +
-      scale_colour_viridis_d() +
-      labs(title = "Title here")
+  ggplot_pca(pca_result) +
+    scale_colour_viridis_d() +
+    labs(title = "Title here")
 }
 }
 }

@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -63,6 +63,7 @@ COMMON_MIC_VALUES <- c(
 #' @param x A [character] or [numeric] vector.
 #' @param na.rm A [logical] indicating whether missing values should be removed.
 #' @param keep_operators A [character] specifying how to handle operators (such as `>` and `<=`) in the input. Accepts one of three values: `"all"` (or `TRUE`) to keep all operators, `"none"` (or `FALSE`) to remove all operators, or `"edges"` to keep operators only at both ends of the range.
+#' @param round_to_next_log2 A [logical] to round up all values to the next log2 level, that are not either `r vector_or(COMMON_MIC_VALUES, quotes = F)`. Values that are already in this list (with or without operators), are left unchanged (including any operators).
 #' @param ... Arguments passed on to methods.
 #' @details To interpret MIC values as SIR values, use [as.sir()] on MIC values. It supports guidelines from EUCAST (`r min(as.integer(gsub("[^0-9]", "", subset(clinical_breakpoints, guideline %like% "EUCAST")$guideline)))`-`r max(as.integer(gsub("[^0-9]", "", subset(clinical_breakpoints, guideline %like% "EUCAST")$guideline)))`) and CLSI (`r min(as.integer(gsub("[^0-9]", "", subset(clinical_breakpoints, guideline %like% "CLSI")$guideline)))`-`r max(as.integer(gsub("[^0-9]", "", subset(clinical_breakpoints, guideline %like% "CLSI")$guideline)))`).
 #'
@@ -71,7 +72,7 @@ COMMON_MIC_VALUES <- c(
 #' ```
 #' x <- random_mic(10)
 #' x
-#' #> Class 'mic'
+#' #> Class <mic>
 #' #>  [1] 16     1      8      8      64     >=128  0.0625 32     32     16
 #'
 #' is.factor(x)
@@ -88,7 +89,7 @@ COMMON_MIC_VALUES <- c(
 #'
 #' ```
 #' x[x > 4]
-#' #> Class 'mic'
+#' #> Class <mic>
 #' #> [1] 16    8     8     64    >=128 32    32    16
 #'
 #' df <- data.frame(x, hospital = "A")
@@ -125,13 +126,17 @@ COMMON_MIC_VALUES <- c(
 #' # this can also coerce combined MIC/SIR values:
 #' as.mic("<=0.002; S")
 #'
-#' # mathematical processing treats MICs as numeric values
+#' # mathematical processing treats MICs as, and returns, numeric values
 #' fivenum(mic_data)
 #' quantile(mic_data)
 #' all(mic_data < 512)
 #'
 #' # rescale MICs using rescale_mic()
 #' rescale_mic(mic_data, mic_range = c(4, 16))
+#'
+#' # round up to nearest log2 level, e.g. for CLSI breakpoint interpretation:
+#' c(1:8)
+#' as.mic(c(1:8), round_to_next_log2 = TRUE)
 #'
 #' # interpret MIC values
 #' as.sir(
@@ -157,17 +162,22 @@ COMMON_MIC_VALUES <- c(
 #' if (require("ggplot2")) {
 #'   autoplot(mic_data, mo = "E. coli", ab = "cipro", language = "nl") # Dutch
 #' }
-as.mic <- function(x, na.rm = FALSE, keep_operators = "all") {
+as.mic <- function(x, na.rm = FALSE, keep_operators = "all", round_to_next_log2 = FALSE) {
   meet_criteria(x, allow_NA = TRUE)
   meet_criteria(na.rm, allow_class = "logical", has_length = 1)
   meet_criteria(keep_operators, allow_class = c("character", "logical"), is_in = c("all", "none", "edges", FALSE, TRUE), has_length = 1)
+  meet_criteria(round_to_next_log2, allow_class = "logical", has_length = 1)
+
   if (isTRUE(keep_operators)) {
     keep_operators <- "all"
   } else if (isFALSE(keep_operators)) {
     keep_operators <- "none"
   }
 
-  if (is.mic(x) && (keep_operators == "all" || !any(x %like% "[>=<]", na.rm = TRUE))) {
+  if (any(is.mic(x)) && (keep_operators == "all" || !any(x %like% "[>=<]", na.rm = TRUE))) {
+    if (isTRUE(round_to_next_log2)) {
+      x <- roundup_to_nearest_log2(x)
+    }
     if (!identical(levels(x), VALID_MIC_LEVELS)) {
       # might be from an older AMR version - just update MIC factor levels
       x <- set_clean_class(factor(as.character(x), levels = VALID_MIC_LEVELS, ordered = TRUE),
@@ -207,8 +217,9 @@ as.mic <- function(x, na.rm = FALSE, keep_operators = "all") {
     warning_("Some MICs were combined values, only the first values are kept")
     x[x %like% "[0-9]/.*[0-9]"] <- gsub("/.*", "", x[x %like% "[0-9]/.*[0-9]"])
   }
+  x <- trimws2(gsub("[^e\\P{L}]", "", x, perl = TRUE)) # \p{L} is the Unicode category for all letters, including those with diacritics
   # remove other invalid characters
-  x <- gsub("[^a-zA-Z0-9.><= -]+", "", x, perl = TRUE)
+  x <- gsub("[^0-9e.><= -]+", "", x, perl = TRUE)
   # transform => to >= and =< to <=
   x <- gsub("=<", "<=", x, fixed = TRUE)
   x <- gsub("=>", ">=", x, fixed = TRUE)
@@ -258,9 +269,9 @@ as.mic <- function(x, na.rm = FALSE, keep_operators = "all") {
       sort() %pm>%
       vector_and(quotes = TRUE)
     cur_col <- get_current_column()
-    warning_("in `as.mic()`: ", na_after - na_before, " result",
+    warning_("in {.help [{.fun as.mic}](AMR::as.mic)}: ", na_after - na_before, " result",
       ifelse(na_after - na_before > 1, "s", ""),
-      ifelse(is.null(cur_col), "", paste0(" in index '", cur_col, "'")),
+      ifelse(is.null(cur_col), "", paste0(" in column {.field ", font_bold(cur_col, collapse = NULL), "}")),
       " truncated (",
       round(((na_after - na_before) / length(x)) * 100),
       "%) that were invalid MICs: ",
@@ -277,6 +288,10 @@ as.mic <- function(x, na.rm = FALSE, keep_operators = "all") {
     x[dbls == max(dbls, na.rm = TRUE)] <- paste0(">=", max(dbls, na.rm = TRUE))
     keep <- x[dbls == max(dbls, na.rm = TRUE) | dbls == min(dbls, na.rm = TRUE)]
     x[!x %in% keep] <- gsub("[>=<]", "", x[!x %in% keep])
+  }
+
+  if (isTRUE(round_to_next_log2)) {
+    x <- roundup_to_nearest_log2(x)
   }
 
   set_clean_class(factor(x, levels = VALID_MIC_LEVELS, ordered = TRUE),
@@ -305,18 +320,19 @@ NA_mic_ <- set_clean_class(factor(NA, levels = VALID_MIC_LEVELS, ordered = TRUE)
 #' @rdname as.mic
 #' @param mic_range A manual range to rescale the MIC values, e.g., `mic_range = c(0.001, 32)`. Use `NA` to prevent rescaling on one side, e.g., `mic_range = c(NA, 32)`.
 #' @export
-rescale_mic <- function(x, mic_range, keep_operators = "edges", as.mic = TRUE) {
+rescale_mic <- function(x, mic_range, keep_operators = "edges", as.mic = TRUE, round_to_next_log2 = FALSE) {
   meet_criteria(mic_range, allow_class = c("numeric", "integer", "logical", "mic"), has_length = 2, allow_NA = TRUE, allow_NULL = TRUE)
+
   if (is.numeric(mic_range)) {
     mic_range <- trimws(format(mic_range, scientific = FALSE))
     mic_range <- gsub("[.]0+$", "", mic_range)
     mic_range[mic_range == "NA"] <- NA_character_
-  } else if (is.mic(mic_range)) {
+  } else if (any(is.mic(mic_range))) {
     mic_range <- as.character(mic_range)
   }
   stop_ifnot(
     all(mic_range %in% c(VALID_MIC_LEVELS, NA)),
-    "Values in `mic_range` must be valid MIC values. ",
+    "Values in {.arg mic_range} must be valid MIC values. ",
     "The allowed range is ", format(as.double(as.mic(VALID_MIC_LEVELS)[1]), scientific = FALSE), " to ", format(as.double(as.mic(VALID_MIC_LEVELS)[length(VALID_MIC_LEVELS)]), scientific = FALSE), ". ",
     "Unvalid: ", vector_and(mic_range[!mic_range %in% c(VALID_MIC_LEVELS, NA)], quotes = FALSE), "."
   )
@@ -336,7 +352,7 @@ rescale_mic <- function(x, mic_range, keep_operators = "edges", as.mic = TRUE) {
     x[x > max_mic] <- max_mic
   }
 
-  x <- as.mic(x, keep_operators = ifelse(keep_operators == "edges", "none", keep_operators))
+  x <- as.mic(x, keep_operators = ifelse(keep_operators == "edges", "none", keep_operators), round_to_next_log2 = round_to_next_log2)
 
   if (isTRUE(as.mic)) {
     if (keep_operators == "edges" && length(unique(x)) > 1) {
@@ -426,23 +442,19 @@ all_valid_mics <- function(x) {
 #' @rawNamespace if(getRversion() >= "3.0.0") S3method(pillar::pillar_shaft, mic)
 pillar_shaft.mic <- function(x, ...) {
   if (!identical(levels(x), VALID_MIC_LEVELS) && message_not_thrown_before("pillar_shaft.mic")) {
-    warning_(AMR_env$sup_1_icon, " These columns contain an outdated or altered structure - convert with `as.mic()` to update",
+    warning_(AMR_env$sup_1_icon, " These columns contain an outdated or altered structure - convert with {.fun as.mic} to update",
       call = FALSE
     )
   }
   crude_numbers <- as.double(x)
   operators <- gsub("[^<=>]+", "", as.character(x))
   # colourise operators
-  operators[!is.na(operators) & operators != ""] <- font_silver(operators[!is.na(operators) & operators != ""], collapse = NULL)
+  operators[!is.na(operators) & operators != ""] <- pillar::style_subtle(operators[!is.na(operators) & operators != ""])
   out <- trimws(paste0(operators, trimws(format(crude_numbers))))
-  out[is.na(x)] <- font_na(NA)
+  out[is.na(x)] <- pillar::style_na(NA)
   # make trailing zeroes less visible
-  if (is_dark()) {
-    fn <- font_silver
-  } else {
-    fn <- font_white
-  }
-  out[out %like% "[.]"] <- gsub("([.]?0+)$", fn("\\1"), out[out %like% "[.]"], perl = TRUE)
+  out[out %like% "[.]"] <- gsub("([.]?0+)$", pillar::style_subtle("\\1"), out[out %like% "[.]"], perl = TRUE)
+
   create_pillar_column(out, align = "right", width = max(nchar(font_stripstyle(out))))
 }
 
@@ -460,7 +472,7 @@ type_sum.mic <- function(x, ...) {
 #' @export
 #' @noRd
 print.mic <- function(x, ...) {
-  cat("Class 'mic'")
+  cat(format_inline_("Class {.cls mic}"))
   if (!identical(levels(x), VALID_MIC_LEVELS)) {
     cat(font_red(" with an outdated or altered structure - convert with `as.mic()` to update"))
   }
@@ -493,7 +505,7 @@ as.vector.mic <- function(x, mode = "numneric", ...) {
   y <- as.mic(y)
   calls <- unlist(lapply(sys.calls(), as.character))
   if (any(calls %in% c("rbind", "cbind")) && message_not_thrown_before("as.vector.mic")) {
-    warning_("Functions `rbind()` and `cbind()` cannot preserve the structure of MIC values. Use dplyr's `bind_rows()` or `bind_cols()` instead.", call = FALSE)
+    warning_("Functions {.fun rbind} and {.fun cbind} cannot preserve the structure of MIC values. Use {.pkg dplyr}'s {.fun bind_rows} or {.fun bind_cols} instead.", call = FALSE)
   }
   y
 }
@@ -586,7 +598,7 @@ sort.mic <- function(x, decreasing = FALSE, ...) {
 #' @export
 #' @noRd
 hist.mic <- function(x, ...) {
-  warning_("in `hist()`: use `plot()` or ggplot2's `autoplot()` for optimal plotting of MIC values")
+  warning_("in {.fun hist}: use {.fun plot} or {.pkg ggplot2}'s {.fun autoplot} for optimal plotting of MIC values")
   hist(log2(x))
 }
 
@@ -603,6 +615,24 @@ get_skimmers.mic <- function(column) {
     p100 = ~ stats::quantile(column, probs = 1, na.rm = TRUE, names = FALSE),
     hist = ~ skimr::inline_hist(log2(stats::na.omit(column)), 10)
   )
+}
+
+
+roundup_to_nearest_log2 <- function(x) {
+  x_dbl <- suppressWarnings(as.double(gsub("[>=<]", "", x)))
+  x_new <- vapply(
+    FUN.VALUE = double(1),
+    x_dbl,
+    function(val) {
+      if (is.na(val)) {
+        NA_real_
+      } else {
+        COMMON_MIC_VALUES[which(COMMON_MIC_VALUES >= val)][1]
+      }
+    }
+  )
+  x[!x_dbl %in% COMMON_MIC_VALUES] <- x_new[!x_dbl %in% COMMON_MIC_VALUES]
+  x
 }
 
 # Miscellaneous mathematical functions ------------------------------------

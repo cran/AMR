@@ -15,10 +15,24 @@
 \alias{eucast_exceptional_phenotypes}
 \title{Determine Multidrug-Resistant Organisms (MDRO)}
 \usage{
-mdro(x = NULL, guideline = "CMI 2012", col_mo = NULL, esbl = NA,
-  carbapenemase = NA, mecA = NA, mecC = NA, vanA = NA, vanB = NA,
-  info = interactive(), pct_required_classes = 0.5, combine_SI = TRUE,
-  verbose = FALSE, only_sir_columns = any(is.sir(x)), ...)
+mdro(
+  x = NULL,
+  guideline = "CMI 2012",
+  col_mo = NULL,
+  esbl = NA,
+  carbapenemase = NA,
+  mecA = NA,
+  mecC = NA,
+  vanA = NA,
+  vanB = NA,
+  info = interactive(),
+  pct_required_classes = 0.5,
+  combine_SI = TRUE,
+  verbose = FALSE,
+  only_sir_columns = any(is.sir(x)),
+  infer_from_combinations = TRUE,
+  ...
+)
 
 brmo(x = NULL, only_sir_columns = any(is.sir(x)), ...)
 
@@ -26,16 +40,19 @@ mrgn(x = NULL, only_sir_columns = any(is.sir(x)), verbose = FALSE, ...)
 
 mdr_tb(x = NULL, only_sir_columns = any(is.sir(x)), verbose = FALSE, ...)
 
-mdr_cmi2012(x = NULL, only_sir_columns = any(is.sir(x)), verbose = FALSE,
-  ...)
+mdr_cmi2012(x = NULL, only_sir_columns = any(is.sir(x)), verbose = FALSE, ...)
 
-eucast_exceptional_phenotypes(x = NULL, only_sir_columns = any(is.sir(x)),
-  verbose = FALSE, ...)
+eucast_exceptional_phenotypes(
+  x = NULL,
+  only_sir_columns = any(is.sir(x)),
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{A \link{data.frame} with antimicrobials columns, like \code{AMX} or \code{amox}. Can be left blank for automatic determination.}
 
-\item{guideline}{A specific guideline to follow, see sections \emph{Supported international / national guidelines} and \emph{Using Custom Guidelines} below. When left empty, the publication by Magiorakos \emph{et al.} (see below) will be followed.}
+\item{guideline}{A specific guideline to follow, see sections \emph{Supported International / National Guidelines} and \emph{Using Custom Guidelines} below. When left empty, the publication by Magiorakos \emph{et al.} (see below) will be followed.}
 
 \item{col_mo}{Column name of the names or codes of the microorganisms (see \code{\link[=as.mo]{as.mo()}}) - the default is the first column of class \code{\link{mo}}. Values will be coerced using \code{\link[=as.mo]{as.mo()}}.}
 
@@ -55,11 +72,13 @@ eucast_exceptional_phenotypes(x = NULL, only_sir_columns = any(is.sir(x)),
 
 \item{pct_required_classes}{Minimal required percentage of antimicrobial classes that must be available per isolate, rounded down. For example, with the default guideline, 17 antimicrobial classes must be available for \emph{S. aureus}. Setting this \code{pct_required_classes} argument to \code{0.5} (default) means that for every \emph{S. aureus} isolate at least 8 different classes must be available. Any lower number of available classes will return \code{NA} for that isolate.}
 
-\item{combine_SI}{A \link{logical} to indicate whether all values of S and I must be merged into one, so resistance is only considered when isolates are R, not I. As this is the default behaviour of the \code{\link[=mdro]{mdro()}} function, it follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. When using \code{combine_SI = FALSE}, resistance is considered when isolates are R or I.}
+\item{combine_SI}{A \link{logical} to indicate whether all values of S and I must be merged into one, so resistance is only considered when isolates are R, not I. As this is the default behaviour of the \code{\link[=mdro]{mdro()}} function, it follows the redefinition by EUCAST about the interpretation of I (increased exposure) in 2019, see section 'Interpretation of S, I and R' below. When using \code{combine_SI = FALSE}, resistance is considered when isolates are R or I. In a future version, the handling of 'I' will follow the selected MDRO guideline (\href{https://github.com/msberends/AMR/issues/323}{#323}).}
 
 \item{verbose}{A \link{logical} to turn Verbose mode on and off (default is off). In Verbose mode, the function returns a data set with the MDRO results in logbook form with extensive info about which isolates would be MDRO-positive, or why they are not.}
 
 \item{only_sir_columns}{A \link{logical} to indicate whether only antimicrobial columns must be included that were transformed to class \link[=as.sir]{sir} on beforehand. Defaults to \code{FALSE} if no columns of \code{x} have a class \link[=as.sir]{sir}.}
+
+\item{infer_from_combinations}{A \link{logical} to indicate whether resistance for a missing base beta-lactam drug should be inferred from an available drug+inhibitor combination (e.g., piperacillin from piperacillin/tazobactam). The clinical basis is that resistance in a combination always implies resistance in the base drug, since the enzyme inhibitor provides no benefit when the organism is truly resistant. Only resistance is inferred; susceptibility in a combination does \strong{not} imply susceptibility in the base drug (the inhibitor may be responsible). Defaults to \code{TRUE}.}
 
 \item{...}{Column names of antimicrobials. To automatically detect antimicrobial column names, do not provide any named arguments; \code{\link[=guess_ab_col]{guess_ab_col()}} will then be used for detection. To manually specify a column, provide its name (case-insensitive) as an argument, e.g. \code{AMX = "amoxicillin"}. To skip a specific antimicrobial, set it to \code{NULL}, e.g. \code{TIC = NULL} to exclude ticarcillin. If a manually defined column does not exist in the data, it will be skipped with a warning.}
 }
@@ -116,7 +135,7 @@ The international guideline for multi-drug resistant tuberculosis - World Health
 The German national guideline - Mueller et al. (2015) Antimicrobial Resistance and Infection Control 4:7; \doi{10.1186/s13756-015-0047-6}
 \item \code{guideline = "BRMO 2024"} (or simply \code{guideline = "BRMO"})
 
-The Dutch national guideline - Samenwerkingverband Richtlijnen Infectiepreventie (SRI) (2024) "Bijzonder Resistente Micro-Organismen (BRMO)" (\href{https://www.sri-richtlijnen.nl/brmo}{link})
+The Dutch national guideline - Samenwerkingverband Richtlijnen Infectiepreventie (SRI) (2024) "Bijzonder Resistente Micro-Organismen (BRMO)" (\href{https://richtlijnendatabase.nl/richtlijn/bijzonder_resistente_micro-organismen_brmo}{link})
 
 Also:
 \itemize{
@@ -136,9 +155,28 @@ Custom guidelines can be set with the \code{\link[=custom_mdro_guideline]{custom
 }
 \section{Interpretation of SIR}{
 
-In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R (\url{https://www.eucast.org/newsiandr}).
+In 2019, the European Committee on Antimicrobial Susceptibility Testing (EUCAST) has decided to change the definitions of susceptibility testing categories S, I, and R (\url{https://www.eucast.org/bacteria/clinical-breakpoints-and-interpretation/definition-of-s-i-and-r/}).
 
-This AMR package follows insight; use \code{\link[=susceptibility]{susceptibility()}} (equal to \code{\link[=proportion_SI]{proportion_SI()}}) to determine antimicrobial susceptibility and \code{\link[=count_susceptible]{count_susceptible()}} (equal to \code{\link[=count_SI]{count_SI()}}) to count susceptible isolates.
+In aggregated analyses, such as proportions, counts, antibiograms, and plots, the 'I' category must be considered either susceptible or resistant. In epidemiological AMR data analysis, this follows the guideline: EUCAST considers 'I' susceptible, while CLSI considers 'I' resistant. The dose-dependent susceptibility of CLSI ('SDD') is always considered susceptible, as it equals what EUCAST defines as 'I'. All functions with a \code{guideline} argument for this purpose use these categories:\tabular{lll}{
+   \code{guideline} \tab Susceptible \tab Resistant \cr
+   \code{"EUCAST"} \tab S, SDD, I, WT \tab R, NWT, NS \cr
+   \code{"CLSI"} \tab S, SDD, WT \tab I, R, NWT, NS \cr
+}
+
+
+The values 'WT' (wild type) and 'NWT' (non-wild type) result from epidemiological cut-off values (ECOFFs) instead of clinical breakpoints. Since they are no clinical categories, 'WT' is always considered susceptible and 'NWT' always resistant, regardless of the guideline. The value 'NS' (non-susceptible) is always considered resistant, and 'NI' (non-interpretable) is always considered a missing result.
+
+The \code{guideline} argument can be:
+\itemize{
+\item \strong{Left unset}, to use the package option \code{\link[=AMR-options]{AMR_guideline}}, or \code{"EUCAST"} if this option is not set. In the latter case, a message is shown once per session (but not in R Markdown or Quarto documents); set the option to silence it.
+\item \strong{\code{"EUCAST"}}, or any EUCAST version such as \code{"EUCAST 2025"}, to consider 'I' susceptible, e.g., to return \code{"SI"} vs. \code{"R"} in \code{\link[=proportion_df]{proportion_df()}}.
+\item \strong{\code{"CLSI"}}, or any CLSI version such as \code{"CLSI 2025"}, to consider 'I' resistant, e.g., to return \code{"S"} vs. \code{"IR"} in \code{\link[=proportion_df]{proportion_df()}}.
+\item \strong{\code{NULL} or \code{FALSE}}, to keep S, I, and R separate. This is only possible in functions that return results per category: \code{\link[=count_df]{count_df()}}, \code{\link[=proportion_df]{proportion_df()}}, \code{\link[=sir_df]{sir_df()}}, \code{\link[=ggplot_sir]{ggplot_sir()}}, \code{\link[=geom_sir]{geom_sir()}}, \code{\link[=labels_sir_count]{labels_sir_count()}}, and \code{\link[=bug_drug_combinations]{bug_drug_combinations()}}. Functions that return a single proportion or count, such as \code{\link[=susceptibility]{susceptibility()}}, \code{\link[=count_resistant]{count_resistant()}}, \code{\link[=antibiogram]{antibiogram()}}, \code{\link[=wisca]{wisca()}}, and \code{\link[=format]{format()}} on the result of \code{\link[=bug_drug_combinations]{bug_drug_combinations()}}, require 'I' to be considered either susceptible or resistant, and return an error.
+}
+
+Use \code{\link[=susceptibility]{susceptibility()}} and \code{\link[=resistance]{resistance()}} (or \code{\link[=count_susceptible]{count_susceptible()}} and \code{\link[=count_resistant]{count_resistant()}}) to follow the guideline, or e.g. \code{\link[=proportion_SI]{proportion_SI()}} and \code{\link[=proportion_R]{proportion_R()}} to be explicit regardless of the guideline.
+
+The \code{combine_SI} argument of the functions that return results per category, \code{\link[=antibiogram]{antibiogram()}}, and \code{\link[=wisca]{wisca()}} is deprecated in favour of \code{guideline}. If set, it is followed literally and takes precedence over \code{guideline}.
 }
 
 \examples{

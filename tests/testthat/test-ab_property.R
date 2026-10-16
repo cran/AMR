@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -39,7 +39,8 @@ test_that("test-ab_property.R", {
   expect_inherits(ab_tradenames("AMX"), "character")
   expect_inherits(ab_tradenames(c("AMX", "AMX")), "list")
 
-  expect_identical(ab_group("AMX", language = NULL), "Beta-lactams/penicillins")
+  expect_identical(ab_group("AMX", language = NULL), "Aminopenicillins")
+  expect_identical(ab_group("AMX", language = NULL, all_groups = TRUE), c("Aminopenicillins", "Penicillins", "Beta-lactams"))
   expect_identical(ab_atc_group1("AMX", language = NULL), "Beta-lactam antibacterials, penicillins")
   expect_identical(ab_atc_group2("AMX", language = NULL), "Penicillins with extended spectrum")
 
@@ -74,7 +75,7 @@ test_that("test-ab_property.R", {
   expect_true(ab_url("AMX") %like% "fhi[.]no")
 
   expect_identical(
-    colnames(set_ab_names(example_isolates[, 17:22])),
+    colnames(set_ab_names(example_isolates[, 17:22], language = "en")),
     c("cefoxitin", "cefotaxime", "ceftazidime", "ceftriaxone", "gentamicin", "tobramycin")
   )
   expect_identical(
@@ -96,7 +97,7 @@ test_that("test-ab_property.R", {
       "moxifloxacin", "vancomycin", "TEC"
     ) %in%
       (example_isolates %>%
-        set_ab_names(NIT:VAN) %>%
+        set_ab_names(NIT:VAN, language = "en") %>%
         colnames())))
   }
 })

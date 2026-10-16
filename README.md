@@ -10,12 +10,13 @@ Overview:
 
 - Provides an **all-in-one solution** for antimicrobial resistance (AMR)
   data analysis in a One Health approach
-- Peer-reviewed, used in over 175 countries, available in 28 languages
-- Generates **antibiograms** - traditional, combined, syndromic, and
-  even WISCA
-- Provides the **full microbiological taxonomy** of ~79 000 distinct
-  species and extensive info of ~620 antimicrobial drugs
-- Applies **CLSI 2011-2025** and **EUCAST 2011-2025** clinical and
+- **Peer-reviewed**, used in over 175 countries, cited over 100 times,
+  available in 28 languages
+- Generates **antibiograms** - WISCA for empiric coverage estimates, or
+  traditional/syndromic for AMR surveillance
+- Provides the **full microbiological taxonomy** of ~103 000 distinct
+  species and extensive info of ~630 antimicrobial drugs
+- Applies **CLSI 2011-2026** and **EUCAST 2011-2026** clinical and
   veterinary breakpoints, and ECOFFs, for MIC and disk zone
   interpretation
 - Corrects for duplicate isolates, **calculates** and **predicts** AMR
@@ -31,10 +32,11 @@ The `AMR` package is a peer-reviewed, free and open-source R package
 with zero dependencies to simplify the analysis and prediction of
 Antimicrobial Resistance (AMR) and to work with microbial and
 antimicrobial data and properties, by using evidence-based methods.
-**Our aim is to provide a standard** for clean and reproducible AMR data
-analysis, that can therefore empower epidemiological analyses to
-continuously enable surveillance and treatment evaluation in any
-setting.
+
+**Our aim has always been to provide a standard** for clean and
+reproducible AMR data analysis, that can therefore empower
+epidemiological analyses to continuously enable surveillance and
+treatment evaluation in any setting.
 
 The `AMR` package supports and can read any data format, including
 WHONET data. This package works on Windows, macOS and Linux with all

@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -212,7 +212,7 @@ ab_from_text <- function(text,
       }
     })
   } else {
-    stop_("`type` must be either 'drug', 'dose' or 'administration'")
+    stop_("{.arg type} must be either {.val drug}, {.val dose} or {.val administration}")
   }
 
   # collapse text if needed

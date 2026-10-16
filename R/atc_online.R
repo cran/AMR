@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -99,12 +99,12 @@ atc_online_property <- function(atc_code,
   read_html <- import_fn("read_html", "xml2")
 
   if (!all(atc_code %in% unlist(AMR::antimicrobials$atc))) {
-    atc_code <- as.character(ab_atc(atc_code, only_first = TRUE))
+    missing <- atc_code %unlike% "[A-Z][0-9][0-9][A-Z][A-Z][0-9][0-9]"
+    atc_code[missing] <- as.character(ab_atc(atc_code[missing], only_first = TRUE))
   }
 
   if (!has_internet()) {
     message_("There appears to be no internet connection, returning NA.",
-      add_fn = font_red,
       as_note = FALSE
     )
     return(rep(NA, length(atc_code)))
@@ -180,7 +180,7 @@ atc_online_property <- function(atc_code,
       colnames(out) <- gsub("^atc.*", "atc", tolower(colnames(out)))
 
       if (length(out) == 0) {
-        message_("in `atc_online_property()`: no properties found for ATC ", atc_code[i], ". Please check ", font_url(atc_url, "this WHOCC webpage"), ".")
+        message_("{.help [{.fun atc_online_property}](AMR::atc_online_property)}: no properties found for ATC ", atc_code[i], ". Please check {.href ", atc_url, " this WHOCC webpage}.")
         returnvalue[i] <- NA
         next
       }

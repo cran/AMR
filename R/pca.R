@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -66,12 +66,12 @@
 #'
 #' # new ggplot2 plotting method using this package:
 #' if (require("dplyr") && require("ggplot2")) {
-#'     ggplot_pca(pca_result)
+#'   ggplot_pca(pca_result)
 #' }
 #' if (require("dplyr") && require("ggplot2")) {
-#'     ggplot_pca(pca_result) +
-#'       scale_colour_viridis_d() +
-#'       labs(title = "Title here")
+#'   ggplot_pca(pca_result) +
+#'     scale_colour_viridis_d() +
+#'     labs(title = "Title here")
 #' }
 #' }
 pca <- function(x,
@@ -114,7 +114,7 @@ pca <- function(x,
 
     x <- as.data.frame(new_list, stringsAsFactors = FALSE)
     if (any(vapply(FUN.VALUE = logical(1), x, function(y) !is.numeric(y)))) {
-      warning_("in `pca()`: be sure to first calculate the resistance (or susceptibility) of variables with antimicrobial test results, since PCA works with numeric variables only. See Examples in `?pca`.", call = FALSE)
+      warning_("in {.fun pca}: be sure to first calculate the resistance (or susceptibility) of variables with antimicrobial test results, since PCA works with numeric variables only. See {.help [{.fun pca}](AMR::pca)}.", call = FALSE)
     }
 
     # set column names
@@ -134,7 +134,7 @@ pca <- function(x,
   pca_data <- x[, which(vapply(FUN.VALUE = logical(1), x, function(x) is.numeric(x))), drop = FALSE]
 
   message_(
-    "Columns selected for PCA: ", vector_and(font_bold(colnames(pca_data), collapse = NULL), quotes = TRUE),
+    "Columns selected for PCA: ", vector_and(paste0("{.field ", font_bold(colnames(pca_data), collapse = NULL), "}"), quotes = FALSE),
     ". Total observations available: ", nrow(pca_data), "."
   )
 

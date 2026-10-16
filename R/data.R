@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -38,7 +38,7 @@
 #' - `ab`\cr antimicrobial ID as used in this package (such as `AMC`), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available. ***This is a unique identifier.***
 #' - `cid`\cr Compound ID as found in PubChem. ***This is a unique identifier.***
 #' - `name`\cr Official name as used by WHONET/EARS-Net or the WHO. ***This is a unique identifier.***
-#' - `group`\cr A short and concise group name, based on WHONET and WHOCC definitions
+#' - `group`\cr One or more short and concise group names, based on WHONET and WHOCC definitions
 #' - `atc`\cr ATC codes (Anatomical Therapeutic Chemical) as defined by the WHOCC, like `J01CR02` (last updated `r documentation_date(TAXONOMY_VERSION$ATC_DDD$accessed_date)`):
 #' - `atc_group1`\cr Official pharmacological subgroup (3rd level ATC code) as defined by the WHOCC, like `"Macrolides, lincosamides and streptogramins"`
 #' - `atc_group2`\cr Official chemical subgroup (4th level ATC code) as defined by the WHOCC, like `"Macrolides"`
@@ -77,13 +77,13 @@
 #'
 #' Synonyms (i.e. trade names) were derived from the PubChem Compound ID (column `cid`) and are consequently only available where a CID is available.
 #' @inheritSection AMR Download Our Reference Data
-#' @source
+#' @references
 #'
 #' * `r TAXONOMY_VERSION$ATC_DDD$citation` Accessed from <`r TAXONOMY_VERSION$ATC_DDD$url`> on `r documentation_date(TAXONOMY_VERSION$ATC_DDD$accessed_date)`.
 #'
 #' * `r TAXONOMY_VERSION$LOINC$citation` Accessed from <`r TAXONOMY_VERSION$LOINC$url`> on `r documentation_date(TAXONOMY_VERSION$LOINC$accessed_date)`.
 #'
-#' * European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: <https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm>
+#' * European Commission Public Health PHARMACEUTICALS - COMMUNITY REGISTER: <https://ec.europa.eu/health/documents/community-register/html/index_en.htm>
 #' @inheritSection WHOCC WHOCC
 #' @seealso [microorganisms], [intrinsic_resistant]
 #' @examples
@@ -100,18 +100,19 @@
 #' Data Set with `r format(nrow(microorganisms), big.mark = " ")` Taxonomic Records of Microorganisms
 #'
 #' @description
-#' A data set containing the full microbial taxonomy (**last updated: `r documentation_date(max(TAXONOMY_VERSION$GBIF$accessed_date, TAXONOMY_VERSION$LPSN$accessed_date, TAXONOMY_VERSION$MycoBank$accessed_date))`**) of `r nr2char(length(unique(microorganisms$kingdom[!microorganisms$kingdom %like% "unknown"])))` kingdoms. This data set is the backbone of this `AMR` package. MO codes can be looked up using [as.mo()] and microorganism properties can be looked up using any of the [`mo_*`][mo_property()] functions.
+#' A data set containing the full microbial taxonomy (**last updated: `r documentation_date(max(TAXONOMY_VERSION$GBIF$accessed_date, TAXONOMY_VERSION$LPSN$accessed_date, TAXONOMY_VERSION$MycoBank$accessed_date))`**) of `r nr2char(length(unique(microorganisms$domain[!microorganisms$domain %like% "unknown"])))` domains. This data set is the backbone of this `AMR` package. MO codes can be looked up using [as.mo()] and microorganism properties can be looked up using any of the [`mo_*`][mo_property()] functions.
 #'
 #' This data set is carefully crafted, yet made 100% reproducible from public and authoritative taxonomic sources (using [this script](https://github.com/msberends/AMR/blob/main/data-raw/_reproduction_scripts/reproduction_of_microorganisms.R)), namely: *`r TAXONOMY_VERSION$LPSN$name`* for bacteria, *`r TAXONOMY_VERSION$MycoBank$name`* for fungi, and *`r TAXONOMY_VERSION$GBIF$name`* for all others taxons.
 #' @format A [tibble][tibble::tibble] with `r format(nrow(microorganisms), big.mark = " ")` observations and `r ncol(microorganisms)` variables:
 #' - `mo`\cr ID of microorganism as used by this package. ***This is a unique identifier.***
 #' - `fullname`\cr Full name, like `"Escherichia coli"`. For the taxonomic ranks genus, species and subspecies, this is the 'pasted' text of genus, species, and subspecies. For all taxonomic ranks higher than genus, this is the name of the taxon. ***This is a unique identifier.***
-#' - `status` \cr Status of the taxon, either `r vector_or(microorganisms$status)`
-#' - `kingdom`, `phylum`, `class`, `order`, `family`, `genus`, `species`, `subspecies`\cr Taxonomic rank of the microorganism. Note that for fungi, *phylum* is equal to their taxonomic *division*. Also, for fungi, *subkingdom* and *subdivision* were left out since they do not occur in the bacterial taxonomy.
+#' - `status` \cr Status of the taxon, either `r vector_or(microorganisms$status, documentation = TRUE)`
+#' - `domain`, `kingdom`, `phylum`, `class`, `order`, `family`, `genus`, `species`, `subspecies`\cr Taxonomic rank of the microorganism. Note that for fungi, *phylum* is used for their taxonomic *division*. Also, for fungi, *subkingdom* and *subdivision* were left out since they do not occur in the bacterial taxonomy. For all species outside the domains of Bacteria and Archaea, the `domain` and `kingdom` are identical.
 #' - `rank`\cr Text of the taxonomic rank of the microorganism, such as `"species"` or `"genus"`
-#' - `ref`\cr Author(s) and year of related scientific publication. This contains only the *first surname* and year of the *latest* authors, e.g. "Wallis *et al.* 2006 *emend.* Smith and Jones 2018" becomes "Smith *et al.*, 2018". This field is directly retrieved from the source specified in the column `source`. Moreover, accents were removed to comply with CRAN that only allows ASCII characters.
-#' - `oxygen_tolerance` \cr Oxygen tolerance, either `r vector_or(microorganisms$oxygen_tolerance)`. These data were retrieved from BacDive (see *Source*). Items that contain "likely" are missing from BacDive and were extrapolated from other species within the same genus to guess the oxygen tolerance. Currently `r round(length(microorganisms$oxygen_tolerance[which(!is.na(microorganisms$oxygen_tolerance))]) / nrow(microorganisms[which(microorganisms$kingdom == "Bacteria"), ]) * 100, 1)`% of all `r format_included_data_number(nrow(microorganisms[which(microorganisms$kingdom == "Bacteria"), ]))` bacteria in the data set contain an oxygen tolerance.
-#' - `source`\cr Either `r vector_or(microorganisms$source)` (see *Source*)
+#' - `ref`\cr Abbreviated authority citation for the nomenclatural act that established the current name combination, following ICNP conventions. For species described in their current genus (*sp. nov.*), this is the original description author(s) and year. For species transferred to a different genus (*comb. nov.*), this is the reclassification author(s) and year. Emendations are excluded. For synonyms, this is the authority under which the synonym was originally published. This field is directly retrieved from the source specified in the column `source`. Diacritics were removed to comply with CRAN, that only allows ASCII characters.
+#' - `oxygen_tolerance` \cr Oxygen tolerance, either `r vector_or(microorganisms$oxygen_tolerance, documentation = TRUE)`. These data were retrieved from BacDive (see *Source*). Items that contain "likely" are missing from BacDive and were extrapolated from other species within the same genus to guess the oxygen tolerance. Currently `r round(length(microorganisms$oxygen_tolerance[which(!is.na(microorganisms$oxygen_tolerance))]) / nrow(microorganisms[which(microorganisms$domain == "Bacteria"), ]) * 100, 1)`% of all `r format_included_data_number(nrow(microorganisms[which(microorganisms$domain == "Bacteria"), ]))` bacteria in the data set contain an oxygen tolerance.
+#' - `morphology` \cr Morphology (cell shape), either `r vector_or(microorganisms$morphology, documentation = TRUE)`. These data were retrieved from BacDive (see *Source*). Genera that are clinically established as coccobacilli (the HACEK group and beyond, such as *Haemophilus* and *Acinetobacter*) are classified as such regardless of BacDive majority vote. Items that contain "likely" are missing from BacDive and were extrapolated from other species within the same genus. Currently `r round(length(microorganisms$morphology[which(!is.na(microorganisms$morphology))]) / nrow(microorganisms[which(microorganisms$domain == "Bacteria"), ]) * 100, 1)`% of all `r format_included_data_number(nrow(microorganisms[which(microorganisms$domain == "Bacteria"), ]))` bacteria in the data set contain a morphology.
+#' - `source`\cr Either `r vector_or(microorganisms$source, documentation = TRUE)` (see *Source*)
 #' - `lpsn`\cr Identifier ('Record number') of `r TAXONOMY_VERSION$LPSN$name`. This will be the first/highest LPSN identifier to keep one identifier per row. For example, *Acetobacter ascendens* has LPSN Record number 7864 and 11011. Only the first is available in the `microorganisms` data set. ***This is a unique identifier***, though available for only `r format_included_data_number(sum(!is.na(microorganisms$lpsn)))` records.
 #' - `lpsn_parent`\cr LPSN identifier of the parent taxon
 #' - `lpsn_renamed_to`\cr LPSN identifier of the currently valid taxon
@@ -130,27 +131,26 @@
 #'
 #' @section Included Taxa:
 #' Included taxonomic data from [LPSN](`r TAXONOMY_VERSION$LPSN$url`), [MycoBank](`r TAXONOMY_VERSION$MycoBank$url`), and [GBIF](`r TAXONOMY_VERSION$GBIF$url`) are:
-#' - All `r format_included_data_number(microorganisms[which(microorganisms$kingdom %in% c("Archeae", "Bacteria")), , drop = FALSE])` (sub)species from the kingdoms of Archaea and Bacteria
-#' - `r format_included_data_number(microorganisms[which(microorganisms$kingdom == "Fungi"), , drop = FALSE])` species from the kingdom of Fungi. The kingdom of Fungi is a very large taxon with almost 300,000 different (sub)species, of which most are not microbial (but rather macroscopic, like mushrooms). Because of this, not all fungi fit the scope of this package. Only relevant fungi are covered (such as all species of *Aspergillus*, *Candida*, *Cryptococcus*, *Histoplasma*, *Pneumocystis*, *Saccharomyces* and *Trichophyton*).
+#' - All `r format_included_data_number(microorganisms[which(microorganisms$domain %in% c("Archeae", "Bacteria")), , drop = FALSE])` (sub)species from the domains of Archaea and Bacteria
+#' - `r format_included_data_number(microorganisms[which(microorganisms$domain == "Fungi"), , drop = FALSE])` species from the kingdom of Fungi. The kingdom of Fungi is a very large taxon with almost 300,000 different (sub)species, of which most are not microbial (but rather macroscopic, like mushrooms). Because of this, not all fungi fit the scope of this package. Only relevant fungi are covered (such as all species of *Aspergillus*, *Candida*, *Cryptococcus*, *Histoplasma*, *Pneumocystis*, *Saccharomyces* and *Trichophyton*).
 #' - `r format_included_data_number(microorganisms[which(microorganisms$kingdom == "Protozoa"), , drop = FALSE])` (sub)species from the kingdom of Protozoa
 #' - `r format_included_data_number(microorganisms[which(microorganisms$kingdom == "Animalia"), , drop = FALSE])` (sub)species from `r format_included_data_number(microorganisms[which(microorganisms$kingdom == "Animalia"), "genus", drop = TRUE])` other relevant genera from the kingdom of Animalia (such as *Strongyloides* and *Taenia*)
 #' - All `r format_included_data_number(microorganisms[which(microorganisms$status != "accepted"), , drop = FALSE])` previously accepted names of all included (sub)species (these were taxonomically renamed)
-#' - The complete taxonomic tree of all included (sub)species: from kingdom to subspecies
+#' - The complete taxonomic tree of all included (sub)species: from domain to subspecies
 #' - The identifier of the parent taxons
 #' - The year and first author of the related scientific publication
 #'
 #' ### Manual additions
 #' For convenience, some entries were added manually:
 #'
+#' - All `r format_included_data_number(length(which(microorganisms$rank == "species group")))` groups and complexes of the [microorganisms.groups] data set, for cross-reference (examples include beta-haemolytic *Streptococcus* groups A to K, coagulase-negative *Staphylococcus* (CoNS), *Mycobacterium tuberculosis* complex, etc.)
 #' - `r format_included_data_number(microorganisms[which(microorganisms$source == "manually added" & microorganisms$genus == "Salmonella"), , drop = FALSE])` entries of *Salmonella*, such as the city-like serovars and groups A to H
-#' - `r format_included_data_number(length(which(microorganisms$rank == "species group")))` species groups (such as the beta-haemolytic *Streptococcus* groups A to K, coagulase-negative *Staphylococcus* (CoNS), *Mycobacterium tuberculosis* complex, etc.), of which the group compositions are stored in the [microorganisms.groups] data set
 #' - 1 entry of *Blastocystis* (*B.  hominis*), although it officially does not exist (Noel *et al.* 2005, PMID 15634993)
-#' - 1 entry of *Moraxella* (*M. catarrhalis*), which was formally named *Branhamella catarrhalis* (Catlin, 1970) though this change was never accepted within the field of clinical microbiology
-#' - 8 other 'undefined' entries (unknown, unknown Gram-negatives, unknown Gram-positives, unknown yeast, unknown fungus, and unknown anaerobic Gram-pos/Gram-neg bacteria)
+#' - `r sum(microorganisms$fullname %like% "unknown")` other 'undefined' entries (unknown, unknown Gram-negatives, unknown Gram-positives, unknown yeast, unknown fungus, and unknown anaerobic Gram-pos/Gram-neg bacteria)
 #'
 #' The syntax used to transform the original data to a cleansed \R format, can be [found here](https://github.com/msberends/AMR/blob/main/data-raw/_reproduction_scripts/reproduction_of_microorganisms.R).
 #' @inheritSection AMR Download Our Reference Data
-#' @source
+#' @references
 #' Taxonomic entries were imported in this order of importance:
 #' 1. `r TAXONOMY_VERSION$LPSN$name`:\cr\cr
 #'    `r TAXONOMY_VERSION$LPSN$citation` Accessed from <`r TAXONOMY_VERSION$LPSN$url`> on `r documentation_date(TAXONOMY_VERSION$LPSN$accessed_date)`.
@@ -182,7 +182,8 @@
 #' A data set containing commonly used codes for microorganisms, from laboratory systems and [WHONET](https://whonet.org). Define your own with [set_mo_source()]. They will all be searched when using [as.mo()] and consequently all the [`mo_*`][mo_property()] functions.
 #' @format A [tibble][tibble::tibble] with `r format(nrow(microorganisms.codes), big.mark = " ")` observations and `r ncol(microorganisms.codes)` variables:
 #' - `code`\cr Commonly used code of a microorganism. ***This is a unique identifier.***
-#' - `mo`\cr ID of the microorganism in the [microorganisms] data set
+#' - `mo`\cr ID of the microorganism in the [microorganisms] data set. This is the record of the name that the code was named after, also if that name is outdated, so that the code and the microorganism ID remain relatable: e.g., the WHONET code `EAE` refers to *Enterobacter aerogenes* (`B_ENTRBC_AERG`). [as.mo()] returns the current name, here *Klebsiella aerogenes*. Codes for organisms that are not in the [microorganisms] data set, such as viruses, refer to `UNKNOWN`.
+#' - `source`\cr Source of the code, with the name it refers to, e.g. `"WHONET (Enterobacter aerogenes)"`, or `NA` if the source is unknown
 #' @inheritSection AMR Download Our Reference Data
 #' @seealso [as.mo()] [microorganisms]
 #' @examples
@@ -222,8 +223,8 @@
 #' - `date`\cr Date of receipt at the laboratory
 #' - `patient`\cr ID of the patient
 #' - `age`\cr Age of the patient
-#' - `gender`\cr Gender of the patient, either `r vector_or(example_isolates$gender)`
-#' - `ward`\cr Ward type where the patient was admitted, either `r vector_or(example_isolates$ward)`
+#' - `gender`\cr Gender of the patient, either `r vector_or(example_isolates$gender, documentation = TRUE)`
+#' - `ward`\cr Ward type where the patient was admitted, either `r vector_or(example_isolates$ward, documentation = TRUE)`
 #' - `mo`\cr ID of microorganism created with [as.mo()], see also the [microorganisms] data set
 #' - `PEN:RIF`\cr `r sum(vapply(FUN.VALUE = logical(1), example_isolates, is.sir))` different antimicrobials with class [`sir`] (see [as.sir()]); these column names occur in the [antimicrobials] data set and can be translated with [set_ab_names()] or [ab_name()]
 #' @inheritSection AMR Download Our Reference Data
@@ -282,7 +283,7 @@
 
 #' Data Set with Clinical Breakpoints for SIR Interpretation
 #'
-#' @description Data set containing clinical breakpoints to interpret MIC and disk diffusion to SIR values, according to international guidelines. This dataset contain breakpoints for humans, `r length(unique(clinical_breakpoints$host[!clinical_breakpoints$host %in% clinical_breakpoints$type]))` different animal groups, and ECOFFs.
+#' @description Data set containing clinical breakpoints to interpret MIC and disk diffusion to SIR values, according to international guidelines. This data set contains breakpoints for humans, `r length(unique(clinical_breakpoints$host[!clinical_breakpoints$host %in% clinical_breakpoints$type]))` different animal groups, and ECOFFs.
 #'
 #' These breakpoints are currently implemented:
 #' - For **clinical microbiology**: EUCAST `r min(as.integer(gsub("[^0-9]", "", subset(AMR::clinical_breakpoints, guideline %like% "EUCAST" & type == "human")$guideline)))`-`r max(as.integer(gsub("[^0-9]", "", subset(AMR::clinical_breakpoints, guideline %like% "EUCAST" & type == "human")$guideline)))` and CLSI `r min(as.integer(gsub("[^0-9]", "", subset(AMR::clinical_breakpoints, guideline %like% "CLSI" & type == "human")$guideline)))`-`r max(as.integer(gsub("[^0-9]", "", subset(AMR::clinical_breakpoints, guideline %like% "CLSI" & type == "human")$guideline)))`;
@@ -292,29 +293,44 @@
 #' Use [as.sir()] to transform MICs or disks measurements to SIR values.
 #' @format A [tibble][tibble::tibble] with `r format(nrow(clinical_breakpoints), big.mark = " ")` observations and `r ncol(clinical_breakpoints)` variables:
 #' - `guideline`\cr Name of the guideline
-#' - `type`\cr Breakpoint type, either `r vector_or(clinical_breakpoints$type)`
-#' - `host`\cr Host of infectious agent. This is mostly useful for veterinary breakpoints and is either `r vector_or(clinical_breakpoints$host)`
-#' - `method`\cr Testing method, either `r vector_or(clinical_breakpoints$method)`
+#' - `type`\cr Breakpoint type, either `r vector_or(clinical_breakpoints$type, documentation = TRUE)`
+#' - `host`\cr Host of infectious agent. This is mostly useful for veterinary breakpoints and is either `r vector_or(clinical_breakpoints$host, documentation = TRUE)`
+#' - `method`\cr Testing method, either `r vector_or(clinical_breakpoints$method, documentation = TRUE)`
 #' - `site`\cr Body site for which the breakpoint must be applied, e.g. "Oral" or "Respiratory"
 #' - `mo`\cr Microbial ID, see [as.mo()]
-#' - `rank_index`\cr Taxonomic rank index of `mo` from 1 (subspecies/infraspecies) to 5 (unknown microorganism)
+#' - `rank_index`\cr Taxonomic rank index of `mo`, used to choose the most specific breakpoint (the lowest index): 1 for subspecies and infraspecies, 2 for species, 2.5 for species groups (e.g., *Streptococcus* group A), 3 for genus, 4 for family, 5 for order, 6 for other groups (e.g., Gram-negative or anaerobic bacteria), and 7 for non-species related (PK-PD) breakpoints. Blocking rows (see *Details*) have the rank index of their organism + 0.1, e.g., 2.6 for a species group, so that a breakpoint for the same organism always takes precedence.
 #' - `ab`\cr Antimicrobial code as used by this package, EARS-Net and WHONET, see [as.ab()]
 #' - `ref_tbl`\cr Info about where the guideline rule can be found
 #' - `disk_dose`\cr Dose of the used disk diffusion method
-#' - `breakpoint_S`\cr Lowest MIC value or highest number of millimetres that leads to "S"
+#' - `breakpoint_S`\cr Lowest MIC value or highest number of millimetres that leads to "S", is `NA` for blocking rows (see *Details*). EUCAST's off-scale MIC breakpoint of 0.001 mg/L, which indicates that there is no S category, is stored as 0.0001 to keep all isolates out of "S".
 #' - `breakpoint_R`\cr Highest MIC value or lowest number of millimetres that leads to "R", can be `NA`
 #' - `uti`\cr A [logical] value (`TRUE`/`FALSE`) to indicate whether the rule applies to a urinary tract infection (UTI)
 #' - `is_SDD`\cr A [logical] value (`TRUE`/`FALSE`) to indicate whether the intermediate range between "S" and "R" should be interpreted as "SDD", instead of "I". This currently applies to `r sum(clinical_breakpoints$is_SDD)` breakpoints.
+#' - `note`\cr Notes from the guideline that apply to the breakpoint, if available
 #' @details
 #' ### Different Types of Breakpoints
-#' Supported types of breakpoints are `r vector_and(clinical_breakpoints$type, quote = FALSE)`. ECOFF (Epidemiological cut-off) values are used in antimicrobial susceptibility testing to differentiate between wild-type and non-wild-type strains of bacteria or fungi.
+#' Supported types of breakpoints are `r vector_and(clinical_breakpoints$type, quotes = FALSE)`. ECOFF (Epidemiological cut-off) values are used in antimicrobial susceptibility testing to differentiate between wild-type and non-wild-type strains of bacteria or fungi.
 #'
 #' The default is `"human"`, which can also be set with the package option [`AMR_breakpoint_type`][AMR-options]. Use [`as.sir(..., breakpoint_type = ...)`][as.sir()] to interpret raw data using a specific breakpoint type, e.g. `as.sir(..., breakpoint_type = "ECOFF")` to use ECOFFs.
 #'
-#' ### Imported From WHONET
-#' Clinical breakpoints in this package were validated through and imported from [WHONET](https://whonet.org), a free desktop Windows application developed and supported by the WHO Collaborating Centre for Surveillance of Antimicrobial Resistance. More can be read on [their website](https://whonet.org). The developers of WHONET and this `AMR` package have been in contact about sharing their work. We highly appreciate their great development on the WHONET software.
+#' ### Blocking Rows
+#' Where EUCAST lists an organism but gives no breakpoint for it (e.g. "IE", "-", "Note", breakpoints in brackets, an organism excluded with "except", or no S category for a zone diameter), [as.sir()] must not fall back to the breakpoint of a broader taxon, such as the breakpoint for *Vibrio* spp. where EUCAST gives "IE" for *V. fluvialis*. Such cases are included as "blocking rows": rows in which `breakpoint_S` and `breakpoint_R` are both `NA` and the `note` starts with `"[No breakpoint]"` followed by the reason. [as.sir()] returns `NA` for these. This currently applies to `r format(sum(is.na(clinical_breakpoints$breakpoint_S) & is.na(clinical_breakpoints$breakpoint_R)), big.mark = " ")` rows. Remove them with `subset(clinical_breakpoints, !is.na(breakpoint_S))` if only actual breakpoints are needed.
 #'
-#' Our import and reproduction script can be found here: <https://github.com/msberends/AMR/blob/main/data-raw/_reproduction_scripts/reproduction_of_clinical_breakpoints.R>.
+#' Where another guideline has no S category for a zone diameter, such as CLSI for fluconazole in *C. glabrata* (SDD and R only), only `breakpoint_R` is given, and the `note` starts with `"[No S category]"`. [as.sir()] then returns R where applicable, and `NA` otherwise.
+#'
+#' ### Imported From WHONET
+#' Some breakpoints in this package were validated through and imported from [WHONET](https://whonet.org), a free desktop Windows application developed and supported by the WHO Collaborating Centre for Surveillance of Antimicrobial Resistance. More can be read on [their website](https://whonet.org). The developers of WHONET and this `AMR` package have been in contact about sharing their work. We highly appreciate their great development on the WHONET software.
+#'
+#' From WHONET, imported were:
+#'
+#' * All CLSI breakpoints, including ECOFF
+#' * All non-human EUCAST breakpoints, including ECOFF
+#' * Human EUCAST breakpoints between `r min(as.integer(gsub("[^0-9]", "", subset(AMR::clinical_breakpoints, guideline %like% "EUCAST" & type == "human")$guideline)))` and 2018
+#' * Human EUCAST antifungal breakpoints between 2019 and 2025
+#'
+#' Human EUCAST breakpoints from 2019 onwards (antifungal breakpoints from 2026 onwards) were retrieved directly from the EUCAST Clinical Breakpoint Tables published on <https://www.eucast.org>, using [this script](https://github.com/msberends/AMR/blob/main/data-raw/_reproduction_scripts/reproduction_of_clinical_breakpoints_eucast.R).
+#'
+#' Our WHONET import script can be [found here](https://github.com/msberends/AMR/blob/main/data-raw/_reproduction_scripts/reproduction_of_clinical_breakpoints.R).
 #'
 #' ### Response From CLSI and EUCAST
 #' The CEO of CLSI and the chairman of EUCAST have endorsed the work and public use of this `AMR` package (and consequently the use of their breakpoints) in June 2023, when future development of distributing clinical breakpoints was discussed in a meeting between CLSI, EUCAST, WHO, developers of WHONET software, and developers of this `AMR` package.
@@ -333,12 +349,14 @@
 #' @format A [tibble][tibble::tibble] with `r format(nrow(intrinsic_resistant), big.mark = " ")` observations and `r ncol(intrinsic_resistant)` variables:
 #' - `mo`\cr Microorganism ID which occurs in [`microorganisms$mo`][microorganisms]. Names can be retrieved using [mo_name()].
 #' - `ab`\cr Antimicrobial ID which occurs in [`antimicrobials$ab`][antimicrobials]. Names can be retrieved using [ab_name()].
+#' - `version`\cr Guideline name and version.
 #' @details
-#' This data set is currently based on `r format_eucast_version_nr(names(EUCAST_VERSION_EXPECTED_PHENOTYPES[1]))`.
+#' This data set is currently strictly follows `r format_eucast_version_nr(names(EUCAST_VERSION_EXPECTED_PHENOTYPES[1]))`. The
 #'
 #' This data set is internally used by:
 #' * [not_intrinsic_resistant()] (an [antimicrobial selector][antimicrobial_selectors])
 #' * [mo_is_intrinsic_resistant()]
+#' * [wisca()] to model \eqn{\beta(1, 9999)} for resistant bug-drug combinations, per \doi{10.1093/jac/dkv397}
 #' @inheritSection AMR Download Our Reference Data
 #' @examples
 #' intrinsic_resistant
@@ -350,10 +368,10 @@
 #' @format A [tibble][tibble::tibble] with `r format(nrow(dosage), big.mark = " ")` observations and `r ncol(dosage)` variables:
 #' - `ab`\cr Antimicrobial ID as used in this package (such as `AMC`), using the official EARS-Net (European Antimicrobial Resistance Surveillance Network) codes where available
 #' - `name`\cr Official name of the antimicrobial drug as used by WHONET/EARS-Net or the WHO
-#' - `type`\cr Type of the dosage, either `r vector_or(dosage$type)`
+#' - `type`\cr Type of the dosage, either `r vector_or(dosage$type, documentation = TRUE)`
 #' - `dose`\cr Dose, such as "2 g" or "25 mg/kg"
 #' - `dose_times`\cr Number of times a dose must be administered
-#' - `administration`\cr Route of administration, either `r vector_or(dosage$administration)`
+#' - `administration`\cr Route of administration, either `r vector_or(dosage$administration, documentation = TRUE)`
 #' - `notes`\cr Additional dosage notes
 #' - `original_txt`\cr Original text in the PDF file of EUCAST
 #' - `eucast_version`\cr Version number of the EUCAST Clinical Breakpoints guideline to which these dosages apply, either `r vector_or(dosage$eucast_version, quotes = FALSE, sort = TRUE, reverse = TRUE)`
@@ -362,14 +380,14 @@
 #' dosage
 "dosage"
 
-# TODO #' Data Set with `r format(nrow(esbl_isolates), big.mark = " ")` ESBL Isolates
-# TODO #'
-# TODO #' A data set containing `r format(nrow(esbl_isolates), big.mark = " ")` microbial isolates with MIC values of common antibiotics and a binary `esbl` column for extended-spectrum beta-lactamase (ESBL) production. This data set contains randomised fictitious data but reflects reality and can be used to practise AMR-related machine learning, e.g., classification modelling with [tidymodels](https://amr-for-r.org/articles/AMR_with_tidymodels.html).
-# TODO #' @format A [tibble][tibble::tibble] with `r format(nrow(esbl_isolates), big.mark = " ")` observations and `r ncol(esbl_isolates)` variables:
-# TODO #' - `esbl`\cr Logical indicator if the isolate is ESBL-producing
-# TODO #' - `genus`\cr Genus of the microorganism
-# TODO #' - `AMC:COL`\cr MIC values for 17 antimicrobial agents, transformed to class [`mic`] (see [as.mic()])
-# TODO #' @details See our [tidymodels integration][amr-tidymodels] for an example using this data set.
-# TODO #' @examples
-# TODO #' esbl_isolates
-# TODO "esbl_isolates"
+#' Data Set with `r format(nrow(esbl_isolates), big.mark = " ")` ESBL Isolates
+#'
+#' A data set containing `r format(nrow(esbl_isolates), big.mark = " ")` microbial isolates with MIC values of common antibiotics and a binary `esbl` column for extended-spectrum beta-lactamase (ESBL) production. This data set contains randomised fictitious data but reflects reality and can be used to practise AMR-related machine learning, e.g., classification modelling with [tidymodels](https://amr-for-r.org/articles/AMR_with_tidymodels.html).
+#' @format A [tibble][tibble::tibble] with `r format(nrow(esbl_isolates), big.mark = " ")` observations and `r ncol(esbl_isolates)` variables:
+#' - `esbl`\cr Logical indicator if the isolate is ESBL-producing
+#' - `genus`\cr Genus of the microorganism
+#' - `AMC:COL`\cr MIC values for 17 antimicrobial drugs, transformed to class [`mic`] (see [as.mic()])
+#' @details See our [tidymodels integration][amr-tidymodels] for an example using this data set.
+#' @examples
+#' esbl_isolates
+"esbl_isolates"

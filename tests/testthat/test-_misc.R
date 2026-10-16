@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -56,14 +56,29 @@ test_that("test-misc.R", {
   }
 
 
+  # test where() ----
+  # where() must be AMR's own function, decided at runtime: a copy of tidyselect::where() made at installation fails without tidyselect at runtime
+  expect_identical(environment(AMR:::where), asNamespace("AMR"))
+  expect_identical(colnames(example_isolates[, AMR:::where(is.sir), drop = FALSE]), colnames(example_isolates)[vapply(FUN.VALUE = logical(1), example_isolates, is.sir)])
+  expect_identical(colnames(example_isolates[, c(1:2, AMR:::where(is.mo)), drop = FALSE]), c("date", "patient", "mo"))
+  expect_error(AMR:::where("is.sir"))
+  # default argument where(is.sir) of antibiogram() works with and without tidyselect
+  expect_inherits(antibiogram(example_isolates), "antibiogram")
+  if (AMR:::pkg_is_available("dplyr", min_version = "1.0.0", also_load = TRUE)) {
+    expect_identical(colnames(example_isolates %>% select(AMR:::where(is.sir))), colnames(example_isolates[, AMR:::where(is.sir), drop = FALSE]))
+    expect_identical(colnames(example_isolates %>% select(mo, AMR:::where(is.sir))), c("mo", colnames(example_isolates[, AMR:::where(is.sir), drop = FALSE])))
+  }
+
   # test get_current_data() ----
 
   is_right <- FALSE
   check_df <- function(check_element, return_val = 0) {
     is_right <<- FALSE
     for (env in sys.frames()) {
-      if (!is.null(env[[check_element]]) && is.data.frame(env[[check_element]])) {
-        is_right <<- all(colnames(example_isolates) %in% colnames(env[[check_element]]))
+      # in R < 4.2, reading a promise that is still being evaluated (such as `x` in tibble's `[`) gives an error
+      val <- tryCatch(env[[check_element]], error = function(e) NULL)
+      if (!is.null(val) && is.data.frame(val)) {
+        is_right <<- all(colnames(example_isolates) %in% colnames(val))
       }
     }
     return_val
@@ -97,4 +112,16 @@ test_that("test-misc.R", {
       prep()
     expect_true(is_right, info = "the environmental data cannot be found for tidymodels/prep()")
   }
+})
+
+test_that("test-cli_to_plain", {
+  # plain-text fallback for when cli or rlang is unavailable: must always terminate, also when
+  # word wrapping breaks a line within markup, or for expressions that cannot be evaluated
+  expect_identical(AMR:::cli_to_plain("a {.code\nx()} b"), "a `x()` b")
+  expect_identical(AMR:::cli_to_plain("{.arg x} {not_an_object_in_AMR} {1 + 1}"), "`x` {not_an_object_in_AMR} 2")
+  msg <- "Setting {.code parallel = TRUE} requires a non-sequential {.help [{.fun future::plan}](future::plan)} to be active."
+  expect_identical(
+    gsub("[[:space:]]+", " ", AMR:::cli_to_plain(AMR:::word_wrap(msg, width = 40))),
+    "Setting `parallel = TRUE` requires a non-sequential `future::plan()` to be active."
+  )
 })

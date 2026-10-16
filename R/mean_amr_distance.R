@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -118,7 +118,7 @@ mean_amr_distance.disk <- function(x, ...) {
 mean_amr_distance.sir <- function(x, ..., combine_SI = TRUE) {
   meet_criteria(combine_SI, allow_class = "logical", has_length = 1, .call_depth = -1)
   if (isTRUE(combine_SI)) {
-    x[x %in% c("I", "SDD")] <- "S"
+    x[x %in% c("I", "SDD")] <- "S" # do not acknowledge CLSI/EUCAST guideline here to keep the numeric mean_amr_distance consistent between systems
   }
   mean_amr_distance(as.double(x))
 }

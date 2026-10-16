@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -31,7 +31,7 @@
 #'
 #' All antimicrobial drugs and their official names, ATC codes, ATC groups and defined daily dose (DDD) are included in this package, using the WHO Collaborating Centre for Drug Statistics Methodology.
 #' @section WHOCC:
-#' This package contains **all ~550 antibiotic, antimycotic and antiviral drugs** and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, <https://atcddd.fhi.no>) and the Pharmaceuticals Community Register of the European Commission (<https://ec.europa.eu/health/documents/community-register/html/reg_hum_atc.htm>).
+#' This package contains **all ~550 antibiotic, antimycotic and antiviral drugs** and their Anatomical Therapeutic Chemical (ATC) codes, ATC groups and Defined Daily Dose (DDD) from the World Health Organization Collaborating Centre for Drug Statistics Methodology (WHOCC, <https://atcddd.fhi.no>) and the Pharmaceuticals Community Register of the European Commission (<https://ec.europa.eu/health/documents/community-register/html/index_en.htm>).
 #'
 #' These have become the gold standard for international drug utilisation monitoring and research.
 #'

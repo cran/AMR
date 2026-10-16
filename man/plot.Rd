@@ -22,7 +22,6 @@
 \alias{scale_sir_colours}
 \alias{scale_sir_colors}
 \alias{theme_sir}
-\alias{labels_sir_count}
 \title{Plotting Helpers for AMR Data Analysis}
 \usage{
 scale_x_mic(keep_operators = "edges", mic_range = NULL, ...)
@@ -33,80 +32,124 @@ scale_colour_mic(keep_operators = "edges", mic_range = NULL, ...)
 
 scale_fill_mic(keep_operators = "edges", mic_range = NULL, ...)
 
-scale_x_sir(colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R
-  = "#ED553B"), language = get_AMR_locale(),
-  eucast_I = getOption("AMR_guideline", "EUCAST") == "EUCAST", ...)
+scale_x_sir(
+  colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R = "#ED553B"),
+  language = get_AMR_locale(),
+  eucast_I = plot_name_of_I(getOption("AMR_guideline", "EUCAST")) != "Intermediate",
+  ...
+)
 
-scale_colour_sir(colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I =
-  "#F6D55C", R = "#ED553B"), language = get_AMR_locale(),
-  eucast_I = getOption("AMR_guideline", "EUCAST") == "EUCAST", ...)
+scale_colour_sir(
+  colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R = "#ED553B"),
+  language = get_AMR_locale(),
+  eucast_I = plot_name_of_I(getOption("AMR_guideline", "EUCAST")) != "Intermediate",
+  ...
+)
 
-scale_fill_sir(colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C",
-  R = "#ED553B"), language = get_AMR_locale(),
-  eucast_I = getOption("AMR_guideline", "EUCAST") == "EUCAST", ...)
+scale_fill_sir(
+  colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R = "#ED553B"),
+  language = get_AMR_locale(),
+  eucast_I = plot_name_of_I(getOption("AMR_guideline", "EUCAST")) != "Intermediate",
+  ...
+)
 
-\method{plot}{mic}(x, mo = NULL, ab = NULL,
+\method{plot}{mic}(
+  x,
+  mo = NULL,
+  ab = NULL,
   guideline = getOption("AMR_guideline", "EUCAST"),
-  main = deparse(substitute(x)), ylab = translate_AMR("Frequency", language
-  = language),
-  xlab = translate_AMR("Minimum Inhibitory Concentration (mg/L)", language =
-  language), colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R
-  = "#ED553B"), language = get_AMR_locale(), expand = TRUE,
+  main = deparse(substitute(x)),
+  ylab = translate_AMR("Frequency", language = language),
+  xlab = translate_AMR("Minimum Inhibitory Concentration (mg/L)", language = language),
+  colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R = "#ED553B"),
+  language = get_AMR_locale(),
+  expand = TRUE,
   include_PKPD = getOption("AMR_include_PKPD", TRUE),
-  breakpoint_type = getOption("AMR_breakpoint_type", "human"), ...)
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"),
+  ...
+)
 
-\method{autoplot}{mic}(object, mo = NULL, ab = NULL,
+\method{autoplot}{mic}(
+  object,
+  mo = NULL,
+  ab = NULL,
   guideline = getOption("AMR_guideline", "EUCAST"),
-  title = deparse(substitute(object)), ylab = translate_AMR("Frequency",
-  language = language),
-  xlab = translate_AMR("Minimum Inhibitory Concentration (mg/L)", language =
-  language), colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R
-  = "#ED553B"), language = get_AMR_locale(), expand = TRUE,
+  title = deparse(substitute(object)),
+  ylab = translate_AMR("Frequency", language = language),
+  xlab = translate_AMR("Minimum Inhibitory Concentration (mg/L)", language = language),
+  colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R = "#ED553B"),
+  language = get_AMR_locale(),
+  expand = TRUE,
   include_PKPD = getOption("AMR_include_PKPD", TRUE),
-  breakpoint_type = getOption("AMR_breakpoint_type", "human"), ...)
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"),
+  ...
+)
 
-\method{plot}{disk}(x, main = deparse(substitute(x)),
+\method{plot}{disk}(
+  x,
+  main = deparse(substitute(x)),
   ylab = translate_AMR("Frequency", language = language),
   xlab = translate_AMR("Disk diffusion diameter (mm)", language = language),
-  mo = NULL, ab = NULL, guideline = getOption("AMR_guideline", "EUCAST"),
-  colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R =
-  "#ED553B"), language = get_AMR_locale(), expand = TRUE,
+  mo = NULL,
+  ab = NULL,
+  guideline = getOption("AMR_guideline", "EUCAST"),
+  colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R = "#ED553B"),
+  language = get_AMR_locale(),
+  expand = TRUE,
   include_PKPD = getOption("AMR_include_PKPD", TRUE),
-  breakpoint_type = getOption("AMR_breakpoint_type", "human"), ...)
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"),
+  ...
+)
 
-\method{autoplot}{disk}(object, mo = NULL, ab = NULL,
-  title = deparse(substitute(object)), ylab = translate_AMR("Frequency",
-  language = language), xlab = translate_AMR("Disk diffusion diameter (mm)",
-  language = language), guideline = getOption("AMR_guideline", "EUCAST"),
-  colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R =
-  "#ED553B"), language = get_AMR_locale(), expand = TRUE,
+\method{autoplot}{disk}(
+  object,
+  mo = NULL,
+  ab = NULL,
+  title = deparse(substitute(object)),
+  ylab = translate_AMR("Frequency", language = language),
+  xlab = translate_AMR("Disk diffusion diameter (mm)", language = language),
+  guideline = getOption("AMR_guideline", "EUCAST"),
+  colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R = "#ED553B"),
+  language = get_AMR_locale(),
+  expand = TRUE,
   include_PKPD = getOption("AMR_include_PKPD", TRUE),
-  breakpoint_type = getOption("AMR_breakpoint_type", "human"), ...)
+  breakpoint_type = getOption("AMR_breakpoint_type", "human"),
+  ...
+)
 
-\method{plot}{sir}(x, ylab = translate_AMR("Percentage", language =
-  language), xlab = translate_AMR("Antimicrobial Interpretation", language =
-  language), main = deparse(substitute(x)), language = get_AMR_locale(),
-  ...)
-
-\method{autoplot}{sir}(object, title = deparse(substitute(object)),
+\method{plot}{sir}(
+  x,
+  ylab = translate_AMR("Percentage", language = language),
   xlab = translate_AMR("Antimicrobial Interpretation", language = language),
-  ylab = translate_AMR("Frequency", language = language), colours_SIR = c(S
-  = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R = "#ED553B"),
-  language = get_AMR_locale(), ...)
+  main = deparse(substitute(x)),
+  language = get_AMR_locale(),
+  ...
+)
+
+\method{autoplot}{sir}(
+  object,
+  title = deparse(substitute(object)),
+  xlab = translate_AMR("Antimicrobial Interpretation", language = language),
+  ylab = translate_AMR("Frequency", language = language),
+  colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R = "#ED553B"),
+  language = get_AMR_locale(),
+  ...
+)
 
 facet_sir(facet = c("interpretation", "antibiotic"), nrow = NULL)
 
-scale_y_percent(breaks = function(x) seq(0, max(x, na.rm = TRUE), 0.1),
-  limits = c(0, NA))
+scale_y_percent(
+  breaks = function(x) seq(0, max(x, na.rm = TRUE), 0.1),
+  limits = c(0, NA)
+)
 
-scale_sir_colours(..., aesthetics, colours_SIR = c(S = "#3CAEA3", SDD =
-  "#8FD6C4", I = "#F6D55C", R = "#ED553B"))
+scale_sir_colours(
+  ...,
+  aesthetics,
+  colours_SIR = c(S = "#3CAEA3", SDD = "#8FD6C4", I = "#F6D55C", R = "#ED553B")
+)
 
 theme_sir()
-
-labels_sir_count(position = NULL, x = "antibiotic",
-  translate_ab = "name", minimum = 30, language = get_AMR_locale(),
-  combine_SI = TRUE, datalabels.size = 3, datalabels.colour = "grey15")
 }
 \arguments{
 \item{keep_operators}{A \link{character} specifying how to handle operators (such as \code{>} and \code{<=}) in the input. Accepts one of three values: \code{"all"} (or \code{TRUE}) to keep all operators, \code{"none"} (or \code{FALSE}) to remove all operators, or \code{"edges"} to keep operators only at both ends of the range.}
@@ -115,11 +158,11 @@ labels_sir_count(position = NULL, x = "antibiotic",
 
 \item{...}{Arguments passed on to methods.}
 
-\item{colours_SIR}{Colours to use for filling in the bars, must be a vector of three values (in the order S, I and R). The default colours are colour-blind friendly.}
+\item{colours_SIR}{Colours to use for filling in the bars, must be a vector of one, three or four values (in the order S, SDD, I and R), or a named vector with any of the names S, SDD, I, R, SI and IR. Missing names S, I and R get the default colour, and with three values or without a name SDD, SDD gets the colour of S. The default colours are colour-blind friendly.}
 
 \item{language}{Language to be used to translate 'Susceptible', 'Increased exposure'/'Intermediate' and 'Resistant' - the default is system language (see \code{\link[=get_AMR_locale]{get_AMR_locale()}}) and can be overwritten by setting the package option \code{\link[=AMR-options]{AMR_locale}}, e.g. \code{options(AMR_locale = "de")}, see \link{translate}. Use \code{language = NULL} to prevent translation.}
 
-\item{eucast_I}{A \link{logical} to indicate whether the 'I' must be interpreted as "Susceptible, under increased exposure". Will be \code{TRUE} if the default \link[=as.sir]{AMR interpretation guideline} is set to EUCAST (which is the default). With \code{FALSE}, it will be interpreted as "Intermediate".}
+\item{eucast_I}{A \link{logical} to indicate whether the 'I' must be interpreted as "Susceptible, under increased exposure". Will be \code{TRUE} if the default \link[=as.sir]{AMR interpretation guideline} is set to EUCAST 2019 or later (which is the default). With \code{FALSE}, it will be interpreted as "Intermediate".}
 
 \item{x, object}{Values created with \code{\link[=as.mic]{as.mic()}}, \code{\link[=as.disk]{as.disk()}} or \code{\link[=as.sir]{as.sir()}} (or their \verb{random_*} variants, such as \code{\link[=random_mic]{random_mic()}}).}
 
@@ -137,7 +180,7 @@ labels_sir_count(position = NULL, x = "antibiotic",
 
 \item{include_PKPD}{A \link{logical} to indicate that PK/PD clinical breakpoints must be applied as a last resort - the default is \code{TRUE}. Can also be set with the package option \code{\link[=AMR-options]{AMR_include_PKPD}}.}
 
-\item{breakpoint_type}{The type of breakpoints to use, either "ECOFF", "animal", or "human". ECOFF stands for Epidemiological Cut-Off values. The default is \code{"human"}, which can also be set with the package option \code{\link[=AMR-options]{AMR_breakpoint_type}}. If \code{host} is set to values of veterinary species, this will automatically be set to \code{"animal"}.}
+\item{breakpoint_type}{The type of breakpoints to use, either \code{"ECOFF"}, \code{"animal"}, or \code{"human"}. ECOFF stands for Epidemiological Cut-Off values. The default is \code{"human"}, which can also be set with the package option \code{\link[=AMR-options]{AMR_breakpoint_type}}. If \code{host} is set to values of veterinary species, this will automatically be set to \code{"animal"}.}
 
 \item{facet}{Variable to split plots by, either \code{"interpretation"} (default) or \code{"antibiotic"} or a grouping variable.}
 
@@ -148,18 +191,6 @@ labels_sir_count(position = NULL, x = "antibiotic",
 \item{limits}{A \link{numeric} vector of length two providing limits of the scale, use \code{NA} to refer to the existing minimum or maximum.}
 
 \item{aesthetics}{Aesthetics to apply the colours to - the default is "fill" but can also be (a combination of) "alpha", "colour", "fill", "linetype", "shape" or "size".}
-
-\item{position}{Position adjustment of bars, either \code{"fill"}, \code{"stack"} or \code{"dodge"}.}
-
-\item{translate_ab}{A column name of the \link{antimicrobials} data set to translate the antibiotic abbreviations to, using \code{\link[=ab_property]{ab_property()}}.}
-
-\item{minimum}{The minimum allowed number of available (tested) isolates. Any isolate count lower than \code{minimum} will return \code{NA} with a warning. The default number of \code{30} isolates is advised by the Clinical and Laboratory Standards Institute (CLSI) as best practice, see \emph{Source}.}
-
-\item{combine_SI}{A \link{logical} to indicate whether all values of S, SDD, and I must be merged into one, so the output only consists of S+SDD+I vs. R (susceptible vs. resistant) - the default is \code{TRUE}.}
-
-\item{datalabels.size}{Size of the datalabels.}
-
-\item{datalabels.colour}{Colour of the datalabels.}
 }
 \value{
 The \code{autoplot()} functions return a \code{\link[ggplot2:ggplot]{ggplot}} model that is extendible with any \code{ggplot2} function.
@@ -167,12 +198,12 @@ The \code{autoplot()} functions return a \code{\link[ggplot2:ggplot]{ggplot}} mo
 \description{
 Functions to plot classes \code{sir}, \code{mic} and \code{disk}, with support for base \R and \code{ggplot2}.
 
-Especially the \verb{scale_*_mic()} functions are relevant wrappers to plot MIC values for \code{ggplot2}. They allows custom MIC ranges and to plot intermediate log2 levels for missing MIC values.
+Especially the \verb{scale_*_mic()} functions are relevant wrappers to plot MIC values for \code{ggplot2}. They allow custom MIC ranges and to plot intermediate log2 levels for missing MIC values.
 }
 \details{
 \subsection{The \verb{scale_*_mic()} Functions}{
 
-The functions \code{\link[=scale_x_mic]{scale_x_mic()}}, \code{\link[=scale_y_mic]{scale_y_mic()}}, \code{\link[=scale_colour_mic]{scale_colour_mic()}}, and \code{\link[=scale_fill_mic]{scale_fill_mic()}} functions allow to plot the \link[=as.mic]{mic} class (MIC values) on a continuous, logarithmic scale.
+The functions \code{\link[=scale_x_mic]{scale_x_mic()}}, \code{\link[=scale_y_mic]{scale_y_mic()}}, \code{\link[=scale_colour_mic]{scale_colour_mic()}}, and \code{\link[=scale_fill_mic]{scale_fill_mic()}} allow to plot the \link[=as.mic]{mic} class (MIC values) on a continuous, logarithmic scale.
 
 There is normally no need to add these scale functions to your plot, as they are applied automatically when plotting values of class \link[=as.mic]{mic}.
 
@@ -181,7 +212,7 @@ When manually added though, they allow to rescale the MIC range with an 'inside'
 
 \subsection{The \verb{scale_*_sir()} Functions}{
 
-The functions \code{\link[=scale_x_sir]{scale_x_sir()}}, \code{\link[=scale_colour_sir]{scale_colour_sir()}}, and \code{\link[=scale_fill_sir]{scale_fill_sir()}} functions allow to plot the \link[=as.sir]{sir} class in the right order (S < SDD < I < R < NI).
+The functions \code{\link[=scale_x_sir]{scale_x_sir()}}, \code{\link[=scale_colour_sir]{scale_colour_sir()}}, and \code{\link[=scale_fill_sir]{scale_fill_sir()}} allow to plot the \link[=as.sir]{sir} class in the right order (S < SDD < I < R < NI < WT < NWT < NS).
 
 There is normally no need to add these scale functions to your plot, as they are applied automatically when plotting values of class \link[=as.sir]{sir}.
 
@@ -193,15 +224,15 @@ At default, they translate the S/I/R values to an interpretative text ("Suscepti
 This package contains more functions that extend the \code{ggplot2} package, to help in visualising AMR data results. All these functions are internally used by \code{\link[=ggplot_sir]{ggplot_sir()}} too.
 \itemize{
 \item \code{\link[=facet_sir]{facet_sir()}} creates 2d plots (at default based on S/I/R) using \code{\link[ggplot2:facet_wrap]{ggplot2::facet_wrap()}}.
-\item \code{\link[=scale_y_percent]{scale_y_percent()}} transforms the y axis to a 0 to 100\% range using \code{\link[ggplot2:scale_continuous]{ggplot2::scale_y_continuous()}}.
+\item \code{\link[=scale_y_percent]{scale_y_percent()}} transforms the y axis to a 0 to 100\% range using \code{\link[ggplot2:scale_y_continuous]{ggplot2::scale_y_continuous()}}.
 \item \code{\link[=scale_sir_colours]{scale_sir_colours()}} allows to set colours to any aesthetic, even for \code{shape} or \code{linetype}.
 \item \code{\link[=theme_sir]{theme_sir()}} is a \link[ggplot2:theme]{ggplot2 theme} with minimal distraction.
-\item \code{\link[=labels_sir_count]{labels_sir_count()}} print datalabels on the bars with percentage and number of isolates, using \code{\link[ggplot2:geom_text]{ggplot2::geom_text()}}.
+\item \code{\link[=labels_sir_count]{labels_sir_count()}} prints data labels on the bars with percentage and number of isolates, using \code{\link[ggplot2:geom_text]{ggplot2::geom_text()}}.
 }
 
-The interpretation of "I" will be named "Increased exposure" for all EUCAST guidelines since 2019, and will be named "Intermediate" in all other cases.
+The interpretation of "I" will be named "Susceptible, incr. exp." (susceptible, increased exposure) for all EUCAST guidelines since 2019, and will be named "Intermediate" in all other cases.
 
-For interpreting MIC values as well as disk diffusion diameters, the default guideline is EUCAST 2025, unless the package option \code{\link[=AMR-options]{AMR_guideline}} is set. See \code{\link[=as.sir]{as.sir()}} for more information.
+For interpreting MIC values as well as disk diffusion diameters, the default guideline is EUCAST 2026, unless the package option \code{\link[=AMR-options]{AMR_guideline}} is set. See \code{\link[=as.sir]{as.sir()}} for more information.
 }
 }
 \examples{
@@ -223,10 +254,10 @@ if (require("ggplot2")) {
 }
 
 if (require("ggplot2")) {
-  # support for 27 languages, various guidelines, and many options
+  # support for all languages in ?translate, various guidelines, and many options
   autoplot(some_disk_values,
     mo = "Escherichia coli", ab = "cipro",
-    guideline = "CLSI 2024", language = "no",
+    guideline = "CLSI", language = "no",
     title = "Disk diffusion from the North"
   )
 }
@@ -320,9 +351,9 @@ if (require("ggplot2")) {
   ) +
     theme_minimal() +
     geom_boxplot(fill = NA, colour = "grey30") +
-    geom_jitter(width = 0.25)
+    geom_jitter(width = 0.25) +
     labs(title = "scale_y_mic()/scale_colour_sir() automatically applied")
-    
+
   mic_sir_plot
 }
 if (require("ggplot2")) {
@@ -330,7 +361,7 @@ if (require("ggplot2")) {
     scale_y_mic(mic_range = c(0.005, 32), name = "Our MICs!") +
     scale_colour_sir(
       language = "pt", # Portuguese
-      name = "Support in 28 languages"
+      name = "Support in many languages"
     )
 }
 }

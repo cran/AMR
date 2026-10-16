@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -31,7 +31,8 @@
 #'
 #' Determine antimicrobial resistance (AMR) of all bug-drug combinations in your data set where at least 30 (default) isolates are available per species. Use [format()] on the result to prettify it to a publishable/printable format, see *Examples*.
 #' @inheritParams eucast_rules
-#' @param combine_SI A [logical] to indicate whether values S, SDD, and I should be summed, so resistance will be based on only R - the default is `TRUE`.
+#' @param guideline A guideline name, `"EUCAST"` or `"CLSI"` (or any version thereof, e.g. `"CLSI 2025"`), to determine whether the 'I' category is considered susceptible (EUCAST) or resistant (CLSI) when calculating resistance with [format()]. The default is the package option [`AMR_guideline`][AMR-options], or `"EUCAST"` if it is not set. In [bug_drug_combinations()], this can also be `NULL` or `FALSE`, after which [format()] requires its own `guideline` to be set. In [format()], the default is the guideline used in [bug_drug_combinations()], which can be overridden by setting it. See section *Interpretation of SIR* below.
+#' @param combine_SI *(deprecated in favour of `guideline`)* A [logical]. If set, it takes precedence over `guideline`: `TRUE` bases resistance on R only, and `FALSE` on SDD, I, and R.
 #' @param add_ab_group A [logical] to indicate where the group of the antimicrobials must be included as a first column.
 #' @param remove_intrinsic_resistant [logical] to indicate that rows and columns with 100% resistance for all tested antimicrobials must be removed from the table.
 #' @param FUN The function to call on the `mo` column to transform the microorganism codes - the default is [mo_shortname()].
@@ -40,10 +41,11 @@
 #' @param ... Arguments passed on to `FUN`.
 #' @inheritParams sir_df
 #' @inheritParams base::formatC
-#' @details The function [format()] calculates the resistance per bug-drug combination and returns a table ready for reporting/publishing. Use `combine_SI = TRUE` (default) to test R vs. S+I and `combine_SI = FALSE` to test R+I vs. S. This table can also directly be used in R Markdown / Quarto without the need for e.g. [knitr::kable()].
+#' @inheritSection as.sir Interpretation of SIR
+#' @details The function [format()] calculates the resistance per bug-drug combination and returns a table ready for reporting/publishing. Following the `guideline`, resistance is based on R (EUCAST) or on I and R (CLSI), see section *Interpretation of SIR* below. This table can also directly be used in R Markdown / Quarto without the need for e.g. [knitr::kable()].
 #' @export
 #' @rdname bug_drug_combinations
-#' @return The function [bug_drug_combinations()] returns a [data.frame] with columns "mo", "ab", "S", "SDD", "I", "R", and "total".
+#' @return The function [bug_drug_combinations()] returns a [data.frame] with columns "mo", "ab", "S", "SDD", "I", "R", "NI", "WT", "NWT", "NS", and "total".
 #' @examples
 #' # example_isolates is a data set available in the AMR package.
 #' # run ?example_isolates for more info.
@@ -72,8 +74,11 @@ bug_drug_combinations <- function(x,
                                   col_mo = NULL,
                                   FUN = mo_shortname,
                                   include_n_rows = FALSE,
+                                  guideline = getOption("AMR_guideline", "EUCAST"),
                                   ...) {
   meet_criteria(x, allow_class = "data.frame")
+  guideline_assumed <- missing(guideline)
+  guideline <- validate_sir_guideline(guideline, fn = "bug_drug_combinations", allow_none = TRUE)
   x <- ascertain_sir_classes(x, "x")
   meet_criteria(col_mo, allow_class = "character", is_in = colnames(x), has_length = 1, allow_NULL = TRUE)
   meet_criteria(FUN, allow_class = "function", has_length = 1)
@@ -82,9 +87,9 @@ bug_drug_combinations <- function(x,
   # -- mo
   if (is.null(col_mo)) {
     col_mo <- search_type_in_df(x = x, type = "mo")
-    stop_if(is.null(col_mo), "`col_mo` must be set")
+    stop_if(is.null(col_mo), "{.arg col_mo} must be set")
   } else {
-    stop_ifnot(col_mo %in% colnames(x), "column '", col_mo, "' (`col_mo`) not found")
+    stop_ifnot(col_mo %in% colnames(x), "column {.field ", font_bold(col_mo), "} ({.arg col_mo}) not found")
   }
 
   x.bak <- x
@@ -111,6 +116,8 @@ bug_drug_combinations <- function(x,
       SDD = integer(0),
       I = integer(0),
       R = integer(0),
+      WT = integer(0),
+      NWT = integer(0),
       total = integer(0),
       total_rows = integer(0),
       stringsAsFactors = FALSE
@@ -127,13 +134,21 @@ bug_drug_combinations <- function(x,
       # turn and merge everything
       pivot <- lapply(x_mo_filter, function(x) {
         m <- as.matrix(table(as.sir(x), useNA = "always"))
+        na_idx <- which(is.na(rownames(m)))
+        get_row <- function(lbl) {
+          idx <- which(rownames(m) == lbl)
+          if (length(idx) == 1L) unname(m[idx, ]) else rep(0L, ncol(m))
+        }
         data.frame(
-          S = m["S", ],
-          SDD = m["SDD", ],
-          I = m["I", ],
-          R = m["R", ],
-          NI = m["NI", ],
-          na = m[which(is.na(rownames(m))), ],
+          S = get_row("S"),
+          SDD = get_row("SDD"),
+          I = get_row("I"),
+          R = get_row("R"),
+          NI = get_row("NI"),
+          WT = get_row("WT"),
+          NWT = get_row("NWT"),
+          NS = get_row("NS"),
+          na = if (length(na_idx) == 1L) unname(m[na_idx, ]) else rep(0L, ncol(m)),
           stringsAsFactors = FALSE
         )
       })
@@ -146,8 +161,11 @@ bug_drug_combinations <- function(x,
         I = merged$I,
         R = merged$R,
         NI = merged$NI,
-        total = merged$S + merged$SDD + merged$I + merged$R + merged$NI,
-        total_rows = merged$S + merged$SDD + merged$I + merged$R + merged$NI + merged$na,
+        WT = merged$WT,
+        NWT = merged$NWT,
+        NS = merged$NS,
+        total = merged$S + merged$SDD + merged$I + merged$R + merged$NI + merged$WT + merged$NWT + merged$NS,
+        total_rows = merged$S + merged$SDD + merged$I + merged$R + merged$NI + merged$WT + merged$NWT + merged$NS + merged$na,
         stringsAsFactors = FALSE
       )
       if (data_has_groups) {
@@ -189,6 +207,9 @@ bug_drug_combinations <- function(x,
   out <- out %pm>% pm_arrange(mo, ab)
   class(out) <- c("bug_drug_combinations", if (data_has_groups) "grouped" else NULL, class(out))
   rownames(out) <- NULL
+  # the guideline is used by format() to calculate resistance, FALSE means that 'I' must not be merged
+  attr(out, "guideline") <- if (is.null(guideline)) FALSE else guideline
+  attr(out, "guideline_assumed") <- guideline_assumed
   out
 }
 
@@ -199,7 +220,8 @@ format.bug_drug_combinations <- function(x,
                                          translate_ab = "name (ab, atc)",
                                          language = get_AMR_locale(),
                                          minimum = 30,
-                                         combine_SI = TRUE,
+                                         combine_SI,
+                                         guideline = attr(x, "guideline"),
                                          add_ab_group = TRUE,
                                          remove_intrinsic_resistant = FALSE,
                                          decimal.mark = getOption("OutDec"),
@@ -209,7 +231,26 @@ format.bug_drug_combinations <- function(x,
   meet_criteria(translate_ab, allow_class = c("character", "logical"), has_length = 1, allow_NA = TRUE)
   language <- validate_language(language)
   meet_criteria(minimum, allow_class = c("numeric", "integer"), has_length = 1, is_positive_or_zero = TRUE, is_finite = TRUE)
-  meet_criteria(combine_SI, allow_class = "logical", has_length = 1)
+  if (!missing(combine_SI)) {
+    # deprecated argument, if set it must be followed literally, regardless of the guideline
+    meet_criteria(combine_SI, allow_class = "logical", has_length = 1)
+    deprecation_warning("combine_SI", "guideline", fn = "format", is_argument = TRUE, extra_msg = "As long as `combine_SI` is set, it takes precedence over `guideline`. Use `guideline = \"EUCAST\"` to base resistance on R only, or `guideline = \"CLSI\"` to base resistance on I and R.")
+    R_values <- c("R", "NWT", "NS", if (isFALSE(combine_SI)) c("SDD", "I"))
+  } else {
+    guideline_assumed <- FALSE
+    if (missing(guideline)) {
+      guideline_assumed <- !isFALSE(attr(x, "guideline_assumed"))
+      if (is.null(guideline)) {
+        # e.g., created with an older version of this package
+        guideline <- getOption("AMR_guideline", "EUCAST")
+      }
+    }
+    guideline <- validate_sir_guideline(guideline, fn = "bug_drug_combinations")
+    if (isTRUE(guideline_assumed)) {
+      message_guideline_assumed("bug_drug_combinations", txt = " when calculating resistance in {.fun format} (R vs. S+SDD+I). Use {.code guideline = \"CLSI\"} for I+R vs. S+SDD.")
+    }
+    R_values <- c("R", "NWT", "NS", if (identical(guideline, "CLSI")) "I")
+  }
   meet_criteria(add_ab_group, allow_class = "logical", has_length = 1)
   meet_criteria(remove_intrinsic_resistant, allow_class = "logical", has_length = 1)
   meet_criteria(decimal.mark, allow_class = "character", has_length = 1)
@@ -218,7 +259,7 @@ format.bug_drug_combinations <- function(x,
   x.bak <- x
   if (inherits(x, "grouped")) {
     # bug_drug_combinations() has been run on groups, so de-group here
-    warning_("in `format()`: formatting the output of `bug_drug_combinations()` does not support grouped variables, they were ignored")
+    warning_("in {.fun format}: formatting the output of {.fun bug_drug_combinations} does not support grouped variables, they were ignored")
     x <- as.data.frame(x, stringsAsFactors = FALSE)
     idx <- split(seq_len(nrow(x)), paste0(x$mo, "%%", x$ab))
     x <- data.frame(
@@ -229,12 +270,17 @@ format.bug_drug_combinations <- function(x,
       I = vapply(FUN.VALUE = double(1), idx, function(i) sum(x$I[i], na.rm = TRUE)),
       R = vapply(FUN.VALUE = double(1), idx, function(i) sum(x$R[i], na.rm = TRUE)),
       NI = vapply(FUN.VALUE = double(1), idx, function(i) sum(x$NI[i], na.rm = TRUE)),
+      WT = vapply(FUN.VALUE = double(1), idx, function(i) sum(x$WT[i], na.rm = TRUE)),
+      NWT = vapply(FUN.VALUE = double(1), idx, function(i) sum(x$NWT[i], na.rm = TRUE)),
+      NS = vapply(FUN.VALUE = double(1), idx, function(i) sum(x$NS[i], na.rm = TRUE)),
       total = vapply(FUN.VALUE = double(1), idx, function(i) {
         sum(x$S[i], na.rm = TRUE) +
           sum(x$SDD[i], na.rm = TRUE) +
           sum(x$I[i], na.rm = TRUE) +
           sum(x$R[i], na.rm = TRUE) +
-          sum(x$NI[i], na.rm = TRUE)
+          sum(x$WT[i], na.rm = TRUE) +
+          sum(x$NWT[i], na.rm = TRUE) +
+          sum(x$NS[i], na.rm = TRUE)
       }),
       stringsAsFactors = FALSE
     )
@@ -246,11 +292,8 @@ format.bug_drug_combinations <- function(x,
   if (remove_intrinsic_resistant == TRUE) {
     x <- subset(x, R != total)
   }
-  if (combine_SI == TRUE) {
-    x$isolates <- x$R
-  } else {
-    x$isolates <- x$R + x$I + x$SDD
-  }
+
+  x$isolates <- rowSums(x[, R_values, drop = FALSE])
 
   give_ab_name <- function(ab, format, language) {
     format <- tolower(format)

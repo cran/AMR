@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -120,7 +120,7 @@ test_that("test-sir.R", {
   # allow for guideline length > 1
   expect_equal(
     AMR:::get_guideline(c("CLSI", "CLSI", "CLSI2023", "EUCAST", "EUCAST2020"), AMR::clinical_breakpoints),
-    c("CLSI 2025", "CLSI 2025", "CLSI 2023", "EUCAST 2025", "EUCAST 2020")
+    c("CLSI 2026", "CLSI 2026", "CLSI 2023", "EUCAST 2026", "EUCAST 2020")
   )
 
   # these are used in the script
@@ -354,11 +354,11 @@ test_that("test-sir.R", {
     mo = mo_name(rep(c("B_ESCHR_COLI", "B_PSTRL_MLTC", "B_MNNHM_HMLY"), 4)[-1])
   )
 
-  out_vet <- as.sir(vet, host = vet$animal, guideline = "CLSI 2023")
+  out_vet <- suppressWarnings(as.sir(vet, host = vet$animal, guideline = "CLSI 2023"))
   # give host column name instead of values
   expect_identical(
     out_vet,
-    as.sir(vet, host = "animal", guideline = "CLSI 2023")
+    suppressWarnings(as.sir(vet, host = "animal", guideline = "CLSI 2023"))
   )
 
   # check outcomes
@@ -384,47 +384,315 @@ test_that("test-sir.R", {
   # ECOFF -----------------------------------------------------------------
 
   expect_equal(
-    suppressMessages(as.sir(as.mic(2), "E. coli", "ampicillin", guideline = "EUCAST 2020", breakpoint_type = "ECOFF")),
-    as.sir("S")
+    suppressMessages(as.sir(as.mic(c(2, 32)), "E. coli", "ampicillin", guideline = "EUCAST 2020", breakpoint_type = "ECOFF")),
+    as.sir(c("WT", "NWT")) # since ECOFF returns WT/NWT at default
+  )
+  expect_equal(
+    suppressMessages(as.sir(as.mic(c(2, 32)), "E. coli", "ampicillin", guideline = "EUCAST 2020", breakpoint_type = "ECOFF", as_wt_nwt = FALSE)),
+    as.sir(c("S", "R"))
   )
   # old method
   expect_warning(as.sir(as.mic(2), "E. coli", "ampicillin", guideline = "EUCAST 2020", ecoff = TRUE))
 
 
+  # Capped MIC handling ---------------------------------------------------
+
+  out1 <- as.sir(as.mic(c("0.125", "<0.125", ">0.125")), mo = "E. coli", ab = "Cipro", guideline = "EUCAST 2025", breakpoint_type = "ECOFF", capped_mic_handling = "none")
+  out2 <- as.sir(as.mic(c("0.125", "<0.125", ">0.125")), mo = "E. coli", ab = "Cipro", guideline = "EUCAST 2025", breakpoint_type = "ECOFF", capped_mic_handling = "conservative")
+  out3 <- as.sir(as.mic(c("0.125", "<0.125", ">0.125")), mo = "E. coli", ab = "Cipro", guideline = "EUCAST 2025", breakpoint_type = "ECOFF", capped_mic_handling = "standard")
+  out4 <- as.sir(as.mic(c("0.125", "<0.125", ">0.125")), mo = "E. coli", ab = "Cipro", guideline = "EUCAST 2025", breakpoint_type = "ECOFF", capped_mic_handling = "lenient")
+  expect_equal(out1, as.sir(c("NWT", "NWT", "NWT")))
+  expect_equal(out2, as.sir(c("NWT", "NI", "NWT")))
+  expect_equal(out3, as.sir(c("NWT", "WT", "NWT")))
+  expect_equal(out4, as.sir(c("NWT", "WT", "NWT")))
+
+  # Issue #295: no S category (off-scale S breakpoint), e.g. EUCAST CIP in P. aeruginosa (S <= 0.001, R > 0.5)
+  capped_psa <- as.mic(c("<=0.5", "<0.5", "<=0.25", "<0.25", "<=0.001", "<=1", "<1", ">=0.5", ">0.5", "0.25"))
+  capped_psa_sir <- function(handling) {
+    suppressMessages(as.sir(capped_psa, mo = "Pseudomonas aeruginosa", ab = "CIP", guideline = "EUCAST 2026", capped_mic_handling = handling))
+  }
+  expect_equal(capped_psa_sir("none"), as.sir(c("I", "I", "I", "I", "I", "R", "R", "I", "R", "I")))
+  expect_equal(capped_psa_sir("conservative"), as.sir(c("I", "I", "I", "I", "I", "NI", "NI", "NI", "R", "I")))
+  expect_equal(capped_psa_sir("standard"), as.sir(c("I", "I", "I", "I", "I", "NI", "I", "NI", "R", "I")))
+  expect_equal(capped_psa_sir("lenient"), as.sir(c("I", "I", "I", "I", "I", "I", "I", "R", "R", "I")))
+  # the same with custom reference data that uses the off-scale value as printed by EUCAST (S <= 0.001, R > 2)
+  ref_staph <- subset(clinical_breakpoints, guideline == "EUCAST 2026" & ab == "CIP" & mo == "B_PSDMN" & method == "MIC" & type == "human")[1, , drop = FALSE]
+  ref_staph$mo <- as.mo("B_STPHY_AURS")
+  ref_staph$breakpoint_S <- 0.001
+  ref_staph$breakpoint_R <- 2
+  for (handling in c("conservative", "standard", "lenient")) {
+    expect_equal(
+      suppressMessages(as.sir(as.mic(c("<=0.5", "<0.5", "<=2", "<0.001")), mo = "Staphylococcus aureus", ab = "CIP", reference_data = ref_staph, capped_mic_handling = handling)),
+      as.sir(c("I", "I", "I", "I"))
+    )
+  }
+  # SDD as middle category, e.g. CLSI DAP in E. faecium (SDD <= 4, R >= 8)
+  expect_equal(
+    suppressMessages(as.sir(as.mic(c("<=4", "<=2", "<=0.5")), mo = "Enterococcus faecium", ab = "DAP", guideline = "CLSI 2026", capped_mic_handling = "lenient")),
+    as.sir(c("SDD", "SDD", "SDD"))
+  )
+  # an S category remains unaffected, e.g. EUCAST CIP in E. coli (S <= 0.25, R > 0.5)
+  expect_equal(
+    suppressMessages(as.sir(as.mic(c("<=0.5", "<0.5", "<=0.25")), mo = "Escherichia coli", ab = "CIP", guideline = "EUCAST 2026", capped_mic_handling = "standard")),
+    as.sir(c("NI", "S", "S"))
+  )
+  # capped values must not be forced to S or R if there is no breakpoint (blocking row, here: EUCAST CIP in S. aureus in brackets only)
+  for (handling in c("none", "conservative", "standard", "lenient")) {
+    expect_true(all(is.na(suppressMessages(as.sir(as.mic(c("<0.5", "<=0.5", ">2", ">=2", "1")), mo = "Staphylococcus aureus", ab = "CIP", guideline = "EUCAST 2026", capped_mic_handling = handling)))))
+  }
+
+  # Issue #278: re-running as.sir() on already-<sir> data must preserve columns
+  df_already_sir <- data.frame(
+    mo = "B_ESCHR_COLI",
+    AMC = as.mic(c("1", "2", "4")),
+    GEN = sample(c("S", "I", "R"), 3, replace = TRUE),
+    stringsAsFactors = FALSE
+  )
+  first_pass <- suppressMessages(as.sir(df_already_sir, col_mo = "mo", info = FALSE))
+  second_pass <- suppressMessages(as.sir(first_pass, col_mo = "mo", info = FALSE))
+  expect_equal(ncol(first_pass), ncol(second_pass))
+  expect_true(is.sir(second_pass[["AMC"]]))
+  expect_true(is.sir(second_pass[["GEN"]]))
+  expect_identical(first_pass[["AMC"]], second_pass[["AMC"]])
+  expect_identical(first_pass[["GEN"]], second_pass[["GEN"]])
+
+  # Issue #278: metadata columns whose names coincidentally match antibiotic
+  # codes (e.g. 'patient' -> OXY, 'ward' -> PRU) must not be processed
+  df_meta <- data.frame(
+    mo = "B_ESCHR_COLI",
+    patient = paste0("Pt_", 1:20),
+    ward = rep(c("ICU", "Surgery", "Outpatient", "ED"), 5),
+    AMC = as.mic(rep(c("1", "2", "4", "8"), 5)),
+    stringsAsFactors = FALSE
+  )
+  df_meta_sir <- suppressMessages(as.sir(df_meta, col_mo = "mo", info = FALSE))
+  expect_true("patient" %in% colnames(df_meta_sir))
+  expect_true("ward" %in% colnames(df_meta_sir))
+  expect_false(is.sir(df_meta_sir[["patient"]]))
+  expect_false(is.sir(df_meta_sir[["ward"]]))
+  expect_true(is.sir(df_meta_sir[["AMC"]]))
+
   # Parallel computing ----------------------------------------------------
+  # Tests must pass even when only 1 core is available; parallel = TRUE then
+  # silently falls back to sequential, but results must still be identical.
 
-  # MB 29 Apr 2025: I have run the code of AVC, PEI, Canada (dataset of 2854x65), and compared it like this:
+  if (AMR:::pkg_is_available("future.apply")) {
+    set.seed(42)
+    n_par <- 200
+    df_par <- data.frame(
+      mo = "B_ESCHR_COLI",
+      AMC = as.mic(sample(c("0.25", "0.5", "1", "2", "4", "8", "16", "32"), n_par, TRUE)),
+      GEN = as.mic(sample(c("0.5", "1", "2", "4", "8", "16", "32", "64"), n_par, TRUE)),
+      CIP = as.mic(sample(c("0.001", "0.002", "0.004", "0.008", "0.016", "0.032"), n_par, TRUE)),
+      PEN = sample(c("S", "I", "R", NA_character_), n_par, TRUE),
+      stringsAsFactors = FALSE
+    )
 
-  # system.time({
-  #   data_2022_2023_SIR_parallel <- data_2022_2023_clean |>
-  #   as.sir(amikacin:tiamulin,
-  #          col_mo = "mo",
-  #          guideline = "CLSI 2024",
-  #          host = "Species",
-  #          uti = "isUTI",
-  #          parallel = TRUE)
-  # })
-  # #    user  system elapsed
-  # # 271.424   2.767  45.762
-  #
-  # history_parallel <- sir_interpretation_history(clean = TRUE)
-  #
-  # system.time({
-  #   data_2022_2023_SIR <- data_2022_2023_clean |>
-  #     as.sir(amikacin:tiamulin,
-  #            col_mo = "mo",
-  #            guideline = "CLSI 2024",
-  #            host = "Species",
-  #            uti = "isUTI")
-  # })
-  # #    user  system elapsed
-  # # 120.637   5.406 128.835
-  # history <- sir_interpretation_history()
+    # clear any existing history before comparing
+    sir_interpretation_history(clean = TRUE)
+    sir_seq <- suppressMessages(as.sir(df_par, col_mo = "mo", info = FALSE))
+    log_seq <- sir_interpretation_history(clean = TRUE)
 
+    future::plan(future::multicore)
+    n_max_workers <- future::nbrOfWorkers()
 
-  # and then got this:
-  # identical(history[, -1], history_parallel[, -1])
-  #> [1] TRUE
+    sir_par <- suppressMessages(as.sir(df_par, col_mo = "mo", info = FALSE, parallel = TRUE))
+    log_par <- sir_interpretation_history(clean = TRUE)
 
-  # so parallel on Apple M2 is 2.8x faster, with identical history -> GREAT!
+    # 1. parallel = TRUE gives identical SIR results to sequential
+    expect_identical(sir_seq[["AMC"]], sir_par[["AMC"]])
+    expect_identical(sir_seq[["GEN"]], sir_par[["GEN"]])
+    expect_identical(sir_seq[["CIP"]], sir_par[["CIP"]])
+    expect_identical(sir_seq[["PEN"]], sir_par[["PEN"]])
+
+    # 2. same number of log rows as sequential
+    expect_equal(nrow(log_seq), nrow(log_par))
+
+    # 3. pre-existing log entries must not be duplicated
+    #    run sequential once to populate the history, then run parallel and
+    #    verify the new parallel run adds exactly as many rows as sequential
+    sir_interpretation_history(clean = TRUE)
+    future::plan(future::sequential)
+    suppressMessages(as.sir(df_par, col_mo = "mo", info = FALSE)) # populate history
+    pre_n <- nrow(sir_interpretation_history())
+    future::plan(future::multicore)
+    suppressMessages(as.sir(df_par, col_mo = "mo", info = FALSE, parallel = TRUE))
+    post_n <- nrow(sir_interpretation_history())
+    expect_equal(post_n - pre_n, nrow(log_seq)) # exactly one run's worth of new rows
+    sir_interpretation_history(clean = TRUE)
+
+    # 4. two sequential runs and two parallel runs yield identical results
+    sir_par2 <- suppressMessages(as.sir(df_par, col_mo = "mo", info = FALSE, parallel = TRUE))
+    expect_identical(sir_par[["AMC"]], sir_par2[["AMC"]])
+    expect_identical(sir_par[["GEN"]], sir_par2[["GEN"]])
+
+    # 5. used cores = 1 gives same results as default sequential
+    future::plan(future::multicore, workers = 1)
+    sir_mc1 <- suppressMessages(as.sir(df_par, col_mo = "mo", info = FALSE, parallel = TRUE))
+    expect_identical(sir_seq[["AMC"]], sir_mc1[["AMC"]])
+    expect_identical(sir_seq[["GEN"]], sir_mc1[["GEN"]])
+
+    # 6. used cores = 2 and used cores = 3 give same results as sequential
+    if (n_max_workers >= 3) {
+      future::plan(future::multicore, workers = 2)
+      sir_mc2 <- suppressMessages(as.sir(df_par, col_mo = "mo", info = FALSE, parallel = TRUE))
+      future::plan(future::multicore, workers = 3)
+      sir_mc3 <- suppressMessages(as.sir(df_par, col_mo = "mo", info = FALSE, parallel = TRUE))
+      expect_identical(sir_seq[["AMC"]], sir_mc2[["AMC"]])
+      expect_identical(sir_seq[["GEN"]], sir_mc3[["GEN"]])
+    }
+
+    # 7. single-column data frame falls back silently to sequential
+    df_single <- df_par[, c("mo", "AMC")]
+    future::plan(future::sequential)
+    sir_single_seq <- suppressMessages(as.sir(df_single, col_mo = "mo", info = FALSE))
+    future::plan(future::multicore)
+    sir_single_par <- suppressMessages(as.sir(df_single, col_mo = "mo", info = FALSE, parallel = TRUE))
+    expect_identical(sir_single_seq[["AMC"]], sir_single_par[["AMC"]])
+
+    # 8. row-batch mode (n_cols < n_cores): force row splitting via used cores and
+    #    verify identical output to sequential for a dataset with 2 AB columns so
+    #    pieces_per_col = ceiling(used cores / 2) >= 2 and row batching activates
+    df_wide <- data.frame(
+      mo = "B_ESCHR_COLI",
+      AMC = as.mic(sample(c("1", "2", "4", "8"), n_par, TRUE)),
+      GEN = as.mic(sample(c("1", "2", "4", "8"), n_par, TRUE)),
+      stringsAsFactors = FALSE
+    )
+    future::plan(future::sequential)
+    sir_wide_seq <- suppressMessages(as.sir(df_wide, col_mo = "mo", info = FALSE))
+    future::plan(future::multicore)
+    sir_wide_par <- suppressMessages(as.sir(df_wide,
+      col_mo = "mo", info = FALSE,
+      parallel = TRUE
+    ))
+    expect_identical(sir_wide_seq[["AMC"]], sir_wide_par[["AMC"]])
+    expect_identical(sir_wide_seq[["GEN"]], sir_wide_par[["GEN"]])
+
+    # 8. info = TRUE with parallel does not produce per-column worker messages
+    #    (messages should only appear in the main process, not duplicated from workers)
+    msgs <- capture.output(
+      suppressWarnings(as.sir(df_par, col_mo = "mo", info = TRUE, parallel = TRUE)),
+      type = "message"
+    )
+    # each AB column name should appear at most once in all messages combined
+    for (ab_nm in c("AMC", "GEN", "CIP", "PEN")) {
+      n_mentions <- sum(grepl(ab_nm, msgs, fixed = TRUE))
+      expect_lte(n_mentions, 1L)
+    }
+    future::plan(future::sequential)
+  }
+})
+
+# issue #239 — custom reference_data support
+test_that("custom reference_data: non-EUCAST/CLSI guideline produces R", {
+  # Build a minimal one-row custom breakpoint table from a plain data.frame.
+  # coerce_reference_data_columns() will coerce mo/ab to the right class.
+  my_bp <- clinical_breakpoints[clinical_breakpoints$method == "MIC" &
+    clinical_breakpoints$type == "human", ][1, ]
+  my_bp$guideline <- "MyLab 2025"
+  my_bp$mo <- "B_ACHRMB_XYLS" # plain character — coerced to <mo>
+  my_bp$ab <- "MEM" # plain character — coerced to <ab>
+  my_bp$breakpoint_S <- 8
+  my_bp$breakpoint_R <- 32
+
+  # guideline omitted: all rows in reference_data are used; R via open interval (>)
+  expect_equal(as.character(suppressMessages(
+    as.sir(as.mic(64), mo = "B_ACHRMB_XYLS", ab = "MEM", reference_data = my_bp)
+  )), "R")
+  expect_equal(as.character(suppressMessages(
+    as.sir(as.mic(16), mo = "B_ACHRMB_XYLS", ab = "MEM", reference_data = my_bp)
+  )), "I")
+  # at R breakpoint value must be I (open interval: > not >=)
+  expect_equal(as.character(suppressMessages(
+    as.sir(as.mic(32), mo = "B_ACHRMB_XYLS", ab = "MEM", reference_data = my_bp)
+  )), "I")
+
+  # guideline explicitly set: same result when it matches the data
+  expect_equal(as.character(suppressMessages(
+    as.sir(as.mic(64),
+      mo = "B_ACHRMB_XYLS", ab = "MEM",
+      guideline = "MyLab 2025", reference_data = my_bp
+    )
+  )), "R")
+})
+
+test_that("custom reference_data: host = NA acts as host-agnostic fallback", {
+  my_bp <- clinical_breakpoints[clinical_breakpoints$method == "MIC" &
+    clinical_breakpoints$type == "human", ][1, ]
+  my_bp$guideline <- "MyLab 2025"
+  my_bp$mo <- "B_ACHRMB_XYLS"
+  my_bp$ab <- "MEM"
+  my_bp$type <- "animal"
+  my_bp$host <- NA # logical NA — coerced to character by coerce_reference_data_columns()
+  my_bp$breakpoint_S <- 8
+  my_bp$breakpoint_R <- 32
+
+  # NA host should match when no species-specific row exists
+  result <- suppressMessages(
+    as.sir(as.mic(64),
+      mo = "B_ACHRMB_XYLS", ab = "MEM",
+      host = "dogs", breakpoint_type = "animal", reference_data = my_bp
+    )
+  )
+  expect_equal(as.character(result), "R")
+})
+
+test_that("EUCAST blocking rows prevent falling back to broader breakpoints", {
+  skip_on_cran()
+  sir <- function(x, mo, ab, guideline, include_screening = FALSE, uti = NA) {
+    as.character(suppressMessages(suppressWarnings(
+      as.sir(x, mo = mo, ab = ab, guideline = guideline, include_screening = include_screening, uti = uti)
+    )))
+  }
+  # IE for V. fluvialis, while Vibrio spp. has breakpoints
+  expect_identical(sir(as.mic(0.125), "Vibrio fluvialis", "CTX", "EUCAST 2026"), NA_character_)
+  expect_identical(sir(as.mic(0.125), "Vibrio cholerae", "CTX", "EUCAST 2026"), "S")
+  # fosfomycin zone diameter breakpoints apply to E. coli only
+  expect_identical(sir(as.disk(25), "Klebsiella pneumoniae", "FOS", "EUCAST 2019"), NA_character_)
+  expect_identical(sir(as.disk(25), "Escherichia coli", "FOS", "EUCAST 2019"), "S")
+  # "-" for enterococci must not fall back to the PK-PD breakpoints
+  expect_identical(sir(as.mic(1), "Enterococcus faecalis", "CTX", "EUCAST 2021"), NA_character_)
+  # exceptions: "Klebsiella spp. (except K. aerogenes)"
+  expect_identical(sir(as.mic(2), "Klebsiella aerogenes", "CXM", "EUCAST 2026"), NA_character_)
+  # agent listed in the Enterobacterales table for other organisms only
+  expect_identical(sir(as.mic(0.5), "Salmonella enterica", "CXM", "EUCAST 2026"), NA_character_)
+  # no EUCAST breakpoints at all, so no PK-PD breakpoints either
+  expect_identical(sir(as.mic(0.5), "Burkholderia cepacia complex", "MEM", "EUCAST 2020"), NA_character_)
+  # PK-PD breakpoints only until EUCAST 2023
+  expect_identical(sir(as.mic(0.25), "Nocardia asteroides", "AMX", "EUCAST 2020"), "S")
+  expect_identical(sir(as.mic(0.25), "Nocardia asteroides", "AMX", "EUCAST 2024"), NA_character_)
+  # H. influenzae MIC breakpoints apply to H. parainfluenzae, zone diameters do not
+  expect_identical(sir(as.mic(0.5), "Haemophilus parainfluenzae", "CIP", "EUCAST 2026"), "R")
+  expect_identical(sir(as.disk(30), "Haemophilus parainfluenzae", "CIP", "EUCAST 2026"), NA_character_)
+  # cefoxitin screen: CoNS not identified to species level use S >= 25 mm
+  expect_identical(sir(as.disk(23), "B_STPHY_CONS", "FOX", "EUCAST 2026", include_screening = TRUE), "R")
+  expect_identical(sir(as.disk(23), "Staphylococcus hominis", "FOX", "EUCAST 2026", include_screening = TRUE), "S")
+  expect_identical(sir(as.disk(26), "Staphylococcus epidermidis", "FOX", "EUCAST 2026", include_screening = TRUE), "R")
+  expect_identical(sir(as.disk(26), "Staphylococcus epidermidis", "FOX", "EUCAST 2026"), NA_character_)
+  # topical screening cut-off values do not replace systemic breakpoints
+  expect_identical(sir(as.mic(0.5), "Staphylococcus aureus", "FUS", "EUCAST 2026"), "S")
+  # off-scale breakpoint S <= 0.001 mg/L categorises wild type isolates as I
+  expect_identical(sir(as.mic(0.0005), "Pseudomonas aeruginosa", "CIP", "EUCAST 2026"), "I")
+  # EUCAST's 0.06 mg/L is the dilution 0.0625, i.e. 0.064 in this package
+  expect_identical(sir(as.mic(0.064), "Haemophilus influenzae", "LVX", "EUCAST 2026"), "S")
+  # high-level gentamicin resistance (screening test given in the notes)
+  expect_identical(sir(as.mic(256), "Enterococcus faecium", "GEH", "EUCAST 2026"), "R")
+  # breakpoints in brackets for systemic infections are not replaced by the UTI breakpoint if uti is unknown
+  expect_identical(sir(as.mic(4), "Acinetobacter baumannii", "AMK", "EUCAST 2026"), NA_character_)
+  expect_identical(sir(as.mic(4), "Acinetobacter baumannii", "AMK", "EUCAST 2026", uti = FALSE), NA_character_)
+  expect_identical(sir(as.mic(4), "Acinetobacter baumannii", "AMK", "EUCAST 2026", uti = TRUE), "S")
+  # UTI breakpoints are only used for unknown uti if there are no non-UTI breakpoints, which is noted every time
+  for (i in 1:2) {
+    sir_interpretation_history(clean = TRUE)
+    expect_identical(sir(as.mic(16), "Escherichia coli", "NTR", "EUCAST 2026"), "S")
+    sir_history <- sir_interpretation_history(clean = TRUE)
+    expect_match(sir_history$notes, "only available for (uncomplicated) urinary tract infections", fixed = TRUE)
+  }
+  expect_identical(sir(as.mic(16), "Escherichia coli", "NTR", "EUCAST 2026", uti = FALSE), NA_character_)
+  # the blocking row of Enterobacterales does not override the UTI breakpoint for E. coli itself
+  expect_identical(sir(as.mic(2), "Escherichia coli", "CZO", "EUCAST 2026"), "I")
+  # with UTI and non-UTI breakpoints, unknown uti takes the non-UTI breakpoint
+  expect_identical(sir(as.mic(c(2, 8, 32)), "Escherichia coli", "CZO", "CLSI 2025"), c("S", "R", "R"))
+  expect_identical(sir(as.mic(c(2, 8, 32)), "Escherichia coli", "CZO", "CLSI 2025", uti = TRUE), c("S", "S", "R"))
 })

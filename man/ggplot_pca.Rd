@@ -17,13 +17,30 @@ As per their GPL-2 licence that demands documentation of code changes, the chang
 }
 }
 \usage{
-ggplot_pca(x, choices = 1:2, scale = 1, pc.biplot = TRUE,
-  labels = NULL, labels_textsize = 3, labels_text_placement = 1.5,
-  groups = NULL, ellipse = TRUE, ellipse_prob = 0.68,
-  ellipse_size = 0.5, ellipse_alpha = 0.5, points_size = 2,
-  points_alpha = 0.25, arrows = TRUE, arrows_colour = "darkblue",
-  arrows_size = 0.5, arrows_textsize = 3, arrows_textangled = TRUE,
-  arrows_alpha = 0.75, base_textsize = 10, ...)
+ggplot_pca(
+  x,
+  choices = 1:2,
+  scale = 1,
+  pc.biplot = TRUE,
+  labels = NULL,
+  labels_textsize = 3,
+  labels_text_placement = 1.5,
+  groups = NULL,
+  ellipse = TRUE,
+  ellipse_prob = 0.68,
+  ellipse_size = 0.5,
+  ellipse_alpha = 0.5,
+  points_size = 2,
+  points_alpha = 0.25,
+  arrows = TRUE,
+  arrows_colour = "darkblue",
+  arrows_size = 0.5,
+  arrows_textsize = 3,
+  arrows_textangled = TRUE,
+  arrows_alpha = 0.75,
+  base_textsize = 10,
+  ...
+)
 }
 \arguments{
 \item{x}{An object returned by \code{\link[=pca]{pca()}}, \code{\link[=prcomp]{prcomp()}} or \code{\link[=princomp]{princomp()}}.}
@@ -41,13 +58,7 @@ ggplot_pca(x, choices = 1:2, scale = 1, pc.biplot = TRUE,
     will be issued if the specified \code{scale} is outside this range.
   }
 
-\item{pc.biplot}{
-    If true, use what Gabriel (1971) refers to as a "principal component
-    biplot", with \code{lambda = 1} and observations scaled up by sqrt(n) and
-    variables scaled down by sqrt(n).  Then inner products between
-    variables approximate covariances and distances between observations
-    approximate Mahalanobis distance.
-  }
+\item{pc.biplot}{If \code{TRUE}, use what Gabriel (1971) refers to as a 'principal component biplot', with \code{lambda = 1} and observations scaled up by \code{sqrt(n)} and variables scaled down by \code{sqrt(n)}. Then inner products between variables approximate covariances and distances between observations approximate Mahalanobis distance.}
 
 \item{labels}{An optional vector of labels for the observations. If set, the labels will be placed below their respective points. When using the \code{\link[=pca]{pca()}} function as input for \code{x}, this will be determined automatically based on the attribute \code{non_numeric_cols}, see \code{\link[=pca]{pca()}}.}
 
@@ -128,4 +139,7 @@ if (require("dplyr")) {
   }
 }
 }
+}
+\references{
+Gabriel, K.R. 1971. \strong{The biplot graphical display of matrices with application to principal component analysis}. \emph{Biometrika} 58(3):453-467. \doi{10.1093/biomet/58.3.453}
 }

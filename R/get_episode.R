@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -215,7 +215,7 @@ is_new_episode <- function(x, episode_days = NULL, case_free_days = NULL, ...) {
 
 exec_episode <- function(x, episode_days, case_free_days, ...) {
   stop_ifnot(is.null(episode_days) || is.null(case_free_days),
-    "either argument `episode_days` or argument `case_free_days` must be set.",
+    "either argument {.arg episode_days} or argument {.arg case_free_days} must be set.",
     call = -2
   )
 

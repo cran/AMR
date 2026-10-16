@@ -12,7 +12,7 @@
 # https://doi.org/10.18637/jss.v104.i03                                #
 #                                                                      #
 # Developed at the University of Groningen and the University Medical  #
-# Center Groningen in The Netherlands, in collaboration with many      #
+# Center Groningen in the Netherlands, in collaboration with many      #
 # colleagues from around the world, see our website.                   #
 #                                                                      #
 # This R package is free software; you can freely use and distribute   #
@@ -27,44 +27,50 @@
 # how to conduct AMR data analysis: https://amr-for-r.org              #
 # ==================================================================== #
 
-# add new version numbers here, and add the rules themselves to "data-raw/eucast_rules.tsv" and clinical_breakpoints
+# add new version numbers here, and add the rules themselves to "data-raw/interpretive_rules.tsv" and clinical_breakpoints
 # (sourcing "data-raw/_pre_commit_checks.R" will process the TSV file)
 EUCAST_VERSION_BREAKPOINTS <- list(
+  "16.0" = list(
+    version_txt = "v16.0",
+    year = 2026,
+    title = "'EUCAST Clinical Breakpoint Tables'",
+    url = "https://www.eucast.org/bacteria/clinical-breakpoints-and-interpretation/clinical-breakpoint-tables/"
+  ),
   "15.0" = list(
     version_txt = "v15.0",
     year = 2025,
     title = "'EUCAST Clinical Breakpoint Tables'",
-    url = "https://www.eucast.org/clinical_breakpoints/"
+    url = "https://www.eucast.org/bacteria/clinical-breakpoints-and-interpretation/clinical-breakpoint-tables/"
   ),
   "14.0" = list(
     version_txt = "v14.0",
     year = 2024,
     title = "'EUCAST Clinical Breakpoint Tables'",
-    url = "https://www.eucast.org/clinical_breakpoints/"
+    url = "https://www.eucast.org/bacteria/clinical-breakpoints-and-interpretation/clinical-breakpoint-tables/"
   ),
   "13.1" = list(
     version_txt = "v13.1",
     year = 2023,
     title = "'EUCAST Clinical Breakpoint Tables'",
-    url = "https://www.eucast.org/clinical_breakpoints/"
+    url = "https://www.eucast.org/bacteria/clinical-breakpoints-and-interpretation/clinical-breakpoint-tables/"
   ),
   "12.0" = list(
     version_txt = "v12.0",
     year = 2022,
     title = "'EUCAST Clinical Breakpoint Tables'",
-    url = "https://www.eucast.org/clinical_breakpoints/"
+    url = "https://www.eucast.org/bacteria/clinical-breakpoints-and-interpretation/clinical-breakpoint-tables/"
   ),
   "11.0" = list(
     version_txt = "v11.0",
     year = 2021,
     title = "'EUCAST Clinical Breakpoint Tables'",
-    url = "https://www.eucast.org/clinical_breakpoints/"
+    url = "https://www.eucast.org/bacteria/clinical-breakpoints-and-interpretation/clinical-breakpoint-tables/"
   ),
   "10.0" = list(
     version_txt = "v10.0",
     year = 2020,
     title = "'EUCAST Clinical Breakpoint Tables'",
-    url = "https://www.eucast.org/ast_of_bacteria/previous_versions_of_documents/"
+    url = "https://www.eucast.org/bacteria/document-archive/"
   )
 )
 EUCAST_VERSION_EXPERT_RULES <- list(
@@ -72,19 +78,7 @@ EUCAST_VERSION_EXPERT_RULES <- list(
     version_txt = "v3.3",
     year = 2021,
     title = "'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes'",
-    url = "https://www.eucast.org/expert_rules_and_expected_phenotypes"
-  ),
-  "3.2" = list(
-    version_txt = "v3.2",
-    year = 2020,
-    title = "'EUCAST Expert Rules' and 'EUCAST Intrinsic Resistance and Unusual Phenotypes'",
-    url = "https://www.eucast.org/expert_rules_and_expected_phenotypes"
-  ),
-  "3.1" = list(
-    version_txt = "v3.1",
-    year = 2016,
-    title = "'EUCAST Expert Rules, Intrinsic Resistance and Exceptional Phenotypes'",
-    url = "https://www.eucast.org/expert_rules_and_expected_phenotypes"
+    url = "https://www.eucast.org/bacteria/important-additional-information/expert-rules/"
   )
 )
 EUCAST_VERSION_EXPECTED_PHENOTYPES <- list(
@@ -92,32 +86,33 @@ EUCAST_VERSION_EXPECTED_PHENOTYPES <- list(
     version_txt = "v1.2",
     year = 2023,
     title = "'EUCAST Expected Resistant Phenotypes'",
-    url = "https://www.eucast.org/expert_rules_and_expected_phenotypes"
+    url = "https://www.eucast.org/bacteria/important-additional-information/expert-rules/"
   )
 )
 
 TAXONOMY_VERSION <- list(
   GBIF = list(
-    name = "Global Biodiversity Information Facility (GBIF)",
-    accessed_date = as.Date("2024-06-24"),
-    citation = "GBIF Secretariat (2023). GBIF Backbone Taxonomy. Checklist dataset \\doi{10.15468/39omei}.",
+    name = "Global Biodiversity Information Facility (GBIF), via Catalogue of Life (COL)",
+    accessed_date = as.Date("2026-04-30"),
+    # take the citation from https://www.gbif.org/dataset/7ddf754f-d193-4cc9-b351-99906754a03b#citation
+    citation = "Banki, O. *et al.* (2026). Catalogue of Life (2026-04-18 XR). Catalogue of Life Foundation, Amsterdam, Netherlands. \\doi{10.48580/dgxjw}.",
     url = "https://www.gbif.org"
   ),
   LPSN = list(
     name = "List of Prokaryotic names with Standing in Nomenclature (LPSN)",
-    accessed_date = as.Date("2024-06-24"),
-    citation = "Parte, AC *et al.* (2020). **List of Prokaryotic names with Standing in Nomenclature (LPSN) moves to the DSMZ.** International Journal of Systematic and Evolutionary Microbiology, 70, 5607-5612; \\doi{10.1099/ijsem.0.004332}.",
+    accessed_date = as.Date("2026-10-05"),
+    citation = "Freese, HM *et al.* (2026). **TYGS and LPSN in 2025: a Global Core Biodata Resource for genome-based classification and nomenclature of prokaryotes within DSMZ Digital Diversity.** Nucleic Acids Research, 54, D884\u2013D891; \\doi{10.1093/nar/gkaf1110}.",
     url = "https://lpsn.dsmz.de"
   ),
   MycoBank = list(
     name = "MycoBank",
-    accessed_date = as.Date("2024-06-24"),
+    accessed_date = as.Date("2026-01-07"),
     citation = "Vincent, R *et al* (2013). **MycoBank gearing up for new horizons.** IMA Fungus, 4(2), 371-9; \\doi{10.5598/imafungus.2013.04.02.16}.",
     url = "https://www.mycobank.org"
   ),
   BacDive = list(
     name = "BacDive",
-    accessed_date = as.Date("2024-07-16"),
+    accessed_date = as.Date("2026-10-05"),
     citation = "Reimer, LC *et al.* (2022). ***BacDive* in 2022: the knowledge base for standardized bacterial and archaeal data.** Nucleic Acids Res., 50(D1):D741-D74; \\doi{10.1093/nar/gkab961}.",
     url = "https://bacdive.dsmz.de"
   ),
@@ -142,10 +137,14 @@ TAXONOMY_VERSION <- list(
 )
 
 globalVariables(c(
+  ".coverage",
+  ".data",
   ".GenericCallEnv",
+  ".lower",
   ".mo",
   ".rowid",
   ".syndromic_group",
+  ".upper",
   "ab",
   "ab_txt",
   "affect_ab_name",
@@ -181,6 +180,7 @@ globalVariables(c(
   "hjust",
   "host_index",
   "host_match",
+  "incidence",
   "input",
   "input_given",
   "intrinsic_resistant",
@@ -208,6 +208,7 @@ globalVariables(c(
   "old",
   "old_name",
   "p_susceptible",
+  "pathogen",
   "pattern",
   "R",
   "rank_index",
@@ -215,6 +216,8 @@ globalVariables(c(
   "reference.rule",
   "reference.rule_group",
   "reference.version",
+  "regimen",
+  "rule.provider",
   "rowid",
   "rule_group",
   "rule_name",
